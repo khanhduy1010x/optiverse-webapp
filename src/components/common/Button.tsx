@@ -10,6 +10,8 @@ import Icon from './Icon/Icon';
 
 
 interface ButtonProps {
+  onClick?: () => void;
+  label?: string;
   title?: string;
   fontType?: keyof typeof TEXT;
   translate?: boolean;

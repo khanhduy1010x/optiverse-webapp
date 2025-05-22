@@ -6,6 +6,7 @@ import Text from './Text';
 import View from './View';
 
 interface Props {
+  placeholder?: string;
   label: string;
   transparent?: boolean;
   error?: string;

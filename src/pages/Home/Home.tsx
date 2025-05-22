@@ -1,5 +1,5 @@
 import React from 'react';
-import Button from '../../components/common/Button';
+import { Button } from '../../components/common/Button';
 import { useAppSelector, useAppDispatch } from '../../store/hooks';
 import { increment, decrement, incrementByAmount } from '../../store/slices/counterSlice';
 
