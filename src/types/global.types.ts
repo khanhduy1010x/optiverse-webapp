@@ -1,0 +1,3 @@
+//AuthView type definition
+export type AuthView = 'login' | 'register' | 'forgot' | 'verify';
+//other types here nhe anh em...

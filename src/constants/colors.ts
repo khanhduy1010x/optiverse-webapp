@@ -1,0 +1,26 @@
+const COLORS = {
+  black700: "#141515",
+  black500: "#282A29",
+  black400: "#333333",
+  black300: "#535554",
+  black200: "#949594",
+  black100: "#D4D4D4",
+  black50: "#EAEAEA",
+  white900: "#FFFFFF",
+  red700: "#CB363B",
+  red500: "#E23C42",
+  red400: "#E86368",
+  pirple100: "#E5D4F4",
+  green700: "#357A38",
+  green500: "#4CAF50",
+  green300: "#82C785",
+  green100: "#B7DFB9",
+  yellow700: "#CC861E",
+  yellow500: "#FFA726",
+  yellow300: "#FFB951",
+  yellow100: "#F7E7CF",
+  black500pct: "#282A2980",
+  transparent: "#00000000",
+};
+
+export default COLORS;
