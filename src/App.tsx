@@ -19,6 +19,7 @@ import Note from './pages/Note/Note';
 import Task from './pages/Task/Task';
 import Statistics from './pages/FocusTimer/Statistics';
 import { ThemeProvider } from './contexts/ThemeContext';
+import NoteScreen from './pages/Note/NoteScreen';
 
 const AppContent: React.FC = () => {
   const location = useLocation();
@@ -59,7 +60,7 @@ const AppContent: React.FC = () => {
           <Route path="/user-profile" element={<UserProfile />} />
           <Route path="/focus-timer" element={<FocusTimer />} />
           <Route path="/manage-focus-timer" element={<ManageFocusTimer />} />
-          <Route path="/note" element={<Note />} />
+          <Route path="/note" element={<NoteScreen />} />
           <Route path="/task" element={<Task />} />
           <Route path="/statistics-timer" element={<Statistics />} />
         </Routes>

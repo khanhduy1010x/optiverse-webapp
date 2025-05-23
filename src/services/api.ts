@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 
 const api: AxiosInstance = axios.create({
-  baseURL: 'http://localhost:3000/api', 
+  baseURL: 'http://localhost:81/productivity/', 
   timeout: 10000, 
   headers: {
     'Content-Type': 'application/json',
@@ -11,7 +11,8 @@ const api: AxiosInstance = axios.create({
 
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = localStorage.getItem('authToken');
+    // var token = localStorage.getItem('authToken');
+  const  token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2ODI5ZmY0NmRiMjhiZjg3ZmVmNzM5ZTciLCJlbWFpbCI6Im5ndXllbmtoYW5oZHV5OTIwMDBAZ21haWwuY29tIiwiZnVsbF9uYW1lIjoiTmd1eWVuIEtoYW5oIER1eSIsInNlc3Npb25faWQiOiI2ODMwMjM1ZmVjMmI0Mjc1ZWVhOTAwMzUiLCJpYXQiOjE3NDc5ODUyNDcsImV4cCI6MTc0ODA3MTY0N30.Jec2_JkEnKFUQpe230rRmCPHmzVG-pQvfYLNHSmkJ4k"
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
