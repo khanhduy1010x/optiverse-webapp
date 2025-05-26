@@ -14,7 +14,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitch }) => {
     e.preventDefault();
     // Giả lập đăng ký, trong thực tế bạn sẽ gọi API
     console.log('Registering with:', { fullName, email, password });
-    onSwitch('login');
+    onSwitch('verify');
   };
 
   const handleGoogleRegister = () => {

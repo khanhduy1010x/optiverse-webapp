@@ -4,13 +4,15 @@ import RegisterForm from './RegisterForm';
 import ForgotPasswordForm from './ForgotPasswordForm';
 import VerifyCodeForm from './VerifyCodeForm';
 import { AuthView } from '../../types/global.types';
-
+import LogoInAuth from '../../components/common/Logo/LogoInAuth';
 
 interface AuthContainerProps {
-  initialView?: AuthView; 
+  initialView?: AuthView;
 }
 
-const AuthContainer: React.FC<AuthContainerProps> = ({ initialView = 'login' }) => {
+const AuthContainer: React.FC<AuthContainerProps> = ({
+  initialView = 'login',
+}) => {
   const [view, setView] = useState<AuthView>(initialView);
 
   const renderForm = () => {
@@ -27,8 +29,9 @@ const AuthContainer: React.FC<AuthContainerProps> = ({ initialView = 'login' }) 
   };
 
   return (
-    <div className="max-w-md mx-auto p-8 bg-white rounded-lg shadow-md">
-      {renderForm()}
+    <div className="flex flex-row w-full h-full p-20">
+      <div className="w-5/11 flex justify-center items-center bg-white border-r-2 border-black">{<LogoInAuth></LogoInAuth>}</div>
+      <div className="w-6/11 flex justify-center items-center bg-white">{renderForm()}</div>
     </div>
   );
 };
