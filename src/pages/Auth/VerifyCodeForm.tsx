@@ -1,5 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { AuthView } from '../../types/global.types';
+import { Button } from '../../components/common/Button';
+import COLORS from '../../constants/colors';
 
 interface VerifyCodeFormProps {
   onSwitch: (view: AuthView) => void;
@@ -22,7 +24,10 @@ const VerifyCodeForm: React.FC<VerifyCodeFormProps> = ({ onSwitch }) => {
     }
   };
 
-  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (
+    index: number,
+    e: React.KeyboardEvent<HTMLInputElement>
+  ) => {
     // Xử lý phím Backspace
     if (e.key === 'Backspace' && !code[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
@@ -50,7 +55,9 @@ const VerifyCodeForm: React.FC<VerifyCodeFormProps> = ({ onSwitch }) => {
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-bold text-gray-800">Verification Code</h2>
-      <p className="text-gray-600">We sent a 6-digit code to your email. Please enter it below:</p>
+      <p className="text-gray-600">
+        We sent a 6-digit code to your email. Please enter it below:
+      </p>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="flex gap-2 justify-center">
           {[...Array(6)].map((_, i) => (
@@ -59,28 +66,24 @@ const VerifyCodeForm: React.FC<VerifyCodeFormProps> = ({ onSwitch }) => {
               type="text"
               maxLength={1}
               value={code[i]}
-              onChange={(e) => handleChange(i, e.target.value)}
-              onKeyDown={(e) => handleKeyDown(i, e)}
-              ref={(el) => {
-                inputRefs.current[i] = el; 
+              onChange={e => handleChange(i, e.target.value)}
+              onKeyDown={e => handleKeyDown(i, e)}
+              ref={el => {
+                inputRefs.current[i] = el;
               }}
               className="w-10 h-10 text-center border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
           ))}
         </div>
-        <button
-          type="submit"
-          className="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-        >
-          Verify
-        </button>
+        <Button title="Verify" className="w-full"></Button>
       </form>
       <p className="text-center">
         Didn’t receive the code?{' '}
         <span
           onClick={handleResend}
-          className="text-blue-500 hover:underline cursor-pointer"
+          className="hover:underline cursor-pointer"
+          style={{ color: COLORS.yellow700 }}
         >
           Resend
         </span>

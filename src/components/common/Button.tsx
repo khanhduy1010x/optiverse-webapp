@@ -8,7 +8,6 @@ import View from './View';
 import Text from './Text';
 import Icon from './Icon/Icon';
 
-
 interface ButtonProps {
   onClick?: () => void;
   label?: string;
@@ -62,15 +61,26 @@ const Button: React.FC<ButtonProps> = ({
       className={`transition-all duration-300 ${className}`}
       style={{
         ...BUTTON_STYLES.rootbg,
-        backgroundColor: transparent ? COLORS.transparent : theme.buttonBackground,
+        backgroundColor: transparent
+          ? COLORS.transparent
+          : theme.buttonBackground,
         ...style,
       }}
       {...props}
     >
-      <View style={{ ...BUTTON_STYLES.rootView, ...leftStyle }}>{leftComponent}</View>
+      <View style={{ ...BUTTON_STYLES.rootView, ...leftStyle }}>
+        {leftComponent}
+      </View>
 
       {title && (
-        <View style={{ ...BUTTON_STYLES.rootView, flex: 1, ...textViewStyle }}>
+        <View
+          style={{
+            ...BUTTON_STYLES.rootView,
+            backgroundColor: COLORS.transparent,
+            flex: 1,
+            ...textViewStyle,
+          }}
+        >
           <Text
             title={title}
             textStyle={fontType}
@@ -83,7 +93,9 @@ const Button: React.FC<ButtonProps> = ({
         </View>
       )}
 
-      <View style={{ ...BUTTON_STYLES.rootView, ...rightStyle }}>{rightComponent}</View>
+      <View style={{ ...BUTTON_STYLES.rootView, ...rightStyle }}>
+        {rightComponent}
+      </View>
     </button>
   );
 };
