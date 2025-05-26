@@ -17,6 +17,8 @@ const Chip: React.FC<ChipProps> = ({ title, fontType = 'bold12', bgColor }) => {
     paddingBottom: 4,
     backgroundColor: bgColor ? bgColor : COLORS.green700,
     borderRadius: 20,
+    display: 'flex',
+    flex: 1,
   };
 
   return (
@@ -46,20 +48,17 @@ const FlashcardChips: React.FC<FlashcardChipsProps> = ({
   className = '',
   style,
 }) => {
-  const containerStyles: React.CSSProperties = {
-    flexDirection: 'row',
-    alignSelf: 'stretch',
-    justifyContent: 'space-between',
-  };
-
   return (
     <View
-      className={`transition-all duration-300 ${className}`}
-      style={{ ...containerStyles, ...style }}
+      className={`transition-all duration-300 w-full flex gap-4 ${className}`}
+      style={{ ...style }}
     >
       <Chip title={`${newFlashcard} New`} bgColor={COLORS.green700} />
       <Chip title={`${learningFlashcard} Learning`} bgColor={COLORS.red700} />
-      <Chip title={`${reviewingFlashcard} Reviewing`} bgColor={COLORS.yellow700} />
+      <Chip
+        title={`${reviewingFlashcard} Reviewing`}
+        bgColor={COLORS.yellow700}
+      />
     </View>
   );
 };
