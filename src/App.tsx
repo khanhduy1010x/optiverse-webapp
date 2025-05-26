@@ -18,7 +18,7 @@ import { getSectionKeyFromPath } from './components/common/Navigation/navigation
 import SliderBar from './components/layout/Sidebar';
 import FlashcardsScreen from './pages/FlashCard/FlashCards';
 import FlashcardView from './pages/FlashCard/FlashCardView';
-import AddFlashCard from './pages/FlashCard/AddFlashCard';
+import AddFlashcard from './pages/FlashCard/AddFlashCard';
 import UserProfile from './pages/Profile/UserProfile';
 import FocusTimer from './pages/FocusTimer/FocusTimer';
 import ManageFocusTimer from './pages/FocusTimer/ManageFocusTimer';
@@ -61,8 +61,8 @@ const AppContent: React.FC = () => {
           <Route path="/flashcard-static" element={<FlashCardStatic />} />
           <Route path="/manage-deck" element={<ManageFlashCardDeck />} />
           <Route path="/flashcards/:deckId" element={<FlashcardsScreen />} />
+          <Route path="/flashcards/:deckId/add" element={<AddFlashcard />} />
           <Route path="/view-flashcard" element={<FlashcardView />} />
-          <Route path="/add-flashcard" element={<AddFlashCard />} />
           <Route path="/user-profile" element={<UserProfile />} />
           <Route path="/focus-timer" element={<FocusTimer />} />
           <Route path="/manage-focus-timer" element={<ManageFocusTimer />} />
