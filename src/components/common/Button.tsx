@@ -68,7 +68,14 @@ const Button: React.FC<ButtonProps> = ({
       }}
       {...props}
     >
-      <View style={{ ...BUTTON_STYLES.rootView, ...leftStyle }}>
+      <View
+        style={{
+          ...BUTTON_STYLES.rootView,
+          backgroundColor: COLORS.transparent,
+          color: COLORS.white900,
+          ...leftStyle,
+        }}
+      >
         {leftComponent}
       </View>
 
@@ -93,7 +100,14 @@ const Button: React.FC<ButtonProps> = ({
         </View>
       )}
 
-      <View style={{ ...BUTTON_STYLES.rootView, ...rightStyle }}>
+      <View
+        style={{
+          ...BUTTON_STYLES.rootView,
+          backgroundColor: COLORS.transparent,
+          color: COLORS.white900,
+          ...rightStyle,
+        }}
+      >
         {rightComponent}
       </View>
     </button>
@@ -106,14 +120,14 @@ const CircleButton: React.FC<CircleButtonProps> = ({
 }) => {
   return (
     <Button
-      leftComponent={<Icon name={name} size={40} />}
+      leftComponent={<Icon name={name} />}
       rightStyle={{ display: 'none' }}
       style={{
         ...BUTTON_STYLES.circlebg,
-        width: 56,
         position: 'absolute',
-        bottom: 24,
-        right: 16,
+        width: 60,
+        bottom: 32,
+        right: 24,
       }}
       {...props}
     />

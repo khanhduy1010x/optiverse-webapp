@@ -1,6 +1,7 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Flashcard, FlashcardDeckCard } from '../../components/common/Card';
+import { CircleButton } from '../../components/common/Button';
 
 export default function FlashcardsScreen() {
   const { deckId } = useParams();
@@ -47,6 +48,8 @@ export default function FlashcardsScreen() {
 
       {/* Bottom border/shadow */}
       <div className="fixed bottom-0 left-0 right-0 h-2 bg-gray-300"></div>
+
+      <CircleButton name='add' onClick={() => console.log("Add")}></CircleButton>
     </div>
   );
 }
