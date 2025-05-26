@@ -1,55 +1,40 @@
-import React from 'react';
-
-export default function ManageFlashCards() {
+export default function FlashcardList() {
   return (
-    <div className="w-full max-w-2xl mx-auto p-4 pb-8">
-      <h1 className="text-2xl font-bold mb-6">Manage flashcards</h1>
-      
-      {/* Deck Header */}
-      <div className="border border-gray-300 rounded mb-4">
-        <div className="flex border-b border-gray-300">
-          <div className="w-24 h-24 bg-gray-200 flex items-center justify-center">
-            <div className="w-16 h-16">
-              {/* X shape */}
-              <div className="relative w-full h-full">
-                <div className="absolute w-full h-0.5 bg-gray-500 top-1/2 left-0 transform -translate-y-1/2 rotate-45"></div>
-                <div className="absolute w-full h-0.5 bg-gray-500 top-1/2 left-0 transform -translate-y-1/2 -rotate-45"></div>
-              </div>
-            </div>
-          </div>
-          <div className="flex-1 p-4 flex items-center justify-center">
-            <h2 className="font-bold text-xl">400 English Words</h2>
-          </div>
+    <div className="w-full h-full bg-white rounded-xl shadow-sm p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-semibold">Flashcard list</h1>
+        <button className="text-gray-500 text-xl">⋮</button>
+      </div>
+
+      {/* Deck Info */}
+      <div className="flex items-start gap-4 mb-6">
+        <div className="w-16 h-16 bg-gray-200 rounded-md flex items-center justify-center text-sm text-gray-500">
+          Deck
         </div>
-        
-        <div className="flex justify-center gap-4 p-3 bg-gray-50">
-          <button className="px-4 py-1 bg-gray-200 rounded hover:bg-gray-300">New</button>
-          <button className="px-4 py-1 bg-gray-200 rounded hover:bg-gray-300">Learning</button>
-          <button className="px-4 py-1 bg-gray-200 rounded hover:bg-gray-300">Reviewing</button>
+        <div className="flex-1">
+          <div className="text-xl font-bold">400 English Words</div>
+          <div className="text-sm text-gray-500">Last review 30 days ago</div>
+          <div className="flex gap-2 mt-2">
+            <span className="bg-red-700 text-white text-xs px-2 py-1 rounded-full">50 New</span>
+            <span className="bg-green-700 text-white text-xs px-2 py-1 rounded-full">20 Learning</span>
+            <span className="bg-yellow-600 text-white text-xs px-2 py-1 rounded-full">10 Reviewing</span>
+          </div>
         </div>
       </div>
-      
-      {/* Cards section */}
-      <div className="mt-6">
-        <h3 className="text-lg mb-4">cards</h3>
-        
-        {/* Card 1 */}
-        <div className="border border-gray-300 mb-4 p-4">
-          <p className="text-gray-800">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut neque diam, malesuada nec leo eget, facilisis suscipit velit. Cras mattis, orci id laoreet fermentum, erat massa finibus orci, eget volutpat neque nibh sit amet ante.
-          </p>
-        </div>
-        
-        {/* Card 2 */}
-        <div className="border border-gray-300 mb-4 p-4">
-          <p className="text-gray-800">
-            Aenean quis sodales velit. Etiam dolor nisi, dictum nec vulputate nec, semper nec lectus. Maecenas et neque id nisi eleifend gravida. Aenean quis elit sed sapien convallis tempus. In hac habitasse platea dictumst.
-          </p>
-        </div>
+
+      {/* Cards */}
+      <div className="space-y-4">
+        {[1, 2].map((_, index) => (
+          <div key={index} className="border rounded-lg p-4 bg-white shadow-sm">
+            <p className="text-gray-800 font-medium mb-1 truncate">
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut neque diam, malesuada nec leo...
+            </p>
+            <p className="text-gray-700 text-sm truncate">
+              Aenean quis sodales velit. Etiam dolor nisi, dictum nec vulputate nec, semper nec lectus...
+            </p>
+          </div>
+        ))}
       </div>
-      
-      {/* Bottom border/shadow */}
-      <div className="fixed bottom-0 left-0 right-0 h-2 bg-gray-300"></div>
     </div>
   );
 }
