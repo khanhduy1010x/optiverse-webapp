@@ -4,7 +4,7 @@ const COLORS = {
 };
 
 export const lightTheme = {
-  background: COLORS.white900,
+  background: COLORS.black500,
   text: COLORS.black500,
   buttonBackground: COLORS.black500,
   buttonText: COLORS.white900,
