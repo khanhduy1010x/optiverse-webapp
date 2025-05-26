@@ -1,5 +1,12 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from 'react-router-dom';
 import Dashboard from './pages/Dashboard/Dashboard';
 import Settings from './pages/Settings/Settings';
 import FlashCardStatic from './pages/FlashCard/FlashCardStatic';
@@ -9,7 +16,7 @@ import { AuthView } from './types/global.types';
 import './App.css';
 import { getSectionKeyFromPath } from './components/common/Navigation/navigation';
 import SliderBar from './components/layout/Sidebar';
-import ManageFlashCards from './pages/FlashCard/ManageFlashCard';
+import FlashcardsScreen from './pages/FlashCard/FlashCards';
 import FlashcardView from './pages/FlashCard/FlashCardView';
 import AddFlashCard from './pages/FlashCard/AddFlashCard';
 import UserProfile from './pages/Profile/UserProfile';
@@ -36,10 +43,7 @@ const AppContent: React.FC = () => {
   return (
     <div className="flex h-screen">
       {showSidebar && (
-        <SliderBar
-          activeSection={activeSection}
-          onNavClick={handleNavClick}
-        />
+        <SliderBar activeSection={activeSection} onNavClick={handleNavClick} />
       )}
 
       <div
@@ -48,12 +52,15 @@ const AppContent: React.FC = () => {
         } h-full w-full overflow-auto`}
       >
         <Routes>
-          <Route path="/" element={<AuthContainer initialView={initialView} />} />
+          <Route
+            path="/"
+            element={<AuthContainer initialView={initialView} />}
+          />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/flashcard-static" element={<FlashCardStatic />} />
           <Route path="/manage-deck" element={<ManageFlashCardDeck />} />
-          <Route path="/manage-flashcard" element={<ManageFlashCards />} />
+          <Route path="/flashcards/:deckId" element={<FlashcardsScreen />} />
           <Route path="/view-flashcard" element={<FlashcardView />} />
           <Route path="/add-flashcard" element={<AddFlashCard />} />
           <Route path="/user-profile" element={<UserProfile />} />
