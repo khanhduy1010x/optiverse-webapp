@@ -8,7 +8,7 @@ interface UIState {
 }
 
 const initialState: UIState = {
-  filterType: FilterType.FILES_FOLDERS,
+  filterType: FilterType.ALL,
   isShowFolderNoteBar: true,
   selectedItem: null,
 };

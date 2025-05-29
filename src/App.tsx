@@ -15,7 +15,6 @@ import AddFlashCard from './pages/FlashCard/AddFlashCard';
 import UserProfile from './pages/Profile/UserProfile';
 import FocusTimer from './pages/FocusTimer/FocusTimer';
 import ManageFocusTimer from './pages/FocusTimer/ManageFocusTimer';
-import Note from './pages/Note/Note';
 import Task from './pages/Task/Task';
 import Statistics from './pages/FocusTimer/Statistics';
 import { ThemeProvider } from './contexts/ThemeContext';

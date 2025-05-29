@@ -1,18 +1,41 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { RootState } from '../../store';
-import { setCurrentNote } from '../../store/slices/noteSlice';
+import { setCurrentNote } from '../../store/slices/itemsSlice';
 import ToolBarNote from './ToolbarNote';
+import { formatDateTime, formatDateTimeFull } from '../../utils/dateUtils';
 
 const MarkdownEditor: React.FC = () => {
   const dispatch = useDispatch();
-  const { currentNote } = useSelector((state: RootState) => state.notes);
+  const { currentNote } = useSelector((state: RootState) => state.items);
   const quillRef = useRef<ReactQuill>(null);
 
-  const handleChange = (content: string) => {
-    if (currentNote) {
+  const skipNextOnChange = useRef(false);
+
+  useEffect(() => {
+    if (quillRef.current && currentNote) {
+      const quill = quillRef.current.getEditor();
+      const editorHtml = quill.root.innerHTML;
+      const expectedHtml = currentNote.content || '';
+
+      if (editorHtml !== expectedHtml) {
+        skipNextOnChange.current = true;
+        quill.setContents(quill.clipboard.convert(expectedHtml));
+      }
+    }
+  }, [currentNote]);
+
+  const handleChange = (content: string, delta: any, source: string) => {
+    if (skipNextOnChange.current) {
+      skipNextOnChange.current = false;
+      return;
+    }
+
+    if (!currentNote) return;
+
+    if (source === 'user') {
       dispatch(setCurrentNote({ ...currentNote, content }));
     }
   };
@@ -35,7 +58,10 @@ const MarkdownEditor: React.FC = () => {
         quill.format('strike', !quill.getFormat().strike);
         break;
       case 'clear-format':
-        quill.removeFormat(quill.getSelection()?.index || 0, quill.getSelection()?.length || 0);
+        const selection = quill.getSelection();
+        if (selection) {
+          quill.removeFormat(selection.index, selection.length);
+        }
         break;
       case 'list-dot':
         quill.format('list', quill.getFormat().list === 'bullet' ? false : 'bullet');
@@ -44,10 +70,10 @@ const MarkdownEditor: React.FC = () => {
         quill.format('list', quill.getFormat().list === 'ordered' ? false : 'ordered');
         break;
       case 'undo':
-        quill.history.undo(); 
+        quill.history.undo();
         break;
       case 'redo':
-        quill.history.redo(); 
+        quill.history.redo();
         break;
       default:
         break;
@@ -55,7 +81,20 @@ const MarkdownEditor: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex w-full flex-col h-full">
+      <div className="flex items-center justify-between p-4 bg-gray-100 border-b">
+        <div>
+          <h1 className="text-lg font-semibold text-gray-900">
+            {currentNote?.title || 'Chưa chọn ghi chú'}
+          </h1>
+          {currentNote?.updatedAt && (
+            <div className="flex justify-center items-center text-sm text-gray-500">
+            Last saved: {formatDateTimeFull(currentNote.updatedAt)}
+            </div>
+          )}
+        </div>
+      </div>
+
       <ReactQuill
         ref={quillRef}
         value={currentNote?.content || ''}
@@ -64,13 +103,14 @@ const MarkdownEditor: React.FC = () => {
         theme="snow"
         modules={{
           history: {
-            delay: 1000, 
-            maxStack: 100, 
-            userOnly: false, 
+            delay: 1000,
+            maxStack: 100,
+            userOnly: false,
           },
-          toolbar: false, 
+          toolbar: false,
         }}
       />
+
       <ToolBarNote onAction={handleAction} />
     </div>
   );

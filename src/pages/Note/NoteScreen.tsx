@@ -2,23 +2,24 @@ import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { debounce } from 'lodash';
 import { RootState, AppDispatch } from '../../store';
-import { saveNote } from '../../store/slices/noteSlice';
+import { saveNote } from '../../store/slices/itemsSlice';
 import FolderNote from './FolderNote';
 import MarkdownEditor from './MarkdownEditor';
 
 const NoteScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { currentNote } = useSelector((state: RootState) => state.notes);
+  const { currentNote } = useSelector((state: RootState) => state.items);
 
   useEffect(() => {
-    if (!currentNote) return;
+    if (!currentNote || !currentNote.content?.trim()) {
+      return;
+    }
 
     const debouncedSave = debounce(async () => {
       try {
-        await dispatch(saveNote(currentNote)).unwrap();
-        console.log('Auto save successfully');
+        await dispatch(saveNote({note: currentNote, shouldSetCurrent: true})).unwrap();
       } catch (error) {
-        console.error('Failed to auto save:', error);
+        console.error('Failed to auto-save note:', currentNote.title, error);
       }
     }, 5000);
 
@@ -30,11 +31,11 @@ const NoteScreen: React.FC = () => {
   }, [currentNote, dispatch]);
 
   return (
-    <div className="flex h-screen">
-      <FolderNote />
+    <div className="flex h-screen relative">
       <div className="flex-1 flex flex-col">
         <MarkdownEditor />
       </div>
+      <FolderNote />
     </div>
   );
 };

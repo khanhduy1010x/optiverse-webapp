@@ -1,34 +1,30 @@
-export enum FilterType {
-  FILES_FOLDERS = "All",
-  FILES = "Files",
-  FOLDERS = "Folders",
-}
-
-export interface NoteItem {
+export interface BaseItem {
   _id: string;
-  title: string;
-  content: string;
-  updatedAt: string;
+  user_id: string;
   createdAt: string;
-  type: "file";
+  updatedAt: string;
+  __v?: number;
 }
 
-export interface FolderItem {
-  _id: string;
+export interface FolderItem extends BaseItem {
+  type: 'folder';
   name: string;
-  type: "folder";
+  parent_folder_id?: string | null;
   subfolders: FolderItem[];
   files: NoteItem[];
-  updatedAt: string;
-  createdAt: string;
+}
+
+export interface NoteItem extends BaseItem {
+  type: 'file';
+  title: string;
+  content: string;
+  folder_id?: string | null;
 }
 
 export type RootItem = FolderItem | NoteItem;
 
-export interface FolderNoteState {
-  filterType: FilterType;
-  folderStack: FolderItem[];
-  currentFileContent?: NoteItem;
-  selectedItem: RootItem | null;
-  isShowFolderNoteBar: boolean;
+export enum FilterType {
+  ALL = 'ALL',
+  FILES = 'FILES',
+  FOLDERS = 'FOLDERS',
 }
