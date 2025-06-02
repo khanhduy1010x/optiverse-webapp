@@ -11,12 +11,11 @@ import Dashboard from './pages/Dashboard/Dashboard';
 import Settings from './pages/Settings/Settings';
 import FlashCardStatic from './pages/FlashCard/FlashCardStatic';
 import AuthContainer from './pages/Auth/AuthContainer';
-import ManageFlashCardDeck from './pages/FlashCard/ManageFlashCardDeck';
+import FlashcardDeckList from './pages/FlashCard/FlashcardDeckList';
 import { AuthView } from './types/global.types';
 import './App.css';
 import { getSectionKeyFromPath } from './components/common/Navigation/navigation';
 import SliderBar from './components/layout/Sidebar';
-import FlashcardsScreen from './pages/FlashCard/Flashcards';
 import FlashcardView from './pages/FlashCard/FlashCardView';
 import AddFlashcard from './pages/FlashCard/AddFlashCard';
 import UserProfile from './pages/Profile/UserProfile';
@@ -26,6 +25,7 @@ import Note from './pages/Note/Note';
 import Task from './pages/Task/Task';
 import Statistics from './pages/FocusTimer/Statistics';
 import { ThemeProvider } from './contexts/ThemeContext';
+import FlashcardList from './pages/FlashCard/FlashcardList';
 
 const AppContent: React.FC = () => {
   const location = useLocation();
@@ -59,9 +59,15 @@ const AppContent: React.FC = () => {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/flashcard-static" element={<FlashCardStatic />} />
-          <Route path="/flashcard-deck" element={<ManageFlashCardDeck />} />
-          <Route path="/flashcard-deck/:deckId" element={<FlashcardsScreen />} />
-          <Route path="/flashcard-deck/:deckId/add" element={<AddFlashcard />} />
+          <Route path="/flashcard-deck" element={<FlashcardDeckList />} />
+          <Route
+            path="/flashcard-deck/:deckId"
+            element={<FlashcardList />}
+          />
+          <Route
+            path="/flashcard-deck/:deckId/add"
+            element={<AddFlashcard />}
+          />
           <Route path="/view-flashcard" element={<FlashcardView />} />
           <Route path="/user-profile" element={<UserProfile />} />
           <Route path="/focus-timer" element={<FocusTimer />} />

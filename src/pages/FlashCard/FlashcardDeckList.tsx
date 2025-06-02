@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { Clock } from 'lucide-react';
 import { FlashcardDeckCard } from '../../components/common/Card';
 import { useNavigate } from 'react-router-dom';
 import { token } from '../../services/apitest';
@@ -13,7 +12,7 @@ interface Deck {
   reviewingCount: number;
 }
 
-export default function ManageFlashCardDeck() {
+export default function FlashcardDeckList() {
   const navigate = useNavigate();
   const [decks, setDecks] = useState<Deck[]>([]);
   const [loading, setLoading] = useState(true);
