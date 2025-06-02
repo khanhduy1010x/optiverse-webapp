@@ -43,9 +43,8 @@ const AppContent: React.FC = () => {
       )}
 
       <div
-        className={`flex-1 transition-all duration-300 ease-in-out ${
-          showSidebar ? '' : 'ml-0'
-        } h-full w-full overflow-auto`}
+        className={`flex-1 transition-all duration-300 ease-in-out ${showSidebar ? '' : 'ml-0'
+          } h-full w-full overflow-auto`}
       >
         <Routes>
           <Route path="/" element={<AuthContainer initialView={initialView} />} />

@@ -2,9 +2,34 @@ import React from 'react';
 
 interface ToolBarNoteProps {
   onAction: (action: string) => void;
+  formatState?: {
+    bold: boolean;
+    italic: boolean;
+    header: boolean;
+    strike: boolean;
+  };
 }
 
-const ToolBarNote: React.FC<ToolBarNoteProps> = ({ onAction }) => {
+const ToolBarNote: React.FC<ToolBarNoteProps> = ({ onAction, formatState = { bold: false, italic: false, header: false, strike: false } }) => {
+  // Function để xác định nếu nút đang active
+  const isActive = (key: string): boolean => {
+    switch (key) {
+      case 'bold': return formatState.bold;
+      case 'italic': return formatState.italic;
+      case 'title': return formatState.header;
+      case 'strike': return formatState.strike;
+      default: return false;
+    }
+  };
+
+  // Tạo class name dựa vào trạng thái active
+  const getButtonClass = (key: string): string => {
+    const baseClass = "p-2 rounded-md transition-colors";
+    return isActive(key)
+      ? `${baseClass} bg-blue-100`
+      : baseClass;
+  };
+
   const icons = [
     {
       key: 'list-dot',
@@ -96,14 +121,14 @@ const ToolBarNote: React.FC<ToolBarNoteProps> = ({ onAction }) => {
     <div className="p-2 border-t border-gray-200">
       <div className="flex justify-center gap-8 mb-2">
         {icons.slice(0, 4).map(({ key, icon }) => (
-          <button key={key} onClick={() => onAction(key)} className="p-2">
+          <button key={key} onClick={() => onAction(key)} className={getButtonClass(key)}>
             {icon}
           </button>
         ))}
       </div>
       <div className="flex justify-center gap-8">
         {icons.slice(4).map(({ key, icon }) => (
-          <button key={key} onClick={() => onAction(key)} className="p-2">
+          <button key={key} onClick={() => onAction(key)} className={getButtonClass(key)}>
             {icon}
           </button>
         ))}

@@ -53,16 +53,14 @@ const RenameModal: React.FC<RenameModalProps> = ({
         <div className="mb-4 relative">
           <label
             htmlFor="rename-input"
-            className={`absolute select-none outline-none pointer-events-none duration-400 left-3 text-xs z-10 block transition-all bg-white px-1 ${
-              isFocused || renameInput
-                ? "text-blue-600 -top-2"
-                : "text-gray-500 top-1/2 text-[16px] bg-transparent px-0"
-            } ${isFocused || renameInput ? '' : '-translate-y-1/2'}`}
+            className={`absolute select-none outline-none pointer-events-none duration-400 left-3 text-xs z-10 block transition-all bg-white px-1
+              ${errorMessage ? 'text-red-500 -top-2' : (isFocused || renameInput ? 'text-blue-600 -top-2' : 'text-gray-500 top-1/2 text-[16px] bg-transparent px-0')}
+              ${isFocused || renameInput || errorMessage ? '' : '-translate-y-1/2'}`}
           >
             New Name
           </label>
-          
-          <div className="relative w-full h-14 border-2 border-gray-200 rounded-xl focus-within:border-blue-600 transition-colors duration-200">
+
+          <div className={`relative w-full h-14 border-2 rounded-xl transition-colors duration-200 ${errorMessage ? 'border-red-500' : 'border-gray-200 focus-within:border-blue-600'}`}>
             <input
               id="rename-input"
               type="text"

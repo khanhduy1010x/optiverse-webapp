@@ -55,6 +55,7 @@ import {ReactComponent as trophy }from "./trophy.svg";
 import {ReactComponent as unfoldLess }from "./unfold-less.svg";
 import {ReactComponent as unfoldMore }from "./unfold-more.svg";
 import {ReactComponent as web }from "./web.svg";
+import {ReactComponent as blinkAI }from "./blinkAI.svg";
 
 export const ICONS = {
   add: add,
@@ -114,6 +115,8 @@ export const ICONS = {
   unfoldLess: unfoldLess,
   unfoldMore: unfoldMore,
   web: web,
+  blinkAI: blinkAI,
+
 };
 
 export type IconName = keyof typeof ICONS;

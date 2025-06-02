@@ -13,7 +13,7 @@ import {
   setCurrentNote,
   saveNote,
 } from '../../store/slices/itemsSlice';
-import { setFilterType, setSelectedItem } from '../../store/slices/uiSlice';
+import { setFilterType, setSelectedItem, setShowWarningModal } from '../../store/slices/uiSlice';
 import { FilterType, RootItem, FolderItem, NoteItem } from '../../types/note.types';
 import ToolBarFolder from './ToolBarFolder';
 import CreateModal from './CreateModal';
@@ -22,14 +22,15 @@ import DeleteModal from './DeleteModal';
 import { formatDateTime } from '../../utils/dateUtils';
 import { toast } from 'react-toastify';
 import { ContextMenu } from './ContextMenu';
+
 const FolderNote: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { items, folderStack, loading, error, currentNote } = useSelector(
     (state: RootState) => state.items
   );
-    const menuRef = useRef<HTMLDivElement>(null);
-   
-  const { filterType, selectedItem } = useSelector(
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  const { filterType, selectedItem, isAiFormatting } = useSelector(
     (state: RootState) => state.ui
   );
   const [isModalInputName, setIsModalInputName] = useState(false);
@@ -40,14 +41,17 @@ const FolderNote: React.FC = () => {
   const [renameErrorMessage, setRenameErrorMessage] = useState('');
 
   const [contextMenu, setContextMenu] = useState<{
-  x: number;
-  y: number;
-  item: RootItem | null;
-} | null>(null);
+    x: number;
+    y: number;
+    item: RootItem | null;
+  } | null>(null);
   const [renameInput, setRenameInput] = useState('');
   const [createType, setCreateType] = useState<'folder' | 'note'>('folder');
   const [pendingSync, setPendingSync] = useState<string[]>([]);
   const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [pendingNoteId, setPendingNoteId] = useState<string | null>(null);
+  const [createErrorMessage, setCreateErrorMessage] = useState('');
 
   useEffect(() => {
     dispatch(fetchItems());
@@ -64,27 +68,53 @@ const FolderNote: React.FC = () => {
         ...item,
         type: 'file' as const,
       }));
-      
+
       return [...subfolders, ...files];
     }
     return items;
   }, [folderStack, items]);
 
+  const flattenItems = (items: RootItem[]): RootItem[] => {
+    let result: RootItem[] = [];
+    for (const item of items) {
+      result.push(item);
+      if (item.type === 'folder') {
+        result = result.concat(flattenItems(item.subfolders));
+        result = result.concat(flattenItems(item.files));
+      }
+    }
+    return result;
+  };
+
+  const allItems = useMemo(() => flattenItems(items), [items]);
+
   const filteredItems = useMemo(() => {
-    const filtered = currentItems.filter(item => {
+    let searchBase: RootItem[];
+    if (searchTerm.trim() !== '') {
+      searchBase = allItems;
+    } else {
+      searchBase = currentItems;
+    }
+    const filtered = searchBase.filter(item => {
       if (filterType === FilterType.ALL) return true;
       if (filterType === FilterType.FILES) return item.type === 'file';
       if (filterType === FilterType.FOLDERS) return item.type === 'folder';
       return true;
     });
+    if (searchTerm.trim() !== '') {
+      return filtered.filter(item => {
+        const name = item.type === 'folder' ? item.name : item.title;
+        return name.toLowerCase().includes(searchTerm.trim().toLowerCase());
+      });
+    }
     return filtered;
-  }, [currentItems, filterType]);
+  }, [allItems, currentItems, filterType, searchTerm]);
 
   const groupedItems = useMemo(() => {
     const files = filteredItems
       .filter(item => item.type === 'file')
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-    
+
     const recentFiles = files
       .slice(0, 4)
       .sort((a, b) => a.title.localeCompare(b.title));
@@ -129,42 +159,58 @@ const FolderNote: React.FC = () => {
     return countAllItems(items);
   }, [items]);
 
+  // Regex kiểm tra tên hợp lệ theo chuẩn Windows
+  const isValidWindowsName = (name: string) => {
+    // Không cho phép các ký tự: \/:*?"<>| và không cho phép tên chỉ là dấu chấm hoặc rỗng
+    const invalidPattern = /[\\/:*?"<>|]/;
+    if (!name.trim()) return false;
+    if (name === '.' || name === '..') return false;
+    return !invalidPattern.test(name);
+  };
+
   const handleCreateItem = async () => {
-  if (!itemName.trim()) return;
-
-  const isDuplicate = checkNameExistsInCurrentFolder(itemName, createType === 'note');
-  if (isDuplicate) {
-    toast.error(`A ${createType} with that name already exists.`);
-    return;
-  }
-
-  const parentId = folderStack.length > 0 ? folderStack[folderStack.length - 1]._id : null;
-
-  try {
-    const stackIds = folderStack.map(folder => folder._id);
-
-    if (createType === 'folder') {
-      await dispatch(createFolder({ parentId, name: itemName })).unwrap();
-      toast.success('Folder created successfully');
-    } else {
-      await dispatch(createNote({ parentId, title: itemName })).unwrap();
-      toast.success('Note created successfully');
+    if (!itemName.trim()) {
+      setCreateErrorMessage('Name cannot be empty');
+      return;
     }
+    if (!isValidWindowsName(itemName)) {
+      setCreateErrorMessage('Name contains invalid characters (\\ / : * ? " < > |) or is not allowed.');
+      return;
+    }
+    const isDuplicate = checkNameExistsInCurrentFolder(itemName, createType === 'note');
+    if (isDuplicate) {
+      setCreateErrorMessage(`A ${createType === 'folder' ? 'folder' : 'note'} with that name already exists in this folder.`);
+      return;
+    }
+    setCreateErrorMessage('');
 
-    await dispatch(fetchItems());
-    setPendingSync(stackIds);
-    setItemName('');
-    setIsModalInputName(false);
-  } catch (error: any) {
-    console.error('Không thể tạo item:', error.message);
-    toast.error('Failed to create item');
-  }
-};
+    const parentId = folderStack.length > 0 ? folderStack[folderStack.length - 1]._id : null;
+
+    try {
+      const stackIds = folderStack.map(folder => folder._id);
+
+      if (createType === 'folder') {
+        await dispatch(createFolder({ parentId, name: itemName })).unwrap();
+        toast.success('Folder created successfully');
+      } else {
+        await dispatch(createNote({ parentId, title: itemName })).unwrap();
+        toast.success('Note created successfully');
+      }
+
+      await dispatch(fetchItems());
+      setPendingSync(stackIds);
+      setItemName('');
+      setIsModalInputName(false);
+    } catch (error: any) {
+      console.error('Cannot create item:', error.message);
+      toast.error('Failed to create item');
+    }
+  };
 
 
   useEffect(() => {
     if (pendingSync.length > 0) {
-      
+
       const updatedStack = syncFolderItemAfterFetch(items, pendingSync);
       dispatch(setFolderStack(updatedStack));
       setPendingSync([]);
@@ -172,6 +218,12 @@ const FolderNote: React.FC = () => {
   }, [items, pendingSync, dispatch]);
 
   const handleOpenFolder = (folder: RootItem) => {
+    // Kiểm tra xem có đang trong chế độ format AI không
+    if (isAiFormatting) {
+      dispatch(setShowWarningModal(true));
+      return; // Không cho phép chuyển folder
+    }
+
     if (folder.type === 'folder') {
       dispatch(pushFolderStack(folder));
     }
@@ -179,6 +231,12 @@ const FolderNote: React.FC = () => {
 
 
   const handleGoBack = () => {
+    // Kiểm tra xem có đang trong chế độ format AI không
+    if (isAiFormatting) {
+      dispatch(setShowWarningModal(true));
+      return; // Không cho phép quay lại folder
+    }
+
     dispatch(popFolderStack());
   };
 
@@ -203,34 +261,69 @@ const FolderNote: React.FC = () => {
   const handleSelectNote = async (note: RootItem) => {
     if (note.type === 'file') {
       if (!note._id) {
-        console.error('Note không có _id:', note);
+        console.error('Note does not have _id:', note);
         toast.error('Invalid note selected');
         return;
       }
-      try {
-        if (currentNote && currentNote.content?.trim() && currentNote._id) {
-          await dispatch(saveNote({note : currentNote,shouldSetCurrent: false})).unwrap();
-          // await dispatch(fetchItems()); 
-        }
-      } catch (error: any) {
-        console.error('Không thể lưu note hiện tại:', error.message);
-        toast.error('Failed to save current note');
-      } finally {
-        const stateNote = findNoteInState(note._id);
-        if (stateNote) {
-          dispatch(setCurrentNote(stateNote));
-          console.log('Đã chọn note:', stateNote.title);
-        } else {
-          dispatch(setCurrentNote(note));
-          console.warn('Không tìm thấy note trong state, sử dụng note đã chọn:', note.title);
-        }
-      
+
+      // Kiểm tra xem có đang trong chế độ format AI không
+      if (isAiFormatting) {
+        dispatch(setShowWarningModal(true));
+        return; // Không cho phép chuyển note
+      }
+
+      // Không cần lưu note hiện tại nữa vì đã được xử lý realtime
+      const stateNote = findNoteInState(note._id);
+      if (stateNote) {
+        dispatch(setCurrentNote(stateNote));
+        console.log('Selected note:', stateNote.title);
+      } else {
+        dispatch(setCurrentNote(note));
+        console.warn('Note not found in state, using selected note:', note.title);
       }
     }
   };
 
+  // Hàm đệ quy build path từ root đến folder cha chứa file
+  const buildPathToFileFromRoot = (items: RootItem[], fileId: string, path: FolderItem[] = []): FolderItem[] | null => {
+    for (const item of items) {
+      if (item.type === 'folder') {
+        if (item.files.some(file => file._id === fileId)) {
+          return [...path, item];
+        }
+        const subPath = buildPathToFileFromRoot(item.subfolders, fileId, [...path, item]);
+        if (subPath) return subPath;
+      }
+    }
+    return null;
+  };
+
+  // Hàm tìm đường dẫn đến folder (dùng cho click folder khi search)
+  const findPathToItem = (items: RootItem[], targetId: string, path: FolderItem[] = []): FolderItem[] | null => {
+    for (const item of items) {
+      if (item._id === targetId) {
+        return path;
+      }
+      if (item.type === 'folder') {
+        const subPath = findPathToItem(item.subfolders, targetId, [...path, item]);
+        if (subPath) return subPath;
+      }
+    }
+    return null;
+  };
+
   const handleClickItem = (item: RootItem) => {
-    if (item.type === 'file') {
+    console.log('DEBUG handleClickItem', { searchTerm, item });
+    if (searchTerm.trim() !== '' && item.type === 'file') {
+      const path = buildPathToFileFromRoot(items, item._id) || [];
+      console.log('DEBUG path to file:', path.map(f => ({ id: f._id, name: f.name })));
+      dispatch(setFolderStack(path));
+      setSearchTerm('');
+    } else if (searchTerm.trim() !== '' && item.type === 'folder') {
+      const path = findPathToItem(items, item._id) || [];
+      dispatch(setFolderStack(path.concat(item as FolderItem)));
+      setSearchTerm('');
+    } else if (item.type === 'file') {
       handleSelectNote(item);
     } else {
       handleOpenFolder(item);
@@ -241,7 +334,7 @@ const FolderNote: React.FC = () => {
     if (!selectedItem) return;
     try {
       const stackIds = folderStack.map(folder => folder._id);
-      
+
       await dispatch(deleteItem(selectedItem)).unwrap();
       await dispatch(fetchItems());
       setPendingSync(stackIds);
@@ -250,45 +343,48 @@ const FolderNote: React.FC = () => {
       dispatch(setSelectedItem(null));
       toast.success('Item deleted successfully');
     } catch (error: any) {
-      console.error('Không thể xóa item:', error.message);
+      console.error('Cannot delete item:', error.message);
       toast.error('Failed to delete item');
     }
   };
 
-const handleRenameItem = async () => {
-  if (!selectedItem || !renameInput.trim()) return;
+  const handleRenameItem = async () => {
+    if (!selectedItem || !renameInput.trim()) return;
 
-  const isNote = selectedItem.type === 'file';
-  const currentName = isNote ? selectedItem.title : selectedItem.name;
+    const isNote = selectedItem.type === 'file';
+    const currentName = isNote ? selectedItem.title : selectedItem.name;
 
-  if (renameInput.trim() === currentName.trim()) {
-    setRenameModalVisible(false);
-    setIsActionModalVisible(false);
-    setRenameInput('');
-    return;
-  }
+    if (renameInput.trim() === currentName.trim()) {
+      setRenameModalVisible(false);
+      setIsActionModalVisible(false);
+      setRenameInput('');
+      return;
+    }
+    if (!isValidWindowsName(renameInput)) {
+      setRenameErrorMessage('Name contains invalid characters (\ / : * ? " < > |) or is not allowed.');
+      return;
+    }
+    const isDuplicate = checkNameExistsInCurrentFolder(renameInput, isNote);
+    if (isDuplicate) {
+      setRenameErrorMessage("Name already exists in this folder");
+      return;
+    }
 
-  const isDuplicate = checkNameExistsInCurrentFolder(renameInput, isNote);
-  if (isDuplicate) {
-     setRenameErrorMessage("Name already exists in this folder");
-    return;
-  }
-
-  try {
-    const stackIds = folderStack.map(folder => folder._id);
-    await dispatch(renameItem({ name: renameInput, item: selectedItem })).unwrap();
-    await dispatch(fetchItems());
-    setPendingSync(stackIds);
-    setRenameModalVisible(false);
-    setIsActionModalVisible(false);
-    dispatch(setSelectedItem(null));
-    setRenameInput('');
-    toast.success('Item renamed successfully');
-  } catch (error: any) {
-    console.error('Không thể đổi tên item:', error.message);
-    toast.error('Failed to rename item');
-  }
-};
+    try {
+      const stackIds = folderStack.map(folder => folder._id);
+      await dispatch(renameItem({ name: renameInput, item: selectedItem })).unwrap();
+      await dispatch(fetchItems());
+      setPendingSync(stackIds);
+      setRenameModalVisible(false);
+      setIsActionModalVisible(false);
+      dispatch(setSelectedItem(null));
+      setRenameInput('');
+      toast.success('Item renamed successfully');
+    } catch (error: any) {
+      console.error('Cannot rename item:', error.message);
+      toast.error('Failed to rename item');
+    }
+  };
 
 
   const syncFolderItemAfterFetch = (newItems: RootItem[], stackIds: string[]): FolderItem[] => {
@@ -301,13 +397,13 @@ const handleRenameItem = async () => {
       ) as FolderItem | undefined;
 
       if (!updatedFolder) {
-        console.warn(`Không tìm thấy thư mục với ID ${id} khi đồng bộ`);
+        console.warn(`Cannot find folder with ID ${id} when syncing`);
         break;
       }
       updatedStack.push(updatedFolder);
       currentLevel = updatedFolder.subfolders ?? [];
     }
-    
+
     return updatedStack;
   };
 
@@ -329,55 +425,53 @@ const handleRenameItem = async () => {
     setIsFilterDropdownOpen(false);
   };
   const checkNameExistsInCurrentFolder = (name: string, isNote: boolean): boolean => {
-  const currentFolder =
-    folderStack.length > 0
-      ? folderStack[folderStack.length - 1]
-      : { files: items.filter(i => i.type === 'file'), subfolders: items.filter(i => i.type === 'folder') };
+    const currentFolder =
+      folderStack.length > 0
+        ? folderStack[folderStack.length - 1]
+        : { files: items.filter(i => i.type === 'file'), subfolders: items.filter(i => i.type === 'folder') };
 
-  if (isNote) {
-    return currentFolder.files.some(file => file.title.trim().toLowerCase() === name.trim().toLowerCase());
-  } else {
-    return currentFolder.subfolders.some(folder => folder.name.trim().toLowerCase() === name.trim().toLowerCase());
-  }
-};
-useEffect(() => {
-setRenameErrorMessage('')
-},[renameModalVisible])
-const handleContextMenu = (e: React.MouseEvent, item: RootItem) => {
-  e.preventDefault();
-  const menuWidth = 150;  
-  const menuHeight = 120;
+    if (isNote) {
+      return currentFolder.files.some(file => file.title.trim().toLowerCase() === name.trim().toLowerCase());
+    } else {
+      return currentFolder.subfolders.some(folder => folder.name.trim().toLowerCase() === name.trim().toLowerCase());
+    }
+  };
+  useEffect(() => {
+    setRenameErrorMessage('')
+  }, [renameModalVisible])
+  const handleContextMenu = (e: React.MouseEvent, item: RootItem) => {
+    e.preventDefault();
+    const menuWidth = 150;
+    const menuHeight = 120;
 
-  const screenW = window.innerWidth;
-  const screenH = window.innerHeight;
+    const screenW = window.innerWidth;
+    const screenH = window.innerHeight;
 
-  let x = e.clientX;
-  let y = e.clientY;
+    let x = e.clientX;
+    let y = e.clientY;
 
-  if (x + menuWidth > screenW) {
-    x = screenW - menuWidth - 10;
-  }
+    if (x + menuWidth > screenW) {
+      x = screenW - menuWidth - 10;
+    }
 
-  if (y + menuHeight > screenH) {
-    y = screenH - menuHeight - 10;
-  }
+    if (y + menuHeight > screenH) {
+      y = screenH - menuHeight - 10;
+    }
 
-  setContextMenu({ x, y, item });
-};
-
+    setContextMenu({ x, y, item });
+  };
 
   const renderItemRow = (item: RootItem) => (
     <div
       key={item._id}
       onClick={() => handleClickItem(item)}
-    onContextMenu={(e) => handleContextMenu(e, item)}
+      onContextMenu={(e) => handleContextMenu(e, item)}
 
 
-      className={`flex items-center py-3 px-4 cursor-pointer border-b border-gray-100 ${
-        item.type === 'file' && currentNote?._id === item._id
-          ? 'bg-blue-100'
-          : 'hover:bg-gray-50'
-      }`}
+      className={`flex items-center py-3 px-4 cursor-pointer border-b border-gray-100 ${item.type === 'file' && currentNote?._id === item._id
+        ? 'bg-blue-100'
+        : 'hover:bg-gray-50'
+        }`}
     >
       <div className="mr-3">
         {item.type === 'folder' ? (
@@ -414,25 +508,29 @@ const handleContextMenu = (e: React.MouseEvent, item: RootItem) => {
         </div>
       )}
       <div
-  onClick={(e) => {
-    e.stopPropagation(); 
-    setContextMenu({
-      x: e.clientX-110,
-      y: e.clientY+ 5,
-      item,
-    });
-  }}
-  className="px-2 py-1 hover:bg-gray-200 rounded cursor-pointer"
->
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-    <circle cx="5" cy="12" r="2" />
-    <circle cx="12" cy="12" r="2" />
-    <circle cx="19" cy="12" r="2" />
-  </svg>
-</div>
+        onClick={(e) => {
+          e.stopPropagation();
+          setContextMenu({
+            x: e.clientX - 110,
+            y: e.clientY + 5,
+            item,
+          });
+        }}
+        className="px-2 py-1 hover:bg-gray-200 rounded cursor-pointer"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <circle cx="5" cy="12" r="2" />
+          <circle cx="12" cy="12" r="2" />
+          <circle cx="19" cy="12" r="2" />
+        </svg>
+      </div>
 
     </div>
   );
+
+  useEffect(() => {
+    if (!isModalInputName) setCreateErrorMessage('');
+  }, [isModalInputName]);
 
   return (
     <div className="w-[320px] bg-white flex flex-col h-full">
@@ -443,7 +541,7 @@ const handleContextMenu = (e: React.MouseEvent, item: RootItem) => {
         <p className="text-sm text-gray-500 mb-4">
           {itemCount.fileCount} files, {itemCount.folderCount} folders
         </p>
-        <div className="relative">
+        <div className="relative mb-3">
           <button
             onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
             className="w-full bg-gray-800 text-white px-4 py-3 rounded-lg text-sm font-medium flex items-center justify-between hover:bg-gray-900 transition-colors"
@@ -468,12 +566,11 @@ const handleContextMenu = (e: React.MouseEvent, item: RootItem) => {
               <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-20 overflow-hidden">
                 <button
                   onClick={() => handleFilterChange(FilterType.ALL)}
-                  className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors ${
-                    filterType === FilterType.ALL ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700'
-                  }`}
+                  className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors ${filterType === FilterType.ALL ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700'
+                    }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span>All</span>
+                    <span>File & Folder</span>
                     {filterType === FilterType.ALL && (
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
@@ -483,9 +580,8 @@ const handleContextMenu = (e: React.MouseEvent, item: RootItem) => {
                 </button>
                 <button
                   onClick={() => handleFilterChange(FilterType.FILES)}
-                  className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 ${
-                    filterType === FilterType.FILES ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700'
-                  }`}
+                  className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 ${filterType === FilterType.FILES ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700'
+                    }`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
@@ -507,9 +603,8 @@ const handleContextMenu = (e: React.MouseEvent, item: RootItem) => {
                 </button>
                 <button
                   onClick={() => handleFilterChange(FilterType.FOLDERS)}
-                  className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 ${
-                    filterType === FilterType.FOLDERS ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700'
-                  }`}
+                  className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 ${filterType === FilterType.FOLDERS ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700'
+                    }`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
@@ -532,62 +627,71 @@ const handleContextMenu = (e: React.MouseEvent, item: RootItem) => {
             </>
           )}
         </div>
-      </div>
-      {folderStack.length > 0 && (
-        <div className="flex items-center px-4 py-2 border-b border-gray-200">
-          <button onClick={handleGoBack} className="mr-2 hover:bg-gray-100 rounded p-1">
-            <svg height="20" viewBox="0 -960 960 960" width="20" fill="#000">
-              <path d="M560-280 360-480l200-200v400Z" />
-            </svg>
-          </button>
-          <div className="flex items-center overflow-x-auto">
-            <button
-              onClick={() => dispatch(setFolderStack([]))}
-              className="text-sm font-medium text-gray-700 hover:text-blue-600"
-            >
-              Root
-            </button>
-            {folderStack.length <= 2 ? (
-              folderStack.map((folder, index) => (
-                <span key={folder._id} className="flex items-center">
-                  <span className="mx-1 text-gray-400">/</span>
-                  <button
-                    onClick={() => dispatch(setFolderStack(folderStack.slice(0, index + 1)))}
-                    className="text-sm font-medium text-gray-700 hover:text-blue-600"
-                  >
-                    {folder.name}
-                  </button>
-                </span>
-              ))
-            ) : (
-              <>
-                <span className="flex items-center">
-                  <span className="mx-1 text-gray-400">/</span>
-                  <button
-                    onClick={() => dispatch(setFolderStack([folderStack[0]]))}
-                    className="text-sm font-medium text-gray-700 hover:text-blue-600"
-                  >
-                    {folderStack[0].name}
-                  </button>
-                </span>
-                <span className="flex items-center">
-                  <span className="mx-1 text-gray-400">/</span>
-                  <span className="text-sm text-gray-500">...</span>
-                </span>
-                <span className="flex items-center">
-                  <span className="mx-1 text-gray-400">/</span>
-                  <button
-                    onClick={() => dispatch(setFolderStack(folderStack))}
-                    className="text-sm font-medium text-gray-700 hover:text-blue-600"
-                  >
-                    {folderStack[folderStack.length - 1].name}
-                  </button>
-                </span>
-              </>
-            )}
-          </div>
+        <div className="mb-3">
+          <input
+            type="text"
+            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+            placeholder="Search file or folder..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+          />
         </div>
-      )}
+        {searchTerm.trim() === '' && folderStack.length > 0 && (
+          <div className="flex items-center px-4 py-2">
+            <button onClick={handleGoBack} className="mr-2 hover:bg-gray-100 rounded p-1">
+              <svg height="20" viewBox="0 -960 960 960" width="20" fill="#000">
+                <path d="M560-280 360-480l200-200v400Z" />
+              </svg>
+            </button>
+            <div className="flex items-center overflow-x-auto">
+              <button
+                onClick={() => dispatch(setFolderStack([]))}
+                className="text-sm font-medium text-gray-700 hover:text-blue-600 cursor-pointer"
+              >
+                Root
+              </button>
+              {folderStack.length <= 2 ? (
+                folderStack.map((folder, index) => (
+                  <span key={folder._id} className="flex items-center">
+                    <span className="mx-1 text-gray-400">/</span>
+                    <button
+                      onClick={() => dispatch(setFolderStack(folderStack.slice(0, index + 1)))}
+                      className="text-sm font-medium text-gray-700 hover:text-blue-600 cursor-pointer"
+                    >
+                      {folder.name}
+                    </button>
+                  </span>
+                ))
+              ) : (
+                <>
+                  <span className="flex items-center">
+                    <span className="mx-1 text-gray-400">/</span>
+                    <button
+                      onClick={() => dispatch(setFolderStack([folderStack[0]]))}
+                      className="text-sm font-medium text-gray-700 hover:text-blue-600 cursor-pointer"
+                    >
+                      {folderStack[0].name}
+                    </button>
+                  </span>
+                  <span className="flex items-center">
+                    <span className="mx-1 text-gray-400">/</span>
+                    <span className="text-sm text-gray-500">...</span>
+                  </span>
+                  <span className="flex items-center">
+                    <span className="mx-1 text-gray-400">/</span>
+                    <button
+                      onClick={() => dispatch(setFolderStack(folderStack))}
+                      className="text-sm font-medium text-gray-700 hover:text-blue-600 cursor-pointer"
+                    >
+                      {folderStack[folderStack.length - 1].name}
+                    </button>
+                  </span>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
       {loading ? (
         <div className="flex justify-center items-center flex-1">
           <p>Loading...</p>
@@ -595,7 +699,10 @@ const handleContextMenu = (e: React.MouseEvent, item: RootItem) => {
       ) : error ? (
         <p className="text-center mt-10 text-red-500">{error}</p>
       ) : (
-        <div className="flex-1 overflow-y-auto">
+        <div
+          className="flex-1 overflow-y-auto scroll-smooth custom-scrollbar"
+          style={{ WebkitOverflowScrolling: 'touch', willChange: 'scroll-position' }}
+        >
           {groupedItems.shouldGroup ? (
             <>
               {groupedItems.lastEdited.length > 0 && (
@@ -624,23 +731,23 @@ const handleContextMenu = (e: React.MouseEvent, item: RootItem) => {
         </div>
       )}
       {contextMenu && contextMenu.item && (
-  <ContextMenu
-    x={contextMenu.x}
-    y={contextMenu.y}
-    onRename={() => {
-      dispatch(setSelectedItem(contextMenu.item));
-      setRenameModalVisible(true);
-      setContextMenu(null);
-    }}
-    onDelete={() => {
-      dispatch(setSelectedItem(contextMenu.item));
-      setIsActionModalVisible(true);
-      setIsDeleteConfirmVisible(true);
-      setContextMenu(null);
-    }}
-    onClose={() => setContextMenu(null)}
-  />
-)}
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          onRename={() => {
+            dispatch(setSelectedItem(contextMenu.item));
+            setRenameModalVisible(true);
+            setContextMenu(null);
+          }}
+          onDelete={() => {
+            dispatch(setSelectedItem(contextMenu.item));
+            setIsActionModalVisible(true);
+            setIsDeleteConfirmVisible(true);
+            setContextMenu(null);
+          }}
+          onClose={() => setContextMenu(null)}
+        />
+      )}
 
       <ToolBarFolder
         setIsModalInputName={setIsModalInputName}
@@ -657,6 +764,7 @@ const handleContextMenu = (e: React.MouseEvent, item: RootItem) => {
         createType={createType}
         onCreate={handleCreateItem}
         loading={loading}
+        errorMessage={createErrorMessage}
       />
       <RenameModal
         isOpen={renameModalVisible}
@@ -668,7 +776,7 @@ const handleContextMenu = (e: React.MouseEvent, item: RootItem) => {
         setRenameInput={setRenameInput}
         selectedItem={selectedItem}
         onRename={handleRenameItem}
-        errorMessage= {renameErrorMessage}
+        errorMessage={renameErrorMessage}
       />
       <DeleteModal
         isOpen={isActionModalVisible && isDeleteConfirmVisible}

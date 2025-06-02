@@ -9,6 +9,7 @@ interface CreateModalProps {
   createType: 'folder' | 'note';
   onCreate: () => Promise<void>;
   loading: boolean;
+  errorMessage?: string;
 }
 
 const CreateModal: React.FC<CreateModalProps> = ({
@@ -19,6 +20,7 @@ const CreateModal: React.FC<CreateModalProps> = ({
   createType,
   onCreate,
   loading,
+  errorMessage,
 }) => {
   const [isFocused, setIsFocused] = React.useState(false);
 
@@ -53,16 +55,14 @@ const CreateModal: React.FC<CreateModalProps> = ({
           {/* Floating label nằm bên ngoài, phía trên input */}
           <label
             htmlFor="create-input"
-            className={`absolute select-none outline-none pointer-events-none duration-300 left-3 text-xs z-10 block transition-all bg-white px-1 ${
-              isFocused || itemName
-                ? "text-blue-600 -top-2"
-                : "text-gray-500 top-1/2 text-[16px] bg-transparent px-0"
-            } ${isFocused || itemName ? '' : '-translate-y-1/2'}`}
+            className={`absolute select-none outline-none pointer-events-none duration-300 left-3 text-xs z-10 block transition-all bg-white px-1
+              ${errorMessage ? 'text-red-500 -top-2' : (isFocused || itemName ? 'text-blue-600 -top-2' : 'text-gray-500 top-1/2 text-[16px] bg-transparent px-0')}
+              ${isFocused || itemName || errorMessage ? '' : '-translate-y-1/2'}`}
           >
             {createType === 'folder' ? 'Folder' : 'Note'} Name
           </label>
-          
-          <div className="relative w-full h-14 border-2 border-gray-200 rounded-xl focus-within:border-blue-600 transition-colors duration-200">
+
+          <div className={`relative w-full h-14 border-2 rounded-xl transition-colors duration-200 ${errorMessage ? 'border-red-500' : 'border-gray-200 focus-within:border-blue-600'}`}>
             <input
               id="create-input"
               type="text"
@@ -79,13 +79,16 @@ const CreateModal: React.FC<CreateModalProps> = ({
                 }
               }}
             />
-            
+
             {loading && (
               <div className="absolute right-3 top-1/2 -translate-y-1/2">
                 <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent"></div>
               </div>
             )}
           </div>
+          {errorMessage && (
+            <p className="mt-2 text-sm text-red-500 animate-in slide-in-from-top-1 duration-200">{errorMessage}</p>
+          )}
         </div>
 
         <div className="flex gap-3">
