@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Clock } from 'lucide-react';
 import { FlashcardDeckCard } from '../../components/common/Card';
 import { useNavigate } from 'react-router-dom';
+import { token } from '../../services/apitest';
 
 interface Deck {
   _id: string;
@@ -19,8 +20,6 @@ export default function ManageFlashCardDeck() {
 
   const fetchData = async () => {
     try {
-      const token =
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2ODNkNjc4YmZhNzY3YThlMDVlYTViYTYiLCJlbWFpbCI6Imh1eWdpYTU2N0BnbWFpbC5jb20iLCJmdWxsX25hbWUiOiJUaG9tYXMiLCJzZXNzaW9uX2lkIjoiNjgzZDZmZjRhZjJkNmIyMDZiY2YxMGE3IiwiaWF0IjoxNzQ4ODU2ODIwLCJleHAiOjE3NDg5NDMyMjB9.O64YmccJgW4kQf05an4k4QrwOjvE2TYhaVJacJFUAp8';
       const response = await fetch(
         `http://localhost:81/productivity/flashcard-deck/all`,
         {

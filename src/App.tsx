@@ -61,7 +61,7 @@ const AppContent: React.FC = () => {
           <Route path="/flashcard-static" element={<FlashCardStatic />} />
           <Route path="/flashcard-deck" element={<ManageFlashCardDeck />} />
           <Route path="/flashcard-deck/:deckId" element={<FlashcardsScreen />} />
-          <Route path="/flashcards/:deckId/add" element={<AddFlashcard />} />
+          <Route path="/flashcard-deck/:deckId/add" element={<AddFlashcard />} />
           <Route path="/view-flashcard" element={<FlashcardView />} />
           <Route path="/user-profile" element={<UserProfile />} />
           <Route path="/focus-timer" element={<FocusTimer />} />
