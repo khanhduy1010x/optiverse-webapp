@@ -37,7 +37,7 @@ export default function FlashcardList() {
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [popupType, setPopupType] = useState<'edit' | 'delete' | null>(null);
-  const [popupFlashcard, setPopupFlashcard] = useState<Flashcard | null>(null);
+  const [popupItem, setPopupItem] = useState<Flashcard | null>(null);
 
   const toggleOptions = (id: string) => {
     setSelectedId(prev => (prev === id ? null : id));
@@ -45,8 +45,9 @@ export default function FlashcardList() {
 
   const closePopupAndRefresh = async () => {
     await fetchData();
+    setSelectedId(null);
     setPopupType(null);
-    setPopupFlashcard(null);
+    setPopupItem(null);
   };
 
   const fetchData = async () => {
@@ -138,14 +139,14 @@ export default function FlashcardList() {
                   leftComponent={<Icon name="brush"></Icon>}
                   onClick={() => {
                     setPopupType('edit');
-                    setPopupFlashcard(item);
+                    setPopupItem(item);
                   }}
                 ></Button>
                 <Button
                   leftComponent={<Icon name="close"></Icon>}
                   onClick={() => {
                     setPopupType('delete');
-                    setPopupFlashcard(item);
+                    setPopupItem(item);
                   }}
                 ></Button>
               </div>
@@ -168,7 +169,7 @@ export default function FlashcardList() {
         }
       ></CircleButton>
 
-      {popupType && popupFlashcard && (
+      {popupType && popupItem && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
           <div
             className={`bg-white p-6 rounded shadow-md relative ${popupType === 'edit' ? 'w-200' : 'w-80'}`}
@@ -176,7 +177,7 @@ export default function FlashcardList() {
             <button
               onClick={() => {
                 setPopupType(null);
-                setPopupFlashcard(null);
+                setPopupItem(null);
               }}
               className="absolute top-2 right-2 text-gray-500 hover:text-black"
             >
@@ -187,7 +188,7 @@ export default function FlashcardList() {
               <>
                 <h3 className="text-lg font-semibold mb-2">Update Flashcard</h3>
                 <UpdateFlashcard
-                  item={popupFlashcard}
+                  item={popupItem}
                   clear={closePopupAndRefresh}
                 ></UpdateFlashcard>
               </>
@@ -203,14 +204,14 @@ export default function FlashcardList() {
                 </p>
                 <div className="flex justify-end gap-2">
                   <Button
-                    onClick={() => handleDelete(popupFlashcard)}
+                    onClick={() => handleDelete(popupItem)}
                     className="bg-red-500 text-white px-3 py-1 rounded"
                     title="Delete"
                   ></Button>
                   <Button
                     onClick={() => {
                       setPopupType(null);
-                      setPopupFlashcard(null);
+                      setPopupItem(null);
                     }}
                     className="bg-gray-200 px-3 py-1 rounded"
                     title="Cancel"

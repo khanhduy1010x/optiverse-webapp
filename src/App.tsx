@@ -16,7 +16,6 @@ import { AuthView } from './types/global.types';
 import './App.css';
 import { getSectionKeyFromPath } from './components/common/Navigation/navigation';
 import SliderBar from './components/layout/Sidebar';
-import FlashcardView from './pages/FlashCard/FlashCardView';
 import AddFlashcard from './pages/FlashCard/AddFlashCard';
 import UserProfile from './pages/Profile/UserProfile';
 import FocusTimer from './pages/FocusTimer/FocusTimer';
@@ -26,6 +25,7 @@ import Task from './pages/Task/Task';
 import Statistics from './pages/FocusTimer/Statistics';
 import { ThemeProvider } from './contexts/ThemeContext';
 import FlashcardList from './pages/FlashCard/FlashcardList';
+import FlashcardReview from './pages/FlashCard/FlashcardReview';
 
 const AppContent: React.FC = () => {
   const location = useLocation();
@@ -68,7 +68,7 @@ const AppContent: React.FC = () => {
             path="/flashcard-deck/:deckId/add"
             element={<AddFlashcard />}
           />
-          <Route path="/view-flashcard" element={<FlashcardView />} />
+          <Route path="/view-flashcard" element={<FlashcardReview />} />
           <Route path="/user-profile" element={<UserProfile />} />
           <Route path="/focus-timer" element={<FocusTimer />} />
           <Route path="/manage-focus-timer" element={<ManageFocusTimer />} />

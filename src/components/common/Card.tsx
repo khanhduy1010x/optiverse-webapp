@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import COLORS from '../../constants/colors';
 import { formatElapsedTime } from '../../services/dateService';
 import { FlashcardChips } from './Chip';
@@ -16,6 +16,7 @@ interface FlashcardCardProps {
   reviewingFlashcard: number;
   style?: React.CSSProperties;
   onClick?: () => void;
+  onLongPress?: () => void;
 }
 
 export const FlashcardDeckCard: React.FC<FlashcardCardProps> = ({
@@ -27,12 +28,40 @@ export const FlashcardDeckCard: React.FC<FlashcardCardProps> = ({
   reviewingFlashcard,
   style,
   onClick,
+  onLongPress,
 }) => {
   const { theme } = useTheme();
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressTriggered = useRef(false);
+
+  const handleMouseDown = () => {
+    if (onLongPress === undefined) {
+      handleMouseUp();
+      return;
+    }
+
+    longPressTriggered.current = false;
+    timerRef.current = setTimeout(() => {
+      longPressTriggered.current = true;
+      onLongPress();
+    }, 500); // 2 seconds
+  };
+
+  const handleMouseUp = () => {
+    if (onClick === undefined) {
+      return;
+    }
+
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (!longPressTriggered.current) {
+      onClick();
+    }
+  };
 
   return (
     <div
-      onClick={onClick}
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -44,6 +73,7 @@ export const FlashcardDeckCard: React.FC<FlashcardCardProps> = ({
         cursor: 'pointer',
         ...style,
       }}
+      className="select-none"
     >
       <img
         src={logo}
@@ -66,6 +96,7 @@ export const FlashcardDeckCard: React.FC<FlashcardCardProps> = ({
             fontSize: 16,
             textTransform: 'capitalize',
           }}
+          className="select-text"
         >
           {title}
         </Text>
