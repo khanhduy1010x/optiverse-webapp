@@ -16,7 +16,7 @@ import { AuthView } from './types/global.types';
 import './App.css';
 import { getSectionKeyFromPath } from './components/common/Navigation/navigation';
 import SliderBar from './components/layout/Sidebar';
-import FlashcardsScreen from './pages/FlashCard/FlashCards';
+import FlashcardsScreen from './pages/FlashCard/Flashcards';
 import FlashcardView from './pages/FlashCard/FlashCardView';
 import AddFlashcard from './pages/FlashCard/AddFlashCard';
 import UserProfile from './pages/Profile/UserProfile';
@@ -59,8 +59,8 @@ const AppContent: React.FC = () => {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/flashcard-static" element={<FlashCardStatic />} />
-          <Route path="/manage-deck" element={<ManageFlashCardDeck />} />
-          <Route path="/flashcards/:deckId" element={<FlashcardsScreen />} />
+          <Route path="/flashcard-deck" element={<ManageFlashCardDeck />} />
+          <Route path="/flashcard-deck/:deckId" element={<FlashcardsScreen />} />
           <Route path="/flashcards/:deckId/add" element={<AddFlashcard />} />
           <Route path="/view-flashcard" element={<FlashcardView />} />
           <Route path="/user-profile" element={<UserProfile />} />
