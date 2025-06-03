@@ -1,0 +1,242 @@
+/* Markdown Editor Styles */
+.markdown-editor {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+  width: 100% !important;
+  overflow: hidden !important;
+}
+
+/* Đảm bảo container của Quill có chiều cao phù hợp */
+.markdown-editor .ql-container {
+  height: auto !important;
+  min-height: 100% !important;
+  overflow-y: auto !important;
+  flex: 1 !important;
+  max-width: 100% !important;
+  scroll-behavior: smooth !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+}
+
+/* Chỉnh sửa chính cho editor để đảm bảo text xuống dòng */
+.markdown-editor .ql-editor {
+  height: auto !important;
+  min-height: 100% !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  white-space: pre-wrap !important;
+  word-wrap: break-word !important;
+  word-break: break-word !important;
+  max-width: 100% !important;
+  padding-bottom: 350px !important;
+  overflow-wrap: break-word !important;
+}
+
+/* Áp dụng cho tất cả các thẻ trong editor */
+.markdown-editor .ql-editor * {
+  white-space: pre-wrap !important;
+  word-wrap: break-word !important;
+  word-break: break-word !important;
+  max-width: 100% !important;
+  overflow-wrap: break-word !important;
+}
+
+/* Quy tắc cụ thể cho từng loại thẻ */
+.markdown-editor .ql-editor p,
+.markdown-editor .ql-editor h1,
+.markdown-editor .ql-editor h2,
+.markdown-editor .ql-editor h3,
+.markdown-editor .ql-editor h4,
+.markdown-editor .ql-editor h5,
+.markdown-editor .ql-editor h6,
+.markdown-editor .ql-editor ul,
+.markdown-editor .ql-editor ol,
+.markdown-editor .ql-editor pre,
+.markdown-editor .ql-editor blockquote,
+.markdown-editor .ql-editor span,
+.markdown-editor .ql-editor div {
+  white-space: pre-wrap !important;
+  word-wrap: break-word !important;
+  word-break: break-word !important;
+  max-width: 100% !important;
+  overflow-wrap: break-word !important;
+}
+
+/* Đảm bảo các ảnh không bị tràn ra ngoài */
+.markdown-editor .ql-editor img {
+  max-width: 100% !important;
+  height: auto !important;
+}
+
+/* Đảm bảo các code blocks không bị tràn */
+.markdown-editor .ql-editor pre,
+.markdown-editor .ql-editor code {
+  white-space: pre-wrap !important;
+  word-wrap: break-word !important;
+  word-break: break-word !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+}
+
+/* Đảm bảo các bảng không bị tràn */
+.markdown-editor .ql-editor table {
+  max-width: 100% !important;
+  table-layout: fixed !important;
+  width: 100% !important;
+}
+
+.markdown-editor .ql-editor table td,
+.markdown-editor .ql-editor table th {
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  max-width: 100% !important;
+}
+
+/* Custom scrollbar để cải thiện trải nghiệm người dùng */
+.markdown-editor .ql-editor::-webkit-scrollbar {
+  width: 8px;
+}
+
+.markdown-editor .ql-editor::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.markdown-editor .ql-editor::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.markdown-editor .ql-editor::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Đảm bảo container có kích thước phù hợp */
+.markdown-editor.flex-1 {
+  display: flex !important;
+  flex: 1 !important;
+  overflow: hidden !important;
+}
+
+/* Quy tắc đặc biệt cho container ReactQuill */
+.quill-wrapper {
+  width: 100%;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+/* Fix cho khi người dùng paste text dài */
+.ql-clipboard {
+  left: -100000px;
+  height: 1px;
+  overflow-y: hidden;
+  position: absolute;
+  top: 50%;
+  width: 1px;
+}
+
+/* Fix table không xuống dòng */
+.markdown-editor table {
+  width: 100% !important;
+  table-layout: fixed !important;
+  display: table !important;
+  overflow-wrap: break-word !important;
+}
+
+/* Fix code không xuống dòng */
+.markdown-editor .ql-syntax {
+  white-space: pre-wrap !important;
+  word-wrap: break-word !important;
+  overflow-x: hidden !important;
+}
+
+/* Đảm bảo tất cả các phần tử inline đều xuống dòng */
+.markdown-editor .ql-editor span,
+.markdown-editor .ql-editor a,
+.markdown-editor .ql-editor strong,
+.markdown-editor .ql-editor em,
+.markdown-editor .ql-editor s,
+.markdown-editor .ql-editor u,
+.markdown-editor .ql-editor mark {
+  white-space: normal !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+}
+
+/* Thêm các style đảm bảo hiển thị text xuống dòng thay vì tạo thanh cuộn ngang */
+.markdown-editor .ql-editor {
+  white-space: pre-wrap !important;
+  word-wrap: break-word !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+  overflow-x: hidden !important;
+  max-width: 100% !important;
+}
+
+/* Đảm bảo các thành phần inline như code, pre, img, ... đều xuống dòng */
+.markdown-editor .ql-editor p,
+.markdown-editor .ql-editor h1,
+.markdown-editor .ql-editor h2,
+.markdown-editor .ql-editor h3,
+.markdown-editor .ql-editor h4,
+.markdown-editor .ql-editor h5,
+.markdown-editor .ql-editor h6,
+.markdown-editor .ql-editor ul,
+.markdown-editor .ql-editor ol,
+.markdown-editor .ql-editor pre,
+.markdown-editor .ql-editor blockquote,
+.markdown-editor .ql-editor table {
+  white-space: pre-wrap !important;
+  word-wrap: break-word !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+  max-width: 100% !important;
+}
+
+/* Đảm bảo các thẻ code cũng xuống dòng */
+.markdown-editor .ql-editor pre.ql-syntax,
+.markdown-editor .ql-editor code {
+  white-space: pre-wrap !important;
+  word-wrap: break-word !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+  max-width: 100% !important;
+}
+
+/* Đảm bảo các thẻ table cũng xuống dòng */
+.markdown-editor .ql-editor table {
+  table-layout: fixed !important;
+  width: 100% !important;
+}
+
+.markdown-editor .ql-editor td,
+.markdown-editor .ql-editor th {
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  max-width: 100% !important;
+}
+
+/* Hiệu ứng active cho các nút định dạng */
+.format-btn.active {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: rgb(59, 130, 246);
+}
+
+/* Style cho container */
+.relative {
+  position: relative;
+}
+
+/* Style cho UserCursors */
+.user-cursors-overlay {
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+}

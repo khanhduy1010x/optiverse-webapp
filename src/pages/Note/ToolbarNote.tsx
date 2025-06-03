@@ -1,0 +1,140 @@
+import React from 'react';
+
+interface ToolBarNoteProps {
+  onAction: (action: string) => void;
+  formatState?: {
+    bold: boolean;
+    italic: boolean;
+    header: boolean;
+    strike: boolean;
+  };
+}
+
+const ToolBarNote: React.FC<ToolBarNoteProps> = ({ onAction, formatState = { bold: false, italic: false, header: false, strike: false } }) => {
+  // Function để xác định nếu nút đang active
+  const isActive = (key: string): boolean => {
+    switch (key) {
+      case 'bold': return formatState.bold;
+      case 'italic': return formatState.italic;
+      case 'title': return formatState.header;
+      case 'strike': return formatState.strike;
+      default: return false;
+    }
+  };
+
+  // Tạo class name dựa vào trạng thái active
+  const getButtonClass = (key: string): string => {
+    const baseClass = "p-2 rounded-md transition-colors";
+    return isActive(key)
+      ? `${baseClass} bg-blue-100`
+      : baseClass;
+  };
+
+  const icons = [
+    {
+      key: 'list-dot',
+      icon: (
+        <svg height="24" viewBox="0 -960 960 960" width="24" fill="#000">
+          <path d="M360-200v-80h480v80H360Zm0-240v-80h480v80H360Zm0-240v-80h480v80H360ZM200-160q-33 0-56.5-23.5T120-240q0-33 23.5-56.5T200-320q33 0 56.5 23.5T280-240q0 33-23.5 56.5T200-160Zm0-240q-33 0-56.5-23.5T120-480q0-33 23.5-56.5T200-560q33 0 56.5 23.5T280-480q0 33-23.5 56.5T200-400Zm0-240q-33 0-56.5-23.5T120-720q0-33 23.5-56.5T200-800q33 0 56.5 23.5T280-720q0 33-23.5 56.5T200-640Z" />
+        </svg>
+      ),
+    },
+    {
+      key: 'list-number',
+      icon: (
+        <svg height="24" viewBox="0 -960 960 960" width="24" fill="#000">
+          <path d="M120-80v-60h100v-30h-60v-60h60v-30H120v-60h120q17 0 28.5 11.5T280-280v40q0 17-11.5 28.5T240-200q17 0 28.5 11.5T280-160v40q0 17-11.5 28.5T240-80H120Zm0-280v-110q0-17 11.5-28.5T160-510h60v-30H120v-60h120q17 0 28.5 11.5T280-560v70q0 17-11.5 28.5T240-450h-60v30h100v60H120Zm60-280v-180h-60v-60h120v240h-60Zm180 440v-80h480v80H360Zm0-240v-80h480v80H360Zm0-240v-80h480v80H360Z" />
+        </svg>
+      ),
+    },
+    {
+      key: 'undo',
+      icon: (
+        <svg height="24" viewBox="0 -960 960 960" width="24" fill="#000">
+          <path d="M280-200v-80h284q63 0 109.5-40T720-420q0-60-46.5-100T564-560H312l104 104-56 56-200-200 200-200 56 56-104 104h252q97 0 166.5 63T800-420q0 94-69.5 157T564-200H280Z" />
+        </svg>
+      ),
+    },
+    {
+      key: 'redo',
+      icon: (
+        <svg height="24" viewBox="0 -960 960 960" width="24" fill="#000">
+          <path d="M396-200q-97 0-166.5-63T160-420q0-94 69.5-157T396-640h252L544-744l56-56 200 200-200 200-56-56 104-104H396q-63 0-109.5 40T240-420q0 60 46.5 100T396-280h284v80H396Z" />
+        </svg>
+      ),
+    },
+    {
+      key: 'title',
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 18 20" fill="none">
+          <path
+            d="M7.25 19.3334V4.16675H0.833313V0.666748H17.1666V4.16675H10.75V19.3334H7.25Z"
+            fill="#000"
+          />
+        </svg>
+      ),
+    },
+    {
+      key: 'bold',
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 14 18" fill="none">
+          <path
+            d="M0.93335 17.1666V0.833252H7.37918C8.64307 0.833252 9.80974 1.22214 10.8792 1.99992C11.9486 2.7777 12.4834 3.85686 12.4834 5.23742C12.4834 6.22908 12.2597 6.99228 11.8125 7.527C11.3653 8.06172 10.9472 8.44575 10.5584 8.67908C11.0445 8.89297 11.584 9.29158 12.1771 9.87492C12.7702 10.4583 13.0667 11.3333 13.0667 12.4999C13.0667 14.2305 12.4347 15.4409 11.1709 16.1312C9.90696 16.8214 8.72085 17.1666 7.61252 17.1666H0.93335ZM4.46252 13.8999H7.49585C8.42918 13.8999 8.99793 13.6617 9.2021 13.1853C9.40627 12.7089 9.50835 12.3638 9.50835 12.1499C9.50835 11.936 9.40627 11.5909 9.2021 11.1145C8.99793 10.6381 8.40002 10.3999 7.40835 10.3999H4.46252V13.8999ZM4.46252 7.24992H7.17502C7.81668 7.24992 8.28335 7.08464 8.57502 6.75408C8.86668 6.42353 9.01252 6.05408 9.01252 5.64575C9.01252 5.17909 8.84724 4.79992 8.51668 4.50825C8.18613 4.21659 7.75835 4.07075 7.23335 4.07075H4.46252V7.24992Z"
+            fill="#000"
+          />
+        </svg>
+      ),
+    },
+    {
+      key: 'italic',
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 16 18" fill="none">
+          <path
+            d="M0.833313 17.1666V14.2499H5.49998L8.99998 3.74992H4.33331V0.833252H16V3.74992H11.9166L8.41665 14.2499H12.5V17.1666H0.833313Z"
+            fill="#000"
+          />
+        </svg>
+      ),
+    },
+    {
+      key: 'strike',
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 20" fill="none">
+          <path
+            d="M12.175 19.3334C10.6972 19.3334 9.3847 18.8959 8.23748 18.0209C7.09026 17.1459 6.26387 15.95 5.75831 14.4334L8.32498 13.325C8.5972 14.2584 9.06873 15.0264 9.73956 15.6292C10.4104 16.232 11.2416 16.5334 12.2333 16.5334C13.05 16.5334 13.7889 16.3389 14.45 15.95C15.1111 15.5611 15.4416 14.9389 15.4416 14.0834C15.4416 13.7334 15.3736 13.4125 15.2375 13.1209C15.1014 12.8292 14.9166 12.5667 14.6833 12.3334H17.95C18.0472 12.6056 18.1201 12.8827 18.1687 13.1646C18.2173 13.4466 18.2416 13.7528 18.2416 14.0834C18.2416 15.7556 17.6437 17.0486 16.4479 17.9625C15.2521 18.8764 13.8278 19.3334 12.175 19.3334ZM0.333313 10V7.6667H23.6666V10H0.333313ZM12.0583 0.491699C13.3416 0.491699 14.4646 0.807671 15.4271 1.43962C16.3896 2.07156 17.1333 3.03892 17.6583 4.3417L15.0916 5.4792C14.9166 4.91531 14.591 4.40975 14.1146 3.96253C13.6382 3.51531 12.9722 3.2917 12.1166 3.2917C11.3194 3.2917 10.6583 3.47156 10.1333 3.83128C9.60831 4.191 9.31665 4.6917 9.25831 5.33337H6.45831C6.4972 3.9917 7.02706 2.84934 8.0479 1.90628C9.06873 0.963227 10.4055 0.491699 12.0583 0.491699Z"
+            fill="#000"
+          />
+        </svg>
+      ),
+    },
+    {
+      key: 'clear-format',
+      icon: (
+        <svg height="24" viewBox="0 -960 960 960" width="24" fill="#000">
+          <path d="m528-546-93-93-121-121h486v120H568l-40 94ZM792-56 460-388l-80 188H249l119-280L56-792l56-56 736 736-56 56Z" />
+        </svg>
+      ),
+    },
+  ];
+
+  return (
+    <div className="p-2 border-t border-gray-200">
+      <div className="flex justify-center gap-8 mb-2">
+        {icons.slice(0, 4).map(({ key, icon }) => (
+          <button key={key} onClick={() => onAction(key)} className={getButtonClass(key)}>
+            {icon}
+          </button>
+        ))}
+      </div>
+      <div className="flex justify-center gap-8">
+        {icons.slice(4).map(({ key, icon }) => (
+          <button key={key} onClick={() => onAction(key)} className={getButtonClass(key)}>
+            {icon}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default ToolBarNote;
