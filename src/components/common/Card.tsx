@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import COLORS from '../../constants/colors';
 import { formatElapsedTime } from '../../services/dateService';
 import { FlashcardChips } from './Chip';
@@ -6,8 +6,12 @@ import Icon from './Icon/Icon';
 import Text from './Text';
 import { useTheme } from '../../contexts/ThemeContext';
 import logo from '../../assets/app-icon/optiverse-logo.svg';
+import {
+  CardInteractionProps,
+  useCardInteractions,
+} from '../../hooks/useCardInteractions';
 
-interface FlashcardCardProps {
+interface FlashcardCardProps extends CardInteractionProps {
   title: string;
   transparent?: boolean;
   lastReview: number;
@@ -15,8 +19,6 @@ interface FlashcardCardProps {
   learningFlashcard: number;
   reviewingFlashcard: number;
   style?: React.CSSProperties;
-  onClick?: () => void;
-  onLongPress?: () => void;
 }
 
 export const FlashcardDeckCard: React.FC<FlashcardCardProps> = ({
@@ -29,39 +31,17 @@ export const FlashcardDeckCard: React.FC<FlashcardCardProps> = ({
   style,
   onClick,
   onLongPress,
+  onContextMenu,
 }) => {
   const { theme } = useTheme();
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const longPressTriggered = useRef(false);
-
-  const handleMouseDown = () => {
-    if (onLongPress === undefined) {
-      handleMouseUp();
-      return;
-    }
-
-    longPressTriggered.current = false;
-    timerRef.current = setTimeout(() => {
-      longPressTriggered.current = true;
-      onLongPress();
-    }, 500); // 2 seconds
-  };
-
-  const handleMouseUp = () => {
-    if (onClick === undefined) {
-      return;
-    }
-
-    if (timerRef.current) clearTimeout(timerRef.current);
-    if (!longPressTriggered.current) {
-      onClick();
-    }
-  };
+  const { handleMouseDown, handleMouseUp, handleContextMenu } =
+    useCardInteractions({ onClick, onLongPress, onContextMenu });
 
   return (
     <div
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
+      onContextMenu={handleContextMenu}
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -118,12 +98,11 @@ export const FlashcardDeckCard: React.FC<FlashcardCardProps> = ({
   );
 };
 
-interface FlashcardProps {
+interface FlashcardProps extends CardInteractionProps {
   front: string;
   back: string;
   transparent?: boolean;
   style?: React.CSSProperties;
-  onClick?: () => void;
 }
 
 export const Flashcard: React.FC<FlashcardProps> = ({
@@ -132,10 +111,17 @@ export const Flashcard: React.FC<FlashcardProps> = ({
   transparent,
   style,
   onClick,
+  onLongPress,
+  onContextMenu,
 }) => {
+  const { handleMouseDown, handleMouseUp, handleContextMenu } =
+    useCardInteractions({ onClick, onLongPress, onContextMenu });
+
   return (
     <div
-      onClick={onClick}
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
+      onContextMenu={handleContextMenu}
       style={{
         display: 'flex',
         flexDirection: 'column',
