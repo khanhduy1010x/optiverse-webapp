@@ -26,7 +26,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import NoteScreen from './pages/Note/NoteScreen';
 import FlashcardList from './pages/FlashCard/FlashcardList';
 import FlashcardReview from './pages/FlashCard/FlashcardReview';
-
+import FriendList from './pages/Friend/FriendList'; // Thêm import
 const AppContent: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -74,6 +74,7 @@ const AppContent: React.FC = () => {
           <Route path="/note" element={<NoteScreen />} />
           <Route path="/task" element={<Task />} />
           <Route path="/statistics-timer" element={<Statistics />} />
+            <Route path="/friends" element={<FriendList />} /> {/* Thêm route cho FriendList */}
         </Routes>
       </div>
     </div>

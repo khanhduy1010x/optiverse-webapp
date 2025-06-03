@@ -1,7 +1,8 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 
 const api: AxiosInstance = axios.create({
-  baseURL: 'http://localhost:81/productivity/', 
+
+  baseURL: 'http://localhost:81', 
   timeout: 10000, 
   headers: {
     'Content-Type': 'application/json',
@@ -11,9 +12,10 @@ const api: AxiosInstance = axios.create({
 
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // var token = localStorage.setItem('authToken');
-    const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2ODM3MmU0NzM0ZmI5YTg4YzY4M2Y0NjAiLCJlbWFpbCI6Im5ndXllbmtoYW5oZHV5OTIwMEBnbWFpbC5jb20iLCJmdWxsX25hbWUiOiJOZ3V5ZW4gS2hhbmggRHV5Iiwic2Vzc2lvbl9pZCI6IjY4M2IzMTEwMjgwYWVmNDYzOWVhYWY1MCIsImlhdCI6MTc0ODcwOTY0OCwiZXhwIjoxNzQ4Nzk2MDQ4fQ.S9gwstz1Dm0pGwTfjFBK6wK5tvEG3SnsxIdCfoHi4mw"
-      if (token && config.headers) {
+
+    // const token = localStorage.getItem('authToken');
+        const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2ODM4NDgxZWY2MTkyZTllOGU4MzRhYjUiLCJlbWFpbCI6Im5ndXllbmdpYWh1eUBnbWFpbC5jb20iLCJmdWxsX25hbWUiOiJOZ3V5ZW4gS2hhbmggRHV5Iiwic2Vzc2lvbl9pZCI6IjY4M2VkNzE3NWJmMjAzMmZhNmUyMmVhYyIsImlhdCI6MTc0ODk0ODc1OSwiZXhwIjoxNzQ5MDM1MTU5fQ.xoeNBas3TkxIm0R5lESgP0HvwNYgBN70ViDr_B790qQ"
+    if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
