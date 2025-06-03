@@ -5,9 +5,10 @@ import COLORS from '../../constants/colors';
 
 interface VerifyCodeFormProps {
   onSwitch: (view: AuthView) => void;
+  data: string;
 }
 
-const VerifyCodeForm: React.FC<VerifyCodeFormProps> = ({ onSwitch }) => {
+const VerifyCodeForm: React.FC<VerifyCodeFormProps> = ({ onSwitch, data }) => {
   const [code, setCode] = useState<string[]>(Array(6).fill(''));
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -34,16 +35,39 @@ const VerifyCodeForm: React.FC<VerifyCodeFormProps> = ({ onSwitch }) => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const fullCode = code.join('');
     if (fullCode.length !== 6) {
       alert('Please enter a 6-digit code');
       return;
     }
-    // Giả lập xác nhận mã, trong thực tế bạn sẽ gọi API
     console.log('Verifying code:', fullCode);
-    onSwitch('login');
+    try {
+      const response = await fetch(
+        `http://localhost:81/core/auth/verify-account`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: data,
+            otp: fullCode,
+            isVerify: true,
+          }),
+        }
+      );
+
+      const result = await response.json();
+      if (result.code !== 1000) {
+        throw new Error(result.message);
+      }
+
+      onSwitch('login');
+    } catch (error) {
+      console.error('Lỗi khi fetch API:', error);
+    }
   };
 
   const handleResend = () => {
