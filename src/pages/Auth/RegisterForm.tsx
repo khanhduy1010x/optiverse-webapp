@@ -31,7 +31,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitch, setData }) => {
         }),
       });
       setData(email);
-      onSwitch('verify');
+      onSwitch('verify-register');
     } catch (error) {
       console.error('Lỗi khi fetch API:', error);
     }
