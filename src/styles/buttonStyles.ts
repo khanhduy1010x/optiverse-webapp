@@ -1,24 +1,26 @@
-import COLORS from "../constants/colors";
-import { TEXT } from "../constants/typography";
- 
+import COLORS from '../constants/colors';
+import { TEXT } from '../constants/typography';
+
 const rootBackgroundStyles = {
   padding: 12,
   borderRadius: 4,
-  flexDirection: "row",
-  alignItems: "center",
-  justifyContent: "space-between",
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between',
   gap: 12,
+  cursor: 'pointer',
 } as const;
 
 const rootTextBtnStyles = {
   ...TEXT.bold20,
-  textAlign: "center",
+  textAlign: 'center',
 } as const;
 
 const rootViewStyles = {
-  flexDirection: "row",
-  alignItems: "center",
-  justifyContent: "center",
+  display: 'flex',
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'center',
 } as const;
 
 export const BUTTON_STYLES = {
@@ -50,6 +52,6 @@ export const BUTTON_STYLES = {
   circlebg: {
     aspectRatio: 1,
     borderRadius: 9999,
-    justifyContent: "center",
+    justifyContent: 'center',
   },
 } as const;

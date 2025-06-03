@@ -1,0 +1,67 @@
+import { useState } from 'react';
+import { token } from '../../services/apitest';
+import { Button } from '../../components/common/Button';
+
+interface Deck {
+  _id: string;
+  title: string;
+  lastReview: number;
+  learningCount: number;
+  newCount: number;
+  reviewingCount: number;
+}
+
+export default function AddFlashcardDeck({
+  item,
+  clear,
+}: {
+  item: Deck;
+  clear: () => void;
+}) {
+  const [title, setTitle] = useState(item.title);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('Add:', { title });
+
+    try {
+      const response = await fetch(
+        `http://localhost:81/productivity/flashcard-deck`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: title,
+          }),
+        }
+      );
+
+      const result = (await response.json()).data;
+      console.log(result);
+      await clear();
+    } catch (error) {
+      console.error('Lỗi khi fetch API:', error);
+    }
+  };
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="w-full h-full bg-white p-8 rounded-xl shadow-sm"
+    >
+      <div className="mb-6">
+        <label className="block text-gray-700 font-medium mb-1">Title</label>
+        <textarea
+          className="w-full p-3 border rounded-md"
+          placeholder="Enter the title"
+          onChange={e => setTitle(e.target.value)}
+          value={title}
+        />
+      </div>
+
+      <Button title="Create deck" className="w-full"></Button>
+    </form>
+  );
+}

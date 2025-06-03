@@ -1,17 +1,22 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from 'react-router-dom';
 import Dashboard from './pages/Dashboard/Dashboard';
 import Settings from './pages/Settings/Settings';
 import FlashCardStatic from './pages/FlashCard/FlashCardStatic';
 import AuthContainer from './pages/Auth/AuthContainer';
-import ManageFlashCardDeck from './pages/FlashCard/ManageFlashCardDeck';
+import FlashcardDeckList from './pages/FlashCard/FlashcardDeckList';
 import { AuthView } from './types/global.types';
 import './App.css';
 import { getSectionKeyFromPath } from './components/common/Navigation/navigation';
 import SliderBar from './components/layout/Sidebar';
-import ManageFlashCards from './pages/FlashCard/ManageFlashCard';
-import FlashcardView from './pages/FlashCard/FlashCardView';
-import AddFlashCard from './pages/FlashCard/AddFlashCard';
+import AddFlashcard from './pages/FlashCard/AddFlashCard';
 import UserProfile from './pages/Profile/UserProfile';
 import FocusTimer from './pages/FocusTimer/FocusTimer';
 import ManageFocusTimer from './pages/FocusTimer/ManageFocusTimer';
@@ -19,6 +24,8 @@ import Task from './pages/Task/Task';
 import Statistics from './pages/FocusTimer/Statistics';
 import { ThemeProvider } from './contexts/ThemeContext';
 import NoteScreen from './pages/Note/NoteScreen';
+import FlashcardList from './pages/FlashCard/FlashcardList';
+import FlashcardReview from './pages/FlashCard/FlashcardReview';
 
 const AppContent: React.FC = () => {
   const location = useLocation();
@@ -36,10 +43,7 @@ const AppContent: React.FC = () => {
   return (
     <div className="flex h-screen">
       {showSidebar && (
-        <SliderBar
-          activeSection={activeSection}
-          onNavClick={handleNavClick}
-        />
+        <SliderBar activeSection={activeSection} onNavClick={handleNavClick} />
       )}
 
       <div
@@ -47,14 +51,23 @@ const AppContent: React.FC = () => {
           } h-full w-full overflow-auto`}
       >
         <Routes>
-          <Route path="/" element={<AuthContainer initialView={initialView} />} />
+          <Route
+            path="/"
+            element={<AuthContainer initialView={initialView} />}
+          />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/flashcard-static" element={<FlashCardStatic />} />
-          <Route path="/manage-deck" element={<ManageFlashCardDeck />} />
-          <Route path="/manage-flashcard" element={<ManageFlashCards />} />
-          <Route path="/view-flashcard" element={<FlashcardView />} />
-          <Route path="/add-flashcard" element={<AddFlashCard />} />
+          <Route path="/flashcard-deck" element={<FlashcardDeckList />} />
+          <Route
+            path="/flashcard-deck/:deckId"
+            element={<FlashcardList />}
+          />
+          <Route
+            path="/flashcard-deck/:deckId/add"
+            element={<AddFlashcard />}
+          />
+          <Route path="/view-flashcard" element={<FlashcardReview />} />
           <Route path="/user-profile" element={<UserProfile />} />
           <Route path="/focus-timer" element={<FocusTimer />} />
           <Route path="/manage-focus-timer" element={<ManageFocusTimer />} />
