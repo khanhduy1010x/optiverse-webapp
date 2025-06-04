@@ -77,12 +77,7 @@ const AppContent: React.FC = () => {
           <Route path="/note" element={<NoteScreen />} />
           <Route path="/task" element={<Task />} />
           <Route path="/statistics-timer" element={<Statistics />} />
-<<<<<<< HEAD
-          <Route path="/friends" element={<FriendList />} />{' '}
-          {/* Thêm route cho FriendList */}
-=======
           <Route path="/friends" element={<FriendList />} /> {/* Thêm route cho FriendList */}
->>>>>>> f78c791 (OPTV-6 OPTV-7 OPTV-9 : get api manage profile , lout single and muti , view active session)
         </Routes>
       </div>
     </div>
