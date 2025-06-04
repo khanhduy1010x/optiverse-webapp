@@ -13,7 +13,6 @@ export default function AddFlashcard() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Giả lập đăng ký, trong thực tế bạn sẽ gọi API
     console.log('Add flashcard:', { front, back });
 
     try {

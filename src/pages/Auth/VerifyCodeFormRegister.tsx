@@ -8,7 +8,10 @@ interface VerifyCodeFormProps {
   data: string;
 }
 
-const VerifyCodeForm: React.FC<VerifyCodeFormProps> = ({ onSwitch, data }) => {
+const VerifyCodeFormRegister: React.FC<VerifyCodeFormProps> = ({
+  onSwitch,
+  data,
+}) => {
   const [code, setCode] = useState<string[]>(Array(6).fill(''));
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -116,4 +119,4 @@ const VerifyCodeForm: React.FC<VerifyCodeFormProps> = ({ onSwitch, data }) => {
   );
 };
 
-export default VerifyCodeForm;
+export default VerifyCodeFormRegister;

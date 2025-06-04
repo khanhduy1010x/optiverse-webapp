@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import LoginForm from './LoginForm';
 import RegisterForm from './RegisterForm';
 import ForgotPasswordForm from './ForgotPasswordForm';
-import VerifyCodeForm from './VerifyCodeForm';
+import VerifyCodeFormRegister from './VerifyCodeFormRegister';
 import { AuthView } from '../../types/global.types';
 import LogoInAuth from '../../components/common/Logo/LogoInAuth';
 
@@ -14,15 +14,16 @@ const AuthContainer: React.FC<AuthContainerProps> = ({
   initialView = 'login',
 }) => {
   const [view, setView] = useState<AuthView>(initialView);
+  const [data, setData] = useState<string>('');
 
   const renderForm = () => {
     switch (view) {
       case 'register':
-        return <RegisterForm onSwitch={setView} />;
+        return <RegisterForm onSwitch={setView} setData={setData} />;
       case 'forgot':
         return <ForgotPasswordForm onSwitch={setView} />;
-      case 'verify':
-        return <VerifyCodeForm onSwitch={setView} />;
+      case 'verify-register':
+        return <VerifyCodeFormRegister onSwitch={setView} data={data} />;
       default:
         return <LoginForm onSwitch={setView} />;
     }
@@ -30,8 +31,12 @@ const AuthContainer: React.FC<AuthContainerProps> = ({
 
   return (
     <div className="flex flex-row w-full h-full p-20">
-      <div className="w-5/11 flex justify-center items-center bg-white border-r-2 border-black">{<LogoInAuth></LogoInAuth>}</div>
-      <div className="w-6/11 flex justify-center items-center bg-white">{renderForm()}</div>
+      <div className="w-5/11 flex justify-center items-center bg-white border-r-2 border-black">
+        {<LogoInAuth></LogoInAuth>}
+      </div>
+      <div className="w-6/11 flex justify-center items-center bg-white">
+        {renderForm()}
+      </div>
     </div>
   );
 };
