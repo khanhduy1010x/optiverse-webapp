@@ -5,18 +5,36 @@ import { Button } from '../../components/common/Button';
 
 interface RegisterFormProps {
   onSwitch: (view: AuthView) => void;
+  setData: (data: string) => void;
 }
 
-const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitch }) => {
+const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitch, setData }) => {
   const [fullName, setFullName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Giả lập đăng ký, trong thực tế bạn sẽ gọi API
+
     console.log('Registering with:', { fullName, email, password });
-    onSwitch('verify');
+
+    try {
+      await fetch(`http://localhost:81/core/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+          full_name: fullName,
+          password: password,
+        }),
+      });
+      setData(email);
+      onSwitch('verify-register');
+    } catch (error) {
+      console.error('Lỗi khi fetch API:', error);
+    }
   };
 
   return (
@@ -55,10 +73,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitch }) => {
             required
           />
         </div>
-        <Button
-          title="Create Account"
-          className="w-full"
-        ></Button>
+        <Button title="Create Account" className="w-full"></Button>
       </form>
       <p
         onClick={() => onSwitch('login')}
