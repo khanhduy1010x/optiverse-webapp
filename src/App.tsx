@@ -18,6 +18,7 @@ import { getSectionKeyFromPath } from './components/common/Navigation/navigation
 import SliderBar from './components/layout/Sidebar';
 import AddFlashcard from './pages/FlashCard/AddFlashCard';
 import UserProfile from './pages/Profile/UserProfile';
+import LoginSessions from './pages/Profile/LoginSessions';
 import FocusTimer from './pages/FocusTimer/FocusTimer';
 import ManageFocusTimer from './pages/FocusTimer/ManageFocusTimer';
 import Task from './pages/Task/Task';
@@ -70,13 +71,18 @@ const AppContent: React.FC = () => {
             element={<FlashcardReview />}
           />
           <Route path="/user-profile" element={<UserProfile />} />
+          <Route path="/login-session" element={<LoginSessions />} />
           <Route path="/focus-timer" element={<FocusTimer />} />
           <Route path="/manage-focus-timer" element={<ManageFocusTimer />} />
           <Route path="/note" element={<NoteScreen />} />
           <Route path="/task" element={<Task />} />
           <Route path="/statistics-timer" element={<Statistics />} />
+<<<<<<< HEAD
           <Route path="/friends" element={<FriendList />} />{' '}
           {/* Thêm route cho FriendList */}
+=======
+          <Route path="/friends" element={<FriendList />} /> {/* Thêm route cho FriendList */}
+>>>>>>> f78c791 (OPTV-6 OPTV-7 OPTV-9 : get api manage profile , lout single and muti , view active session)
         </Routes>
       </div>
     </div>
