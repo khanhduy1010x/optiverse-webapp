@@ -26,6 +26,7 @@ interface ButtonProps {
 }
 
 interface FlashcardButtonProps {
+  onClick?: () => void;
   difficulty: string;
   minutes: number;
   translate?: boolean;
@@ -135,6 +136,7 @@ const CircleButton: React.FC<CircleButtonProps> = ({
 };
 
 const FlashcardButton: React.FC<FlashcardButtonProps> = ({
+  onClick,
   difficulty,
   minutes,
   fontType = 'regular16',
@@ -148,11 +150,11 @@ const FlashcardButton: React.FC<FlashcardButtonProps> = ({
 
   return (
     <button
-      className={`transition-all duration-300 ${className}`}
+      className={`transition-all duration-300 flex flex-col ${className}`}
       style={{
         ...BUTTON_STYLES.rootbg,
-        flexDirection: 'column',
-        gap: 4,
+        flexDirection: "column",
+        width: 100,
         paddingTop: 4,
         paddingBottom: 4,
         paddingLeft: 8,
@@ -160,6 +162,7 @@ const FlashcardButton: React.FC<FlashcardButtonProps> = ({
         backgroundColor: theme.buttonBackground,
         ...style,
       }}
+      onClick={onClick}
       {...props}
     >
       <Text

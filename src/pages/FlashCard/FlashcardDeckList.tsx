@@ -6,25 +6,17 @@ import { Button, CircleButton } from '../../components/common/Button';
 import Icon from '../../components/common/Icon/Icon';
 import UpdateFlashcardDeck from './UpdateFlashcardDeck';
 import AddFlashcardDeck from './AddFlashcardDeck';
-
-interface Deck {
-  _id: string;
-  title: string;
-  lastReview: number;
-  learningCount: number;
-  newCount: number;
-  reviewingCount: number;
-}
+import { FlashcardDeck } from '../../types/flashcard.types';
 
 export default function FlashcardDeckList() {
   const navigate = useNavigate();
-  const [decks, setDecks] = useState<Deck[]>([]);
+  const [decks, setDecks] = useState<FlashcardDeck[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [popupType, setPopupType] = useState<'edit' | 'delete' | 'add' | null>(
     null
   );
-  const [popupItem, setPopupItem] = useState<Deck | null>(null);
+  const [popupItem, setPopupItem] = useState<FlashcardDeck | null>(null);
 
   const toggleOptions = (id: string) => {
     setSelectedId(prev => (prev === id ? null : id));
@@ -37,7 +29,7 @@ export default function FlashcardDeckList() {
     setPopupItem(null);
   };
 
-  const handleDelete = async (item: Deck) => {
+  const handleDelete = async (item: FlashcardDeck) => {
     try {
       await fetch(
         `http://localhost:81/productivity/flashcard-deck/${item._id}`,
@@ -69,7 +61,7 @@ export default function FlashcardDeckList() {
         }
       );
 
-      const result: Deck[] = (await response.json()).data;
+      const result: FlashcardDeck[] = (await response.json()).data;
       console.log(result);
       setDecks(result);
     } catch (error) {
@@ -152,6 +144,7 @@ export default function FlashcardDeckList() {
             newCount: 0,
             reviewingCount: 0,
             title: '',
+            user_id: '',
           });
         }}
       ></CircleButton>

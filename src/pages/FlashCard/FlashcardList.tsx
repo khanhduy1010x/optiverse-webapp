@@ -5,39 +5,28 @@ import { Button, CircleButton } from '../../components/common/Button';
 import { token } from '../../services/apitest';
 import Icon from '../../components/common/Icon/Icon';
 import UpdateFlashcard from './UpdateFlashcard';
-
-interface Flashcard {
-  _id: string;
-  front: string;
-  back: string;
-  review: any;
-}
-
-interface Deck {
-  _id: string;
-  title: string;
-  lastReview: number;
-  learningCount: number;
-  newCount: number;
-  reviewingCount: number;
-}
+import {
+  FlashcardDeck,
+  Flashcard as FlashcardType,
+} from '../../types/flashcard.types';
 
 export default function FlashcardList() {
   const { deckId } = useParams();
   const navigate = useNavigate();
-  const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
-  const [deck, setDeck] = useState<Deck>({
+  const [flashcards, setFlashcards] = useState<FlashcardType[]>([]);
+  const [deck, setDeck] = useState<FlashcardDeck>({
     _id: '',
     title: 'Loading',
     lastReview: 0,
     learningCount: 0,
     newCount: 0,
     reviewingCount: 0,
+    user_id: '',
   });
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [popupType, setPopupType] = useState<'edit' | 'delete' | null>(null);
-  const [popupItem, setPopupItem] = useState<Flashcard | null>(null);
+  const [popupItem, setPopupItem] = useState<FlashcardType | null>(null);
 
   const toggleOptions = (id: string) => {
     setSelectedId(prev => (prev === id ? null : id));
@@ -64,17 +53,18 @@ export default function FlashcardList() {
       );
 
       const result = (await response.json()).data;
-      const deckData: Deck = {
+      const deckData: FlashcardDeck = {
         _id: result._id,
         title: result.title,
         lastReview: result.lastReview,
         learningCount: result.learningCount,
         newCount: result.newCount,
         reviewingCount: result.reviewingCount,
+        user_id: result.user_id,
       };
       setDeck(deckData);
 
-      const flashcardsData: Flashcard[] = result.flashcards;
+      const flashcardsData: FlashcardType[] = result.flashcards;
       setFlashcards(flashcardsData);
     } catch (error) {
       console.error('Lỗi khi fetch API:', error);
@@ -83,7 +73,7 @@ export default function FlashcardList() {
     }
   };
 
-  const handleDelete = async (item: Flashcard) => {
+  const handleDelete = async (item: FlashcardType) => {
     try {
       await fetch(`http://localhost:81/productivity/flashcard/${item._id}`, {
         method: 'DELETE',
@@ -105,13 +95,28 @@ export default function FlashcardList() {
 
   return (
     <div className="w-full max-w-2xl mx-auto p-4 pb-8 flex flex-col gap-4">
-      <h1
-        className="text-xl mb-6"
-        style={{ cursor: 'pointer', color: 'blue' }}
-        onClick={() => navigate(-1)}
-      >
-        Back{' '}
-      </h1>
+      <div className="w-full flex justify-between">
+        <h1
+          className="text-xl mb-6"
+          style={{ cursor: 'pointer', color: 'blue' }}
+          onClick={() => navigate(-1)}
+        >
+          Back{' '}
+        </h1>
+        <h1
+          className="text-xl mb-6"
+          style={{ cursor: 'pointer', color: 'blue' }}
+          onClick={() =>
+            navigate(`/flashcard-deck/${deck._id}/learn`, {
+              state: {
+                title: deck.title,
+              },
+            })
+          }
+        >
+          Learn{' '}
+        </h1>
+      </div>
 
       {/* Deck Header */}
       <FlashcardDeckCard
