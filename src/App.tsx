@@ -47,8 +47,9 @@ const AppContent: React.FC = () => {
       )}
 
       <div
-        className={`flex-1 transition-all duration-300 ease-in-out ${showSidebar ? '' : 'ml-0'
-          } h-full w-full overflow-auto`}
+        className={`flex-1 transition-all duration-300 ease-in-out ${
+          showSidebar ? '' : 'ml-0'
+        } h-full w-full overflow-auto`}
       >
         <Routes>
           <Route
@@ -59,22 +60,23 @@ const AppContent: React.FC = () => {
           <Route path="/settings" element={<Settings />} />
           <Route path="/flashcard-static" element={<FlashCardStatic />} />
           <Route path="/flashcard-deck" element={<FlashcardDeckList />} />
-          <Route
-            path="/flashcard-deck/:deckId"
-            element={<FlashcardList />}
-          />
+          <Route path="/flashcard-deck/:deckId" element={<FlashcardList />} />
           <Route
             path="/flashcard-deck/:deckId/add"
             element={<AddFlashcard />}
           />
-          <Route path="/view-flashcard" element={<FlashcardReview />} />
+          <Route
+            path="/flashcard-deck/:deckId/learn"
+            element={<FlashcardReview />}
+          />
           <Route path="/user-profile" element={<UserProfile />} />
           <Route path="/focus-timer" element={<FocusTimer />} />
           <Route path="/manage-focus-timer" element={<ManageFocusTimer />} />
           <Route path="/note" element={<NoteScreen />} />
           <Route path="/task" element={<Task />} />
           <Route path="/statistics-timer" element={<Statistics />} />
-            <Route path="/friends" element={<FriendList />} /> {/* Thêm route cho FriendList */}
+          <Route path="/friends" element={<FriendList />} />{' '}
+          {/* Thêm route cho FriendList */}
         </Routes>
       </div>
     </div>

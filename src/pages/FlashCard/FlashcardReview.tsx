@@ -1,43 +1,208 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { FlashcardChips } from '../../components/common/Chip';
+import { getDueFlashcards } from '../../services/flashcardService';
+import { Flashcard, FlashcardDeck } from '../../types/flashcard.types';
+import { token } from '../../services/apitest';
+import { Button, FlashcardButton } from '../../components/common/Button';
+import COLORS from '../../constants/colors';
 
+const initFlashcardDeck = {
+  _id: '',
+  lastReview: 0,
+  learningCount: 0,
+  newCount: 0,
+  reviewingCount: 0,
+  title: '',
+  user_id: '',
+  description: '',
+  flashcards: [
+    {
+      _id: '',
+      front: '',
+      back: '',
+      deck_id: '',
+      review: {
+        _id: '',
+        flashcard_id: '',
+        user_id: '',
+        ease_factor: 0,
+        interval: 0,
+        last_review: new Date(),
+        next_review: new Date(),
+        repetition_count: 0,
+        quality: 0,
+      },
+    },
+  ],
+};
 export default function FlashcardView() {
+  const { deckId } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { title } = location.state;
+  const [flashcardDeck, setFlashcardDeck] =
+    useState<FlashcardDeck>(initFlashcardDeck);
+  const [flashcard, setFlashcard] = useState<Flashcard>({
+    _id: '',
+    front: '',
+    back: '',
+    deck_id: '',
+    review: {
+      _id: '',
+      flashcard_id: '',
+      user_id: '',
+      ease_factor: 0,
+      interval: 0,
+      last_review: new Date(),
+      next_review: new Date(),
+      repetition_count: 0,
+      quality: 0,
+    },
+  });
+  const [showAnswer, setShowAnswer] = useState(false);
+
+  const fetchData = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:81/productivity/flashcard-deck/${deckId}`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const data = (await response.json()).data;
+      if (data.flashcards) {
+        const learnFlashcards = getDueFlashcards(data.flashcards);
+        data.flashcards = [...learnFlashcards];
+        if (data.flashcards.length > 0) {
+          setFlashcard(data.flashcards[0]);
+        }
+      }
+
+      setFlashcardDeck(data);
+    } catch (error) {
+      console.error('Failed to fetch deck:', error);
+    } finally {
+      setShowAnswer(false);
+    }
+  };
+
+  const handleReview = async (quality: number) => {
+    try {
+      const response = await fetch(
+        `http://localhost:81/productivity/review-session/review`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            flashcard_id: flashcard._id,
+            quality: quality,
+          }),
+        }
+      );
+
+      const data = (await response.json()).data;
+
+      console.log(data);
+    } catch (error) {
+      console.error('Failed to review flashcard:', error);
+    } finally {
+      await fetchData();
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
   return (
     <div className="flex flex-col items-center justify-center w-full min-h-screen px-4 py-8 bg-gray-100">
       {/* Title */}
-      <h1 className="text-2xl font-bold mb-6">400 English Words</h1>
+      <h1 className="text-2xl font-bold mb-6">{title}</h1>
 
       {/* Status tags */}
-      <div className="flex gap-4 mb-6">
-        <span className="px-4 py-1 text-sm font-semibold text-white bg-red-700 rounded-full">50 New</span>
-        <span className="px-4 py-1 text-sm font-semibold text-white bg-green-700 rounded-full">20 Learning</span>
-        <span className="px-4 py-1 text-sm font-semibold text-black bg-yellow-600 rounded-full">10 Reviewing</span>
+      <div className="w-1/2" style={{ display: 'flex', flexDirection: 'row' }}>
+        <FlashcardChips
+          newFlashcard={flashcardDeck.newCount}
+          learningFlashcard={flashcardDeck.learningCount}
+          reviewingFlashcard={flashcardDeck.reviewingCount}
+        />
       </div>
 
-      {/* Flashcard Front */}
-      <div className="w-full max-w-lg mb-6">
-        <div className="text-sm font-semibold text-gray-600 mb-1">Front</div>
-        <div className="bg-white rounded-md border border-gray-300 p-4 shadow-sm">
-          <p className="text-sm text-gray-800 leading-relaxed">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. In urna orci, fermentum sit amet lorem dignissim,
-            semper congue justo.
-          </p>
+      {flashcardDeck.flashcards?.length !== 0 && (
+        <div className="w-1/2 mb-4">
+          <label className="block text-gray-700 font-medium mb-1">Front</label>
+          <textarea
+            className="w-full p-3 border rounded-md"
+            placeholder="Enter the front side content..."
+            value={flashcard.front}
+            contentEditable={false}
+            readOnly={true}
+          />
         </div>
-      </div>
+      )}
 
-      {/* Flashcard Back */}
-      <div className="w-full max-w-lg mb-6">
-        <div className="text-sm font-semibold text-gray-600 mb-1">Back</div>
-        <div className="bg-white rounded-md border border-gray-300 p-4 shadow-sm">
-          <p className="text-sm text-gray-800 leading-relaxed">
-            Nulla porttitor pulvinar lacus scelerisque dapibus. Fusce iaculis augue lacinia justo ullamcorper sagittis.
-          </p>
+      {flashcardDeck.flashcards?.length !== 0 && showAnswer && (
+        <>
+          {/* Back Side */}
+          <div className="w-1/2 mb-6">
+            <label className="block text-gray-700 font-medium mb-1">Back</label>
+            <textarea
+              className="w-full p-3 border rounded-md"
+              placeholder="Enter the back side content..."
+              value={flashcard.back}
+              contentEditable={false}
+              readOnly={true}
+            />
+          </div>
+        </>
+      )}
+
+      {flashcardDeck.flashcards?.length !== 0 && showAnswer && (
+        <div className="w-1/2 flex justify-between">
+          <FlashcardButton
+            difficulty={'Again'}
+            minutes={1}
+            onClick={() => handleReview(0)}
+            style={{ backgroundColor: COLORS.red500 }}
+          ></FlashcardButton>
+          <FlashcardButton
+            difficulty={'Hard'}
+            minutes={6}
+            onClick={() => handleReview(1)}
+            style={{ backgroundColor: COLORS.yellow500 }}
+          ></FlashcardButton>
+          <FlashcardButton
+            difficulty={'Good'}
+            minutes={20}
+            onClick={() => handleReview(2)}
+            style={{ backgroundColor: COLORS.green500 }}
+          ></FlashcardButton>
+          <FlashcardButton
+            difficulty={'Easy'}
+            minutes={60}
+            onClick={() => handleReview(3)}
+          ></FlashcardButton>
         </div>
-      </div>
+      )}
 
-      {/* Show Answer Button (tùy chọn nếu muốn toggle) */}
-      <button className="w-full max-w-lg bg-black text-white py-3 rounded-md text-base font-semibold hover:bg-gray-800 transition">
-        Show Answer
-      </button>
+      {flashcardDeck.flashcards?.length !== 0 && !showAnswer && (
+        <>
+          <Button
+            title="Show Answer"
+            className="w-1/2"
+            onClick={() => setShowAnswer(true)}
+          ></Button>
+        </>
+      )}
     </div>
   );
 }
