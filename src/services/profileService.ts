@@ -6,6 +6,7 @@ export interface ProfileData {
   user_id?: string;
   email: string;
   full_name: string;
+  avatar?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -15,6 +16,7 @@ export interface UpdateProfileRequest {
 }
 
 export interface ChangePasswordRequest {
+  currentPassword: string;
   newPassword: string;
 }
 
@@ -46,7 +48,16 @@ export async function getProfile(): Promise<ProfileData> {
   try {
     const response = await api.get('/core/profile');
     console.log('Profile response:', response.data);
-    return response.data.data || response.data;
+    const profileData = response.data.data || response.data;
+    
+    // Ensure avatar field is included in the response
+    return {
+      _id: profileData._id,
+      email: profileData.email,
+      full_name: profileData.full_name,
+      avatar: profileData.avatar_url,
+     
+    };
   } catch (error: any) {
     console.error('Error fetching profile:', error);
     // Check if it's an authentication error
@@ -84,15 +95,15 @@ export async function updateProfile(data: UpdateProfileRequest): Promise<Profile
 
 /**
  * Change user's password
- * @param data The new password data
+ * @param data The password data containing current and new password
  */
 export async function changePassword(data: ChangePasswordRequest): Promise<void> {
   try {
-    await api.post('/core/auth/reset-password', data);
+    await api.post('/core/auth/change-password', data);
   } catch (error: any) {
     console.error('Error changing password:', error);
     if (error.response?.status === 400) {
-      throw new Error(error.response.data.message || 'Invalid password format. Password must be at least 6 characters.');
+      throw new Error(error.response.data.message || 'Current password is incorrect or invalid password format.');
     }
     if (error.response?.status === 401) {
       throw new Error('Authentication failed. Please log in again.');
@@ -113,7 +124,7 @@ export async function logout(): Promise<void> {
     // }
 
     // Development code (remove in production)
-    const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2ODI5YTA3MDM5M2I1ODE3OTY4NjA2OTQiLCJlbWFpbCI6Im5ndXllbmtoYW5oZHV5QGdtYWlsLmNvbSIsImZ1bGxfbmFtZSI6IkxvaVRyYW4iLCJzZXNzaW9uX2lkIjoiNjgzZmVmMzc5MjBhYWIyYjlkZDJiMjI4IiwiaWF0IjoxNzQ5MDIwNDcxLCJleHAiOjE3NDkxMDY4NzF9.re3SfRuomaEUogyHeSV4sdfqzOkqASd7qta9W9isQ_4";
+    const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2ODI5YTA3MDM5M2I1ODE3OTY4NjA2OTQiLCJlbWFpbCI6Im5ndXllbmtoYW5oZHV5QGdtYWlsLmNvbSIsImZ1bGxfbmFtZSI6IkxhZG8iLCJzZXNzaW9uX2lkIjoiNjg0MTNlNzY2YjBjNzgxZWFkMWYxNjU5IiwiaWF0IjoxNzQ5MTA2Mjk0LCJleHAiOjE3NDkxOTI2OTR9.qGwrujvelYY6QhXaa598OuxsVfJWsLq3ARM7SMHnDvE";
 
     const payload = decodeToken(token);
     if (!payload || !payload.session_id) {
@@ -212,6 +223,31 @@ export async function logoutAllOtherSessions(): Promise<void> {
   }
 }
 
+/**
+ * Update user's avatar
+ * @param file The image file to upload
+ */
+export async function updateAvatar(file: File): Promise<{ avatar: string }> {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await api.post('/core/profile/avatar', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    return response.data.data;
+  } catch (error: any) {
+    console.error('Error updating avatar:', error);
+    if (error.response?.status === 401) {
+      throw new Error('Authentication failed. Please log in again.');
+    }
+    throw new Error('Failed to update avatar. Please try again.');
+  }
+}
+
 // Export as default object for compatibility with existing code
 const profileService = {
   getProfile,
@@ -220,7 +256,8 @@ const profileService = {
   logout,
   getLoginSessions,
   logoutSession,
-  logoutAllOtherSessions
+  logoutAllOtherSessions,
+  updateAvatar
 };
 
 export default profileService;
