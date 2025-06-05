@@ -34,7 +34,6 @@ api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     // Get token from localStorage
     const token = localStorage.getItem('accessToken');
-
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
