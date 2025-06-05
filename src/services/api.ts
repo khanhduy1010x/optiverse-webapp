@@ -1,7 +1,7 @@
-import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
+import { AUTH_ERROR_EVENT, TOKEN_REFRESH_SUCCESS } from '../contexts/AuthContext';
 
 const api: AxiosInstance = axios.create({
-
   baseURL: 'http://localhost:81', 
   timeout: 10000, 
   headers: {
@@ -9,12 +9,34 @@ const api: AxiosInstance = axios.create({
   },
 });
 
+// Store pending requests that need to be retried after token refresh
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (value?: unknown) => void;
+  reject: (reason?: any) => void;
+  config: InternalAxiosRequestConfig;
+}> = [];
+
+const processQueue = (error: any = null, token: string | null = null) => {
+  failedQueue.forEach(request => {
+    if (error) {
+      request.reject(error);
+    } else if (token) {
+      request.config.headers.Authorization = `Bearer ${token}`;
+      request.resolve(api(request.config));
+    }
+  });
+  
+  failedQueue = [];
+};
 
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
 
+
     // const token = localStorage.getItem('authToken');
         const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2ODI5YTA3MDM5M2I1ODE3OTY4NjA2OTQiLCJlbWFpbCI6Im5ndXllbmtoYW5oZHV5QGdtYWlsLmNvbSIsImZ1bGxfbmFtZSI6IkxvaVRyYW4iLCJzZXNzaW9uX2lkIjoiNjg0MDA3OTg5YTg1MDI3OTkzZDc4ODNlIiwiaWF0IjoxNzQ5MDI2NzEyLCJleHAiOjE3NDkxMTMxMTJ9.IJD3OKkOBl5FybiDpKDSedemfQVsy-dD7pLQdA8WFVI"
+
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -25,16 +47,49 @@ api.interceptors.request.use(
   }
 );
 
+// Listen for token refresh success events
+let tokenRefreshPromise: Promise<void> | null = null;
 
+if (typeof window !== 'undefined') {
+  window.addEventListener(TOKEN_REFRESH_SUCCESS, () => {
+    // Retry all requests in the queue with the new token
+    const newToken = localStorage.getItem('accessToken');
+    processQueue(null, newToken);
+  });
+}
+
+// Add response interceptor for error handling and token refresh
 api.interceptors.response.use(
-  (response: AxiosResponse) => {
-    return response;
-  },
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('authToken');
-      window.location.href = '/';
+  (response) => response,
+  async (error: AxiosError) => {
+    const originalRequest = error.config as InternalAxiosRequestConfig;
+    
+    // Check if error is due to authentication (Unauthenticated, code 1005)
+    if (
+      error.response?.status === 401 && 
+      error.response?.data && 
+      (error.response.data as any).code === 1005 && 
+      !originalRequest?.headers['X-Retry']
+    ) {
+      // Dispatch auth error event for the AuthContext to handle
+      window.dispatchEvent(new Event(AUTH_ERROR_EVENT));
+      
+      // Add this request to the queue
+      return new Promise((resolve, reject) => {
+        failedQueue.push({ resolve, reject, config: originalRequest });
+      });
     }
+    
+    // Handle other errors
+    if (error.response?.status === 401) {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      // Redirect to login page if not already there
+      if (!window.location.pathname.includes('/login')) {
+        window.location.href = '/login';
+      }
+    }
+    
     return Promise.reject(error);
   }
 );
