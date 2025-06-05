@@ -16,6 +16,7 @@ export interface UpdateProfileRequest {
 }
 
 export interface ChangePasswordRequest {
+  currentPassword: string;
   newPassword: string;
 }
 
@@ -94,15 +95,15 @@ export async function updateProfile(data: UpdateProfileRequest): Promise<Profile
 
 /**
  * Change user's password
- * @param data The new password data
+ * @param data The password data containing current and new password
  */
 export async function changePassword(data: ChangePasswordRequest): Promise<void> {
   try {
-    await api.post('/core/auth/reset-password', data);
+    await api.post('/core/auth/change-password', data);
   } catch (error: any) {
     console.error('Error changing password:', error);
     if (error.response?.status === 400) {
-      throw new Error(error.response.data.message || 'Invalid password format. Password must be at least 6 characters.');
+      throw new Error(error.response.data.message || 'Current password is incorrect or invalid password format.');
     }
     if (error.response?.status === 401) {
       throw new Error('Authentication failed. Please log in again.');
