@@ -4,5 +4,6 @@ export type AuthView =
   | 'register'
   | 'forgot'
   | 'verify'
-  | 'verify-register';
+  | 'verify-register'
+  | 'reset';
 //other types here nhe anh em...
