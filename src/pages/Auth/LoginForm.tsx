@@ -3,6 +3,8 @@ import { AuthView } from '../../types/global.types';
 import { useNavigate } from 'react-router-dom';
 import { AuthService } from '../../services/AuthService';
 import { GOOGLE_AUTH_CONFIG } from '../../config/google-auth';
+import axios from 'axios';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface LoginFormProps {
   onSwitch: (view: AuthView) => void;
@@ -11,20 +13,63 @@ interface LoginFormProps {
 const LoginForm: React.FC<LoginFormProps> = ({ onSwitch }) => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isEmailLoginLoading, setIsEmailLoginLoading] = useState<boolean>(false);
+  const [isGoogleLoginLoading, setIsGoogleLoginLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { refreshTokens } = useAuth(); // Get auth context methods
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Giả lập đăng nhập, trong thực tế bạn sẽ gọi API
-    console.log('Logging in with:', { email, password });
-    navigate('/flashcard-static');
+    
+    if (isEmailLoginLoading) return; // Prevent multiple submissions
+    
+    setError(null);
+    setIsEmailLoginLoading(true);
+    
+    try {
+      // Direct implementation to ensure we can catch and handle the error properly
+      const response = await axios.post('http://localhost:81/core/auth/login', { 
+        email, 
+        password 
+      });
+      
+      // Process successful login
+      const { access_token, refresh_token } = response.data.data;
+      
+      // Save tokens to localStorage
+      localStorage.setItem('accessToken', access_token);
+      localStorage.setItem('refreshToken', refresh_token);
+      
+      // Update authentication state
+      await refreshTokens(); // This will update isAuthenticated in AuthContext
+      
+      // Navigate to dashboard page
+      navigate('/dashboard', { replace: true });
+      
+    } catch (err: any) {
+      console.error('Login error:', err);
+      
+      // Handle 401 Unauthorized explicitly
+      if (err.response?.status === 401) {
+        setError('Invalid email or password. Please try again.');
+      } else {
+        setError(err.message || 'Login failed. Please try again later.');
+      }
+    } finally {
+      setIsEmailLoginLoading(false); // Always reset loading state
+    }
+  };
+
+  // Reset error when user starts typing again
+  const handleInputChange = (setter: React.Dispatch<React.SetStateAction<string>>) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (error) setError(null);
+    setter(e.target.value);
   };
 
   const handleGoogleLogin = async () => {
     setError(null);
-    setIsLoading(true);
+    setIsGoogleLoginLoading(true);
     
     try {
       // Open Google OAuth page in a popup
@@ -36,8 +81,12 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitch }) => {
         'width=500,height=600,menubar=no,toolbar=no,location=no'
       );
 
+      if (!popup) {
+        throw new Error('Popup blocked. Please allow popups for this site.');
+      }
+
       // Listen for the callback from the popup
-      window.addEventListener('message', async (event) => {
+      const messageHandler = async (event: MessageEvent) => {
         // Make sure the message is from our popup
         if (event.origin !== window.location.origin) return;
         
@@ -45,8 +94,10 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitch }) => {
           try {
             // Call the API with the received code
             await AuthService.loginWithGoogle(event.data.code);
-            // Navigate to home page after successful login
-            navigate('/flashcard-static');
+            // Update authentication state
+            await refreshTokens(); 
+            // Navigate to dashboard page after successful login
+            navigate('/dashboard', { replace: true });
             
             // Close the popup after successful login
             if (popup) popup.close();
@@ -54,13 +105,27 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitch }) => {
             setError('Google login failed. Please try again.');
             console.error('Google login error:', err);
           } finally {
-            setIsLoading(false);
+            setIsGoogleLoginLoading(false);
+            // Remove the event listener
+            window.removeEventListener('message', messageHandler);
           }
         }
-      });
+      };
+
+      window.addEventListener('message', messageHandler);
+      
+      // Set a timeout to clear the loading state if no response is received
+      setTimeout(() => {
+        if (isGoogleLoginLoading) {
+          setError('Google login timed out. Please try again.');
+          setIsGoogleLoginLoading(false);
+          window.removeEventListener('message', messageHandler);
+        }
+      }, 60000); // 1 minute timeout
+      
     } catch (err) {
       setError('Failed to open Google login. Please try again.');
-      setIsLoading(false);
+      setIsGoogleLoginLoading(false);
       console.error('Google login error:', err);
     }
   };
@@ -79,9 +144,10 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitch }) => {
             type="email"
             placeholder="Email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={handleInputChange(setEmail)}
             className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
+            disabled={isEmailLoginLoading || isGoogleLoginLoading}
           />
         </div>
         <div>
@@ -89,36 +155,45 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitch }) => {
             type="password"
             placeholder="Password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={handleInputChange(setPassword)}
             className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
+            disabled={isEmailLoginLoading || isGoogleLoginLoading}
           />
         </div>
         <button
           type="submit"
           className="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-          disabled={isLoading}
+          disabled={isEmailLoginLoading || isGoogleLoginLoading}
         >
-          Login
+          {isEmailLoginLoading ? 'Logging in...' : 'Login'}
         </button>
         <button
           type="button"
           onClick={handleGoogleLogin}
           className="w-full px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors flex justify-center items-center gap-2"
-          disabled={isLoading}
+          disabled={isEmailLoginLoading || isGoogleLoginLoading}
         >
-          {isLoading ? 'Loading...' : 'Login with Google'}
+          {isGoogleLoginLoading ? 'Loading...' : 'Login with Google'}
         </button>
       </form>
       <p
-        onClick={() => onSwitch('forgot')}
-        className="text-blue-500 hover:underline cursor-pointer text-center"
+        onClick={() => {
+          if (!isEmailLoginLoading && !isGoogleLoginLoading) {
+            onSwitch('forgot');
+          }
+        }}
+        className={`text-blue-500 ${!isEmailLoginLoading && !isGoogleLoginLoading ? 'hover:underline cursor-pointer' : 'opacity-50 cursor-not-allowed'} text-center`}
       >
         Forgot password?
       </p>
       <p
-        onClick={() => onSwitch('register')}
-        className="text-blue-500 hover:underline cursor-pointer text-center"
+        onClick={() => {
+          if (!isEmailLoginLoading && !isGoogleLoginLoading) {
+            onSwitch('register');
+          }
+        }}
+        className={`text-blue-500 ${!isEmailLoginLoading && !isGoogleLoginLoading ? 'hover:underline cursor-pointer' : 'opacity-50 cursor-not-allowed'} text-center`}
       >
         Don't have an account? Register
       </p>

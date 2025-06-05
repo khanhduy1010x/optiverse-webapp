@@ -32,10 +32,8 @@ const processQueue = (error: any = null, token: string | null = null) => {
 
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-
-
-    // const token = localStorage.getItem('authToken');
-        const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2ODI5YTA3MDM5M2I1ODE3OTY4NjA2OTQiLCJlbWFpbCI6Im5ndXllbmtoYW5oZHV5QGdtYWlsLmNvbSIsImZ1bGxfbmFtZSI6IkxvaVRyYW4iLCJzZXNzaW9uX2lkIjoiNjg0MDA3OTg5YTg1MDI3OTkzZDc4ODNlIiwiaWF0IjoxNzQ5MDI2NzEyLCJleHAiOjE3NDkxMTMxMTJ9.IJD3OKkOBl5FybiDpKDSedemfQVsy-dD7pLQdA8WFVI"
+    // Get token from localStorage
+    const token = localStorage.getItem('accessToken');
 
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -63,6 +61,12 @@ api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig;
+    const requestUrl = originalRequest?.url || '';
+    
+    // Do not intercept auth/login errors - let them be handled by the components
+    if (requestUrl.includes('auth/login')) {
+      return Promise.reject(error);
+    }
     
     // Check if error is due to authentication (Unauthenticated, code 1005)
     if (
@@ -81,7 +85,12 @@ api.interceptors.response.use(
     }
     
     // Handle other errors
-    if (error.response?.status === 401) {
+    // Don't redirect to login page if we're already on a login-related endpoint
+    if (
+      error.response?.status === 401 && 
+      !requestUrl.includes('auth/login') && 
+      !requestUrl.includes('auth/google')
+    ) {
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
       // Redirect to login page if not already there
