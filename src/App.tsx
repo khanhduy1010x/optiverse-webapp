@@ -21,7 +21,7 @@ import AddFlashcard from './pages/FlashCard/AddFlashCard';
 import UserProfile from './pages/Profile/UserProfile';
 import LoginSessions from './pages/Profile/LoginSessions';
 import FocusTimer from './pages/FocusTimer/FocusTimer';
-import ManageFocusTimer from './pages/FocusTimer/ManageFocusTimer';
+// import ManageFocusTimer from './pages/FocusTimer/ManageFocusTimer';
 import Task from './pages/Task/Task';
 import Statistics from './pages/FocusTimer/Statistics';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -33,6 +33,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { PublicRoute } from './components/PublicRoute';
 import ForgotPasswordForm from './pages/Auth/ForgotPasswordForm';
 import { AuthProvider } from './contexts/AuthContext';
+import FocusSessionList from './pages/FocusTimer/FocusSessionListPage';
 
 const AppContent: React.FC = () => {
   const location = useLocation();
@@ -139,7 +140,7 @@ const AppContent: React.FC = () => {
           } />
           <Route path="/manage-focus-timer" element={
             <ProtectedRoute>
-              <ManageFocusTimer />
+              <FocusSessionList />
             </ProtectedRoute>
           } />
           <Route path="/note" element={
