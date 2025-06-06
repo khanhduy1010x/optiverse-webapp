@@ -6,6 +6,7 @@ import IconProps from '../../components/common/Icon/Icon.component';
 import profileService from '../../services/profile.service';
 import { ConfirmationModalProps } from '../../types/profile/props/component.props';
 import { UserSession } from '../../types/profile/response/profile.response';
+import { GROUP_CLASSNAMES } from '../../styles/group-class-name.style';
 
 const SESSIONS_PER_PAGE = 2; // Number of sessions to show initially
 
@@ -14,14 +15,14 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, onClose, 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="bg-white rounded-lg p-6 w-96 shadow-xl">
+    <div className={GROUP_CLASSNAMES.modalOverlayProfile}>
+      <div className={GROUP_CLASSNAMES.modalContentProfile}>
         <h3 className="text-xl font-semibold mb-4">{title}</h3>
         <p className="text-gray-600 mb-6">{message}</p>
         <div className="flex justify-end space-x-4">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+            className={GROUP_CLASSNAMES.modalButtonCancel}
           >
             Cancel
           </button>
@@ -30,7 +31,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, onClose, 
               onConfirm();
               onClose();
             }}
-            className="px-4 py-2 text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+            className={GROUP_CLASSNAMES.modalButtonConfirm}
           >
             Confirm
           </button>
@@ -149,42 +150,41 @@ export default function LoginSessions() {
   };
 
   const ThisDeviceCard: React.FC<{ session: UserSession }> = ({ session }) => (
-    <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200 mb-4">
-      <div className="flex items-center space-x-4">
-        <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+    <div className={GROUP_CLASSNAMES.sessionCard}>
+      <div className={GROUP_CLASSNAMES.sessionCardContent}>
+        <div className={GROUP_CLASSNAMES.sessionCardIcon}>
           <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
           </svg>
         </div>
         <div>
-          <Text className="font-medium text-gray-900 text-base">{formatDeviceInfo(session)}</Text>
+          <Text className={GROUP_CLASSNAMES.sessionCardText}>{formatDeviceInfo(session)}</Text>
           <div className="flex flex-col">
-            <Text className="text-sm text-gray-500">{session.ip_address || 'Unknown IP'}</Text>
+            <Text className={GROUP_CLASSNAMES.sessionCardSubtext}>{session.ip_address || 'Unknown IP'}</Text>
           </div>
         </div>
       </div>
       <div className="flex items-center">
-        <span className="text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full">Current session</span>
+        <span className={GROUP_CLASSNAMES.sessionCardCurrentBadge}>Current session</span>
       </div>
     </div>
   );
 
   const SessionCard: React.FC<{ session: UserSession; isActive?: boolean }> = ({ session, isActive = true }) => (
-    <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200 mb-4">
-      <div className="flex items-center space-x-4">
-        <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+    <div className={GROUP_CLASSNAMES.sessionCard}>
+      <div className={GROUP_CLASSNAMES.sessionCardContent}>
+        <div className={GROUP_CLASSNAMES.sessionCardIcon}>
           <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
           </svg>
         </div>
         <div>
-          <Text className="font-medium text-gray-900">{formatDeviceInfo(session)}</Text>
+          <Text className={GROUP_CLASSNAMES.sessionCardText}>{formatDeviceInfo(session)}</Text>
           <div className="flex items-center space-x-2 mt-1">
-            <Text className="text-sm text-gray-500">{session.ip_address || 'Unknown IP'}</Text>
+            <Text className={GROUP_CLASSNAMES.sessionCardSubtext}>{session.ip_address || 'Unknown IP'}</Text>
             {isActive && (
               <>
                 <span className="text-gray-300">•</span>
-
               </>
             )}
           </div>
@@ -194,7 +194,7 @@ export default function LoginSessions() {
         <div className="flex items-center">
           <button
             onClick={() => handleLogoutSession(session._id)}
-            className="text-sm text-gray-600 hover:text-gray-900"
+            className={GROUP_CLASSNAMES.sessionLogoutButton}
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -217,7 +217,7 @@ export default function LoginSessions() {
       <View className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
         <View
-          className="w-1/5 overflow-y-auto bg-white"
+          className={GROUP_CLASSNAMES.profileSidebar}
           style={{
             msOverflowStyle: 'none',
             scrollbarWidth: 'none',
@@ -235,9 +235,8 @@ export default function LoginSessions() {
             <li>
               <button
                 onClick={() => handleNavigate('profile', '/user-profile')}
-                className={`w-full text-left flex justify-between items-center py-2 px-3 rounded 
-                  ${selectedMenu === 'profile' ? 'bg-gray-200 font-bold text-lg' : 'text-gray-500'} 
-                  hover:bg-gray-100`}
+                className={`${GROUP_CLASSNAMES.profileSidebarButton} 
+                  ${selectedMenu === 'profile' ? GROUP_CLASSNAMES.profileSidebarButtonActive : GROUP_CLASSNAMES.profileSidebarButtonInactive}`}
               >
                 Profile
                 <IconProps name="chevron" size={selectedMenu === 'profile' ? 28 : 20} className="ml-2" />
@@ -246,9 +245,8 @@ export default function LoginSessions() {
             <li>
               <button
                 onClick={() => handleNavigate('achievements', '/achievements')}
-                className={`w-full text-left flex justify-between items-center py-2 px-3 rounded 
-                  ${selectedMenu === 'achievements' ? 'bg-gray-200 font-bold text-lg' : 'text-gray-500'} 
-                  hover:bg-gray-100`}
+                className={`${GROUP_CLASSNAMES.profileSidebarButton} 
+                  ${selectedMenu === 'achievements' ? GROUP_CLASSNAMES.profileSidebarButtonActive : GROUP_CLASSNAMES.profileSidebarButtonInactive}`}
               >
                 Achievements
                 <IconProps name="chevron" size={selectedMenu === 'achievements' ? 28 : 20} className="ml-2" />
@@ -257,9 +255,8 @@ export default function LoginSessions() {
             <li>
               <button
                 onClick={() => handleNavigate('friends', '/friends')}
-                className={`w-full text-left flex justify-between items-center py-2 px-3 rounded 
-                  ${selectedMenu === 'friends' ? 'bg-gray-200 font-bold text-lg' : 'text-gray-500'} 
-                  hover:bg-gray-100`}
+                className={`${GROUP_CLASSNAMES.profileSidebarButton} 
+                  ${selectedMenu === 'friends' ? GROUP_CLASSNAMES.profileSidebarButtonActive : GROUP_CLASSNAMES.profileSidebarButtonInactive}`}
               >
                 Friends
                 <IconProps name="chevron" size={selectedMenu === 'friends' ? 28 : 20} className="ml-2" />
@@ -268,9 +265,8 @@ export default function LoginSessions() {
             <li>
               <button
                 onClick={() => handleNavigate('login-sessions', '/login-session')}
-                className={`w-full text-left flex justify-between items-center py-2 px-3 rounded 
-                  ${selectedMenu === 'login-sessions' ? 'bg-gray-200 font-bold text-lg' : 'text-gray-500'} 
-                  hover:bg-gray-100`}
+                className={`${GROUP_CLASSNAMES.profileSidebarButton} 
+                  ${selectedMenu === 'login-sessions' ? GROUP_CLASSNAMES.profileSidebarButtonActive : GROUP_CLASSNAMES.profileSidebarButtonInactive}`}
               >
                 Login Sessions
                 <IconProps name="chevron" size={selectedMenu === 'login-sessions' ? 28 : 20} className="ml-2" />
@@ -281,7 +277,7 @@ export default function LoginSessions() {
 
         {/* Main Content */}
         <View
-          className="flex-1 overflow-y-auto border-l border-gray-300 dark:border-gray-600"
+          className={GROUP_CLASSNAMES.profileMainContent}
           style={{
             msOverflowStyle: 'none',
             scrollbarWidth: 'none',
@@ -305,17 +301,17 @@ export default function LoginSessions() {
             ) : (
               <div className="space-y-8">
                 <section>
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">This device</h3>
+                  <h3 className={GROUP_CLASSNAMES.profileSection}>This device</h3>
                   {currentSession && <ThisDeviceCard session={currentSession} />}
                 </section>
 
                 <section>
                   <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-medium text-gray-900">Other active sessions</h3>
+                    <h3 className={GROUP_CLASSNAMES.profileSection}>Other active sessions</h3>
                     {getDisplayedActiveSessions().length > 0 && (
                       <button
                         onClick={handleLogoutAllSessions}
-                        className="text-sm text-gray-600 hover:text-gray-900 bg-gray-100 px-4 py-2 rounded-lg"
+                        className={GROUP_CLASSNAMES.sessionLogoutAllButton}
                       >
                         Log out all other sessions
                       </button>
@@ -328,7 +324,7 @@ export default function LoginSessions() {
                     {activeSessions.filter(session => !session.is_current).length > SESSIONS_PER_PAGE && (
                       <button
                         onClick={toggleShowAllSessions}
-                        className="w-full text-center text-sm text-blue-600 hover:text-blue-800 mt-2 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                        className={GROUP_CLASSNAMES.sessionShowMoreButton}
                       >
                         {showAllActiveSessions ? (
                           <>
@@ -352,7 +348,7 @@ export default function LoginSessions() {
 
                 {previousSessions.length > 0 && (
                   <section>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Previously logged-out sessions</h3>
+                    <h3 className={GROUP_CLASSNAMES.profileSection}>Previously logged-out sessions</h3>
                     <div className="space-y-4">
                       {previousSessions.map(session => (
                         <SessionCard key={session._id} session={session} isActive={false} />

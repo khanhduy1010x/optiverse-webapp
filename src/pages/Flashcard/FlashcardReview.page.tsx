@@ -2,64 +2,20 @@ import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { FlashcardChips } from '../../components/common/Chip.component';
 import { getDueFlashcards } from '../../services/flashcardService';
-import { Flashcard, FlashcardDeck } from '../../types/flashcard/response/flashcard.response';
+import { Flashcard, FlashcardDeck, FlashcardMock, initFlashcardDeckMock } from '../../types/flashcard/response/flashcard.response';
 import { token } from '../../utils/apitest';
 import { Button, FlashcardButton } from '../../components/common/Button.component';
 import COLORS from '../../constants/colors.constant';
 
-const initFlashcardDeck = {
-  _id: '',
-  lastReview: 0,
-  learningCount: 0,
-  newCount: 0,
-  reviewingCount: 0,
-  title: '',
-  user_id: '',
-  description: '',
-  flashcards: [
-    {
-      _id: '',
-      front: '',
-      back: '',
-      deck_id: '',
-      review: {
-        _id: '',
-        flashcard_id: '',
-        user_id: '',
-        ease_factor: 0,
-        interval: 0,
-        last_review: new Date(),
-        next_review: new Date(),
-        repetition_count: 0,
-        quality: 0,
-      },
-    },
-  ],
-};
+
 export default function FlashcardView() {
   const { deckId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const { title } = location.state;
   const [flashcardDeck, setFlashcardDeck] =
-    useState<FlashcardDeck>(initFlashcardDeck);
-  const [flashcard, setFlashcard] = useState<Flashcard>({
-    _id: '',
-    front: '',
-    back: '',
-    deck_id: '',
-    review: {
-      _id: '',
-      flashcard_id: '',
-      user_id: '',
-      ease_factor: 0,
-      interval: 0,
-      last_review: new Date(),
-      next_review: new Date(),
-      repetition_count: 0,
-      quality: 0,
-    },
-  });
+    useState<FlashcardDeck>(initFlashcardDeckMock);
+  const [flashcard, setFlashcard] = useState<Flashcard>(FlashcardMock);
   const [showAnswer, setShowAnswer] = useState(false);
 
   const fetchData = async () => {

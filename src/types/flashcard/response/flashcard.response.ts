@@ -15,6 +15,50 @@ export interface FlashcardDeck {
   flashcards?: Flashcard[];
 }
 
+// Mock data for flashcard deck
+export const FlashCardDeckMock: FlashcardDeck = {
+  _id: '',
+  title: '',
+  lastReview: 0,
+  learningCount: 0,
+  newCount: 0,
+  reviewingCount: 0,
+  user_id: '',
+};
+export const FlashCardDeckLoadingMock: FlashcardDeck = {
+  ...FlashCardDeckMock,
+  title: 'Loading',
+};
+export const initFlashcardDeckMock: FlashcardDeck = {
+  _id: '',
+  lastReview: 0,
+  learningCount: 0,
+  newCount: 0,
+  reviewingCount: 0,
+  title: '',
+  user_id: '',
+  description: '',
+  flashcards: [
+    {
+      _id: '',
+      front: '',
+      back: '',
+      deck_id: '',
+      review: {
+        _id: '',
+        flashcard_id: '',
+        user_id: '',
+        ease_factor: 0,
+        interval: 0,
+        last_review: new Date(),
+        next_review: new Date(),
+        repetition_count: 0,
+        quality: 0,
+      },
+    },
+  ],
+};
+//End of mock data for flashcard deck
 export interface Flashcard {
   _id: string;
 
@@ -26,7 +70,6 @@ export interface Flashcard {
 
   review: FlashcardReview;
 }
-
 export interface FlashcardReview {
   _id: string;
 
@@ -46,3 +89,20 @@ export interface FlashcardReview {
 
   quality: number;
 }
+export const FlashcardMock: Flashcard = {
+  _id: '',
+  front: '',
+  back: '',
+  deck_id: '',
+  review: {
+    _id: '',
+    flashcard_id: '',
+    user_id: '',
+    ease_factor: 0,
+    interval: 0,
+    last_review: new Date(),
+    next_review: new Date(),
+    repetition_count: 0,
+    quality: 0,
+  },
+};

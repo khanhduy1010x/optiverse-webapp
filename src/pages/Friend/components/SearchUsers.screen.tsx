@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SearchUsersProps } from '../../../types/friend/props/component.props';
+import { GROUP_CLASSNAMES } from '../../../styles/group-class-name.style';
 
 
 const EMAIL_DOMAINS = [
@@ -169,7 +170,7 @@ const SearchUsers: React.FC<SearchUsersProps> = ({
         return (
           <button
             onClick={() => friendRelation && onRemoveFriend(friendRelation._id)}
-            className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-colors duration-300 flex items-center gap-1 shadow-sm hover:shadow-md"
+            className={GROUP_CLASSNAMES.buttonRemove}
             disabled={loading || !friendRelation}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -182,7 +183,7 @@ const SearchUsers: React.FC<SearchUsersProps> = ({
         return (
           <button
             onClick={() => pendingIncomingRequest && onAcceptFriend(pendingIncomingRequest._id)}
-            className="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition-colors duration-300 flex items-center gap-1 shadow-sm hover:shadow-md"
+            className={GROUP_CLASSNAMES.buttonAccept}
             disabled={loading}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -195,7 +196,7 @@ const SearchUsers: React.FC<SearchUsersProps> = ({
         return (
           <button
             onClick={() => onCancelRequest(sentRequest._id)}
-            className="px-4 py-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-lg hover:from-yellow-600 hover:to-yellow-700 transition-colors duration-300 flex items-center gap-1 shadow-sm hover:shadow-md"
+            className={GROUP_CLASSNAMES.buttonCancel}
             disabled={loading}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -208,7 +209,7 @@ const SearchUsers: React.FC<SearchUsersProps> = ({
         return (
           <button
             onClick={() => onAddFriend(userId)}
-            className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-colors duration-300 flex items-center gap-1 shadow-sm hover:shadow-md"
+            className={GROUP_CLASSNAMES.buttonAdd}
             disabled={loading}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -222,32 +223,46 @@ const SearchUsers: React.FC<SearchUsersProps> = ({
 
   return (
     <div>
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 mb-6">
+      <div className={GROUP_CLASSNAMES.friendSearchContainer}>
         <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">{t('Search for Friends')}</h3>
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-wrap gap-2">
-            <div className="relative flex-1 min-w-[200px]">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              <input
-                type="text"
-                placeholder={t('Enter username')}
-                value={username}
-                onChange={handleUsernameChange}
-                onKeyPress={handleKeyPress}
-                className="pl-10 p-3 w-full border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                disabled={loading}
-              />
+        <div className={GROUP_CLASSNAMES.friendSearchInput}>
+          <div className={GROUP_CLASSNAMES.friendSearchInputInner}>
+            <div className={GROUP_CLASSNAMES.friendSearchInputIcon}>
+              <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
             </div>
-
-            {!showCustomDomain ? (
+            <input
+              type="text"
+              placeholder={t('Enter username')}
+              value={username}
+              onChange={handleUsernameChange}
+              onKeyPress={handleKeyPress}
+              className={GROUP_CLASSNAMES.friendSearchInputField}
+              disabled={loading}
+            />
+          </div>
+        </div>
+        <div className={GROUP_CLASSNAMES.friendSearchInput}>
+          {!showCustomDomain ? (
+            <select
+              value={selectedDomain}
+              onChange={handleDomainChange}
+              className={GROUP_CLASSNAMES.friendSearchInputField}
+              disabled={loading}
+            >
+              {EMAIL_DOMAINS.map(domain => (
+                <option key={domain.value} value={domain.value}>
+                  {domain.label}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <>
               <select
                 value={selectedDomain}
                 onChange={handleDomainChange}
-                className="p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className={GROUP_CLASSNAMES.friendSearchInputField}
                 disabled={loading}
               >
                 {EMAIL_DOMAINS.map(domain => (
@@ -256,71 +271,54 @@ const SearchUsers: React.FC<SearchUsersProps> = ({
                   </option>
                 ))}
               </select>
-            ) : (
-              <>
-                <select
-                  value={selectedDomain}
-                  onChange={handleDomainChange}
-                  className="p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  disabled={loading}
-                >
-                  {EMAIL_DOMAINS.map(domain => (
-                    <option key={domain.value} value={domain.value}>
-                      {domain.label}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  ref={customDomainInputRef}
-                  type="text"
-                  placeholder={t('@example.com')}
-                  value={customDomain}
-                  onChange={(e) => setCustomDomain(e.target.value)}
-                  className="p-3 w-40 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  disabled={loading}
-                />
-              </>
-            )}
-
-            <button
-              onClick={handleSearch}
-              className="px-5 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300 flex items-center gap-2 shadow-md hover:shadow-lg"
-              disabled={loading || (username === '') || (showCustomDomain && customDomain === '@')}
-            >
-              {loading ? (
-                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-              ) : (
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              )}
-              {t('Search')}
-            </button>
-
-            {(hasSearched || searchEmail) && (
-              <button
-                onClick={handleClearSearch}
-                className="px-5 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-300 flex items-center gap-2 shadow-md hover:shadow-lg"
+              <input
+                ref={customDomainInputRef}
+                type="text"
+                placeholder={t('@example.com')}
+                value={customDomain}
+                onChange={(e) => setCustomDomain(e.target.value)}
+                className={GROUP_CLASSNAMES.friendSearchInputField}
                 disabled={loading}
-              >
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-                {t('Clear')}
-              </button>
-            )}
-          </div>
+              />
+            </>
+          )}
         </div>
-        <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
-          {t('Enter a username and select an email domain to find users. You can then send them friend requests.')}
-        </p>
+        <button
+          onClick={handleSearch}
+          className={GROUP_CLASSNAMES.buttonSearch}
+          disabled={loading || (username === '') || (showCustomDomain && customDomain === '@')}
+        >
+          {loading ? (
+            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          ) : (
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          )}
+          {t('Search')}
+        </button>
+        {(hasSearched || searchEmail) && (
+          <button
+            onClick={handleClearSearch}
+            className={GROUP_CLASSNAMES.buttonCancel}
+            disabled={loading}
+          >
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            {t('Clear')}
+          </button>
+        )}
       </div>
+      <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
+        {t('Enter a username and select an email domain to find users. You can then send them friend requests.')}
+      </p>
 
       {loading && (
-        <div className="flex justify-center items-center p-8">
+        <div className={GROUP_CLASSNAMES.friendLoadingContainer}>
           <div className="animate-pulse flex space-x-4">
             <div className="rounded-full bg-gray-300 dark:bg-gray-700 h-12 w-12"></div>
             <div className="flex-1 space-y-4 py-1">
@@ -335,34 +333,36 @@ const SearchUsers: React.FC<SearchUsersProps> = ({
       )}
 
       {!loading && searchedUsers.length > 0 ? (
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
+        <div className={GROUP_CLASSNAMES.friendSearchResultsContainer}>
+          <div className={GROUP_CLASSNAMES.friendSearchResultsHeader}>
             <h3 className="text-lg font-semibold text-gray-800 dark:text-white">{t('Search Results')}</h3>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className={GROUP_CLASSNAMES.friendSearchResultsGrid}>
             {searchedUsers.map((user) => {
               const actualUserId = user.userId || (user as any)._id;
               const status = checkFriendStatus(actualUserId);
               return (
                 <div
                   key={actualUserId}
-                  className="p-5 bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 flex items-center justify-between"
+                  className={GROUP_CLASSNAMES.friendSearchResultCard}
                 >
-                  <div className="flex items-center">
-                    <div className="w-14 h-14 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xl font-bold mr-4">
-                      {user.email ? user.email.charAt(0).toUpperCase() : 'U'}
+                  <div className={GROUP_CLASSNAMES.friendSearchResultCardInner}>
+                    <div className={GROUP_CLASSNAMES.friendSearchResultCardAvatar}>
+                      <div className={GROUP_CLASSNAMES.avatarSmall}>
+                        {user.email ? user.email.charAt(0).toUpperCase() : 'U'}
+                      </div>
                     </div>
-                    <div>
-                      <div className="font-medium text-lg text-gray-900 dark:text-white">
+                    <div className={GROUP_CLASSNAMES.friendSearchResultCardInfo}>
+                      <div className={GROUP_CLASSNAMES.friendSearchResultCardName}>
                         {renderUserInfo(actualUserId, true)}
                       </div>
                       {status === 'self' && (
-                        <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                        <div className={GROUP_CLASSNAMES.friendSearchResultCardSelf}>
                           {t('This is you')}
                         </div>
                       )}
                       {status === 'pending_incoming' && (
-                        <div className="text-sm text-yellow-500 dark:text-yellow-400 mt-1 flex items-center">
+                        <div className={GROUP_CLASSNAMES.friendSearchResultCardPending}>
                           <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
@@ -370,7 +370,7 @@ const SearchUsers: React.FC<SearchUsersProps> = ({
                         </div>
                       )}
                       {status === 'sent' && (
-                        <div className="text-sm text-blue-500 dark:text-blue-400 mt-1 flex items-center">
+                        <div className={GROUP_CLASSNAMES.friendSearchResultCardSent}>
                           <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                           </svg>
@@ -378,7 +378,7 @@ const SearchUsers: React.FC<SearchUsersProps> = ({
                         </div>
                       )}
                       {status === 'friend' && (
-                        <div className="text-sm text-green-500 dark:text-green-400 mt-1 flex items-center">
+                        <div className={GROUP_CLASSNAMES.friendSearchResultCardFriend}>
                           <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                           </svg>
@@ -387,7 +387,9 @@ const SearchUsers: React.FC<SearchUsersProps> = ({
                       )}
                     </div>
                   </div>
-                  {renderActionButton(actualUserId)}
+                  <div className={GROUP_CLASSNAMES.friendSearchResultCardActions}>
+                    {renderActionButton(actualUserId)}
+                  </div>
                 </div>
               );
             })}
@@ -395,8 +397,8 @@ const SearchUsers: React.FC<SearchUsersProps> = ({
         </div>
       ) : (
         !loading && hasSearched && (
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-8 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 text-blue-500 dark:bg-blue-900 dark:text-blue-300 mb-4">
+          <div className={GROUP_CLASSNAMES.friendNoResultsContainer}>
+            <div className={GROUP_CLASSNAMES.friendNoResultsIcon}>
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
@@ -409,7 +411,7 @@ const SearchUsers: React.FC<SearchUsersProps> = ({
             </p>
             <button
               onClick={handleClearSearch}
-              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-300"
+              className={GROUP_CLASSNAMES.friendNoResultsButton}
             >
               {t('Clear search')}
             </button>

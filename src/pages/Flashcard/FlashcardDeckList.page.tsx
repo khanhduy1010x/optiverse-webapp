@@ -6,7 +6,7 @@ import { Button, CircleButton } from '../../components/common/Button.component';
 import Icon from '../../components/common/Icon/Icon.component';
 import UpdateFlashcardDeck from './UpdateFlashcardDeck.screen';
 import AddFlashcardDeck from './AddFlashcardDeck.screen';
-import { FlashcardDeck } from '../../types/flashcard/response/flashcard.response';
+import { FlashcardDeck, FlashCardDeckMock } from '../../types/flashcard/response/flashcard.response';
 
 export default function FlashcardDeckList() {
   const navigate = useNavigate();
@@ -137,15 +137,7 @@ export default function FlashcardDeckList() {
         name="add"
         onClick={() => {
           setPopupType('add');
-          setPopupItem({
-            _id: '',
-            lastReview: 0,
-            learningCount: 0,
-            newCount: 0,
-            reviewingCount: 0,
-            title: '',
-            user_id: '',
-          });
+          setPopupItem(FlashCardDeckMock);
         }}
       ></CircleButton>
 

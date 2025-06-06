@@ -7,6 +7,7 @@ import Icon from '../../components/common/Icon/Icon.component';
 import UpdateFlashcard from './UpdateFlashcard.screen';
 import {
   FlashcardDeck,
+  FlashCardDeckLoadingMock,
   Flashcard as FlashcardType,
 } from '../../types/flashcard/response/flashcard.response';
 
@@ -14,15 +15,7 @@ export default function FlashcardList() {
   const { deckId } = useParams();
   const navigate = useNavigate();
   const [flashcards, setFlashcards] = useState<FlashcardType[]>([]);
-  const [deck, setDeck] = useState<FlashcardDeck>({
-    _id: '',
-    title: 'Loading',
-    lastReview: 0,
-    learningCount: 0,
-    newCount: 0,
-    reviewingCount: 0,
-    user_id: '',
-  });
+  const [deck, setDeck] = useState<FlashcardDeck>(FlashCardDeckLoadingMock);
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [popupType, setPopupType] = useState<'edit' | 'delete' | null>(null);
