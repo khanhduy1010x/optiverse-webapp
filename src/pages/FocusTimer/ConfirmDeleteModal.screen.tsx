@@ -1,7 +1,7 @@
 // DeleteFocusSessionModal.tsx
 import React, { useState } from 'react';
 import { FocusSession } from '../../types/global.types';
-import { token } from '../../services/apitest';
+import { token } from '../../utils/apitest';
 
 interface DeleteFocusSessionModalProps {
   session: FocusSession;

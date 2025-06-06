@@ -1,9 +1,9 @@
 import React from 'react';
-import COLORS from '../../constants/colors';
-import { TEXT } from '../../constants/typography';
-import { useTheme } from '../../contexts/ThemeContext';
-import Text from './Text';
-import View from './View';
+import COLORS from '../../constants/colors.constant';
+import { TEXT } from '../../constants/typography.constant';
+import { useTheme } from '../../contexts/theme.context';
+import Text from './Text.component';
+import View from './View.component';
 
 interface Props {
   placeholder?: string;

@@ -1,8 +1,8 @@
 import React from 'react';
-import COLORS from '../../constants/colors';
-import { TEXT } from '../../constants/typography';
-import View from './View';
-import Text from './Text';
+import COLORS from '../../constants/colors.constant';
+import { TEXT } from '../../constants/typography.constant';
+import View from './View.component';
+import Text from './Text.component';
 interface ChipProps {
   title: string;
   fontType?: keyof typeof TEXT;

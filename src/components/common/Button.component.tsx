@@ -1,12 +1,12 @@
 import React from 'react';
-import COLORS from '../../constants/colors';
-import { TEXT } from '../../constants/typography';
-import { useTheme } from '../../contexts/ThemeContext';
+import COLORS from '../../constants/colors.constant';
+import { TEXT } from '../../constants/typography.constant';
+import { useTheme } from '../../contexts/theme.context';
 import { IconName } from '../../assets/icons';
 import { BUTTON_STYLES } from '../../styles';
-import View from './View';
-import Text from './Text';
-import Icon from './Icon/Icon';
+import View from './View.component';
+import Text from './Text.component';
+import Icon from './Icon/Icon.component';
 
 interface ButtonProps {
   onClick?: () => void;

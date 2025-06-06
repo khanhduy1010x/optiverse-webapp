@@ -1,4 +1,4 @@
-import { HttpStatus } from '../constants/http-status';
+import { HttpStatus } from '../constants/http-status.constant';
 
 export interface ApiResponse<T> {
   code: number;

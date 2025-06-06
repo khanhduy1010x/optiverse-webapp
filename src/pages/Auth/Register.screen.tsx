@@ -1,7 +1,7 @@
 import React, { Dispatch, SetStateAction, useState } from 'react';
 import { AuthView } from '../../types/global.types';
-import COLORS from '../../constants/colors';
-import { Button } from '../../components/common/Button';
+import COLORS from '../../constants/colors.constant';
+import { Button } from '../../components/common/Button.component';
 
 interface RegisterFormProps {
   onSwitch: (view: AuthView) => void;

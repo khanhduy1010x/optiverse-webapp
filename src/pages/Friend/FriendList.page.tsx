@@ -14,7 +14,7 @@ import {
   cancelFriendRequest,
   removeFriend,
   setUser,
-} from '../../store/slices/friendSlice';
+} from '../../store/slices/friend.slice';
 import { useTranslation } from 'react-i18next';
 import {
   FriendSidebar,

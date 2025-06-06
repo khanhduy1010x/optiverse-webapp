@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { AuthView } from '../../types/global.types';
-import { Button } from '../../components/common/Button';
-import COLORS from '../../constants/colors';
+import { Button } from '../../components/common/Button.component';
+import COLORS from '../../constants/colors.constant';
 
 interface VerifyCodeFormProps {
   onSwitch: (view: AuthView) => void;

@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { debounce } from 'lodash';
 import { RootState, AppDispatch } from '../../store';
-import { saveNote } from '../../store/slices/itemsSlice';
+import { saveNote } from '../../store/slices/items.slice';
 import FolderNote from './FolderNote.screen';
 import MarkdownEditor from './MarkdownEditor.screen';
 

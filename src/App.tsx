@@ -8,7 +8,6 @@ import {
   useSearchParams,
 } from 'react-router-dom';
 import Dashboard from './pages/Dashboard/Dashboard.page';
-import Settings from './pages/Settings/Settings';
 import FlashcardStatistic from './pages/Flashcard/FlashcardStatistic.page';
 import AuthContainer from './pages/Auth/AuthContainer.page';
 import GoogleCallback from './pages/Auth/GoogleCallback.page';
@@ -16,20 +15,20 @@ import FlashcardDeckList from './pages/Flashcard/FlashcardDeckList.page';
 import { AuthView } from './types/global.types';
 import './App.css';
 import { getSectionKeyFromPath } from './components/common/Navigation/navigation';
-import SliderBar from './components/layout/Sidebar';
+import SliderBar from './components/layout/Sidebar.component';
 import AddFlashcard from './pages/Flashcard/AddFlashcard.page';
 import UserProfile from './pages/Profile/UserProfile.page';
 import FocusTimer from './pages/FocusTimer/FocusTimer.page';
 import Task from './pages/Task/Task.page';
 import FocusTimerStatistic from './pages/FocusTimer/FocusTimerStatistic.page';
-import { ThemeProvider } from './contexts/ThemeContext';
+import { ThemeProvider } from './contexts/theme.context';
 import NoteScreen from './pages/Note/NoteScreen.page';
 import FlashcardList from './pages/Flashcard/FlashcardList.page';
 import FlashcardReview from './pages/Flashcard/FlashcardReview.page';
 import FriendList from './pages/Friend/FriendList.page';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { PublicRoute } from './components/PublicRoute';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider } from './contexts/auth.context';
 import FocusSessionList from './pages/FocusTimer/FocusTimerList.page';
 
 const AppContent: React.FC = () => {
@@ -94,14 +93,6 @@ const AppContent: React.FC = () => {
             element={
               <ProtectedRoute>
                 <Dashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/settings"
-            element={
-              <ProtectedRoute>
-                <Settings />
               </ProtectedRoute>
             }
           />

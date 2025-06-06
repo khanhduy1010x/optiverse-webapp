@@ -1,5 +1,5 @@
 import React from 'react';
-import Icon from '../../components/common/Icon/Icon';
+import Icon from '../../components/common/Icon/Icon.component';
 
 const FlashcardStatistic: React.FC = () => {
   

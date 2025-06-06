@@ -1,4 +1,4 @@
-import { FONTS } from "../config/themeConfig";
+import { FONTS } from "../config/theme.config";
 
 const rootTextRegular: React.CSSProperties = {
   fontFamily: FONTS.regular,
