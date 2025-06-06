@@ -7,13 +7,13 @@ interface ApiResponse<T> {
   data: T;
 }
 
-const URLBASE = 'note';
+const URLBASE = 'productivity/note';
 
 export const NoteService = {
   saveNote: async (note: NoteItem): Promise<NoteItem> => {
     try {
       const response = await api.patch<ApiResponse<{ note: NoteItem }>>(
-        `/note/${note._id}`,
+        `productivity/note/${note._id}`,
         {
           content: note.content,
           title: note.title,
@@ -36,7 +36,7 @@ export const NoteService = {
 
   handleDeleteNote: async (note: NoteItem): Promise<void> => {
     try {
-      await api.delete(`${URLBASE}/${note._id}`);
+      await api.delete(`productivity/${URLBASE}/${note._id}`);
     } catch (error: any) {
       console.error(
         `Failed to delete note ${note._id} (folder_id: ${note.folder_id}):`,
@@ -55,7 +55,7 @@ export const NoteService = {
   ): Promise<NoteItem> => {
     try {
       const response = await api.post<ApiResponse<{ note: NoteItem }>>(
-        `${URLBASE}`,
+        `productivity/${URLBASE}`,
         {
           folder_id,
           title,
@@ -74,7 +74,7 @@ export const NoteService = {
 
   handleRenameNote: async (title: string, item: NoteItem): Promise<void> => {
     try {
-      await api.patch(`/note/${item._id}`, {
+      await api.patch(`productivity/note/${item._id}`, {
         title,
         content: item.content,
         folder_id: item.folder_id,
