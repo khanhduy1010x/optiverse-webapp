@@ -7,10 +7,10 @@ import { RootState } from '../../store';
 import { setCurrentNote } from '../../store/slices/itemsSlice';
 import { setShowWarningModal } from '../../store/slices/uiSlice';
 import { formatDateTimeFull } from '../../utils/dateUtils';
-import ToolBarNote from './ToolbarNote';
+import ToolBarNote from './ToolbarNote.screen';
 import Icon from '../../components/common/Icon/Icon';
-import { NoteService } from '../../services/NoteService';
-import SocketService from '../../services/SocketService';
+import { NoteService } from '../../services/note.service';
+import SocketService from '../../services/socket.service';
 
 const cleanGeminiHtml = (raw: string) => {
   let cleaned = raw.replace(/<pre><code>/g, '<pre class="ql-syntax" spellcheck="false">');

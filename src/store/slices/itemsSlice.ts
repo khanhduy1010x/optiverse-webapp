@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { RootItem, FolderItem, NoteItem } from '../../types/note.types';
-import { NoteFolderService } from '../../services/NoteFolderService';
-import { NoteService } from '../../services/NoteService';
+import { NoteFolderService } from '../../services/noteFolder.service';
+import { NoteService } from '../../services/note.service';
 
 interface ItemsState {
   items: RootItem[];

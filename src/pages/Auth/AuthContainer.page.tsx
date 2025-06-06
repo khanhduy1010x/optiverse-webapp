@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import LoginForm from './LoginForm';
-import RegisterForm from './RegisterForm';
-import ForgotPasswordForm from './ForgotPasswordForm';
-import VerifyCodeFormRegister from './VerifyCodeFormRegister';
+import LoginForm from './Login.screen';
+import RegisterForm from './Register.screen';
+import ForgotPasswordForm from './ForgotPassword.screen';
+import VerifyCodeFormRegister from './VerifyCodeRegister.screen';
 import { AuthView } from '../../types/global.types';
 import LogoInAuth from '../../components/common/Logo/LogoInAuth';
-import ResetPasswordForm from './ResetPasswordForm';
-import VerifyCodeForm from './VerifyCodeForm';
+import ResetPasswordForm from './ResetPassword.screen';
+import VerifyCodeForm from './VerifyCode.screen';
 
 interface AuthContainerProps {
   initialView?: AuthView;
@@ -28,9 +28,11 @@ const AuthContainer: React.FC<AuthContainerProps> = ({
       case 'verify-register':
         return <VerifyCodeFormRegister onSwitch={setView} data={data} />;
       case 'verify':
-        return <VerifyCodeForm onSwitch={setView} data={data} setToken={setToken}/>;
+        return (
+          <VerifyCodeForm onSwitch={setView} data={data} setToken={setToken} />
+        );
       case 'reset':
-        return <ResetPasswordForm onSwitch={setView} token={token}/>;
+        return <ResetPasswordForm onSwitch={setView} token={token} />;
       default:
         return <LoginForm onSwitch={setView} />;
     }

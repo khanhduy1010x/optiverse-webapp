@@ -3,8 +3,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { debounce } from 'lodash';
 import { RootState, AppDispatch } from '../../store';
 import { saveNote } from '../../store/slices/itemsSlice';
-import FolderNote from './FolderNote';
-import MarkdownEditor from './MarkdownEditor';
+import FolderNote from './FolderNote.screen';
+import MarkdownEditor from './MarkdownEditor.screen';
 
 const NoteScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();

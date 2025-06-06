@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../store';
-import FriendService from '../../services/FriendService';
+import FriendService from '../../services/friend.service';
 import {
   setFriends,
   setSentRequests,

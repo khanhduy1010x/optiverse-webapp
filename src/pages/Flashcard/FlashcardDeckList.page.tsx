@@ -4,8 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { token } from '../../services/apitest';
 import { Button, CircleButton } from '../../components/common/Button';
 import Icon from '../../components/common/Icon/Icon';
-import UpdateFlashcardDeck from './UpdateFlashcardDeck';
-import AddFlashcardDeck from './AddFlashcardDeck';
+import UpdateFlashcardDeck from './UpdateFlashcardDeck.screen';
+import AddFlashcardDeck from './AddFlashcardDeck.screen';
 import { FlashcardDeck } from '../../types/flashcard.types';
 
 export default function FlashcardDeckList() {

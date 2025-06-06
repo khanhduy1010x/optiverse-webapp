@@ -7,7 +7,11 @@ interface VerifyCodeFormProps {
   setToken: Dispatch<SetStateAction<string>>;
 }
 
-const VerifyCodeForm: React.FC<VerifyCodeFormProps> = ({ data, onSwitch, setToken}) => {
+const VerifyCodeForm: React.FC<VerifyCodeFormProps> = ({
+  data,
+  onSwitch,
+  setToken,
+}) => {
   const [code, setCode] = useState<string[]>(Array(6).fill(''));
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');

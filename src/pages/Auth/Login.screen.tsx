@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { AuthView } from '../../types/global.types';
 import { useNavigate } from 'react-router-dom';
-import { AuthService } from '../../services/AuthService';
+import { AuthService } from '../../services/auth.service';
 import { GOOGLE_AUTH_CONFIG } from '../../config/google-auth';
 import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';

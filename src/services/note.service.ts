@@ -1,5 +1,5 @@
 import { NoteItem, RootItem } from '../types/note.types';
-import api from './api';
+import api from './api.service';
 
 interface ApiResponse<T> {
   code: number;

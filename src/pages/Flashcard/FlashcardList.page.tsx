@@ -4,7 +4,7 @@ import { Flashcard, FlashcardDeckCard } from '../../components/common/Card';
 import { Button, CircleButton } from '../../components/common/Button';
 import { token } from '../../services/apitest';
 import Icon from '../../components/common/Icon/Icon';
-import UpdateFlashcard from './UpdateFlashcard';
+import UpdateFlashcard from './UpdateFlashcard.screen';
 import {
   FlashcardDeck,
   Flashcard as FlashcardType,
