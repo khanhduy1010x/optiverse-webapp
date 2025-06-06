@@ -5,7 +5,7 @@ import { FlashcardChips } from './Chip.component';
 import Icon from './Icon/Icon.component';
 import Text from './Text.component';
 import { useTheme } from '../../contexts/theme.context';
-import logo from '../../assets/app-icon/optiverse-logo.svg';
+import logo from '../../assets/app-icon/optiverse.logo.svg';
 import {
   CardInteractionProps,
   useCardInteractions,

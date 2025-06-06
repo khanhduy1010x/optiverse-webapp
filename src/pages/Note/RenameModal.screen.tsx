@@ -1,16 +1,8 @@
 import React from 'react';
 import Modal from 'react-modal';
-import { RootItem } from '../../types/note.types';
+import { RenameModalProps } from '../../types/note/props/component.props';
 
-interface RenameModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  renameInput: string;
-  setRenameInput: (input: string) => void;
-  selectedItem: RootItem | null;
-  onRename: () => Promise<void>;
-  errorMessage?: string;
-}
+
 
 const RenameModal: React.FC<RenameModalProps> = ({
   isOpen,

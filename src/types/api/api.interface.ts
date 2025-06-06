@@ -1,4 +1,4 @@
-import { HttpStatus } from '../types/http-status.enum';
+import { HttpStatus } from '../http-status.enum';
 
 export interface ApiResponse<T> {
   code: number;
@@ -6,12 +6,6 @@ export interface ApiResponse<T> {
   data: T;
   httpStatus?: HttpStatus;
 }
-
-export interface LoginResponse {
-  access_token: string;
-  refresh_token: string;
-}
-
 export interface ApiResponseWrapper<T> {
   data: T;
 }

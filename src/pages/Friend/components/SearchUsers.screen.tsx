@@ -1,21 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { SearchUsersProps } from '../../../types/friend/props/component.props';
 
-interface SearchUsersProps {
-  searchEmail: string;
-  onSearchEmailChange: (email: string) => void;
-  onSearch: () => void;
-  searchedUsers: any[];
-  loading: boolean;
-  onAddFriend: (userId: string) => void;
-  onCancelRequest: (id: string) => void;
-  onRemoveFriend: (id: string) => void;
-  renderUserInfo: (userId: string, showId?: boolean) => React.ReactNode;
-  friends: any[];
-  sentRequests: any[];
-  pendingRequests?: any[];
-  onAcceptFriend?: (id: string) => void;
-}
 
 const EMAIL_DOMAINS = [
   { value: '@gmail.com', label: '@gmail.com' },
@@ -36,7 +22,7 @@ const SearchUsers: React.FC<SearchUsersProps> = ({
   friends,
   sentRequests,
   pendingRequests = [],
-  onAcceptFriend = () => {}
+  onAcceptFriend = () => { }
 }) => {
   const { t } = useTranslation();
   const [username, setUsername] = useState('');
@@ -67,7 +53,7 @@ const SearchUsers: React.FC<SearchUsersProps> = ({
     const value = e.target.value;
     setSelectedDomain(value);
     setShowCustomDomain(value === 'custom');
-    
+
     // Focus on custom domain input when "Other" is selected
     if (value === 'custom' && customDomainInputRef.current) {
       setTimeout(() => {
@@ -79,14 +65,14 @@ const SearchUsers: React.FC<SearchUsersProps> = ({
   // Handle username input change
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    
+
     // If user enters @ symbol, handle it specially
     if (value.includes('@')) {
       // Split at the @ symbol
       const parts = value.split('@');
       const usernamePart = parts[0];
       setUsername(usernamePart);
-      
+
       // If there's text after @, set it as custom domain
       if (parts[1]) {
         setSelectedDomain('custom');
@@ -97,7 +83,7 @@ const SearchUsers: React.FC<SearchUsersProps> = ({
         setSelectedDomain('custom');
         setShowCustomDomain(true);
         setCustomDomain('@');
-        
+
         // Focus on custom domain input
         setTimeout(() => {
           customDomainInputRef.current?.focus();
@@ -134,35 +120,35 @@ const SearchUsers: React.FC<SearchUsersProps> = ({
     // if (userId === localStorage.getItem('userId')) {
     //   return 'self';
     // }
-    
+
     // Kiểm tra xem user có thuộc tính is_self = true không
     const userWithIsSelf = searchedUsers.find(u => {
       const id = u.userId || (u as any)._id;
       return id === userId && u.is_self === true;
     });
-    
+
     if (userWithIsSelf) {
       return 'self';
     }
-    
+
     // Kiểm tra xem đã là bạn bè chưa
     const isFriend = friends.some(friend => friend.friend_id === userId);
     if (isFriend) {
       return 'friend';
     }
-    
+
     // Kiểm tra xem người dùng có gửi lời mời kết bạn đến mình không
     const isPendingIncoming = pendingRequests.some(request => request.user_id === userId);
     if (isPendingIncoming) {
       return 'pending_incoming';
     }
-    
+
     // Kiểm tra xem đã gửi lời mời kết bạn chưa
     const sentRequest = sentRequests.find(request => request.friend_id === userId);
     if (sentRequest) {
       return 'sent';
     }
-    
+
     // Chưa có mối quan hệ nào
     return 'none';
   };
@@ -175,8 +161,8 @@ const SearchUsers: React.FC<SearchUsersProps> = ({
     const pendingIncomingRequest = pendingRequests.find(request => request.user_id === userId);
     // Tìm mối quan hệ bạn bè nếu đã là bạn
     const friendRelation = friends.find(friend => friend.friend_id === userId);
-    
-    switch(status) {
+
+    switch (status) {
       case 'self':
         return null; // Không hiển thị nút nào khi tìm kiếm chính mình
       case 'friend':
@@ -256,7 +242,7 @@ const SearchUsers: React.FC<SearchUsersProps> = ({
                 disabled={loading}
               />
             </div>
-            
+
             {!showCustomDomain ? (
               <select
                 value={selectedDomain}
@@ -295,7 +281,7 @@ const SearchUsers: React.FC<SearchUsersProps> = ({
                 />
               </>
             )}
-            
+
             <button
               onClick={handleSearch}
               className="px-5 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300 flex items-center gap-2 shadow-md hover:shadow-lg"
@@ -313,7 +299,7 @@ const SearchUsers: React.FC<SearchUsersProps> = ({
               )}
               {t('Search')}
             </button>
-            
+
             {(hasSearched || searchEmail) && (
               <button
                 onClick={handleClearSearch}
@@ -417,8 +403,8 @@ const SearchUsers: React.FC<SearchUsersProps> = ({
             </div>
             <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">{t('No users found')}</h3>
             <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto">
-              {searchEmail 
-                ? t('No users found with the email address "{email}". Try a different email.', { email: searchEmail }) 
+              {searchEmail
+                ? t('No users found with the email address "{email}". Try a different email.', { email: searchEmail })
                 : t('Enter a username and select an email domain to search for users.')}
             </p>
             <button

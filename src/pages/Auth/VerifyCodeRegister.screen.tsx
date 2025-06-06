@@ -1,12 +1,9 @@
 import React, { useState, useRef } from 'react';
-import { AuthView } from '../../types/global.types';
 import { Button } from '../../components/common/Button.component';
 import COLORS from '../../constants/colors.constant';
+import { VerifyCodeFormProps } from '../../types/auth/props/component.props';
 
-interface VerifyCodeFormProps {
-  onSwitch: (view: AuthView) => void;
-  data: string;
-}
+
 
 const VerifyCodeFormRegister: React.FC<VerifyCodeFormProps> = ({
   onSwitch,

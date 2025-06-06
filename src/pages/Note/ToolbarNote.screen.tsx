@@ -1,17 +1,10 @@
 import React from 'react';
+import { ToolBarNoteProps } from '../../types/note/props/component.props';
 
-interface ToolBarNoteProps {
-  onAction: (action: string) => void;
-  formatState?: {
-    bold: boolean;
-    italic: boolean;
-    header: boolean;
-    strike: boolean;
-  };
-}
+
 
 const ToolBarNote: React.FC<ToolBarNoteProps> = ({ onAction, formatState = { bold: false, italic: false, header: false, strike: false } }) => {
-  
+
   const isActive = (key: string): boolean => {
     switch (key) {
       case 'bold': return formatState.bold;
@@ -22,7 +15,7 @@ const ToolBarNote: React.FC<ToolBarNoteProps> = ({ onAction, formatState = { bol
     }
   };
 
-  
+
   const getButtonClass = (key: string): string => {
     const baseClass = "p-2 rounded-md transition-colors";
     return isActive(key)

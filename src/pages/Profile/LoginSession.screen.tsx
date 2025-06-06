@@ -3,17 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import View from '../../components/common/View.component';
 import Text from '../../components/common/Text.component';
 import IconProps from '../../components/common/Icon/Icon.component';
-import profileService, { UserSession } from '../../services/profile.service';
+import profileService from '../../services/profile.service';
+import { ConfirmationModalProps } from '../../types/profile/props/component.props';
+import { UserSession } from '../../types/profile/response/profile.response';
 
 const SESSIONS_PER_PAGE = 2; // Number of sessions to show initially
 
-interface ConfirmationModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onConfirm: () => void;
-  title: string;
-  message: string;
-}
 
 const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, onClose, onConfirm, title, message }) => {
   if (!isOpen) return null;
@@ -63,7 +58,7 @@ export default function LoginSessions() {
     isOpen: false,
     title: '',
     message: '',
-    onConfirm: () => {},
+    onConfirm: () => { },
   });
 
   useEffect(() => {
@@ -74,13 +69,13 @@ export default function LoginSessions() {
     try {
       setIsLoading(true);
       setError(null);
-      
+
       const data = await profileService.getLoginSessions();
-      
+
       setCurrentSession(data.current_session);
       // Filter out current session and sessions with same IP
-      setActiveSessions(data.active_sessions.filter(session => 
-        session._id !== data.current_session._id && 
+      setActiveSessions(data.active_sessions.filter((session: UserSession) =>
+        session._id !== data.current_session._id &&
         session.ip_address !== data.current_session.ip_address
       ));
       setPreviousSessions(data.previous_sessions);
@@ -189,7 +184,7 @@ export default function LoginSessions() {
             {isActive && (
               <>
                 <span className="text-gray-300">•</span>
-               
+
               </>
             )}
           </div>
@@ -221,8 +216,8 @@ export default function LoginSessions() {
       />
       <View className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
-        <View 
-          className="w-1/5 overflow-y-auto bg-white" 
+        <View
+          className="w-1/5 overflow-y-auto bg-white"
           style={{
             msOverflowStyle: 'none',
             scrollbarWidth: 'none',
@@ -285,7 +280,7 @@ export default function LoginSessions() {
         </View>
 
         {/* Main Content */}
-        <View 
+        <View
           className="flex-1 overflow-y-auto border-l border-gray-300 dark:border-gray-600"
           style={{
             msOverflowStyle: 'none',

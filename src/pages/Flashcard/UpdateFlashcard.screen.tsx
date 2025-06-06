@@ -1,13 +1,9 @@
 import { useState } from 'react';
 import { token } from '../../utils/apitest';
 import { Button } from '../../components/common/Button.component';
+import { Flashcard } from '../../types/flashcard/response/flashcard.response';
 
-interface Flashcard {
-  _id: string;
-  front: string;
-  back: string;
-  review: any;
-}
+
 
 export default function UpdateFlashcard({
   item,

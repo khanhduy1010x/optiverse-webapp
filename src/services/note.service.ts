@@ -1,11 +1,6 @@
-import { NoteItem, RootItem } from '../types/note.types';
+import { ApiResponse } from '../types/api/api.interface';
+import { NoteItem } from '../types/note/response/note.response';
 import api from './api.service';
-
-interface ApiResponse<T> {
-  code: number;
-  message: string;
-  data: T;
-}
 
 const URLBASE = 'productivity/note';
 

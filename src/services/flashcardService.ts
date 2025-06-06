@@ -1,4 +1,4 @@
-import { Flashcard } from '../types/flashcard.types';
+import { Flashcard } from '../types/flashcard/response/flashcard.response';
 
 const getDueFlashcards = (flashcards: Flashcard[]): Flashcard[] => {
   const now = new Date().getTime();

@@ -1,28 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-
-interface Friend {
-  _id: string;
-  user_id: string;
-  friend_id: string;
-  status: 'pending' | 'accepted' | 'blocked';
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-interface UserDto {
-  userId: string;
-  email: string;
-}
-
-interface FriendState {
-  friends: Friend[];
-  sentRequests: Friend[];
-  pendingRequests: Friend[];
-  searchedUsers: UserDto[];
-  users: Record<string, UserDto>; // Lưu thông tin user theo userId
-  error: string | null;
-  loading: boolean;
-}
+import { FriendState } from '../../types/friend/friend.types';
+import { Friend, UserDto } from '../../types/friend/response/friend.response';
 
 const initialState: FriendState = {
   friends: [],
@@ -67,23 +45,31 @@ const friendSlice = createSlice({
     addFriend: (state, action: PayloadAction<Friend>) => {
       // Kiểm tra xem yêu cầu đã tồn tại chưa để tránh trùng lặp
       const exists = state.sentRequests.some(
-        req => req._id === action.payload._id || 
-              (req.friend_id === action.payload.friend_id && req.status === 'pending')
+        req =>
+          req._id === action.payload._id ||
+          (req.friend_id === action.payload.friend_id &&
+            req.status === 'pending')
       );
-      
+
       if (!exists) {
         state.sentRequests.push(action.payload);
       }
     },
     acceptFriend: (state, action: PayloadAction<Friend>) => {
-      state.pendingRequests = state.pendingRequests.filter((req) => req._id !== action.payload._id);
+      state.pendingRequests = state.pendingRequests.filter(
+        req => req._id !== action.payload._id
+      );
       state.friends.push(action.payload);
     },
     cancelFriendRequest: (state, action: PayloadAction<string>) => {
-      state.sentRequests = state.sentRequests.filter((req) => req._id !== action.payload);
+      state.sentRequests = state.sentRequests.filter(
+        req => req._id !== action.payload
+      );
     },
     removeFriend: (state, action: PayloadAction<string>) => {
-      state.friends = state.friends.filter((friend) => friend._id !== action.payload);
+      state.friends = state.friends.filter(
+        friend => friend._id !== action.payload
+      );
     },
   },
 });

@@ -1,11 +1,7 @@
 // src/components/auth/ResetPasswordForm.tsx
 import React, { useState } from 'react';
-import { AuthView } from '../../types/global.types';
+import { ResetPasswordFormProps } from '../../types/auth/props/component.props';
 
-interface ResetPasswordFormProps {
-  token: string;
-  onSwitch: (view: AuthView) => void;
-}
 
 const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({
   onSwitch,

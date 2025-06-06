@@ -1,9 +1,8 @@
 import React from 'react';
-import { FilterType } from '../../types/note.types';
+import { RadioButtonProps } from '../../types/note/props/component.props';
+import { FilterType } from '../../types/note/note.types';
 
-interface RadioButtonProps {
-  selected: boolean;
-}
+
 
 const RadioButton: React.FC<RadioButtonProps> = ({ selected }) => {
   return (

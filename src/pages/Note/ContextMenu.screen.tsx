@@ -1,12 +1,6 @@
 import React, { useRef, useEffect } from 'react';
+import { ContextMenuProps } from '../../types/note/props/component.props';
 
-interface ContextMenuProps {
-  x: number;
-  y: number;
-  onRename: () => void;
-  onDelete: () => void;
-  onClose: () => void;
-}
 
 export const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, onRename, onDelete, onClose }) => {
   const menuRef = useRef<HTMLDivElement>(null);

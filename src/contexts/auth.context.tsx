@@ -1,7 +1,8 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import api from '../services/api.service';
 import { AuthService } from '../services/auth.service';
-import { ApiResponse, LoginResponse } from '../types/api.types';
+import { LoginResponse } from '../types/auth/response/auth.reponse';
+import { ApiResponse } from '../types/api/api.interface';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -35,7 +36,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     const checkAuth = async () => {
       const accessToken = localStorage.getItem('accessToken');
-      
+
       if (!accessToken) {
         setIsAuthenticated(false);
         setLoading(false);
@@ -47,7 +48,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         // This could be a lightweight endpoint like "verify-token" or "me" endpoint
         // For now we'll just check if there's a token and assume it's valid
         setIsAuthenticated(true);
-        
+
         // Optional: get user profile if you have an endpoint for it
         // const userProfile = await UserService.getProfile();
         // setUser(userProfile);
@@ -117,7 +118,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const refreshTokens = async (): Promise<boolean> => {
     try {
       const refreshToken = localStorage.getItem('refreshToken');
-      
+
       if (!refreshToken) {
         return false;
       }
@@ -133,11 +134,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       );
 
       const { access_token, refresh_token } = response.data.data;
-      
+
       // Save new tokens
       localStorage.setItem('accessToken', access_token);
       localStorage.setItem('refreshToken', refresh_token);
-      
+
       setIsAuthenticated(true);
       return true;
     } catch (error) {
@@ -150,13 +151,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      isAuthenticated, 
-      loading, 
-      login, 
-      logout, 
-      refreshTokens, 
-      user 
+    <AuthContext.Provider value={{
+      isAuthenticated,
+      loading,
+      login,
+      logout,
+      refreshTokens,
+      user
     }}>
       {children}
     </AuthContext.Provider>

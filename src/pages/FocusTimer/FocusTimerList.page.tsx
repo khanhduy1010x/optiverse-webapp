@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Trash2 as TrashIcon } from 'lucide-react';
-// import AddFocusSessionModal from './CreateFocusModal';
 import DeleteFocusSessionModal from './ConfirmDeleteModal.screen';
-import { FocusSession } from '../../types/global.types';
 import { token } from '../../utils/apitest';
+import { FocusSession } from '../../types/focus-timer/response/focus-timer.response';
 
 const FocusSessionListPage: React.FC = () => {
   const [focusSessions, setFocusSessions] = useState<FocusSession[]>([]);
   const [loading, setLoading] = useState(false);
-  //   const [showAddModal, setShowAddModal] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState<FocusSession | null>(
     null
   );

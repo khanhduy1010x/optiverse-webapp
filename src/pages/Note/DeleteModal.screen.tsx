@@ -1,22 +1,14 @@
 import React from 'react';
 import Modal from 'react-modal';
-import { RootItem } from '../../types/note.types';
-import { formatDateTime } from '../../utils/date.utils';
+import { DeleteModalProps } from '../../types/note/props/component.props';
 
-interface DeleteModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  selectedItem: RootItem | null;
-  onDelete: () => Promise<void>;
-  onOpenActionModal: () => void;
-}
+
 
 const DeleteModal: React.FC<DeleteModalProps> = ({
   isOpen,
   onClose,
   selectedItem,
   onDelete,
-  onOpenActionModal,
 }) => {
   return (
     <Modal
@@ -26,7 +18,7 @@ const DeleteModal: React.FC<DeleteModalProps> = ({
       overlayClassName="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000]"
     >
       <div className="">
-      
+
         <div className="text-center mb-6 px-6 pt-6">
           <div className="flex justify-center mb-4">
             <div className="bg-red-100 rounded-full p-4">
@@ -44,7 +36,7 @@ const DeleteModal: React.FC<DeleteModalProps> = ({
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Item</h3>
           <p className="text-gray-600">
             Are you sure you want to delete "<span className="font-medium">
-            {selectedItem?.type === 'folder' ? selectedItem.name : selectedItem?.title}
+              {selectedItem?.type === 'folder' ? selectedItem.name : selectedItem?.title}
             </span>"? This action cannot be undone.
           </p>
         </div>
@@ -72,9 +64,9 @@ const DeleteModal: React.FC<DeleteModalProps> = ({
           </button>
         </div>
       </div>
-        <div className="flex justify-center pt-3 pb-2">
-          <div className="w-10 h-1 bg-gray-300 rounded-full" />
-        </div>
+      <div className="flex justify-center pt-3 pb-2">
+        <div className="w-10 h-1 bg-gray-300 rounded-full" />
+      </div>
     </Modal>
   );
 };

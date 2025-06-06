@@ -1,12 +1,7 @@
-import React, { Dispatch, SetStateAction, useState } from 'react';
-import { AuthView } from '../../types/global.types';
+import React, { useState } from 'react';
+import { ForgotPasswordFormProps } from '../../types/auth/props/component.props';
 
-interface ForgotPasswordFormProps {
-  onSwitch: (view: AuthView) => void;
-  setData: Dispatch<SetStateAction<string>>;
-}
-
-const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitch, setData }) => {
+const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitch = () => { }, setData = () => { } }) => {
   const [email, setEmail] = useState<string>('');
   const [message, setMessage] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
@@ -20,7 +15,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitch, setDa
       const res = await fetch('http://localhost:81/core/auth/send-otp-reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email , isVerify: false}),
+        body: JSON.stringify({ email, isVerify: false }),
       });
 
       const data = await res.json();

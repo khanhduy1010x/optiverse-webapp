@@ -1,28 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { AllFriendsProps } from '../../../types/friend/props/component.props';
 
-interface FriendUserInfo {
-  email?: string;
-  full_name?: string;
-  avatar_url?: string;
-}
-
-interface Friend {
-  _id: string;
-  user_id: string;
-  friend_id: string;
-  status: string;
-  createdAt?: string;
-  updatedAt?: string;
-  friendInfo?: FriendUserInfo;
-}
-
-interface AllFriendsProps {
-  friends: Friend[];
-  loading: boolean;
-  onRemoveFriend: (id: string) => void;
-  renderUserInfo: (userId: string, showId?: boolean) => React.ReactNode;
-}
 
 const AllFriends: React.FC<AllFriendsProps> = ({ friends, loading, onRemoveFriend, renderUserInfo }) => {
   const { t } = useTranslation();
@@ -71,7 +50,7 @@ const AllFriends: React.FC<AllFriendsProps> = ({ friends, loading, onRemoveFrien
         <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto text-base">
           {t('You have not added any friends yet. Use the search function to find and connect with other users.')}
         </p>
-        <button 
+        <button
           className="mt-6 px-5 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-full font-medium hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg flex items-center mx-auto"
           onClick={() => document.querySelector('[data-tab="search"]')?.dispatchEvent(new Event('click'))}
         >
@@ -101,23 +80,23 @@ const AllFriends: React.FC<AllFriendsProps> = ({ friends, loading, onRemoveFrien
           {t('Last updated')}: <span className="font-medium">{new Date().toLocaleTimeString()}</span>
         </div>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {friends.map((friend) => {
           // Lấy chữ cái đầu tiên từ tên hoặc email
-          const initial = friend.friendInfo?.full_name 
-            ? friend.friendInfo.full_name.charAt(0).toUpperCase() 
+          const initial = friend.friendInfo?.full_name
+            ? friend.friendInfo.full_name.charAt(0).toUpperCase()
             : friend.friendInfo?.email?.charAt(0).toUpperCase() || friend.friend_id.charAt(0).toUpperCase();
-          
+
           // Lấy màu dựa trên ID
           const gradientClass = getColorFromString(friend.friend_id);
-          
+
           return (
             <div
               key={friend._id}
               className="bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl transition-all duration-200 border border-gray-100 dark:border-gray-700 overflow-hidden group"
             >
-              <div className="h-2 bg-gradient-to-r w-full group-hover:scale-105 transition-transform duration-300 ease-out" style={{backgroundImage: `linear-gradient(to right, #3b82f6, #8b5cf6)`}}></div>
+              <div className="h-2 bg-gradient-to-r w-full group-hover:scale-105 transition-transform duration-300 ease-out" style={{ backgroundImage: `linear-gradient(to right, #3b82f6, #8b5cf6)` }}></div>
               <div className="p-5 flex items-start justify-between">
                 <div className="flex items-center">
                   <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${gradientClass} flex items-center justify-center text-white text-2xl font-bold mr-4 shadow-md transform transition-transform group-hover:scale-105`}>

@@ -1,12 +1,9 @@
 import React, { Dispatch, SetStateAction, useState } from 'react';
-import { AuthView } from '../../types/global.types';
 import COLORS from '../../constants/colors.constant';
 import { Button } from '../../components/common/Button.component';
+import { RegisterFormProps } from '../../types/auth/props/component.props';
 
-interface RegisterFormProps {
-  onSwitch: (view: AuthView) => void;
-  setData: Dispatch<SetStateAction<string>>;
-}
+
 
 const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitch, setData }) => {
   const [fullName, setFullName] = useState<string>('');

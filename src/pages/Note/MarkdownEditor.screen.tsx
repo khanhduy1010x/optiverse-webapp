@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import './MarkdownEditor.css';
+import '../../styles/note/MarkdownEditor.style.css';
 import { RootState } from '../../store';
 import { setCurrentNote } from '../../store/slices/items.slice';
 import { setShowWarningModal } from '../../store/slices/ui.slice';

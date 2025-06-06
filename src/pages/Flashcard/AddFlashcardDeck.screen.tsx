@@ -1,21 +1,15 @@
 import { useState } from 'react';
 import { token } from '../../utils/apitest';
 import { Button } from '../../components/common/Button.component';
+import { FlashcardDeck } from '../../types/flashcard/response/flashcard.response';
 
-interface Deck {
-  _id: string;
-  title: string;
-  lastReview: number;
-  learningCount: number;
-  newCount: number;
-  reviewingCount: number;
-}
+
 
 export default function AddFlashcardDeck({
   item,
   clear,
 }: {
-  item: Deck;
+  item: FlashcardDeck;
   clear: () => void;
 }) {
   const [title, setTitle] = useState(item.title);

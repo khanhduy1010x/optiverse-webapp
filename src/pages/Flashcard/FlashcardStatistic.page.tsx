@@ -2,7 +2,7 @@ import React from 'react';
 import Icon from '../../components/common/Icon/Icon.component';
 
 const FlashcardStatistic: React.FC = () => {
-  
+
 
   const StatisticCard = ({ title, count, subtitle }: { title: string; count: number; subtitle: string }) => {
     return (
@@ -17,7 +17,7 @@ const FlashcardStatistic: React.FC = () => {
 
   return (
     <div className="flex items-center h-screen">
-  
+
 
       {/* Main Content Area */}
       <div className="flex-1 p-8">
@@ -52,4 +52,4 @@ const FlashcardStatistic: React.FC = () => {
   );
 };
 
-export default FlashCardStatic;
+export default FlashcardStatistic;

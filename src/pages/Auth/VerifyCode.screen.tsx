@@ -1,11 +1,6 @@
 import React, { useState, useRef, Dispatch, SetStateAction } from 'react';
-import { AuthView } from '../../types/global.types';
+import { VerifyCodeFormProps } from '../../types/auth/props/component.props';
 
-interface VerifyCodeFormProps {
-  data: string;
-  onSwitch: (view: AuthView) => void;
-  setToken: Dispatch<SetStateAction<string>>;
-}
 
 const VerifyCodeForm: React.FC<VerifyCodeFormProps> = ({
   data,
@@ -58,7 +53,7 @@ const VerifyCodeForm: React.FC<VerifyCodeFormProps> = ({
       const token = result.data.reset_token;
 
       if (!res.ok) throw new Error(result.message || 'Verification failed');
-      setToken(token);
+      if (setToken) setToken(token);
       setMessage('OTP verified. Redirecting...');
       onSwitch('reset');
     } catch (err) {
@@ -102,7 +97,7 @@ const VerifyCodeForm: React.FC<VerifyCodeFormProps> = ({
               value={digit}
               onChange={e => handleChange(i, e.target.value)}
               onKeyDown={e => handleKeyDown(i, e)}
-              ref={el => (inputRefs.current[i] = el)}
+              ref={el => { inputRefs.current[i] = el }}
               className="w-10 h-10 text-center border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />

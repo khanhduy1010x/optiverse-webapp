@@ -1,11 +1,6 @@
 import React from 'react';
+import { FolderFileComponentProps } from '../../types/note/props/component.props';
 
-interface FolderFileComponentProps {
-  type: 'folder' | 'file';
-  title: string;
-  updatedAt: string;
-  noteCount?: number;
-}
 
 const FolderFileComponent: React.FC<FolderFileComponentProps> = ({ type, title, updatedAt, noteCount }) => {
   return (
