@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { fetchAllUserTasks, createTask, Task, updateTask, deleteTask, getTaskTags, filterTasksByTags } from '../../services/taskservice';
+import { fetchAllUserTasks, createTask, Task, updateTask, deleteTask, getTaskTags, filterTasksByTags } from '../../services/task.service';
 import { format } from 'date-fns';
-import { Tag, fetchAllUserTags, createTag, createTaskTag, fetchTasksByTagId, deleteTag, deleteTaskTag } from '../../services/tagservices';
+import { Tag, fetchAllUserTags, createTag, createTaskTag, fetchTasksByTagId, deleteTag, deleteTaskTag } from '../../services/tag.service';
 
 export default function TaskManagement() {
   const [tasks, setTasks] = useState<Task[]>([]);

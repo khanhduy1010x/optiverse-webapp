@@ -7,33 +7,30 @@ import {
   useNavigate,
   useSearchParams,
 } from 'react-router-dom';
-import Dashboard from './pages/Dashboard/Dashboard';
+import Dashboard from './pages/Dashboard/Dashboard.page';
 import Settings from './pages/Settings/Settings';
-import FlashCardStatic from './pages/FlashCard/FlashCardStatic';
-import AuthContainer from './pages/Auth/AuthContainer';
-import GoogleCallback from './pages/Auth/GoogleCallback';
-import FlashcardDeckList from './pages/FlashCard/FlashcardDeckList';
+import FlashcardStatistic from './pages/Flashcard/FlashcardStatistic.page';
+import AuthContainer from './pages/Auth/AuthContainer.page';
+import GoogleCallback from './pages/Auth/GoogleCallback.page';
+import FlashcardDeckList from './pages/Flashcard/FlashcardDeckList.page';
 import { AuthView } from './types/global.types';
 import './App.css';
 import { getSectionKeyFromPath } from './components/common/Navigation/navigation';
 import SliderBar from './components/layout/Sidebar';
-import AddFlashcard from './pages/FlashCard/AddFlashCard';
-import UserProfile from './pages/Profile/UserProfile';
-import LoginSessions from './pages/Profile/LoginSessions';
-import FocusTimer from './pages/FocusTimer/FocusTimer';
-// import ManageFocusTimer from './pages/FocusTimer/ManageFocusTimer';
-import Task from './pages/Task/Task';
-import Statistics from './pages/FocusTimer/Statistics';
+import AddFlashcard from './pages/Flashcard/AddFlashcard.page';
+import UserProfile from './pages/Profile/UserProfile.page';
+import FocusTimer from './pages/FocusTimer/FocusTimer.page';
+import Task from './pages/Task/Task.page';
+import FocusTimerStatistic from './pages/FocusTimer/FocusTimerStatistic.page';
 import { ThemeProvider } from './contexts/ThemeContext';
-import NoteScreen from './pages/Note/NoteScreen';
-import FlashcardList from './pages/FlashCard/FlashcardList';
-import FlashcardReview from './pages/FlashCard/FlashcardReview';
-import FriendList from './pages/Friend/FriendList';
+import NoteScreen from './pages/Note/NoteScreen.page';
+import FlashcardList from './pages/Flashcard/FlashcardList.page';
+import FlashcardReview from './pages/Flashcard/FlashcardReview.page';
+import FriendList from './pages/Friend/FriendList.page';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { PublicRoute } from './components/PublicRoute';
-import ForgotPasswordForm from './pages/Auth/ForgotPasswordForm';
 import { AuthProvider } from './contexts/AuthContext';
-import FocusSessionList from './pages/FocusTimer/FocusSessionListPage';
+import FocusSessionList from './pages/FocusTimer/FocusTimerList.page';
 
 const AppContent: React.FC = () => {
   const location = useLocation();
@@ -41,7 +38,10 @@ const AppContent: React.FC = () => {
   const [searchParams] = useSearchParams();
   const initialView = (searchParams.get('view') as AuthView) || 'login';
 
-  const showSidebar = location.pathname !== '/' && !location.pathname.startsWith('/auth/google') && !location.pathname.startsWith('/forgot-password');
+  const showSidebar =
+    location.pathname !== '/' &&
+    !location.pathname.startsWith('/auth/google') &&
+    !location.pathname.startsWith('/forgot-password');
   const activeSection = getSectionKeyFromPath(location.pathname);
 
   const handleNavClick = (path: string) => {
@@ -70,10 +70,7 @@ const AppContent: React.FC = () => {
             }
           />
 
-          <Route 
-            path="/auth/google/callback" 
-            element={<GoogleCallback />} 
-          />
+          <Route path="/auth/google/callback" element={<GoogleCallback />} />
           <Route
             path="/forgot-password"
             element={
@@ -83,7 +80,6 @@ const AppContent: React.FC = () => {
             }
           />
           <Route
-
             path="/reset-password"
             element={
               <PublicRoute restricted={false}>
@@ -91,78 +87,120 @@ const AppContent: React.FC = () => {
               </PublicRoute>
             }
           />
-          
+
           {/* Protected routes - require authentication */}
-          <Route path="/dashboard" element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          } />
-          <Route path="/settings" element={
-            <ProtectedRoute>
-              <Settings />
-            </ProtectedRoute>
-          } />
-          <Route path="/flashcard-static" element={
-            <ProtectedRoute>
-              <FlashCardStatic />
-            </ProtectedRoute>
-          } />
-          <Route path="/flashcard-deck" element={
-            <ProtectedRoute>
-              <FlashcardDeckList />
-            </ProtectedRoute>
-          } />
-          <Route path="/flashcard-deck/:deckId" element={
-            <ProtectedRoute>
-              <FlashcardList />
-            </ProtectedRoute>
-          } />
-          <Route path="/flashcard-deck/:deckId/add" element={
-            <ProtectedRoute>
-              <AddFlashcard />
-            </ProtectedRoute>
-          } />
-          <Route path="/view-flashcard" element={
-            <ProtectedRoute>
-              <FlashcardReview />
-            </ProtectedRoute>
-          } />
-          <Route path="/user-profile" element={
-            <ProtectedRoute>
-              <UserProfile />
-            </ProtectedRoute>
-          } />
-          <Route path="/focus-timer" element={
-            <ProtectedRoute>
-              <FocusTimer />
-            </ProtectedRoute>
-          } />
-          <Route path="/manage-focus-timer" element={
-            <ProtectedRoute>
-              <FocusSessionList />
-            </ProtectedRoute>
-          } />
-          <Route path="/note" element={
-            <ProtectedRoute>
-              <NoteScreen />
-            </ProtectedRoute>
-          } />
-          <Route path="/task" element={
-            <ProtectedRoute>
-              <Task />
-            </ProtectedRoute>
-          } />
-          <Route path="/statistics-timer" element={
-            <ProtectedRoute>
-              <Statistics />
-            </ProtectedRoute>
-          } />
-          <Route path="/friends" element={
-            <ProtectedRoute>
-              <FriendList />
-            </ProtectedRoute>
-          } />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <Settings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/flashcard-static"
+            element={
+              <ProtectedRoute>
+                <FlashcardStatistic />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/flashcard-deck"
+            element={
+              <ProtectedRoute>
+                <FlashcardDeckList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/flashcard-deck/:deckId"
+            element={
+              <ProtectedRoute>
+                <FlashcardList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/flashcard-deck/:deckId/add"
+            element={
+              <ProtectedRoute>
+                <AddFlashcard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/view-flashcard"
+            element={
+              <ProtectedRoute>
+                <FlashcardReview />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/user-profile"
+            element={
+              <ProtectedRoute>
+                <UserProfile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/focus-timer"
+            element={
+              <ProtectedRoute>
+                <FocusTimer />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/manage-focus-timer"
+            element={
+              <ProtectedRoute>
+                <FocusSessionList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/note"
+            element={
+              <ProtectedRoute>
+                <NoteScreen />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/task"
+            element={
+              <ProtectedRoute>
+                <Task />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/focus-timer/statistic"
+            element={
+              <ProtectedRoute>
+                <FocusTimerStatistic />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/friends"
+            element={
+              <ProtectedRoute>
+                <FriendList />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </div>
     </div>

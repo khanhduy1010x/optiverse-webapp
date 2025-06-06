@@ -15,13 +15,13 @@ import {
 } from '../../store/slices/itemsSlice';
 import { setFilterType, setSelectedItem, setShowWarningModal } from '../../store/slices/uiSlice';
 import { FilterType, RootItem, FolderItem, NoteItem } from '../../types/note.types';
-import ToolBarFolder from './ToolBarFolder';
-import CreateModal from './CreateModal';
-import RenameModal from './RenameModal';
-import DeleteModal from './DeleteModal';
+import ToolBarFolder from './ToolBarFolder.screen';
+import CreateModal from './CreateModal.screen';
+import RenameModal from './RenameModal.screen';
+import DeleteModal from './DeleteModal.screen';
 import { formatDateTime } from '../../utils/dateUtils';
 import { toast } from 'react-toastify';
-import { ContextMenu } from './ContextMenu';
+import { ContextMenu } from './ContextMenu.screen';
 
 const FolderNote: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();

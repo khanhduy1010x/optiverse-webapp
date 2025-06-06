@@ -5,7 +5,7 @@ import Text from '../../components/common/Text';
 import Input from '../../components/common/Input';
 import { useNavigate } from 'react-router-dom';
 import IconProps from '../../components/common/Icon/Icon';
-import profileService, { ProfileData } from '../../services/profileService';
+import profileService, { ProfileData } from '../../services/profile.service';
 
 type ChangePasswordPopupProps = {
   onClose: () => void;

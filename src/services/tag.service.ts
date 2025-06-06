@@ -1,5 +1,5 @@
-import api from './api';
-import { Task } from './taskservice';
+import api from './api.service';
+import { Task } from './task.service';
 
 // Define ApiResponse interface for type safety
 interface ApiResponse<T> {

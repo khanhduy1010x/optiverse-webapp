@@ -1,7 +1,7 @@
 import React from 'react';
 import Icon from '../../components/common/Icon/Icon';
 
-const FlashCardStatic: React.FC = () => {
+const FlashcardStatistic: React.FC = () => {
   
 
   const StatisticCard = ({ title, count, subtitle }: { title: string; count: number; subtitle: string }) => {

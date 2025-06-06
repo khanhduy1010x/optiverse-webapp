@@ -1,4 +1,4 @@
-import api from './api';
+import api from './api.service';
 import { decodeToken } from '../utils/jwt';
 
 export interface ProfileData {

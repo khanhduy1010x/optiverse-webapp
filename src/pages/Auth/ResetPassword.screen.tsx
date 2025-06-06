@@ -3,13 +3,11 @@ import React, { useState } from 'react';
 import { AuthView } from '../../types/global.types';
 
 interface ResetPasswordFormProps {
-  otp: string;
   token: string;
   onSwitch: (view: AuthView) => void;
 }
 
 const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({
-  otp,
   onSwitch,
   token,
 }) => {
