@@ -1,4 +1,4 @@
-import { HttpStatus } from '../constants/http-status.constant';
+import { HttpStatus } from '../types/http-status.enum';
 
 export interface ApiResponse<T> {
   code: number;
@@ -14,4 +14,4 @@ export interface LoginResponse {
 
 export interface ApiResponseWrapper<T> {
   data: T;
-} 
+}
