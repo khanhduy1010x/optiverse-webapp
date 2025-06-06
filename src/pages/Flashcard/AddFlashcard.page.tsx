@@ -2,6 +2,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../../components/common/Button.component';
 import { useState } from 'react';
 import { token } from '../../utils/apitest';
+import { clearStates } from '../../utils/clear-state.util';
 
 export default function AddFlashcard() {
   const { deckId } = useParams();
@@ -37,12 +38,14 @@ export default function AddFlashcard() {
       clear();
     } catch (error) {
       console.error('Lỗi khi fetch API:', error);
-    } 
+    }
   };
 
   const clear = () => {
-    setFront('');
-    setBack('');
+    clearStates([
+      [setFront, ''],
+      [setBack, ''],
+    ]);
   };
 
   return (

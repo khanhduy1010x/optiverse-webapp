@@ -2,8 +2,10 @@ import React, { useState, useRef } from 'react';
 import { Button } from '../../components/common/Button.component';
 import COLORS from '../../constants/colors.constant';
 import { VerifyCodeFormProps } from '../../types/auth/props/component.props';
-
-
+import {
+  handleChangeOTP,
+  handleKeyDownOTP,
+} from '../../utils/keyboard/keyboard-handler.util';
 
 const VerifyCodeFormRegister: React.FC<VerifyCodeFormProps> = ({
   onSwitch,
@@ -11,29 +13,6 @@ const VerifyCodeFormRegister: React.FC<VerifyCodeFormProps> = ({
 }) => {
   const [code, setCode] = useState<string[]>(Array(6).fill(''));
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-
-  const handleChange = (index: number, value: string) => {
-    if (!/^[0-9]?$/.test(value)) return; // Chỉ cho phép số
-
-    const newCode = [...code];
-    newCode[index] = value;
-    setCode(newCode);
-
-    // Tự động focus ô tiếp theo
-    if (value && index < 5) {
-      inputRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleKeyDown = (
-    index: number,
-    e: React.KeyboardEvent<HTMLInputElement>
-  ) => {
-    // Xử lý phím Backspace
-    if (e.key === 'Backspace' && !code[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,8 +69,16 @@ const VerifyCodeFormRegister: React.FC<VerifyCodeFormProps> = ({
               type="text"
               maxLength={1}
               value={code[i]}
-              onChange={e => handleChange(i, e.target.value)}
-              onKeyDown={e => handleKeyDown(i, e)}
+              onChange={e =>
+                handleChangeOTP(
+                  i,
+                  e.target.value,
+                  code,
+                  setCode,
+                  inputRefs.current
+                )
+              }
+              onKeyDown={e => handleKeyDownOTP(i, e, code, inputRefs.current)}
               ref={el => {
                 inputRefs.current[i] = el;
               }}

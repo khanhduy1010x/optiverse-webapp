@@ -1,6 +1,9 @@
-import React, { useState, useRef, Dispatch, SetStateAction } from 'react';
+import React, { useState, useRef } from 'react';
 import { VerifyCodeFormProps } from '../../types/auth/props/component.props';
-
+import {
+  handleChangeOTP,
+  handleKeyDownOTP,
+} from '../../utils/keyboard/keyboard-handler.util';
 
 const VerifyCodeForm: React.FC<VerifyCodeFormProps> = ({
   data,
@@ -11,26 +14,6 @@ const VerifyCodeForm: React.FC<VerifyCodeFormProps> = ({
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-
-  const handleChange = (index: number, value: string) => {
-    if (!/^[0-9]?$/.test(value)) return;
-    const newCode = [...code];
-    newCode[index] = value;
-    setCode(newCode);
-
-    if (value && index < 5) {
-      inputRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleKeyDown = (
-    index: number,
-    e: React.KeyboardEvent<HTMLInputElement>
-  ) => {
-    if (e.key === 'Backspace' && !code[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,9 +78,19 @@ const VerifyCodeForm: React.FC<VerifyCodeFormProps> = ({
               type="text"
               maxLength={1}
               value={digit}
-              onChange={e => handleChange(i, e.target.value)}
-              onKeyDown={e => handleKeyDown(i, e)}
-              ref={el => { inputRefs.current[i] = el }}
+              onChange={e =>
+                handleChangeOTP(
+                  i,
+                  e.target.value,
+                  code,
+                  setCode,
+                  inputRefs.current
+                )
+              }
+              onKeyDown={e => handleKeyDownOTP(i, e, code, inputRefs.current)}
+              ref={el => {
+                inputRefs.current[i] = el;
+              }}
               className="w-10 h-10 text-center border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
