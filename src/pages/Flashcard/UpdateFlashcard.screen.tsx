@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { token } from '../../services/apitest';
-import { Button } from '../../components/common/Button';
+import { token } from '../../utils/apitest';
+import { Button } from '../../components/common/Button.component';
 
 interface Flashcard {
   _id: string;

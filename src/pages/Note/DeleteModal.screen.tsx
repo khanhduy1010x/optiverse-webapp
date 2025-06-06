@@ -1,7 +1,7 @@
 import React from 'react';
 import Modal from 'react-modal';
 import { RootItem } from '../../types/note.types';
-import { formatDateTime } from '../../utils/dateUtils';
+import { formatDateTime } from '../../utils/date.utils';
 
 interface DeleteModalProps {
   isOpen: boolean;

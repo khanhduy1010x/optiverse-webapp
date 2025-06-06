@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useTheme } from '../../contexts/ThemeContext';
-import View from '../../components/common/View';
-import Text from '../../components/common/Text';
-import Input from '../../components/common/Input';
+import { useTheme } from '../../contexts/theme.context';
+import View from '../../components/common/View.component';
+import Text from '../../components/common/Text.component';
+import Input from '../../components/common/Input.component';
 import { useNavigate } from 'react-router-dom';
-import IconProps from '../../components/common/Icon/Icon';
+import IconProps from '../../components/common/Icon/Icon.component';
 import profileService, { ProfileData } from '../../services/profile.service';
 
 type ChangePasswordPopupProps = {

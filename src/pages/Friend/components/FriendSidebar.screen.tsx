@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import Icon from '../../../components/common/Icon/Icon';
+import Icon from '../../../components/common/Icon/Icon.component';
 import NavButton from '../../../components/common/Button/NavButton';
 import { IconName } from '../../../assets/icons/index';
 

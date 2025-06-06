@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { FlashcardChips } from '../../components/common/Chip';
+import { FlashcardChips } from '../../components/common/Chip.component';
 import { getDueFlashcards } from '../../services/flashcardService';
 import { Flashcard, FlashcardDeck } from '../../types/flashcard.types';
-import { token } from '../../services/apitest';
-import { Button, FlashcardButton } from '../../components/common/Button';
-import COLORS from '../../constants/colors';
+import { token } from '../../utils/apitest';
+import { Button, FlashcardButton } from '../../components/common/Button.component';
+import COLORS from '../../constants/colors.constant';
 
 const initFlashcardDeck = {
   _id: '',

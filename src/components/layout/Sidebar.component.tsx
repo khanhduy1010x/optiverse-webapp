@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import { NAV_SECTIONS } from '../common/Navigation/navigation';
 import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { toggleSidebar } from '../../store/slices/sidebarSlice';
-import Icon from '../common/Icon/Icon';
+import { toggleSidebar } from '../../store/slices/sidebar.slice';
+import Icon from '../common/Icon/Icon.component';
 import NavButton from '../common/Button/NavButton';
 
 interface SliderBarProps {

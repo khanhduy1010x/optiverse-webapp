@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { AuthView } from '../../types/global.types';
 import { useNavigate } from 'react-router-dom';
 import { AuthService } from '../../services/auth.service';
-import { GOOGLE_AUTH_CONFIG } from '../../config/google-auth';
+import { GOOGLE_AUTH_CONFIG } from '../../config/google-auth.config';
 import axios from 'axios';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/auth.context';
 
 interface LoginFormProps {
   onSwitch: (view: AuthView) => void;

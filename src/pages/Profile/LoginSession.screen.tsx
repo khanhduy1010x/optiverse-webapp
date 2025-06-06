@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import View from '../../components/common/View';
-import Text from '../../components/common/Text';
-import IconProps from '../../components/common/Icon/Icon';
+import View from '../../components/common/View.component';
+import Text from '../../components/common/Text.component';
+import IconProps from '../../components/common/Icon/Icon.component';
 import profileService, { UserSession } from '../../services/profile.service';
 
 const SESSIONS_PER_PAGE = 2; // Number of sessions to show initially

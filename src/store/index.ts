@@ -1,12 +1,12 @@
 import { configureStore } from '@reduxjs/toolkit';
-import counterReducer from './slices/counterSlice';
-import sidebarReducer from './slices/sidebarSlice';
+import counterReducer from './slices/counter.slice';
+import sidebarReducer from './slices/sidebar.slice';
 
-import uiReducer from './slices/uiSlice';
-import itemsReducer from './slices/itemsSlice';
-import themeReducer from './slices/themeSlice'; 
-import authReducer from './slices/authSlice'; // Thêm auth reducer
-import friendReducer from './slices/friendSlice';
+import uiReducer from './slices/ui.slice';
+import itemsReducer from './slices/items.slice';
+import themeReducer from './slices/theme.slice'; 
+import authReducer from './slices/auth.slice'; // Thêm auth reducer
+import friendReducer from './slices/friend.slice';
 export const store = configureStore({
   reducer: {
     counter: counterReducer,

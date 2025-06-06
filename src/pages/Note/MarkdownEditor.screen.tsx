@@ -4,11 +4,11 @@ import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import './MarkdownEditor.css';
 import { RootState } from '../../store';
-import { setCurrentNote } from '../../store/slices/itemsSlice';
-import { setShowWarningModal } from '../../store/slices/uiSlice';
-import { formatDateTimeFull } from '../../utils/dateUtils';
+import { setCurrentNote } from '../../store/slices/items.slice';
+import { setShowWarningModal } from '../../store/slices/ui.slice';
+import { formatDateTimeFull } from '../../utils/date.utils';
 import ToolBarNote from './ToolbarNote.screen';
-import Icon from '../../components/common/Icon/Icon';
+import Icon from '../../components/common/Icon/Icon.component';
 import { NoteService } from '../../services/note.service';
 import SocketService from '../../services/socket.service';
 

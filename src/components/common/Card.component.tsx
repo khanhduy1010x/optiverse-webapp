@@ -1,15 +1,15 @@
 import React from 'react';
-import COLORS from '../../constants/colors';
-import { formatElapsedTime } from '../../services/dateService';
-import { FlashcardChips } from './Chip';
-import Icon from './Icon/Icon';
-import Text from './Text';
-import { useTheme } from '../../contexts/ThemeContext';
+import COLORS from '../../constants/colors.constant';
+import { formatElapsedTime } from '../../utils/date.utils';
+import { FlashcardChips } from './Chip.component';
+import Icon from './Icon/Icon.component';
+import Text from './Text.component';
+import { useTheme } from '../../contexts/theme.context';
 import logo from '../../assets/app-icon/optiverse-logo.svg';
 import {
   CardInteractionProps,
   useCardInteractions,
-} from '../../hooks/useCardInteractions';
+} from '../../hooks/useCardInteraction.hook';
 
 interface FlashcardCardProps extends CardInteractionProps {
   title: string;

@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useState, useEffect } from 'react';
-import { lightTheme, darkTheme } from '../config/themeConfig';
+import { lightTheme, darkTheme } from '../config/theme.config';
 
 const THEME_KEY = 'appTheme';
 

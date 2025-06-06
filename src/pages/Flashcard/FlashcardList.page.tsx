@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Flashcard, FlashcardDeckCard } from '../../components/common/Card';
-import { Button, CircleButton } from '../../components/common/Button';
-import { token } from '../../services/apitest';
-import Icon from '../../components/common/Icon/Icon';
+import { Flashcard, FlashcardDeckCard } from '../../components/common/Card.component';
+import { Button, CircleButton } from '../../components/common/Button.component';
+import { token } from '../../utils/apitest';
+import Icon from '../../components/common/Icon/Icon.component';
 import UpdateFlashcard from './UpdateFlashcard.screen';
 import {
   FlashcardDeck,

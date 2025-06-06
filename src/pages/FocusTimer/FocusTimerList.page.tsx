@@ -3,7 +3,7 @@ import { Trash2 as TrashIcon } from 'lucide-react';
 // import AddFocusSessionModal from './CreateFocusModal';
 import DeleteFocusSessionModal from './ConfirmDeleteModal.screen';
 import { FocusSession } from '../../types/global.types';
-import { token } from '../../services/apitest';
+import { token } from '../../utils/apitest';
 
 const FocusSessionListPage: React.FC = () => {
   const [focusSessions, setFocusSessions] = useState<FocusSession[]>([]);

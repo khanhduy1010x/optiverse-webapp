@@ -1,7 +1,7 @@
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { Button } from '../../components/common/Button';
+import { Button } from '../../components/common/Button.component';
 import { useState } from 'react';
-import { token } from '../../services/apitest';
+import { token } from '../../utils/apitest';
 
 export default function AddFlashcard() {
   const { deckId } = useParams();

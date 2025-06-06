@@ -1,5 +1,5 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
-import { AUTH_ERROR_EVENT, TOKEN_REFRESH_SUCCESS } from '../contexts/AuthContext';
+import { AUTH_ERROR_EVENT, TOKEN_REFRESH_SUCCESS } from '../contexts/auth.context';
 
 const api: AxiosInstance = axios.create({
   baseURL: 'http://localhost:81', 

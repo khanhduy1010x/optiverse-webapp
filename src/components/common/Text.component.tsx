@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { TEXT } from '../../constants/typography';
-import { useTheme } from '../../contexts/ThemeContext';
+import { TEXT } from '../../constants/typography.constant';
+import { useTheme } from '../../contexts/theme.context';
 
 interface CustomTextProps {
   title?: string;

@@ -1,5 +1,5 @@
-import COLORS from '../constants/colors';
-import { TEXT } from '../constants/typography';
+import COLORS from '../constants/colors.constant';
+import { TEXT } from '../constants/typography.constant';
 
 const rootBackgroundStyles = {
   padding: 12,
