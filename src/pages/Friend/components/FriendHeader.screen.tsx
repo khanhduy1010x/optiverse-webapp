@@ -1,11 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { FriendHeaderProps } from '../../../types/friend/props/component.props';
 
-interface FriendHeaderProps {
-  activeTab: string;
-  loading: boolean;
-  onRefresh: () => void;
-}
 
 const FriendHeader: React.FC<FriendHeaderProps> = ({ activeTab, loading, onRefresh }) => {
   const { t } = useTranslation();
@@ -54,7 +50,7 @@ const FriendHeader: React.FC<FriendHeaderProps> = ({ activeTab, loading, onRefre
             {description}
           </p>
         </div>
-        <button 
+        <button
           onClick={onRefresh}
           className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300 flex items-center gap-2 shadow-md hover:shadow-lg"
           disabled={loading}

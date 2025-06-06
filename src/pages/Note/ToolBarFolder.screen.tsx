@@ -1,9 +1,7 @@
 import React from 'react';
+import { ToolBarFolderProps } from '../../types/note/props/component.props';
 
-interface ToolBarFolderProps {
-  setIsModalInputName: (value: boolean) => void;
-  setCreateType: (type: 'folder' | 'note') => void;
-}
+
 
 const ToolBarFolder: React.FC<ToolBarFolderProps> = ({ setIsModalInputName, setCreateType }) => {
   return (

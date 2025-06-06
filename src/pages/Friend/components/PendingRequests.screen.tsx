@@ -1,21 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { Friend } from '../../../types/friend/response/friend.response';
 
-interface FriendUserInfo {
-  email?: string;
-  full_name?: string;
-  avatar_url?: string;
-}
-
-interface Friend {
-  _id: string;
-  user_id: string;
-  friend_id: string;
-  status: string;
-  createdAt?: string;
-  updatedAt?: string;
-  friendInfo?: FriendUserInfo;
-}
 
 interface PendingRequestsProps {
   pendingRequests: Friend[];
@@ -24,11 +10,11 @@ interface PendingRequestsProps {
   renderUserInfo: (userId: string, showId?: boolean) => React.ReactNode;
 }
 
-const PendingRequests: React.FC<PendingRequestsProps> = ({ 
-  pendingRequests, 
-  loading, 
-  onAcceptFriend, 
-  renderUserInfo 
+const PendingRequests: React.FC<PendingRequestsProps> = ({
+  pendingRequests,
+  loading,
+  onAcceptFriend,
+  renderUserInfo
 }) => {
   const { t } = useTranslation();
 
@@ -97,23 +83,23 @@ const PendingRequests: React.FC<PendingRequestsProps> = ({
           {t('Last updated')}: <span className="font-medium">{new Date().toLocaleTimeString()}</span>
         </div>
       </div>
-      
+
       <div className="space-y-4">
         {pendingRequests.map((request) => {
           // Lấy chữ cái đầu tiên từ tên hoặc email
-          const initial = request.friendInfo?.full_name 
-            ? request.friendInfo.full_name.charAt(0).toUpperCase() 
+          const initial = request.friendInfo?.full_name
+            ? request.friendInfo.full_name.charAt(0).toUpperCase()
             : request.friendInfo?.email?.charAt(0).toUpperCase() || request.user_id.charAt(0).toUpperCase();
-          
+
           // Lấy màu dựa trên ID
           const gradientClass = getColorFromString(request.user_id);
-          
+
           return (
             <div
               key={request._id}
               className="bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl transition-all duration-200 border border-gray-100 dark:border-gray-700 overflow-hidden group"
             >
-              <div className="h-2 bg-gradient-to-r w-full group-hover:scale-105 transition-transform duration-300 ease-out" style={{backgroundImage: `linear-gradient(to right, #eab308, #f59e0b)`}}></div>
+              <div className="h-2 bg-gradient-to-r w-full group-hover:scale-105 transition-transform duration-300 ease-out" style={{ backgroundImage: `linear-gradient(to right, #eab308, #f59e0b)` }}></div>
               <div className="p-5 flex items-start justify-between">
                 <div className="flex items-center">
                   <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${gradientClass} flex items-center justify-center text-white text-2xl font-bold mr-4 shadow-md transform transition-transform group-hover:scale-105`}>

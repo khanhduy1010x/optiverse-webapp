@@ -8,7 +8,7 @@ import UpdateFlashcard from './UpdateFlashcard.screen';
 import {
   FlashcardDeck,
   Flashcard as FlashcardType,
-} from '../../types/flashcard.types';
+} from '../../types/flashcard/response/flashcard.response';
 
 export default function FlashcardList() {
   const { deckId } = useParams();

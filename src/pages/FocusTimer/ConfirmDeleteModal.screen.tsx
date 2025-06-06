@@ -1,13 +1,7 @@
 // DeleteFocusSessionModal.tsx
 import React, { useState } from 'react';
-import { FocusSession } from '../../types/global.types';
+import { DeleteFocusSessionModalProps } from '../../types/focus-timer/props/component.props';
 import { token } from '../../utils/apitest';
-
-interface DeleteFocusSessionModalProps {
-  session: FocusSession;
-  onClose: () => void;
-  onSessionDeleted: () => void;
-}
 
 const DeleteFocusSessionModal: React.FC<DeleteFocusSessionModalProps> = ({
   session,

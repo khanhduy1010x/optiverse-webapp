@@ -6,7 +6,7 @@ import { Button, CircleButton } from '../../components/common/Button.component';
 import Icon from '../../components/common/Icon/Icon.component';
 import UpdateFlashcardDeck from './UpdateFlashcardDeck.screen';
 import AddFlashcardDeck from './AddFlashcardDeck.screen';
-import { FlashcardDeck } from '../../types/flashcard.types';
+import { FlashcardDeck } from '../../types/flashcard/response/flashcard.response';
 
 export default function FlashcardDeckList() {
   const navigate = useNavigate();

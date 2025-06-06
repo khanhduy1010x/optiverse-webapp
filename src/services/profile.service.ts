@@ -1,45 +1,14 @@
 import api from './api.service';
 import { decodeToken } from '../utils/jwt';
-
-export interface ProfileData {
-  _id: string;
-  user_id?: string;
-  email: string;
-  full_name: string;
-  avatar?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface UpdateProfileRequest {
-  full_name: string;
-}
-
-export interface ChangePasswordRequest {
-  currentPassword: string;
-  newPassword: string;
-}
-
-export interface LogoutSessionRequest {
-  session_id: string;
-}
-
-export interface UserSession {
-  _id: string;
-  user_id: string;
-  device_info?: string;
-  ip_address?: string;
-  refresh_token?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  is_current?: boolean;
-}
-
-export interface UserSessionsResponse {
-  current_session: UserSession;
-  active_sessions: UserSession[];
-  previous_sessions: UserSession[];
-}
+import {
+  ProfileData,
+  UserSession,
+  UserSessionsResponse,
+} from '../types/profile/response/profile.response';
+import {
+  ChangePasswordRequest,
+  UpdateProfileRequest,
+} from '../types/profile/request/profile.request';
 
 /**
  * Get the current user's profile information
@@ -49,14 +18,13 @@ export async function getProfile(): Promise<ProfileData> {
     const response = await api.get('/core/profile');
     console.log('Profile response:', response.data);
     const profileData = response.data.data || response.data;
-    
+
     // Ensure avatar field is included in the response
     return {
       _id: profileData._id,
       email: profileData.email,
       full_name: profileData.full_name,
       avatar: profileData.avatar_url,
-     
     };
   } catch (error: any) {
     console.error('Error fetching profile:', error);
@@ -72,11 +40,13 @@ export async function getProfile(): Promise<ProfileData> {
  * Update the current user's profile information
  * @param data The profile data to update (currently only supports full_name)
  */
-export async function updateProfile(data: UpdateProfileRequest): Promise<ProfileData> {
+export async function updateProfile(
+  data: UpdateProfileRequest
+): Promise<ProfileData> {
   try {
     // Ensure data is properly formatted
     const requestData = {
-      full_name: data.full_name.toString()
+      full_name: data.full_name.toString(),
     };
     console.log('Updating profile:', requestData);
     const response = await api.patch('/core/profile', requestData);
@@ -97,13 +67,18 @@ export async function updateProfile(data: UpdateProfileRequest): Promise<Profile
  * Change user's password
  * @param data The password data containing current and new password
  */
-export async function changePassword(data: ChangePasswordRequest): Promise<void> {
+export async function changePassword(
+  data: ChangePasswordRequest
+): Promise<void> {
   try {
     await api.post('/core/auth/change-password', data);
   } catch (error: any) {
     console.error('Error changing password:', error);
     if (error.response?.status === 400) {
-      throw new Error(error.response.data.message || 'Current password is incorrect or invalid password format.');
+      throw new Error(
+        error.response.data.message ||
+          'Current password is incorrect or invalid password format.'
+      );
     }
     if (error.response?.status === 401) {
       throw new Error('Authentication failed. Please log in again.');
@@ -124,14 +99,17 @@ export async function logout(): Promise<void> {
     // }
 
     // Development code (remove in production)
-    const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2ODI5YTA3MDM5M2I1ODE3OTY4NjA2OTQiLCJlbWFpbCI6Im5ndXllbmtoYW5oZHV5QGdtYWlsLmNvbSIsImZ1bGxfbmFtZSI6IkxhZG8iLCJzZXNzaW9uX2lkIjoiNjg0MTNlNzY2YjBjNzgxZWFkMWYxNjU5IiwiaWF0IjoxNzQ5MTA2Mjk0LCJleHAiOjE3NDkxOTI2OTR9.qGwrujvelYY6QhXaa598OuxsVfJWsLq3ARM7SMHnDvE";
+    const token =
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2ODI5YTA3MDM5M2I1ODE3OTY4NjA2OTQiLCJlbWFpbCI6Im5ndXllbmtoYW5oZHV5QGdtYWlsLmNvbSIsImZ1bGxfbmFtZSI6IkxhZG8iLCJzZXNzaW9uX2lkIjoiNjg0MTNlNzY2YjBjNzgxZWFkMWYxNjU5IiwiaWF0IjoxNzQ5MTA2Mjk0LCJleHAiOjE3NDkxOTI2OTR9.qGwrujvelYY6QhXaa598OuxsVfJWsLq3ARM7SMHnDvE';
 
     const payload = decodeToken(token);
     if (!payload || !payload.session_id) {
       throw new Error('Invalid token format');
     }
 
-    await api.post('/core/auth/log-out-single', { session_id: payload.session_id });
+    await api.post('/core/auth/log-out-single', {
+      session_id: payload.session_id,
+    });
 
     // Production code (uncomment when authentication is properly implemented)
     // localStorage.removeItem('authToken');
@@ -147,7 +125,7 @@ export async function logout(): Promise<void> {
       // localStorage.removeItem('authToken');
       // localStorage.removeItem('user');
       // sessionStorage.clear();
-      
+
       window.location.href = '/';
       return;
     }
@@ -168,17 +146,25 @@ export async function getLoginSessions(): Promise<UserSessionsResponse> {
     const currentSessionId = token ? decodeToken(token)?.session_id : null;
 
     // Transform the data to match our frontend structure
-    const currentSession = sessions.find((s: UserSession) => s._id === currentSessionId);
+    const currentSession = sessions.find(
+      (s: UserSession) => s._id === currentSessionId
+    );
     if (currentSession) {
       currentSession.is_current = true;
     }
 
-    const otherSessions = sessions.filter((s: UserSession) => s._id !== currentSessionId);
+    const otherSessions = sessions.filter(
+      (s: UserSession) => s._id !== currentSessionId
+    );
 
     return {
       current_session: currentSession || otherSessions[0], // Fallback to first session if current not found
-      active_sessions: otherSessions.filter((s: UserSession) => s.refresh_token), // Sessions with refresh tokens are active
-      previous_sessions: otherSessions.filter((s: UserSession) => !s.refresh_token) // Sessions without refresh tokens are logged out
+      active_sessions: otherSessions.filter(
+        (s: UserSession) => s.refresh_token
+      ), // Sessions with refresh tokens are active
+      previous_sessions: otherSessions.filter(
+        (s: UserSession) => !s.refresh_token
+      ), // Sessions without refresh tokens are logged out
     };
   } catch (error: any) {
     console.error('Error fetching login sessions:', error);
@@ -257,7 +243,7 @@ const profileService = {
   getLoginSessions,
   logoutSession,
   logoutAllOtherSessions,
-  updateAvatar
+  updateAvatar,
 };
 
 export default profileService;

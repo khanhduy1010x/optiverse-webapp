@@ -1,16 +1,12 @@
 import React, { useState } from 'react';
-import { AuthView } from '../../types/global.types';
 import { useNavigate } from 'react-router-dom';
 import { AuthService } from '../../services/auth.service';
 import { GOOGLE_AUTH_CONFIG } from '../../config/google-auth.config';
 import axios from 'axios';
 import { useAuth } from '../../contexts/auth.context';
+import { LoginFormProps } from '../../types/auth/props/component.props';
 
-interface LoginFormProps {
-  onSwitch: (view: AuthView) => void;
-}
-
-const LoginForm: React.FC<LoginFormProps> = ({ onSwitch }) => {
+const LoginForm: React.FC<LoginFormProps> = ({ onSwitch = () => { } }) => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [isEmailLoginLoading, setIsEmailLoginLoading] = useState<boolean>(false);
@@ -21,35 +17,35 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitch }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (isEmailLoginLoading) return; // Prevent multiple submissions
-    
+
     setError(null);
     setIsEmailLoginLoading(true);
-    
+
     try {
       // Direct implementation to ensure we can catch and handle the error properly
-      const response = await axios.post('http://localhost:81/core/auth/login', { 
-        email, 
-        password 
+      const response = await axios.post('http://localhost:81/core/auth/login', {
+        email,
+        password
       });
-      
+
       // Process successful login
       const { access_token, refresh_token } = response.data.data;
-      
+
       // Save tokens to localStorage
       localStorage.setItem('accessToken', access_token);
       localStorage.setItem('refreshToken', refresh_token);
-      
+
       // Update authentication state
       await refreshTokens(); // This will update isAuthenticated in AuthContext
-      
+
       // Navigate to dashboard page
       navigate('/dashboard', { replace: true });
-      
+
     } catch (err: any) {
       console.error('Login error:', err);
-      
+
       // Handle 401 Unauthorized explicitly
       if (err.response?.status === 401) {
         setError('Invalid email or password. Please try again.');
@@ -70,11 +66,11 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitch }) => {
   const handleGoogleLogin = async () => {
     setError(null);
     setIsGoogleLoginLoading(true);
-    
+
     try {
       // Open Google OAuth page in a popup
       const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_AUTH_CONFIG.CLIENT_ID}&redirect_uri=${encodeURIComponent(GOOGLE_AUTH_CONFIG.REDIRECT_URI)}&response_type=code&scope=email profile`;
-      
+
       const popup = window.open(
         googleAuthUrl,
         'Google Login',
@@ -89,16 +85,16 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitch }) => {
       const messageHandler = async (event: MessageEvent) => {
         // Make sure the message is from our popup
         if (event.origin !== window.location.origin) return;
-        
+
         if (event.data.type === 'googleCallback' && event.data.code) {
           try {
             // Call the API with the received code
             await AuthService.loginWithGoogle(event.data.code);
             // Update authentication state
-            await refreshTokens(); 
+            await refreshTokens();
             // Navigate to dashboard page after successful login
             navigate('/dashboard', { replace: true });
-            
+
             // Close the popup after successful login
             if (popup) popup.close();
           } catch (err) {
@@ -113,7 +109,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitch }) => {
       };
 
       window.addEventListener('message', messageHandler);
-      
+
       // Set a timeout to clear the loading state if no response is received
       setTimeout(() => {
         if (isGoogleLoginLoading) {
@@ -122,7 +118,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitch }) => {
           window.removeEventListener('message', messageHandler);
         }
       }, 60000); // 1 minute timeout
-      
+
     } catch (err) {
       setError('Failed to open Google login. Please try again.');
       setIsGoogleLoginLoading(false);

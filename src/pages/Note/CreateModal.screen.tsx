@@ -1,16 +1,7 @@
 import React from 'react';
 import Modal from 'react-modal';
+import { CreateModalProps } from '../../types/note/props/component.props';
 
-interface CreateModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  itemName: string;
-  setItemName: (name: string) => void;
-  createType: 'folder' | 'note';
-  onCreate: () => Promise<void>;
-  loading: boolean;
-  errorMessage?: string;
-}
 
 const CreateModal: React.FC<CreateModalProps> = ({
   isOpen,

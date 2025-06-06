@@ -12,7 +12,6 @@ import FlashcardStatistic from './pages/Flashcard/FlashcardStatistic.page';
 import AuthContainer from './pages/Auth/AuthContainer.page';
 import GoogleCallback from './pages/Auth/GoogleCallback.page';
 import FlashcardDeckList from './pages/Flashcard/FlashcardDeckList.page';
-import { AuthView } from './types/global.types';
 import './App.css';
 import { getSectionKeyFromPath } from './components/common/Navigation/navigation';
 import SliderBar from './components/layout/Sidebar.component';
@@ -30,12 +29,13 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { PublicRoute } from './components/PublicRoute';
 import { AuthProvider } from './contexts/auth.context';
 import FocusSessionList from './pages/FocusTimer/FocusTimerList.page';
+import { AuthViewType } from './types/auth/auth.types';
 
 const AppContent: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const initialView = (searchParams.get('view') as AuthView) || 'login';
+  const initialView = (searchParams.get('view') as AuthViewType) || 'login';
 
   const showSidebar =
     location.pathname !== '/' &&
@@ -54,9 +54,8 @@ const AppContent: React.FC = () => {
       )}
 
       <div
-        className={`flex-1 transition-all duration-300 ease-in-out ${
-          showSidebar ? '' : 'ml-0'
-        } h-full w-full overflow-auto`}
+        className={`flex-1 transition-all duration-300 ease-in-out ${showSidebar ? '' : 'ml-0'
+          } h-full w-full overflow-auto`}
       >
         <Routes>
           {/* Public routes - accessible without authentication */}

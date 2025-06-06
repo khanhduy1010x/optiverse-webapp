@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
-import { fetchAllUserTasks, createTask, Task, updateTask, deleteTask, getTaskTags, filterTasksByTags } from '../../services/task.service';
+import { fetchAllUserTasks, createTask, updateTask, deleteTask, getTaskTags, filterTasksByTags } from '../../services/task.service';
 import { format } from 'date-fns';
-import { Tag, fetchAllUserTags, createTag, createTaskTag, fetchTasksByTagId, deleteTag, deleteTaskTag } from '../../services/tag.service';
+import { fetchAllUserTags, createTag, createTaskTag, fetchTasksByTagId, deleteTag, deleteTaskTag } from '../../services/tag.service';
+import { Task } from '../../types/task/response/task.response';
+import { Tag } from '../../types/task/response/tag.response';
 
 export default function TaskManagement() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -39,7 +41,7 @@ export default function TaskManagement() {
       // First, separate completed and non-completed tasks
       if (a.status === 'completed' && b.status !== 'completed') return 1;
       if (a.status !== 'completed' && b.status === 'completed') return -1;
-      
+
       // Then sort by creation date (newest first) within each group
       const dateA = new Date(a.createdAt || '').getTime();
       const dateB = new Date(b.createdAt || '').getTime();
@@ -111,15 +113,15 @@ export default function TaskManagement() {
     try {
       const tags = await getTaskTags(taskId);
       console.log(`Tags for task ${taskId}:`, tags);
-      
+
       // Ensure tags is an array before updating state
       const tagsArray = Array.isArray(tags) ? tags : [];
-      
+
       setTaskTags(prev => ({
         ...prev,
         [taskId]: tagsArray
       }));
-      
+
       return tagsArray;
     } catch (error) {
       console.error(`Error fetching tags for task ${taskId}:`, error);
@@ -264,12 +266,12 @@ export default function TaskManagement() {
         const updatedTasks = prevTasks.map(task =>
           task._id === taskId ? { ...task, ...updatedFields } : task
         );
-        
+
         // If the task is being marked as completed, sort the tasks to move completed tasks to the bottom
         if (updatedFields.status === 'completed' || updatedFields.status === 'pending') {
           return sortTasksWithCompletedAtBottom(updatedTasks);
         }
-        
+
         return updatedTasks;
       });
 
@@ -278,12 +280,12 @@ export default function TaskManagement() {
         const updatedFilteredTasks = prevFilteredTasks.map(task =>
           task._id === taskId ? { ...task, ...updatedFields } : task
         );
-        
+
         // If the task is being marked as completed, sort the tasks to move completed tasks to the bottom
         if (updatedFields.status === 'completed' || updatedFields.status === 'pending') {
           return sortTasksWithCompletedAtBottom(updatedFilteredTasks);
         }
-        
+
         return updatedFilteredTasks;
       });
 
@@ -373,7 +375,7 @@ export default function TaskManagement() {
 
     try {
       let taskId: string;
-      
+
       if (selectedTask) {
         // Update existing task
         console.log('Updating existing task:', selectedTask._id);
@@ -383,7 +385,7 @@ export default function TaskManagement() {
           status,
           priority
         });
-        
+
         if (response && response.data && response.data.task) {
           taskId = selectedTask._id;
           console.log("Task updated successfully:", response.data.task);
@@ -404,7 +406,7 @@ export default function TaskManagement() {
           const tagsToAdd = selectedTags.filter(
             selectedTag => !currentTags.some(currentTag => currentTag._id === selectedTag._id)
           );
-          
+
           console.log("Tags to add:", tagsToAdd.map(t => t.name));
           console.log("Tags to remove:", tagsToRemove.map(t => t.name));
 
@@ -414,7 +416,7 @@ export default function TaskManagement() {
             const removeTagPromises = tagsToRemove
               .filter(tag => tag.taskTagId) // Make sure we have the taskTagId
               .map(tag => deleteTaskTag(tag.taskTagId!));
-            
+
             await Promise.all(removeTagPromises);
           }
 
@@ -447,7 +449,7 @@ export default function TaskManagement() {
         if (!createdTask || !createdTask._id) {
           throw new Error('Failed to create task');
         }
-        
+
         taskId = createdTask._id;
 
         // Add tags to the newly created task
@@ -605,7 +607,7 @@ export default function TaskManagement() {
       // If this was the filtered tag, reset the filter
       if (filterTags.some(t => t._id === tagToDelete._id)) {
         setFilterTags(filterTags.filter(t => t._id !== tagToDelete._id));
-        
+
         // If no more filter tags, show all tasks
         if (filterTags.length <= 1) {
           setFilteredTasks(sortTasksWithCompletedAtBottom([...tasks]));
@@ -631,7 +633,7 @@ export default function TaskManagement() {
       // Close the confirmation dialog
       setShowDeleteTagConfirm(false);
       setTagToDelete(null);
-      
+
       // Show success message
       console.log(`Tag "${tagToDelete.name}" deleted successfully`);
     } catch (error) {
@@ -639,7 +641,7 @@ export default function TaskManagement() {
       // Revert the UI updates on error
       fetchUserTags();
       fetchTasks();
-      
+
       // Show error message
       alert(`Failed to delete tag "${tagToDelete.name}". Please try again.`);
     }

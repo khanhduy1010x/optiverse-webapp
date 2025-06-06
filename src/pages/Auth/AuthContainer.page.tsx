@@ -3,19 +3,16 @@ import LoginForm from './Login.screen';
 import RegisterForm from './Register.screen';
 import ForgotPasswordForm from './ForgotPassword.screen';
 import VerifyCodeFormRegister from './VerifyCodeRegister.screen';
-import { AuthView } from '../../types/global.types';
 import LogoInAuth from '../../components/common/Logo/LogoInAuth';
 import ResetPasswordForm from './ResetPassword.screen';
 import VerifyCodeForm from './VerifyCode.screen';
-
-interface AuthContainerProps {
-  initialView?: AuthView;
-}
+import { AuthContainerProps } from '../../types/auth/props/component.props';
+import { AuthViewType } from '../../types/auth/auth.types';
 
 const AuthContainer: React.FC<AuthContainerProps> = ({
   initialView = 'login',
 }) => {
-  const [view, setView] = useState<AuthView>(initialView);
+  const [view, setView] = useState<AuthViewType>(initialView);
   const [data, setData] = useState<string>('');
   const [token, setToken] = useState<string>('');
 

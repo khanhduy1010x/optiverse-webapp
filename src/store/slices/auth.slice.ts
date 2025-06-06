@@ -1,9 +1,6 @@
 // File: D:\optiverse\webapp\src\store\slices\authSlice.ts
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-
-interface AuthState {
-  user: { userId: string; email: string } | null;
-}
+import { AuthState } from '../../types/auth/auth.types';
 
 const initialState: AuthState = { user: null };
 
@@ -11,10 +8,13 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    setUser: (state, action: PayloadAction<{ userId: string; email: string }>) => {
+    setUser: (
+      state,
+      action: PayloadAction<{ userId: string; email: string }>
+    ) => {
       state.user = action.payload;
     },
-    clearUser: (state) => {
+    clearUser: state => {
       state.user = null;
     },
   },

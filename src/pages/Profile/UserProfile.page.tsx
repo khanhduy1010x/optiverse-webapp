@@ -5,11 +5,11 @@ import Text from '../../components/common/Text.component';
 import Input from '../../components/common/Input.component';
 import { useNavigate } from 'react-router-dom';
 import IconProps from '../../components/common/Icon/Icon.component';
-import profileService, { ProfileData } from '../../services/profile.service';
+import profileService from '../../services/profile.service';
+import { ChangePasswordPopupProps } from '../../types/profile/props/component.props';
+import { ProfileData } from '../../types/profile/response/profile.response';
 
-type ChangePasswordPopupProps = {
-  onClose: () => void;
-};
+
 
 const ChangePasswordPopup: React.FC<ChangePasswordPopupProps> = ({ onClose }) => {
   const [currentPassword, setCurrentPassword] = useState('');
@@ -48,7 +48,7 @@ const ChangePasswordPopup: React.FC<ChangePasswordPopupProps> = ({ onClose }) =>
   const handleSubmit = async () => {
     try {
       setError(null);
-      
+
       if (!validatePasswords()) {
         return;
       }
@@ -71,7 +71,7 @@ const ChangePasswordPopup: React.FC<ChangePasswordPopupProps> = ({ onClose }) =>
     <div className="fixed inset-0 flex justify-center items-center z-50 bg-white/10">
       <div className="w-full max-w-sm p-6 rounded-xl shadow-xl bg-white border border-gray-200">
         <h2 className="text-lg font-bold text-center mb-4 text-gray-800">Change Password</h2>
-        
+
         {error && (
           <div className="mb-4 p-3 bg-red-100 text-red-700 rounded text-sm">
             {error}
@@ -212,9 +212,9 @@ export default function UserProfile() {
     try {
       setIsLoading(true);
       setError(null);
-      
+
       const data = await profileService.getProfile();
-      
+
       setProfileData(data);
       setNewFullName(data.full_name);
       // Set initial avatar if available from profile data
@@ -238,7 +238,7 @@ export default function UserProfile() {
 
         const result = await profileService.updateAvatar(file);
         setAvatar(result.avatar);
-        
+
         // Update profile data with new avatar
         setProfileData(prev => ({
           ...prev,
@@ -279,15 +279,15 @@ export default function UserProfile() {
     if (newFullName.trim() === '') {
       return;
     }
-    
+
     try {
       setIsSaving(true);
       setError(null);
-      
-      const updatedProfile = await profileService.updateProfile({ 
-        full_name: newFullName.trim() 
+
+      const updatedProfile = await profileService.updateProfile({
+        full_name: newFullName.trim()
       });
-      
+
       setProfileData(updatedProfile);
       setIsEditingName(false);
       console.log('Profile updated successfully:', updatedProfile);
@@ -333,11 +333,11 @@ export default function UserProfile() {
     <View className="w-full h-full dark:border-gray-700 rounded-lg shadow-md overflow-hidden">
       {/* Avatar View Modal */}
       {showAvatarModal && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center"
           onClick={() => setShowAvatarModal(false)}
         >
-          <div 
+          <div
             className="relative"
             onClick={(e) => e.stopPropagation()}
           >
@@ -349,9 +349,9 @@ export default function UserProfile() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-            <img 
-              src={avatar} 
-              alt="User Avatar" 
+            <img
+              src={avatar}
+              alt="User Avatar"
               className="max-w-[90vw] max-h-[80vh] object-contain rounded-lg"
               onClick={(e) => e.stopPropagation()}
             />
@@ -431,13 +431,13 @@ export default function UserProfile() {
           ) : (
             <View className="max-w-2xl">
               <View className="flex items-start gap-8 mb-10">
-                <div 
+                <div
                   className="relative w-24 h-24 rounded-full overflow-hidden border border-gray-100 shadow group"
                   onMouseEnter={() => setShowAvatarMenu(true)}
                   onMouseLeave={() => setShowAvatarMenu(false)}
                 >
                   <img src={avatar} alt="User Avatar" className="w-full h-full object-cover" />
-                  
+
                   {/* Hover Menu */}
                   {showAvatarMenu && (
                     <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center gap-2">
@@ -451,9 +451,9 @@ export default function UserProfile() {
                         </svg>
                         View
                       </button>
-                      
-                      <label 
-                        htmlFor="avatarUpload" 
+
+                      <label
+                        htmlFor="avatarUpload"
                         className="text-white text-sm hover:text-blue-300 transition-colors cursor-pointer flex items-center gap-1"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -472,16 +472,16 @@ export default function UserProfile() {
                   )}
 
                   {/* Hidden File Input */}
-                  <input 
-                    id="avatarUpload" 
-                    type="file" 
-                    accept="image/*" 
-                    className="hidden" 
+                  <input
+                    id="avatarUpload"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
                     onChange={handleAvatarChange}
                     disabled={isUploadingAvatar}
                   />
                 </div>
-                
+
                 <View className="flex-1 space-y-4">
                   <View className="relative">
                     {isEditingName ? (
@@ -496,14 +496,14 @@ export default function UserProfile() {
                           disabled={isSaving}
                         />
                         <div className="absolute right-3 flex gap-3">
-                          <button 
+                          <button
                             onClick={saveFullName}
                             disabled={isSaving}
                             className="text-blue-500 hover:text-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             {isSaving ? 'Saving...' : 'Save'}
                           </button>
-                          <button 
+                          <button
                             onClick={cancelEditingName}
                             disabled={isSaving}
                             className="text-gray-500 hover:text-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -521,7 +521,7 @@ export default function UserProfile() {
                           className="w-full p-2.5 border border-gray-200 rounded-md cursor-default focus:outline-none text-gray-700"
                           placeholder="Full Name"
                         />
-                        <button 
+                        <button
                           onClick={startEditingName}
                           className="absolute right-3 top-1/2 transform -translate-y-1/2"
                         >
@@ -534,7 +534,7 @@ export default function UserProfile() {
                       </div>
                     )}
                   </View>
-                  
+
                   <View className="relative">
                     <input
                       type="text"

@@ -1,13 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { FilterType, RootItem } from '../../types/note.types';
-
-interface UIState {
-  filterType: FilterType;
-  isShowFolderNoteBar: boolean;
-  selectedItem: RootItem | null;
-  isAiFormatting: boolean;
-  showWarningModal: boolean;
-}
+import { FilterType, UIState } from '../../types/note/note.types';
 
 const initialState: UIState = {
   filterType: FilterType.ALL,

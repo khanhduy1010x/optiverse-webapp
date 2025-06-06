@@ -1,10 +1,8 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { ErrorDisplayProps } from '../../../types/friend/props/component.props';
 
-interface ErrorDisplayProps {
-  error: string | null;
-  loading: boolean;
-}
+
 
 const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ error, loading }) => {
   const { t } = useTranslation();
@@ -25,7 +23,7 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ error, loading }) => {
           </div>
         </div>
       )}
-      
+
       {loading && (
         <div className="mb-6 p-4 bg-blue-50 border-l-4 border-blue-500 rounded-lg shadow-md dark:bg-blue-900/30 dark:border-blue-700">
           <div className="flex items-center">

@@ -11,10 +11,9 @@ import {
   renameItem,
   setFolderStack,
   setCurrentNote,
-  saveNote,
 } from '../../store/slices/items.slice';
 import { setFilterType, setSelectedItem, setShowWarningModal } from '../../store/slices/ui.slice';
-import { FilterType, RootItem, FolderItem, NoteItem } from '../../types/note.types';
+import { FilterType, RootItem } from '../../types/note/note.types';
 import ToolBarFolder from './ToolBarFolder.screen';
 import CreateModal from './CreateModal.screen';
 import RenameModal from './RenameModal.screen';
@@ -22,13 +21,14 @@ import DeleteModal from './DeleteModal.screen';
 import { formatDateTime } from '../../utils/date.utils';
 import { toast } from 'react-toastify';
 import { ContextMenu } from './ContextMenu.screen';
+import { NoteItem } from '../../types/note/response/note.response';
+import { FolderItem } from '../../types/note/response/folder.response';
 
 const FolderNote: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { items, folderStack, loading, error, currentNote } = useSelector(
     (state: RootState) => state.items
   );
-  const menuRef = useRef<HTMLDivElement>(null);
 
   const { filterType, selectedItem, isAiFormatting } = useSelector(
     (state: RootState) => state.ui
@@ -50,7 +50,6 @@ const FolderNote: React.FC = () => {
   const [pendingSync, setPendingSync] = useState<string[]>([]);
   const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [pendingNoteId, setPendingNoteId] = useState<string | null>(null);
   const [createErrorMessage, setCreateErrorMessage] = useState('');
 
   useEffect(() => {
@@ -60,11 +59,11 @@ const FolderNote: React.FC = () => {
   const currentItems = useMemo(() => {
     if (folderStack.length > 0) {
       const currentFolder = folderStack[folderStack.length - 1];
-      const subfolders = (currentFolder.subfolders || []).map(item => ({
+      const subfolders = (currentFolder.subfolders || []).map((item: FolderItem) => ({
         ...item,
         type: 'folder' as const,
       }));
-      const files = (currentFolder.files || []).map(item => ({
+      const files = (currentFolder.files || []).map((item: NoteItem) => ({
         ...item,
         type: 'file' as const,
       }));
@@ -247,10 +246,10 @@ const FolderNote: React.FC = () => {
         return item as NoteItem;
       }
       if (item.type === 'folder') {
-        const file = item.files.find(file => file._id === noteId);
+        const file = item.files.find((file: NoteItem) => file._id === noteId);
         if (file) return file;
         for (const subfolder of item.subfolders) {
-          const subFile = subfolder.files.find(file => file._id === noteId);
+          const subFile = subfolder.files.find((file: NoteItem) => file._id === noteId);
           if (subFile) return subFile;
         }
       }
@@ -431,9 +430,9 @@ const FolderNote: React.FC = () => {
         : { files: items.filter(i => i.type === 'file'), subfolders: items.filter(i => i.type === 'folder') };
 
     if (isNote) {
-      return currentFolder.files.some(file => file.title.trim().toLowerCase() === name.trim().toLowerCase());
+      return currentFolder.files.some((file: NoteItem) => file.title.trim().toLowerCase() === name.trim().toLowerCase());
     } else {
-      return currentFolder.subfolders.some(folder => folder.name.trim().toLowerCase() === name.trim().toLowerCase());
+      return currentFolder.subfolders.some((folder: FolderItem) => folder.name.trim().toLowerCase() === name.trim().toLowerCase());
     }
   };
   useEffect(() => {
