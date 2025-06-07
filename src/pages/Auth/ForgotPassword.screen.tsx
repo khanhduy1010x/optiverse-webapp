@@ -1,36 +1,19 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { ForgotPasswordFormProps } from '../../types/auth/props/component.props';
+import { useForgotPassword } from '../../hooks/auth/useForgotPassword.hook';
 
-const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitch = () => { }, setData = () => { } }) => {
-  const [email, setEmail] = useState<string>('');
-  const [message, setMessage] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setMessage('');
-    setLoading(true);
-
-    try {
-      const res = await fetch('http://localhost:81/core/auth/send-otp-reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, isVerify: false }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Đã xảy ra lỗi.');
-
-      setMessage('OTP đã được gửi tới email của bạn.');
-
-      setData(email);
-      onSwitch('verify');
-    } catch (err: any) {
-      setMessage(err.message || 'Không thể gửi OTP.');
-    } finally {
-      setLoading(false);
+const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
+  onSwitch = () => {},
+  setData = () => {},
+}) => {
+  const { email, setEmail, message, loading, handleSubmit } = useForgotPassword(
+    {
+      onSuccess: email => {
+        setData(email);
+        onSwitch('verify');
+      },
     }
-  };
+  );
 
   return (
     <div className="space-y-4">

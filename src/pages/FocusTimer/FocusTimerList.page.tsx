@@ -1,41 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Trash2 as TrashIcon } from 'lucide-react';
 import DeleteFocusSessionModal from './ConfirmDeleteModal.screen';
-import { token } from '../../utils/apitest';
-import { FocusSession } from '../../types/focus-timer/response/focus-timer.response';
+import { useFocusSessionList } from '../../hooks/focus-timer/useFocusTimerList.hook';
 
-const FocusSessionListPage: React.FC = () => {
-  const [focusSessions, setFocusSessions] = useState<FocusSession[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [sessionToDelete, setSessionToDelete] = useState<FocusSession | null>(
-    null
-  );
-
-  const fetchSessions = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(
-        'http://localhost:81/productivity/focus-session',
-        {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-      const data = await res.json();
-      setFocusSessions(data.data || []);
-    } catch (err) {
-      console.error('Failed to fetch focus sessions:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchSessions();
-  }, []);
+const FocusTimerList: React.FC = () => {
+  const {
+    focusSessions,
+    loading,
+    sessionToDelete,
+    setSessionToDelete,
+    fetchSessions,
+  } = useFocusSessionList();
 
   return (
     <div className="p-6 space-y-4">
@@ -73,24 +48,6 @@ const FocusSessionListPage: React.FC = () => {
         </div>
       )}
 
-      {/* Add Button */}
-      {/* <button
-        onClick={() => setShowAddModal(true)}
-        className="fixed bottom-6 right-6 bg-red-500 text-white p-4 rounded-full shadow-lg hover:bg-red-600 transition"
-        aria-label="Add session"
-      >
-        <PlusIcon size={24} />
-      </button> */}
-
-      {/* Add Modal */}
-      {/* {showAddModal && (
-        <AddFocusSessionModal
-          onClose={() => setShowAddModal(false)}
-          onSessionAdded={fetchSessions}
-        />
-      )} */}
-
-      {/* Delete Modal */}
       {sessionToDelete && (
         <DeleteFocusSessionModal
           session={sessionToDelete}
@@ -102,4 +59,4 @@ const FocusSessionListPage: React.FC = () => {
   );
 };
 
-export default FocusSessionListPage;
+export default FocusTimerList;

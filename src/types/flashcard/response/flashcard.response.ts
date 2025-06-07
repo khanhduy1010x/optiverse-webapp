@@ -16,7 +16,7 @@ export interface FlashcardDeck {
 }
 
 // Mock data for flashcard deck
-export const FlashCardDeckMock: FlashcardDeck = {
+export const FlashcardDeckMock: FlashcardDeck = {
   _id: '',
   title: '',
   lastReview: 0,
@@ -25,8 +25,8 @@ export const FlashCardDeckMock: FlashcardDeck = {
   reviewingCount: 0,
   user_id: '',
 };
-export const FlashCardDeckLoadingMock: FlashcardDeck = {
-  ...FlashCardDeckMock,
+export const FlashcardDeckLoadingMock: FlashcardDeck = {
+  ...FlashcardDeckMock,
   title: 'Loading',
 };
 export const initFlashcardDeckMock: FlashcardDeck = {

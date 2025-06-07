@@ -1,39 +1,25 @@
-import React, { Dispatch, SetStateAction, useState } from 'react';
+import React from 'react';
 import COLORS from '../../constants/colors.constant';
 import { Button } from '../../components/common/Button.component';
 import { RegisterFormProps } from '../../types/auth/props/component.props';
 import { GROUP_CLASSNAMES } from '../../styles';
-
-
+import { useRegisterForm } from '../../hooks/auth/useRegister.hook';
 
 const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitch, setData }) => {
-  const [fullName, setFullName] = useState<string>('');
-  const [email, setEmail] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    console.log('Registering with:', { fullName, email, password });
-
-    try {
-      await fetch(`http://localhost:81/core/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: email,
-          full_name: fullName,
-          password: password,
-        }),
-      });
+  const {
+    fullName,
+    setFullName,
+    email,
+    setEmail,
+    password,
+    setPassword,
+    handleSubmit,
+  } = useRegisterForm({
+    onSuccess: (email: string) => {
       setData(email);
       onSwitch('verify-register');
-    } catch (error) {
-      console.error('Lỗi khi fetch API:', error);
-    }
-  };
+    },
+  });
 
   return (
     <div className="w-3/5 grid gap-10">
@@ -71,7 +57,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitch, setData }) => {
             required
           />
         </div>
-        <Button title="Create Account" className="w-full"></Button>
+        <Button title="Create Account" className="w-full" />
       </form>
       <p
         onClick={() => onSwitch('login')}

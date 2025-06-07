@@ -128,7 +128,7 @@ const AppContent: React.FC = () => {
             }
           />
           <Route
-            path="/view-flashcard"
+            path="/flashcard-deck/:deckId/learn"
             element={
               <ProtectedRoute>
                 <FlashcardReview />

@@ -1,20 +1,15 @@
 import React, { useRef, useEffect } from 'react';
 import { ContextMenuProps } from '../../types/note/props/component.props';
+import { useContextMenu } from '../../hooks/note/useContextMenu.hook';
 
-
-export const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, onRename, onDelete, onClose }) => {
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        onClose();
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [onClose]);
+export const ContextMenu: React.FC<ContextMenuProps> = ({
+  x,
+  y,
+  onRename,
+  onDelete,
+  onClose,
+}) => {
+  const { menuRef } = useContextMenu(onClose);
 
   return (
     <div

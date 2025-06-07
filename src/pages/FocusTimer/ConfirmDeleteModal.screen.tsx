@@ -1,39 +1,19 @@
-// DeleteFocusSessionModal.tsx
-import React, { useState } from 'react';
+import React from 'react';
 import { DeleteFocusSessionModalProps } from '../../types/focus-timer/props/component.props';
-import { token } from '../../utils/apitest';
+import { useDeleteFocusSession } from '../../hooks/focus-timer/useDeleteFocusTimer.hook';
 
 const DeleteFocusSessionModal: React.FC<DeleteFocusSessionModalProps> = ({
   session,
   onClose,
   onSessionDeleted,
 }) => {
-  const [loading, setLoading] = useState(false);
+  const { deleteSession, loading } = useDeleteFocusSession();
 
   const handleDelete = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(
-        `http://localhost:81/productivity/focus-session/${session._id}`,
-        {
-          method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-      if (res.ok) {
-        onSessionDeleted();
-        onClose();
-      } else {
-        alert('Failed to delete');
-      }
-    } catch (err) {
-      console.error(err);
-      alert('Error occurred');
-    } finally {
-      setLoading(false);
+    const success = await deleteSession(session._id);
+    if (success) {
+      onSessionDeleted();
+      onClose();
     }
   };
 

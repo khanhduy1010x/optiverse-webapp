@@ -1,50 +1,23 @@
-// src/components/auth/ResetPasswordForm.tsx
-import React, { useState } from 'react';
+import React from 'react';
 import { ResetPasswordFormProps } from '../../types/auth/props/component.props';
-
+import { useResetPasswordForm } from '../../hooks/auth/useResetPassword.hook';
 
 const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({
   onSwitch,
   token,
 }) => {
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [message, setMessage] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setMessage('');
-
-    if (newPassword !== confirmPassword) {
-      setMessage('Passwords do not match');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const res = await fetch('http://localhost:81/core/auth/reset-password', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ newPassword }),
-      });
-
-      const result = await res.json();
-      if (!res.ok)
-        throw new Error(result.message || 'Failed to reset password');
-
-      setMessage('Password reset successfully!');
-      setTimeout(() => onSwitch('login'), 1500);
-    } catch (err) {
-      const error = err as Error;
-      setMessage(error.message || 'An error occurred');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    newPassword,
+    confirmPassword,
+    setNewPassword,
+    setConfirmPassword,
+    handleSubmit,
+    message,
+    loading,
+  } = useResetPasswordForm({
+    token,
+    onSuccess: () => onSwitch('login'),
+  });
 
   return (
     <div className="space-y-4">
