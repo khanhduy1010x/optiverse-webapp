@@ -18,7 +18,6 @@ import SliderBar from './components/layout/Sidebar.component';
 import AddFlashcard from './pages/Flashcard/AddFlashcard.page';
 import UserProfile from './pages/Profile/UserProfile.page';
 import FocusTimer from './pages/FocusTimer/FocusTimer.page';
-import Task from './pages/Task/Task.page';
 import FocusTimerStatistic from './pages/FocusTimer/FocusTimerStatistic.page';
 import { ThemeProvider } from './contexts/theme.context';
 import NoteScreen from './pages/Note/NoteScreen.page';
@@ -30,6 +29,8 @@ import { PublicRoute } from './components/PublicRoute';
 import { AuthProvider } from './contexts/auth.context';
 import FocusSessionList from './pages/FocusTimer/FocusTimerList.page';
 import { AuthViewType } from './types/auth/auth.types';
+import LoginSessions from './pages/Profile/LoginSession.page';
+import TaskPage from './pages/Task/Task.page';
 
 const AppContent: React.FC = () => {
   const location = useLocation();
@@ -171,7 +172,7 @@ const AppContent: React.FC = () => {
             path="/task"
             element={
               <ProtectedRoute>
-                <Task />
+                <TaskPage />
               </ProtectedRoute>
             }
           />
@@ -188,6 +189,14 @@ const AppContent: React.FC = () => {
             element={
               <ProtectedRoute>
                 <FriendList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/login-session"
+            element={
+              <ProtectedRoute>
+                <LoginSessions />
               </ProtectedRoute>
             }
           />

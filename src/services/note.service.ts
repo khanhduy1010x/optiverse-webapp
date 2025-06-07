@@ -31,7 +31,7 @@ export const NoteService = {
 
   handleDeleteNote: async (note: NoteItem): Promise<void> => {
     try {
-      await api.delete(`productivity/${URLBASE}/${note._id}`);
+      await api.delete(`${URLBASE}/${note._id}`);
     } catch (error: any) {
       console.error(
         `Failed to delete note ${note._id} (folder_id: ${note.folder_id}):`,
@@ -50,7 +50,7 @@ export const NoteService = {
   ): Promise<NoteItem> => {
     try {
       const response = await api.post<ApiResponse<{ note: NoteItem }>>(
-        `productivity/${URLBASE}`,
+        `${URLBASE}`,
         {
           folder_id,
           title,
@@ -69,7 +69,7 @@ export const NoteService = {
 
   handleRenameNote: async (title: string, item: NoteItem): Promise<void> => {
     try {
-      await api.patch(`productivity/note/${item._id}`, {
+      await api.patch(`${URLBASE}/${item._id}`, {
         title,
         content: item.content,
         folder_id: item.folder_id,

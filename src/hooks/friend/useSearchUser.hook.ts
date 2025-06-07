@@ -91,7 +91,7 @@ export const useSearchUser = (props: SearchUsersProps) => {
     );
     if (isSelf) return 'self';
     if (friends.some(f => f.friend_id === userId)) return 'friend';
-    if (pendingRequests.some(r => r.user_id === userId))
+    if (pendingRequests && pendingRequests.some(r => r.user_id === userId))
       return 'pending_incoming';
     if (sentRequests.some(r => r.friend_id === userId)) return 'sent';
     return 'none';
