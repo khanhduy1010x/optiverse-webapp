@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { fetchAllUserTags, createTag, createTaskTag, fetchTasksByTagId, deleteTag, deleteTaskTag } from '../../services/tag.service';
 import { Task } from '../../types/task/response/task.response';
 import { Tag } from '../../types/task/response/tag.response';
+import { GROUP_CLASSNAMES } from '../../styles';
 
 export default function TaskManagement() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -687,18 +688,18 @@ export default function TaskManagement() {
   }, [showFilterMenu, showSortMenu]);
 
   if (loading) return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+    <div className={GROUP_CLASSNAMES.flexCenterCenter + " min-h-screen bg-gray-50"}>
+      <div className={GROUP_CLASSNAMES.loadingSpinnerLarge}></div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+    <div className={GROUP_CLASSNAMES.pageContainer}>
+      <div className={GROUP_CLASSNAMES.headerContainer}>
+        <div className={GROUP_CLASSNAMES.contentContainer + " py-0"}>
+          <div className={GROUP_CLASSNAMES.flexJustifyBetween + " h-16"}>
             <h1 className="text-xl font-semibold text-gray-900">My Tasks</h1>
-            <div className="flex items-center space-x-4">
+            <div className={GROUP_CLASSNAMES.flexItemsCenter + " space-x-4"}>
               <button
                 onClick={() => setShowTagManagement(true)}
                 className="text-gray-500 hover:text-gray-700 p-2"
@@ -713,10 +714,10 @@ export default function TaskManagement() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className={GROUP_CLASSNAMES.contentContainer}>
         <div className="flex flex-col space-y-6">
           {/* Toolbar */}
-          <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className={GROUP_CLASSNAMES.flexJustifyBetween + " flex-wrap gap-4"}>
             <div className="w-full md:w-auto flex-1 max-w-md">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -729,15 +730,15 @@ export default function TaskManagement() {
                   placeholder="Search tasks..."
                   value={searchQuery}
                   onChange={(e) => handleSearchChange(e.target.value)}
-                  className="block w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 bg-gray-50"
+                  className={GROUP_CLASSNAMES.searchInput}
                 />
               </div>
             </div>
 
-            <div className="flex items-center space-x-3">
+            <div className={GROUP_CLASSNAMES.flexItemsCenter + " space-x-3"}>
               <button
                 onClick={() => setShowPopup(true)}
-                className="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-md flex items-center shadow-sm transition-colors"
+                className={GROUP_CLASSNAMES.buttonAddTask}
               >
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -748,7 +749,7 @@ export default function TaskManagement() {
               <div className="relative group">
                 <button
                   id="filter-button"
-                  className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-md flex items-center"
+                  className={GROUP_CLASSNAMES.buttonFilter}
                   onClick={() => setShowFilterMenu(!showFilterMenu)}
                 >
                   <svg className="w-5 h-5 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -756,7 +757,7 @@ export default function TaskManagement() {
                   </svg>
                   <span className="mr-1">Filter</span>
                   {filterTags.length > 0 && (
-                    <span className="bg-red-100 text-red-800 text-xs font-medium rounded-full px-2 py-0.5">
+                    <span className={GROUP_CLASSNAMES.badgeCount}>
                       {filterTags.length}
                     </span>
                   )}
@@ -766,13 +767,13 @@ export default function TaskManagement() {
                 {showFilterMenu && (
                   <div
                     id="filter-menu"
-                    className="absolute right-0 mt-1 w-64 bg-white rounded-md shadow-lg z-10 py-1 animate-fade-in"
+                    className={GROUP_CLASSNAMES.dropdownMenu + " w-64"}
                     style={{
                       animation: 'fadeIn 0.2s ease-in-out'
                     }}
                   >
                     <div
-                      className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer ${filterTags.length === 0 ? 'text-red-600 font-medium' : 'text-gray-700'}`}
+                      className={`${GROUP_CLASSNAMES.dropdownItem} ${filterTags.length === 0 ? 'text-red-600 font-medium' : 'text-gray-700'}`}
                       onClick={() => {
                         setFilterTags([]);
                         handleFilterByTags([]);
@@ -780,7 +781,7 @@ export default function TaskManagement() {
                     >
                       All Tasks
                     </div>
-                    <div className="border-t border-gray-100"></div>
+                    <div className={GROUP_CLASSNAMES.divider}></div>
                     {allTags.length === 0 ? (
                       <div className="px-4 py-2 text-sm text-gray-500">No tags available</div>
                     ) : (
@@ -790,7 +791,7 @@ export default function TaskManagement() {
                           return (
                             <div
                               key={tag._id}
-                              className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer flex items-center justify-between ${isSelected ? 'bg-red-50' : ''}`}
+                              className={`${GROUP_CLASSNAMES.dropdownItem} flex items-center justify-between ${isSelected ? 'bg-red-50' : ''}`}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 // Cập nhật danh sách tag được chọn
@@ -810,7 +811,7 @@ export default function TaskManagement() {
                                 handleFilterByTags(updatedTags);
                               }}
                             >
-                              <div className="flex items-center">
+                              <div className={GROUP_CLASSNAMES.flexItemsCenter}>
                                 <span
                                   className="w-3 h-3 rounded-full mr-2"
                                   style={{ backgroundColor: tag.color }}
@@ -850,7 +851,7 @@ export default function TaskManagement() {
               <div className="relative group">
                 <button
                   id="sort-button"
-                  className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-md flex items-center"
+                  className={GROUP_CLASSNAMES.buttonFilter}
                   onClick={() => setShowSortMenu(!showSortMenu)}
                 >
                   <svg className="w-5 h-5 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -863,13 +864,13 @@ export default function TaskManagement() {
                 {showSortMenu && (
                   <div
                     id="sort-menu"
-                    className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg z-10 py-1 animate-fade-in"
+                    className={GROUP_CLASSNAMES.dropdownMenu + " w-48"}
                     style={{
                       animation: 'fadeIn 0.2s ease-in-out'
                     }}
                   >
                     <div
-                      className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer ${sortOrder === 'newest' ? 'text-red-600 font-medium' : 'text-gray-700'}`}
+                      className={`${GROUP_CLASSNAMES.dropdownItem} ${sortOrder === 'newest' ? 'text-red-600 font-medium' : 'text-gray-700'}`}
                       onClick={() => {
                         handleSortChange('newest');
                         setShowSortMenu(false);
@@ -878,7 +879,7 @@ export default function TaskManagement() {
                       Newest First
                     </div>
                     <div
-                      className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer ${sortOrder === 'oldest' ? 'text-red-600 font-medium' : 'text-gray-700'}`}
+                      className={`${GROUP_CLASSNAMES.dropdownItem} ${sortOrder === 'oldest' ? 'text-red-600 font-medium' : 'text-gray-700'}`}
                       onClick={() => {
                         handleSortChange('oldest');
                         setShowSortMenu(false);
@@ -893,24 +894,24 @@ export default function TaskManagement() {
           </div>
 
           {/* Task Table */}
-          <div className="bg-white rounded-lg shadow">
+          <div className={GROUP_CLASSNAMES.taskListContainer}>
             {loading ? (
-              <div className="flex items-center justify-center py-12">
+              <div className={GROUP_CLASSNAMES.flexCenterCenter + " py-12"}>
                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-red-500"></div>
               </div>
             ) : filteredTasks.length === 0 ? (
-              <div className="text-center py-12">
-                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className={GROUP_CLASSNAMES.taskEmptyState}>
+                <svg className={GROUP_CLASSNAMES.taskEmptyIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                 </svg>
-                <h3 className="mt-2 text-lg font-medium text-gray-900">No tasks found</h3>
-                <p className="mt-1 text-sm text-gray-500">
+                <h3 className={GROUP_CLASSNAMES.taskEmptyTitle}>No tasks found</h3>
+                <p className={GROUP_CLASSNAMES.taskEmptyDescription}>
                   {searchQuery || filterTags.length > 0 ? 'No tasks match your search or filter.' : 'Get started by creating a new task.'}
                 </p>
-                <div className="mt-6">
+                <div className={GROUP_CLASSNAMES.taskEmptyAction}>
                   <button
                     onClick={() => setShowPopup(true)}
-                    className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-500 hover:bg-red-600"
+                    className={GROUP_CLASSNAMES.buttonAddTask + " inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md"}
                   >
                     <svg className="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -924,16 +925,16 @@ export default function TaskManagement() {
                 {filteredTasks.map((task) => (
                   <li
                     key={task._id}
-                    className="px-6 py-3 hover:bg-gray-50 cursor-pointer transition-colors group"
+                    className={GROUP_CLASSNAMES.taskListItem}
                     onClick={() => handleTaskClick(task)}
                   >
-                    <div className="flex items-start">
+                    <div className={GROUP_CLASSNAMES.flexItemsCenter + " items-start"}>
                       <div
-                        className={`flex-shrink-0 mt-1 w-5 h-5 rounded-full border flex items-center justify-center cursor-pointer transition-colors ${task.status === 'completed'
-                          ? 'bg-green-500 border-green-500 text-white'
+                        className={`${GROUP_CLASSNAMES.taskCheckbox} ${task.status === 'completed'
+                          ? GROUP_CLASSNAMES.taskCheckboxCompleted
                           : task.status === 'overdue'
-                            ? 'border-red-400 hover:border-red-500'
-                            : 'border-gray-400 hover:border-green-500'
+                            ? GROUP_CLASSNAMES.taskCheckboxOverdue
+                            : GROUP_CLASSNAMES.taskCheckboxPending
                           }`}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -951,14 +952,14 @@ export default function TaskManagement() {
                       </div>
 
                       <div className="ml-3 flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <p className={`text-sm font-medium truncate ${task.status === 'completed' ? 'line-through text-gray-500' : 'text-gray-900'}`}>
+                        <div className={GROUP_CLASSNAMES.flexJustifyBetween}>
+                          <p className={`${GROUP_CLASSNAMES.taskTitle} ${task.status === 'completed' ? GROUP_CLASSNAMES.taskTitleCompleted : GROUP_CLASSNAMES.taskTitlePending}`}>
                             {task.title}
                           </p>
                           <div className="ml-2 flex-shrink-0 flex">
-                            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${task.priority === 'high' ? 'bg-red-100 text-red-800' :
-                              task.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-green-100 text-green-800'
+                            <span className={`${GROUP_CLASSNAMES.taskPriorityBadge} ${task.priority === 'high' ? GROUP_CLASSNAMES.taskPriorityHigh :
+                              task.priority === 'medium' ? GROUP_CLASSNAMES.taskPriorityMedium :
+                                GROUP_CLASSNAMES.taskPriorityLow
                               }`}>
                               {task.priority === 'high' ? 'P1' : task.priority === 'medium' ? 'P2' : 'P3'}
                             </span>
@@ -966,18 +967,18 @@ export default function TaskManagement() {
                         </div>
 
                         {task.description && (
-                          <p className="mt-1 text-sm text-gray-500 line-clamp-1">
+                          <p className={GROUP_CLASSNAMES.taskDescription}>
                             {task.description}
                           </p>
                         )}
 
-                        <div className="mt-2 flex items-center">
-                          <div className="flex flex-wrap gap-1">
+                        <div className={GROUP_CLASSNAMES.taskTagContainer}>
+                          <div className={GROUP_CLASSNAMES.tagContainer}>
                             {taskTags[task._id] && taskTags[task._id].length > 0 ? (
                               taskTags[task._id].map((tag) => (
                                 <span
                                   key={tag._id}
-                                  className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
+                                  className={GROUP_CLASSNAMES.tagItem}
                                   style={{
                                     backgroundColor: `${tag.color}15`,
                                     color: tag.color
@@ -1003,7 +1004,7 @@ export default function TaskManagement() {
                             e.stopPropagation();
                             handleEditTask(task);
                           }}
-                          className="text-gray-400 hover:text-gray-600 mr-2"
+                          className={GROUP_CLASSNAMES.taskActionButton}
                           title="Edit task"
                           aria-label="Edit task"
                         >
@@ -1023,7 +1024,7 @@ export default function TaskManagement() {
                             e.stopPropagation();
                             confirmDeleteTask(task._id);
                           }}
-                          className="text-gray-400 hover:text-red-500"
+                          className={GROUP_CLASSNAMES.taskDeleteButton}
                           title="Delete task"
                           aria-label="Delete task"
                         >
@@ -1049,10 +1050,10 @@ export default function TaskManagement() {
 
       {/* Create/Edit Task Modal */}
       {showPopup && (
-        <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
-          <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden">
+        <div className={GROUP_CLASSNAMES.taskModalOverlay}>
+          <div className={GROUP_CLASSNAMES.taskModalContent}>
             {/* Task name */}
-            <div className="px-6 pt-6 pb-3">
+            <div className={GROUP_CLASSNAMES.taskDetailHeader}>
               <input
                 className="w-full text-xl font-medium border-0 p-0 mb-2 focus:outline-none focus:ring-0 placeholder-gray-400"
                 type="text"
@@ -1064,7 +1065,7 @@ export default function TaskManagement() {
             </div>
 
             {/* Description */}
-            <div className="px-6 pb-4">
+            <div className={GROUP_CLASSNAMES.taskDetailDescription}>
               <textarea
                 className="w-full text-sm border-0 p-0 focus:outline-none focus:ring-0 placeholder-gray-400 resize-none"
                 placeholder="Description"
@@ -1074,11 +1075,11 @@ export default function TaskManagement() {
               />
             </div>
 
-            <div className="px-6 py-2 border-t border-gray-100">
+            <div className={GROUP_CLASSNAMES.taskDetailSection}>
               {/* Task attributes */}
               <div className="space-y-2">
                 {/* Status */}
-                <div className="flex items-center py-2">
+                <div className={GROUP_CLASSNAMES.flexItemsCenter + " py-2"}>
                   <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -1092,11 +1093,10 @@ export default function TaskManagement() {
                     <option value="completed">Completed</option>
                     <option value="overdue">Overdue</option>
                   </select>
-
                 </div>
 
                 {/* Priority */}
-                <div className="flex items-center py-2">
+                <div className={GROUP_CLASSNAMES.flexItemsCenter + " py-2"}>
                   <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
                   </svg>
@@ -1106,215 +1106,159 @@ export default function TaskManagement() {
                     value={priority}
                     onChange={(e) => setPriority(e.target.value as any)}
                   >
-                    <option value="high">P1: High Priority</option>
-                    <option value="medium">P2: Medium Priority</option>
-                    <option value="low">P3: Low Priority</option>
+                    <option value="low">Low (P3)</option>
+                    <option value="medium">Medium (P2)</option>
+                    <option value="high">High (P1)</option>
                   </select>
-
                 </div>
 
                 {/* Tags */}
-                <div className="flex items-center py-2">
+                <div className={GROUP_CLASSNAMES.flexItemsCenter + " py-2"}>
                   <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                   </svg>
                   <div className="flex-grow">
-                    <div className="flex flex-wrap gap-1 mb-1">
+                    <div className={GROUP_CLASSNAMES.tagContainer + " mb-2"}>
                       {selectedTags.length === 0 ? (
-                        <span
-                          className="text-sm text-gray-500 cursor-pointer"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setShowNewTagForm(!showNewTagForm);
-                          }}
-                        >
-                          Add tags
-                        </span>
+                        <span className="text-sm text-gray-400">No tags selected</span>
                       ) : (
-                        <>
-                          {selectedTags.map((tag) => (
-                            <span
-                              key={tag._id}
-                              className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
-                              style={{
-                                backgroundColor: `${tag.color}15`,
-                                color: tag.color
-                              }}
+                        selectedTags.map(tag => (
+                          <span
+                            key={tag._id}
+                            className={GROUP_CLASSNAMES.tagItem}
+                            style={{
+                              backgroundColor: `${tag.color}15`,
+                              color: tag.color
+                            }}
+                          >
+                            {tag.name}
+                            <button
+                              type="button"
+                              onClick={() => setSelectedTags(selectedTags.filter(t => t._id !== tag._id))}
+                              className="ml-1 focus:outline-none"
                             >
-                              {tag.name}
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </span>
+                        ))
+                      )}
+                    </div>
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setShowNewTagForm(!showNewTagForm)}
+                        className="text-xs text-blue-500 hover:text-blue-700 focus:outline-none"
+                      >
+                        + Add tags
+                      </button>
+
+                      {showNewTagForm && (
+                        <div className="absolute top-full left-0 mt-1 w-56 bg-white rounded-md shadow-lg z-10 max-h-48 overflow-y-auto">
+                          {allTags.length === 0 ? (
+                            <div className="px-4 py-2 text-sm text-gray-500">No tags available</div>
+                          ) : (
+                            allTags.map(tag => {
+                              const isSelected = selectedTags.some(t => t._id === tag._id);
+                              return (
+                                <div
+                                  key={tag._id}
+                                  className={`${GROUP_CLASSNAMES.dropdownItem} ${isSelected ? 'bg-gray-100' : ''}`}
+                                  onClick={() => handleTagSelect(tag)}
+                                >
+                                  <div className={GROUP_CLASSNAMES.flexItemsCenter}>
+                                    <span
+                                      className="w-3 h-3 rounded-full mr-2"
+                                      style={{ backgroundColor: tag.color }}
+                                    ></span>
+                                    <span>{tag.name}</span>
+                                  </div>
+                                </div>
+                              );
+                            })
+                          )}
+                          <div className={GROUP_CLASSNAMES.divider}></div>
+                          <div className="px-4 py-2">
+                            <div className={GROUP_CLASSNAMES.flexItemsCenter}>
+                              <input
+                                type="text"
+                                placeholder="New tag name"
+                                value={newTagName}
+                                onChange={(e) => setNewTagName(e.target.value)}
+                                className="flex-grow text-xs border-0 p-0 focus:outline-none focus:ring-0"
+                              />
+                              <input
+                                type="color"
+                                value={newTagColor}
+                                onChange={(e) => setNewTagColor(e.target.value)}
+                                className="w-5 h-5 p-0 border-0 rounded-full cursor-pointer"
+                              />
                               <button
                                 type="button"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  setSelectedTags(prev => prev.filter(t => t._id !== tag._id));
-                                }}
-                                className="ml-1 text-xs hover:text-red-500"
+                                onClick={handleCreateNewTag}
+                                disabled={!newTagName.trim()}
+                                className="ml-2 text-xs text-blue-500 hover:text-blue-700 disabled:text-gray-300"
                               >
-                                ×
+                                Add
                               </button>
-                            </span>
-                          ))}
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setShowNewTagForm(!showNewTagForm);
-                            }}
-                            className="text-xs text-gray-500 hover:text-gray-700 py-0.5 px-1"
-                          >
-                            +
-                          </button>
-                        </>
+                            </div>
+                          </div>
+                        </div>
                       )}
                     </div>
                   </div>
                 </div>
               </div>
-
-              {/* Tag selector */}
-              {showNewTagForm && (
-                <div className="mt-2 border border-gray-200 rounded-lg p-3 bg-gray-50" onClick={(e) => e.stopPropagation()}>
-                  {/* Create new tag */}
-                  <div className="flex items-center gap-2 mb-3">
-                    <input
-                      type="text"
-                      placeholder="New tag name"
-                      value={newTagName}
-                      onChange={(e) => setNewTagName(e.target.value)}
-                      onClick={(e) => e.stopPropagation()}
-                      className="flex-1 border border-gray-300 rounded px-3 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-red-500"
-                    />
-                    <input
-                      type="color"
-                      aria-label="Pick tag color"
-                      value={newTagColor}
-                      onChange={(e) => setNewTagColor(e.target.value)}
-                      onClick={(e) => e.stopPropagation()}
-                      className="w-8 h-8 border-0 p-0 cursor-pointer rounded"
-                    />
-
-                    <button
-                      id="create-tag-button"
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleCreateNewTag();
-                      }}
-                      disabled={!newTagName.trim()}
-                      className={`px-3 py-1 rounded text-sm ${newTagName.trim()
-                        ? 'bg-red-500 text-white hover:bg-red-600'
-                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        }`}
-                    >
-                      Add
-                    </button>
-                  </div>
-
-                  {/* Existing tags */}
-                  <div className="max-h-32 overflow-y-auto">
-                    {allTags.length === 0 ? (
-                      <p className="text-gray-500 text-sm">No tags available. Create your first tag!</p>
-                    ) : (
-                      <div className="flex flex-wrap gap-2">
-                        {allTags.map((tag) => {
-                          const isSelected = selectedTags.some(t => t._id === tag._id);
-
-                          return (
-                            <button
-                              key={tag._id}
-                              type="button"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                handleTagSelect(tag);
-                              }}
-                              className={`px-2 py-1 rounded-full text-xs font-medium cursor-pointer ${isSelected ? 'ring-1 ring-red-500' : ''
-                                }`}
-                              style={{
-                                backgroundColor: `${tag.color}15`,
-                                color: tag.color
-                              }}
-                            >
-                              {tag.name}
-                              {isSelected && (
-                                <span className="ml-1">✓</span>
-                              )}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
             </div>
 
-            {/* Bottom buttons */}
-            <div className="px-6 py-4 border-t border-gray-200 flex justify-between items-center">
+            {/* Action buttons */}
+            <div className={GROUP_CLASSNAMES.taskModalFooter}>
               <button
+                type="button"
                 onClick={() => setShowPopup(false)}
-                className="text-sm text-gray-500 hover:text-gray-700"
+                className={GROUP_CLASSNAMES.buttonSecondary + " px-4 py-2 text-sm"}
               >
                 Cancel
               </button>
-              <div>
-                <button
-                  onClick={handleSaveTask}
-                  className={`px-4 py-2 text-sm text-white rounded-full transition-colors ${title.trim() ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-300 cursor-not-allowed'
-                    }`}
-                  disabled={!title.trim()}
-                >
-                  {selectedTask ? 'Save' : 'Add task'}
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={handleSaveTask}
+                disabled={!title.trim()}
+                className={GROUP_CLASSNAMES.buttonPrimary + " px-4 py-2 text-sm"}
+              >
+                {selectedTask ? 'Update Task' : 'Create Task'}
+              </button>
             </div>
-
-            {/* Close button */}
-            <button
-              type="button"
-              onClick={() => setShowPopup(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-500"
-              aria-label="Close popup"
-              title="Close popup"
-            >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-
           </div>
         </div>
       )}
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-5 w-[350px] max-w-[90vw]">
+        <div className={GROUP_CLASSNAMES.taskModalOverlay}>
+          <div className={GROUP_CLASSNAMES.deleteConfirmModal}>
             <div className="flex items-center justify-center mb-4">
-              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                <svg className="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className={GROUP_CLASSNAMES.deleteConfirmIcon}>
+                <svg className={GROUP_CLASSNAMES.deleteConfirmIconSvg} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
               </div>
             </div>
-            <h3 className="text-lg font-medium text-center text-gray-900 mb-2">Delete task?</h3>
-            <p className="text-sm text-center text-gray-500 mb-4">
+            <h3 className={GROUP_CLASSNAMES.deleteConfirmTitle}>Delete task?</h3>
+            <p className={GROUP_CLASSNAMES.deleteConfirmDescription}>
               This action cannot be undone.
             </p>
-            <div className="flex justify-center space-x-3">
+            <div className={GROUP_CLASSNAMES.deleteConfirmButtons}>
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50"
+                className={GROUP_CLASSNAMES.deleteConfirmCancelButton}
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeleteTask}
-                className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700"
+                className={GROUP_CLASSNAMES.deleteConfirmDeleteButton}
               >
                 Delete
               </button>
@@ -1325,10 +1269,10 @@ export default function TaskManagement() {
 
       {/* Task Detail View */}
       {showTaskDetail && selectedTask && (
-        <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
-          <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden">
+        <div className={GROUP_CLASSNAMES.taskModalOverlay}>
+          <div className={GROUP_CLASSNAMES.taskModalContent}>
             {/* Task title */}
-            <div className="px-6 pt-6 pb-3">
+            <div className={GROUP_CLASSNAMES.taskDetailHeader}>
               <h2 className="text-xl font-medium text-gray-900">
                 {selectedTask.title}
               </h2>
@@ -1336,23 +1280,23 @@ export default function TaskManagement() {
 
             {/* Description */}
             {selectedTask.description && (
-              <div className="px-6 pb-4">
+              <div className={GROUP_CLASSNAMES.taskDetailDescription}>
                 <p className="text-sm text-gray-600 whitespace-pre-wrap">
                   {selectedTask.description}
                 </p>
               </div>
             )}
 
-            <div className="px-6 py-2 border-t border-gray-100">
+            <div className={GROUP_CLASSNAMES.taskDetailSection}>
               <div className="space-y-2">
                 <div className="flex items-center py-2">
                   <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <div className="text-sm text-gray-700">Status:</div>
-                  <span className={`ml-auto px-2 py-0.5 rounded-full text-xs font-medium ${selectedTask.status === 'completed' ? 'bg-green-100 text-green-800' :
-                    selectedTask.status === 'overdue' ? 'bg-red-100 text-red-800' :
-                      'bg-yellow-100 text-yellow-800'
+                  <span className={`ml-auto ${GROUP_CLASSNAMES.taskStatusBadge} ${selectedTask.status === 'completed' ? GROUP_CLASSNAMES.taskStatusCompleted :
+                    selectedTask.status === 'overdue' ? GROUP_CLASSNAMES.taskStatusOverdue :
+                      GROUP_CLASSNAMES.taskStatusPending
                     }`}>
                     {selectedTask.status.charAt(0).toUpperCase() + selectedTask.status.slice(1)}
                   </span>
@@ -1363,9 +1307,9 @@ export default function TaskManagement() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
                   </svg>
                   <div className="text-sm text-gray-700">Priority:</div>
-                  <span className={`ml-auto px-2 py-0.5 rounded-full text-xs font-medium ${selectedTask.priority === 'high' ? 'bg-red-100 text-red-800' :
-                    selectedTask.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-green-100 text-green-800'
+                  <span className={`ml-auto ${GROUP_CLASSNAMES.taskStatusBadge} ${selectedTask.priority === 'high' ? GROUP_CLASSNAMES.taskPriorityHigh :
+                    selectedTask.priority === 'medium' ? GROUP_CLASSNAMES.taskPriorityMedium :
+                      GROUP_CLASSNAMES.taskPriorityLow
                     }`}>
                     {selectedTask.priority === 'high' ? 'P1' :
                       selectedTask.priority === 'medium' ? 'P2' : 'P3'}
@@ -1392,7 +1336,7 @@ export default function TaskManagement() {
                       taskTags[selectedTask._id].map((tag) => (
                         <span
                           key={tag._id}
-                          className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                          className={GROUP_CLASSNAMES.tagItem}
                           style={{
                             backgroundColor: `${tag.color}15`,
                             color: tag.color
@@ -1410,7 +1354,7 @@ export default function TaskManagement() {
             </div>
 
             {/* Bottom buttons */}
-            <div className="px-6 py-4 border-t border-gray-200 flex justify-between items-center">
+            <div className={GROUP_CLASSNAMES.taskDetailFooter}>
               <button
                 onClick={() => setShowTaskDetail(false)}
                 className="text-sm text-gray-500 hover:text-gray-700"
@@ -1429,7 +1373,7 @@ export default function TaskManagement() {
             <button
               type="button"
               onClick={() => setShowTaskDetail(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-500"
+              className={GROUP_CLASSNAMES.taskModalCloseButton}
               aria-label="Close task details"
               title="Close task details"
             >
@@ -1444,15 +1388,15 @@ export default function TaskManagement() {
 
       {/* Tag Management Modal */}
       {showTagManagement && (
-        <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
-          <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden">
+        <div className={GROUP_CLASSNAMES.taskModalOverlay}>
+          <div className={GROUP_CLASSNAMES.taskModalContent}>
             {/* Header */}
-            <div className="flex justify-between items-center px-4 py-3 border-b border-gray-200">
+            <div className={GROUP_CLASSNAMES.taskModalHeader}>
               <h3 className="text-lg font-medium text-gray-900">Manage Tags</h3>
               <button
                 type="button"
                 onClick={() => setShowTagManagement(false)}
-                className="text-gray-400 hover:text-gray-500"
+                className={GROUP_CLASSNAMES.taskModalCloseButton}
                 aria-label="Close tag management"
                 title="Close tag management"
               >
@@ -1460,26 +1404,25 @@ export default function TaskManagement() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
-
             </div>
 
-            <div className="px-4 py-4">
+            <div className={GROUP_CLASSNAMES.tagManagementContainer}>
               {/* Create new tag */}
-              <div className="mb-4">
-                <h3 className="text-sm font-medium text-gray-700 mb-2">Add New Tag</h3>
+              <div className={GROUP_CLASSNAMES.tagManagementSection}>
+                <h3 className={GROUP_CLASSNAMES.tagManagementTitle}>Add New Tag</h3>
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
                     placeholder="Tag name"
                     value={newTagName}
                     onChange={(e) => setNewTagName(e.target.value)}
-                    className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
+                    className={GROUP_CLASSNAMES.tagManagementInput}
                   />
                   <input
                     type="color"
                     value={newTagColor}
                     onChange={(e) => setNewTagColor(e.target.value)}
-                    className="w-10 h-10 border-0 p-0 cursor-pointer rounded"
+                    className={GROUP_CLASSNAMES.tagManagementColorInput}
                     aria-label="Choose tag color"
                     title="Choose tag color"
                   />
@@ -1488,9 +1431,9 @@ export default function TaskManagement() {
                     type="button"
                     onClick={handleCreateNewTag}
                     disabled={!newTagName.trim()}
-                    className={`px-3 py-2 rounded text-sm ${newTagName.trim()
-                      ? 'bg-red-500 text-white hover:bg-red-600'
-                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    className={`${GROUP_CLASSNAMES.tagManagementButton} ${newTagName.trim()
+                      ? GROUP_CLASSNAMES.tagManagementButtonActive
+                      : GROUP_CLASSNAMES.tagManagementButtonDisabled
                       }`}
                   >
                     Add
@@ -1500,7 +1443,7 @@ export default function TaskManagement() {
 
               {/* List of existing tags */}
               <div>
-                <h3 className="text-sm font-medium text-gray-700 mb-2">Your Tags</h3>
+                <h3 className={GROUP_CLASSNAMES.tagManagementTitle}>Your Tags</h3>
                 {allTags.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-8 text-center border border-gray-200 rounded-md bg-gray-50">
                     <svg className="h-10 w-10 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1509,9 +1452,9 @@ export default function TaskManagement() {
                     <p className="text-gray-500 text-sm">No tags available. Create your first tag!</p>
                   </div>
                 ) : (
-                  <ul className="mt-2 max-h-64 overflow-y-auto rounded-md divide-y divide-gray-100">
+                  <ul className={GROUP_CLASSNAMES.tagManagementList}>
                     {allTags.map((tag) => (
-                      <li key={tag._id} className="py-2 px-3 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                      <li key={tag._id} className={GROUP_CLASSNAMES.tagManagementListItem}>
                         <div className="flex items-center">
                           <span
                             className="w-4 h-4 rounded-full mr-2"
@@ -1521,7 +1464,7 @@ export default function TaskManagement() {
                         </div>
                         <button
                           onClick={() => confirmDeleteTag(tag)}
-                          className="text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-gray-100"
+                          className={GROUP_CLASSNAMES.tagManagementDeleteButton}
                           title="Delete tag"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1540,29 +1483,29 @@ export default function TaskManagement() {
 
       {/* Delete Tag Confirmation Modal */}
       {showDeleteTagConfirm && tagToDelete && (
-        <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-5 w-[350px] max-w-[90vw]">
+        <div className={GROUP_CLASSNAMES.taskModalOverlay}>
+          <div className={GROUP_CLASSNAMES.deleteConfirmModal}>
             <div className="flex items-center justify-center mb-4">
-              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                <svg className="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className={GROUP_CLASSNAMES.deleteConfirmIcon}>
+                <svg className={GROUP_CLASSNAMES.deleteConfirmIconSvg} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
               </div>
             </div>
-            <h3 className="text-lg font-medium text-center text-gray-900 mb-2">Delete tag?</h3>
-            <p className="text-sm text-center text-gray-500 mb-4">
+            <h3 className={GROUP_CLASSNAMES.deleteConfirmTitle}>Delete tag?</h3>
+            <p className={GROUP_CLASSNAMES.deleteConfirmDescription}>
               This will remove <span className="font-semibold" style={{ color: tagToDelete.color }}>{tagToDelete.name}</span> from all tasks.
             </p>
-            <div className="flex justify-center space-x-3">
+            <div className={GROUP_CLASSNAMES.deleteConfirmButtons}>
               <button
                 onClick={() => setShowDeleteTagConfirm(false)}
-                className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50"
+                className={GROUP_CLASSNAMES.deleteConfirmCancelButton}
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeleteTag}
-                className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700"
+                className={GROUP_CLASSNAMES.deleteConfirmDeleteButton}
               >
                 Delete
               </button>

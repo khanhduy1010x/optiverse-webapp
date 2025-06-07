@@ -2,6 +2,7 @@ import React from 'react';
 import COLORS from '../../constants/colors.constant';
 import { TEXT } from '../../constants/typography.constant';
 import { useTheme } from '../../contexts/theme.context';
+import { GROUP_CLASSNAMES } from '../../styles';
 import Text from './Text.component';
 import View from './View.component';
 
@@ -64,7 +65,7 @@ const Input: React.FC<Props> = ({
         />
       )}
       <input
-        className={`w-full transition-all duration-300 ${className}`}
+        className={`${GROUP_CLASSNAMES.formInput} ${className}`}
         style={{ ...inputStyles, ...style }}
         {...props}
       />

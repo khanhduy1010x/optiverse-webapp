@@ -3,7 +3,7 @@ import COLORS from '../../constants/colors.constant';
 import { TEXT } from '../../constants/typography.constant';
 import { useTheme } from '../../contexts/theme.context';
 import { IconName } from '../../assets/icons';
-import { BUTTON_STYLES } from '../../styles';
+import { BUTTON_STYLES, GROUP_CLASSNAMES } from '../../styles';
 import View from './View.component';
 import Text from './Text.component';
 import Icon from './Icon/Icon.component';
@@ -59,7 +59,7 @@ const Button: React.FC<ButtonProps> = ({
 
   return (
     <button
-      className={`transition-all duration-300 ${className}`}
+      className={`${GROUP_CLASSNAMES.transition} ${className}`}
       style={{
         ...BUTTON_STYLES.rootbg,
         backgroundColor: transparent
@@ -150,7 +150,7 @@ const FlashcardButton: React.FC<FlashcardButtonProps> = ({
 
   return (
     <button
-      className={`transition-all duration-300 flex flex-col ${className}`}
+      className={`${GROUP_CLASSNAMES.transition} flex flex-col ${className}`}
       style={{
         ...BUTTON_STYLES.rootbg,
         flexDirection: "column",

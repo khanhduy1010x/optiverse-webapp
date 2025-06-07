@@ -1,6 +1,7 @@
 import React from 'react';
 import Modal from 'react-modal';
 import { CreateModalProps } from '../../types/note/props/component.props';
+import { GROUP_CLASSNAMES } from '../../styles';
 
 
 const CreateModal: React.FC<CreateModalProps> = ({
@@ -19,11 +20,11 @@ const CreateModal: React.FC<CreateModalProps> = ({
     <Modal
       isOpen={isOpen}
       onRequestClose={onClose}
-      className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[420px] max-w-[90vw] bg-white rounded-2xl shadow-2xl z-[3000] outline-none"
-      overlayClassName="fixed inset-0 bg-black/40 backdrop-blur-sm z-[3000]"
+      className={GROUP_CLASSNAMES.modalContainer}
+      overlayClassName={GROUP_CLASSNAMES.modalOverlay}
     >
       <div className="p-6">
-        <div className="flex items-center justify-between mb-4">
+        <div className={GROUP_CLASSNAMES.flexJustifyBetween + " mb-4"}>
           <h3 className="text-lg font-semibold text-gray-900">
             Create {createType === 'folder' ? 'Folder' : 'Note'}
           </h3>
@@ -59,7 +60,7 @@ const CreateModal: React.FC<CreateModalProps> = ({
               type="text"
               value={itemName}
               onChange={e => setItemName(e.target.value)}
-              className="w-full h-full bg-transparent px-3 pt-4 pb-4 outline-none text-gray-900 disabled:bg-gray-100"
+              className={GROUP_CLASSNAMES.inputTransparent}
               autoFocus
               disabled={loading}
               onFocus={() => setIsFocused(true)}
@@ -72,8 +73,8 @@ const CreateModal: React.FC<CreateModalProps> = ({
             />
 
             {loading && (
-              <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent"></div>
+              <div className={GROUP_CLASSNAMES.absoluteCenter}>
+                <div className={GROUP_CLASSNAMES.loadingSpinner}></div>
               </div>
             )}
           </div>
@@ -85,7 +86,7 @@ const CreateModal: React.FC<CreateModalProps> = ({
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-3 bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 disabled:bg-gray-300 disabled:text-gray-400 transition-colors"
+            className={GROUP_CLASSNAMES.buttonSecondary + " flex-1"}
             disabled={loading}
           >
             Cancel
@@ -93,11 +94,11 @@ const CreateModal: React.FC<CreateModalProps> = ({
           <button
             onClick={onCreate}
             disabled={!itemName.trim() || loading}
-            className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:text-gray-400 transition-colors flex items-center justify-center gap-2"
+            className={GROUP_CLASSNAMES.buttonPrimary + " flex-1 flex items-center justify-center gap-2"}
           >
             {loading ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                <div className={GROUP_CLASSNAMES.loadingSpinnerSmall}></div>
                 <span>Creating...</span>
               </>
             ) : (

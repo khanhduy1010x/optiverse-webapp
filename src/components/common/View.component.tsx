@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTheme } from '../../contexts/theme.context';
+import { GROUP_CLASSNAMES } from '../../styles';
 
 interface CustomViewProps {
   className?: string;
@@ -23,7 +24,7 @@ const View: React.FC<CustomViewProps> = ({ className = '', style, children }) =>
 
   return (
     <div
-      className={`transition-all duration-300 ${className}`}
+      className={`${GROUP_CLASSNAMES.transition} ${className}`}
       style={{ ...themeStyles, ...style }}
     >
       {children}
@@ -42,7 +43,7 @@ const ScrollView: React.FC<CustomScrollViewProps> = ({ className = '', style, ch
 
   return (
     <div
-      className={`transition-all duration-300 ${className}`}
+      className={`${GROUP_CLASSNAMES.transition} ${className}`}
       style={{ ...themeStyles, ...style }}
     >
       {children}

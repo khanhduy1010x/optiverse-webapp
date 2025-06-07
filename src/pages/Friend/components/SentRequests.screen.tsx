@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { SentRequestsProps } from '../../../types/friend/props/component.props';
 import { Friend } from '../../../types/friend/response/friend.response';
+import { GROUP_CLASSNAMES } from '../../../styles/group-class-name.style';
 
 
 
@@ -47,8 +48,8 @@ const SentRequests: React.FC<SentRequestsProps> = ({
 
   if (sentRequests.length === 0) {
     return (
-      <div className="bg-gradient-to-br from-purple-50 to-violet-50 dark:from-gray-800 dark:to-gray-900 rounded-xl shadow-lg p-8 text-center border border-purple-100 dark:border-gray-700">
-        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-r from-purple-500 to-violet-500 text-white mb-6 shadow-md">
+      <div className={GROUP_CLASSNAMES.emptyStateSentContainer}>
+        <div className={GROUP_CLASSNAMES.avatarPurple}>
           <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
           </svg>
@@ -58,7 +59,7 @@ const SentRequests: React.FC<SentRequestsProps> = ({
           {t('You have not sent any friend requests yet. Use the search function to find and connect with other users.')}
         </p>
         <button
-          className="mt-6 px-5 py-3 bg-gradient-to-r from-purple-500 to-violet-600 text-white rounded-full font-medium hover:from-purple-600 hover:to-violet-700 transition-all duration-200 shadow-md hover:shadow-lg flex items-center mx-auto"
+          className={GROUP_CLASSNAMES.buttonPurple}
           onClick={() => document.querySelector('[data-tab="search"]')?.dispatchEvent(new Event('click'))}
         >
           <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -101,7 +102,7 @@ const SentRequests: React.FC<SentRequestsProps> = ({
       <div className="space-y-6">
         {Object.entries(groupedRequests).map(([status, requests]) => (
           <div key={status} className="space-y-4">
-            <h3 className="text-md font-semibold text-gray-700 dark:text-gray-300 capitalize border-b border-gray-200 dark:border-gray-700 pb-2 flex items-center">
+            <h3 className={GROUP_CLASSNAMES.sectionHeader}>
               <span className={`w-3 h-3 rounded-full mr-2 ${status === 'pending'
                 ? 'bg-yellow-400 dark:bg-yellow-500'
                 : status === 'accepted'
@@ -123,12 +124,12 @@ const SentRequests: React.FC<SentRequestsProps> = ({
                 return (
                   <div
                     key={request._id}
-                    className="bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl transition-all duration-200 border border-gray-100 dark:border-gray-700 overflow-hidden group"
+                    className={GROUP_CLASSNAMES.cardContainer}
                   >
                     <div className="h-2 bg-gradient-to-r w-full group-hover:scale-105 transition-transform duration-300 ease-out" style={{ backgroundImage: `linear-gradient(to right, #a855f7, #8b5cf6)` }}></div>
                     <div className="p-5 flex items-start justify-between">
                       <div className="flex items-center">
-                        <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${gradientClass} flex items-center justify-center text-white text-2xl font-bold mr-4 shadow-md transform transition-transform group-hover:scale-105`}>
+                        <div className={`${GROUP_CLASSNAMES.avatarMedium} ${gradientClass} flex items-center justify-center text-white text-2xl font-bold mr-4 shadow-md transform transition-transform group-hover:scale-105`}>
                           {initial}
                         </div>
                         <div>
@@ -189,7 +190,7 @@ const SentRequests: React.FC<SentRequestsProps> = ({
                         <div>
                           <button
                             onClick={() => onCancelRequest(request._id)}
-                            className="px-4 py-2 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-200 rounded-lg hover:bg-red-500 hover:text-white transition-all duration-200 flex items-center gap-1 border border-gray-200 dark:border-gray-600 shadow-sm group-hover:shadow-md"
+                            className={GROUP_CLASSNAMES.buttonRemoveFriend}
                             disabled={loading}
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
