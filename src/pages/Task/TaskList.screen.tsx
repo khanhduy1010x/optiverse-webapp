@@ -1,0 +1,180 @@
+import React from 'react';
+import { format } from 'date-fns';
+import { Task } from '../../types/task/response/task.response';
+import { Tag } from '../../types/task/response/tag.response';
+import { GROUP_CLASSNAMES } from '../../styles';
+import { TaskListProps as TaskListComponentProps } from '../../types/task/props/component.props';
+
+
+
+const TaskList: React.FC<TaskListComponentProps> = ({
+    filteredTasks,
+    taskTags,
+    handleTaskClick,
+    handleTaskUpdate,
+    confirmDeleteTask,
+    handleEditTask,
+    loading,
+    setShowPopup,
+    searchQuery,
+    filterTags
+}) => {
+    if (loading) {
+        return (
+            <div className={GROUP_CLASSNAMES.flexCenterCenter + " py-12"}>
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-red-500"></div>
+            </div>
+        );
+    }
+
+    if (filteredTasks.length === 0) {
+        return (
+            <div className={GROUP_CLASSNAMES.taskEmptyState}>
+                <svg className={GROUP_CLASSNAMES.taskEmptyIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+                <h3 className={GROUP_CLASSNAMES.taskEmptyTitle}>No tasks found</h3>
+                <p className={GROUP_CLASSNAMES.taskEmptyDescription}>
+                    {searchQuery || filterTags.length > 0 ? 'No tasks match your search or filter.' : 'Get started by creating a new task.'}
+                </p>
+                <div className={GROUP_CLASSNAMES.taskEmptyAction}>
+                    <button
+                        onClick={() => setShowPopup(true)}
+                        className={GROUP_CLASSNAMES.buttonAddTask + " inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md"}
+                    >
+                        <svg className="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        Add a task
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <ul className="divide-y divide-gray-100">
+            {filteredTasks.map((task) => (
+                <li
+                    key={task._id}
+                    className={GROUP_CLASSNAMES.taskListItem}
+                    onClick={() => handleTaskClick(task)}
+                >
+                    <div className={GROUP_CLASSNAMES.flexItemsCenter + " items-start"}>
+                        <div
+                            className={`${GROUP_CLASSNAMES.taskCheckbox} ${task.status === 'completed'
+                                ? GROUP_CLASSNAMES.taskCheckboxCompleted
+                                : task.status === 'overdue'
+                                    ? GROUP_CLASSNAMES.taskCheckboxOverdue
+                                    : GROUP_CLASSNAMES.taskCheckboxPending
+                                }`}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleTaskUpdate(
+                                    task._id,
+                                    { status: task.status === 'completed' ? 'pending' : 'completed' }
+                                );
+                            }}
+                        >
+                            {task.status === 'completed' && (
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                                </svg>
+                            )}
+                        </div>
+
+                        <div className="ml-3 flex-1 min-w-0">
+                            <div className={GROUP_CLASSNAMES.flexJustifyBetween}>
+                                <p className={`${GROUP_CLASSNAMES.taskTitle} ${task.status === 'completed' ? GROUP_CLASSNAMES.taskTitleCompleted : GROUP_CLASSNAMES.taskTitlePending}`}>
+                                    {task.title}
+                                </p>
+                                <div className="ml-2 flex-shrink-0 flex">
+                                    <span className={`${GROUP_CLASSNAMES.taskPriorityBadge} ${task.priority === 'high' ? GROUP_CLASSNAMES.taskPriorityHigh :
+                                        task.priority === 'medium' ? GROUP_CLASSNAMES.taskPriorityMedium :
+                                            GROUP_CLASSNAMES.taskPriorityLow
+                                        }`}>
+                                        {task.priority === 'high' ? 'P1' : task.priority === 'medium' ? 'P2' : 'P3'}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {task.description && (
+                                <p className={GROUP_CLASSNAMES.taskDescription}>
+                                    {task.description}
+                                </p>
+                            )}
+
+                            <div className={GROUP_CLASSNAMES.taskTagContainer}>
+                                <div className={GROUP_CLASSNAMES.tagContainer}>
+                                    {taskTags[task._id] && taskTags[task._id].length > 0 ? (
+                                        taskTags[task._id].map((tag) => (
+                                            <span
+                                                key={tag._id}
+                                                className={GROUP_CLASSNAMES.tagItem}
+                                                style={{
+                                                    backgroundColor: `${tag.color}15`,
+                                                    color: tag.color
+                                                }}
+                                            >
+                                                {tag.name}
+                                            </span>
+                                        ))
+                                    ) : (
+                                        <span className="text-xs text-gray-400">No tags</span>
+                                    )}
+                                </div>
+                                <span className="ml-auto text-xs text-gray-500">
+                                    {task.createdAt ? format(new Date(task.createdAt), 'MMM dd') : ''}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="ml-4 flex-shrink-0 invisible group-hover:visible flex">
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditTask(task);
+                                }}
+                                className={GROUP_CLASSNAMES.taskActionButton}
+                                title="Edit task"
+                                aria-label="Edit task"
+                            >
+                                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth="2"
+                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                    />
+                                </svg>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    confirmDeleteTask(task._id);
+                                }}
+                                className={GROUP_CLASSNAMES.taskDeleteButton}
+                                title="Delete task"
+                                aria-label="Delete task"
+                            >
+                                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth="2"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                    />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </li>
+            ))}
+        </ul>
+    );
+};
+
+export default TaskList; 

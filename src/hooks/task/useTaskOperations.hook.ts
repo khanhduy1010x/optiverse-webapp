@@ -1,0 +1,271 @@
+import { useEffect } from 'react';
+import { Task } from '../../types/task/response/task.response';
+import { Tag } from '../../types/task/response/tag.response';
+import {
+  fetchAllUserTasks,
+  createTask,
+  updateTask,
+  deleteTask,
+  getTaskTags,
+  filterTasksByTags,
+} from '../../services/task.service';
+
+export function useTaskOperations(
+  tasks: Task[],
+  setTasks: React.Dispatch<React.SetStateAction<Task[]>>,
+  setFilteredTasks: React.Dispatch<React.SetStateAction<Task[]>>,
+  taskTags: { [taskId: string]: Tag[] },
+  setTaskTags: React.Dispatch<
+    React.SetStateAction<{ [taskId: string]: Tag[] }>
+  >,
+  setLoading: React.Dispatch<React.SetStateAction<boolean>>,
+  selectedTask: Task | null,
+  setSelectedTask: React.Dispatch<React.SetStateAction<Task | null>>,
+  setShowTaskDetail: React.Dispatch<React.SetStateAction<boolean>>,
+  sortOrder: 'newest' | 'oldest',
+  setTaskToDelete: React.Dispatch<React.SetStateAction<string | null>>,
+  setShowDeleteConfirm: React.Dispatch<React.SetStateAction<boolean>>
+) {
+  // Helper function to sort tasks with completed tasks at the bottom
+  const sortTasksWithCompletedAtBottom = (tasksToSort: Task[]) => {
+    return [...tasksToSort].sort((a, b) => {
+      // First, separate completed and non-completed tasks
+      if (a.status === 'completed' && b.status !== 'completed') return 1;
+      if (a.status !== 'completed' && b.status === 'completed') return -1;
+
+      // Then sort by creation date (newest first) within each group
+      const dateA = new Date(a.createdAt || '').getTime();
+      const dateB = new Date(b.createdAt || '').getTime();
+      return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+    });
+  };
+
+  // Fetch tasks from API
+  const fetchTasks = () => {
+    setLoading(true);
+    fetchAllUserTasks()
+      .then(fetchedTasks => {
+        // Sort tasks using our helper function
+        const sortedTasks = sortTasksWithCompletedAtBottom(fetchedTasks);
+        setTasks(sortedTasks);
+        setFilteredTasks(sortedTasks);
+
+        // Fetch tags for each task
+        const tagPromises = sortedTasks.map(task => fetchTaskTags(task._id));
+        Promise.all(tagPromises)
+          .then(() => {
+            console.log('All task tags loaded');
+          })
+          .catch(err => {
+            console.error('Error loading task tags:', err);
+          });
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  };
+
+  // Fetch tags for a specific task
+  const fetchTaskTags = async (taskId: string) => {
+    try {
+      const tags = await getTaskTags(taskId);
+      console.log(`Tags for task ${taskId}:`, tags);
+
+      // Ensure tags is an array before updating state
+      const tagsArray = Array.isArray(tags) ? tags : [];
+
+      setTaskTags(prev => ({
+        ...prev,
+        [taskId]: tagsArray,
+      }));
+
+      return tagsArray;
+    } catch (error) {
+      console.error(`Error fetching tags for task ${taskId}:`, error);
+      return [];
+    }
+  };
+
+  // Apply task filters with tag filtering
+  const filterTasksByTagsLocal = async (tags: Tag[]) => {
+    console.log(
+      `Filtering by ${tags.length} tags:`,
+      tags.map(tag => tag.name)
+    );
+
+    if (tags.length === 0) {
+      // When no tags are selected, sort the tasks and return
+      const sortedTasks = sortTasksWithCompletedAtBottom([...tasks]);
+      setFilteredTasks(sortedTasks);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Get tag IDs from the selected tags
+      const tagIds = tags.map(tag => tag._id);
+
+      // Use the service function to fetch tasks by multiple tags
+      const tasksWithAllTags = await filterTasksByTags(tagIds);
+      console.log(
+        `Found ${tasksWithAllTags.length} tasks with all selected tags`
+      );
+
+      if (tasksWithAllTags && tasksWithAllTags.length > 0) {
+        // Apply sorting with completed tasks at bottom
+        const sortedTasks = sortTasksWithCompletedAtBottom(tasksWithAllTags);
+
+        // Update filtered tasks
+        setFilteredTasks(sortedTasks);
+
+        // Fetch tags for each task to ensure we have them for display
+        const tagPromises = tasksWithAllTags.map(task =>
+          fetchTaskTags(task._id)
+        );
+        await Promise.all(tagPromises);
+      } else {
+        console.log('No tasks found with all selected tags');
+        setFilteredTasks([]);
+      }
+    } catch (error) {
+      console.error('Error filtering by tags:', error);
+
+      // Fallback to client-side filtering if API fails
+      const tasksWithTags = [...tasks]; // Start with all tasks
+
+      // Filter tasks that have ALL the selected tags
+      const filteredResult = tasksWithTags.filter(task => {
+        // Get the tags for this task
+        const taskTagsList = taskTags[task._id] || [];
+
+        // Check if the task has ALL the selected tags
+        return tags.every(filterTag =>
+          taskTagsList.some(taskTag => taskTag._id === filterTag._id)
+        );
+      });
+
+      console.log(
+        `Client-side filtering found ${filteredResult.length} tasks with all selected tags`
+      );
+
+      // Apply sorting
+      const sortedTasks = sortTasksWithCompletedAtBottom(filteredResult);
+      setFilteredTasks(sortedTasks);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle task update (optimistic update)
+  const handleTaskUpdate = async (
+    taskId: string,
+    updatedFields: Partial<Task>
+  ) => {
+    try {
+      // Create a temporary optimistic update for better UI responsiveness
+      setTasks(prevTasks => {
+        const updatedTasks = prevTasks.map(task =>
+          task._id === taskId ? { ...task, ...updatedFields } : task
+        );
+
+        // If the task is being marked as completed, sort the tasks to move completed tasks to the bottom
+        if (
+          updatedFields.status === 'completed' ||
+          updatedFields.status === 'pending'
+        ) {
+          return sortTasksWithCompletedAtBottom(updatedTasks);
+        }
+
+        return updatedTasks;
+      });
+
+      // Apply the same sorting to filtered tasks
+      setFilteredTasks(prevFilteredTasks => {
+        const updatedFilteredTasks = prevFilteredTasks.map(task =>
+          task._id === taskId ? { ...task, ...updatedFields } : task
+        );
+
+        // If the task is being marked as completed, sort the tasks to move completed tasks to the bottom
+        if (
+          updatedFields.status === 'completed' ||
+          updatedFields.status === 'pending'
+        ) {
+          return sortTasksWithCompletedAtBottom(updatedFilteredTasks);
+        }
+
+        return updatedFilteredTasks;
+      });
+
+      // Send the update to the server
+      const response = await updateTask(taskId, updatedFields);
+
+      // If the update was successful, refresh the tasks
+      if (response && response.data) {
+        console.log('Task updated successfully:', response.data);
+      } else {
+        // If there was an issue with the response, revert back and fetch tasks
+        fetchTasks();
+      }
+
+      // Update selected task if it's currently being viewed
+      if (selectedTask && selectedTask._id === taskId) {
+        setSelectedTask({ ...selectedTask, ...updatedFields });
+      }
+    } catch (error) {
+      console.error('Update task failed:', error);
+      // Revert the optimistic update by refetching tasks
+      fetchTasks();
+    }
+  };
+
+  // Confirm task deletion
+  const confirmDeleteTask = (taskId: string) => {
+    setTaskToDelete(taskId);
+    setShowDeleteConfirm(true);
+  };
+
+  // Handle task deletion
+  const handleDeleteTask = async (taskId: string | null) => {
+    if (!taskId) return;
+
+    try {
+      await deleteTask(taskId);
+
+      // Update the tasks list immediately without refetching
+      setTasks(prevTasks => prevTasks.filter(task => task._id !== taskId));
+      setFilteredTasks(prevFilteredTasks =>
+        prevFilteredTasks.filter(task => task._id !== taskId)
+      );
+
+      // Close task detail if the deleted task was being viewed
+      if (selectedTask && selectedTask._id === taskId) {
+        setShowTaskDetail(false);
+        setSelectedTask(null);
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Delete task failed:', error);
+      return false;
+    }
+  };
+
+  // Handle task click to show details
+  const handleTaskClick = (task: Task) => {
+    setSelectedTask(task);
+    setShowTaskDetail(true);
+
+    // Make sure we have the latest tags
+    fetchTaskTags(task._id);
+  };
+
+  return {
+    fetchTasks,
+    fetchTaskTags,
+    filterTasksByTags: filterTasksByTagsLocal,
+    handleTaskUpdate,
+    confirmDeleteTask,
+    handleDeleteTask,
+    handleTaskClick,
+    sortTasksWithCompletedAtBottom,
+  };
+}
