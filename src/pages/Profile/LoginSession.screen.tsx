@@ -1,209 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
 import View from '../../components/common/View.component';
 import Text from '../../components/common/Text.component';
 import IconProps from '../../components/common/Icon/Icon.component';
-import profileService from '../../services/profile.service';
-import { ConfirmationModalProps } from '../../types/profile/props/component.props';
-import { UserSession } from '../../types/profile/response/profile.response';
+import { ConfirmationModal } from './ConfirmationModal.screen';
 import { GROUP_CLASSNAMES } from '../../styles/group-class-name.style';
-
-const SESSIONS_PER_PAGE = 2; // Number of sessions to show initially
-
-
-const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, onClose, onConfirm, title, message }) => {
-  if (!isOpen) return null;
-
-  return (
-    <div className={GROUP_CLASSNAMES.modalOverlayProfile}>
-      <div className={GROUP_CLASSNAMES.modalContentProfile}>
-        <h3 className="text-xl font-semibold mb-4">{title}</h3>
-        <p className="text-gray-600 mb-6">{message}</p>
-        <div className="flex justify-end space-x-4">
-          <button
-            onClick={onClose}
-            className={GROUP_CLASSNAMES.modalButtonCancel}
-          >
-            Cancel
-          </button>
-          <button
-            onClick={() => {
-              onConfirm();
-              onClose();
-            }}
-            className={GROUP_CLASSNAMES.modalButtonConfirm}
-          >
-            Confirm
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
+import { useLoginSessions } from '../../hooks/profile/useLoginSession.hook';
+import {
+  SessionCard,
+  ThisDeviceCard,
+} from '../../components/common/SessionCard.component';
 
 export default function LoginSessions() {
-  const navigate = useNavigate();
-  const [selectedMenu, setSelectedMenu] = useState<string>('login-sessions');
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [currentSession, setCurrentSession] = useState<UserSession | null>(null);
-  const [activeSessions, setActiveSessions] = useState<UserSession[]>([]);
-  const [previousSessions, setPreviousSessions] = useState<UserSession[]>([]);
-  const [showAllActiveSessions, setShowAllActiveSessions] = useState(false);
-  const [confirmModal, setConfirmModal] = useState<{
-    isOpen: boolean;
-    title: string;
-    message: string;
-    onConfirm: () => void;
-  }>({
-    isOpen: false,
-    title: '',
-    message: '',
-    onConfirm: () => { },
-  });
-
-  useEffect(() => {
-    fetchLoginSessions();
-  }, []);
-
-  const fetchLoginSessions = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const data = await profileService.getLoginSessions();
-
-      setCurrentSession(data.current_session);
-      // Filter out current session and sessions with same IP
-      setActiveSessions(data.active_sessions.filter((session: UserSession) =>
-        session._id !== data.current_session._id &&
-        session.ip_address !== data.current_session.ip_address
-      ));
-      setPreviousSessions(data.previous_sessions);
-    } catch (error: any) {
-      console.error('Failed to fetch login sessions:', error);
-      setError(error.message || 'Failed to load login sessions. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleNavigate = (menuKey: string, path: string) => {
-    setSelectedMenu(menuKey);
-    navigate(path);
-  };
-
-  const handleLogoutSession = async (sessionId: string) => {
-    setConfirmModal({
-      isOpen: true,
-      title: 'Confirm Logout',
-      message: 'Are you sure you want to log out this session?',
-      onConfirm: async () => {
-        try {
-          await profileService.logoutSession(sessionId);
-          await fetchLoginSessions();
-        } catch (error: any) {
-          console.error('Failed to logout session:', error);
-          setError(error.message || 'Failed to logout session. Please try again.');
-        }
-      },
-    });
-  };
-
-  const handleLogoutAllSessions = async () => {
-    setConfirmModal({
-      isOpen: true,
-      title: 'Confirm Logout All',
-      message: 'Are you sure you want to log out all other sessions?',
-      onConfirm: async () => {
-        try {
-          await profileService.logoutAllOtherSessions();
-          await fetchLoginSessions();
-        } catch (error: any) {
-          console.error('Failed to logout all sessions:', error);
-          setError(error.message || 'Failed to logout all sessions. Please try again.');
-        }
-      },
-    });
-  };
-
-  const formatDeviceInfo = (session: UserSession) => {
-    return session.device_info || 'Unknown Device';
-  };
-
-  const formatLastActivity = (session: UserSession) => {
-    if (!session.updatedAt) return 'Unknown';
-    return new Date(session.updatedAt).toLocaleString();
-  };
-
-  const toggleShowAllSessions = () => {
-    setShowAllActiveSessions(!showAllActiveSessions);
-  };
-
-  const getDisplayedActiveSessions = () => {
-    // Filter out current session from active sessions
-    const otherSessions = activeSessions.filter(session => !session.is_current);
-    if (showAllActiveSessions) {
-      return otherSessions;
-    }
-    return otherSessions.slice(0, SESSIONS_PER_PAGE);
-  };
-
-  const ThisDeviceCard: React.FC<{ session: UserSession }> = ({ session }) => (
-    <div className={GROUP_CLASSNAMES.sessionCard}>
-      <div className={GROUP_CLASSNAMES.sessionCardContent}>
-        <div className={GROUP_CLASSNAMES.sessionCardIcon}>
-          <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-          </svg>
-        </div>
-        <div>
-          <Text className={GROUP_CLASSNAMES.sessionCardText}>{formatDeviceInfo(session)}</Text>
-          <div className="flex flex-col">
-            <Text className={GROUP_CLASSNAMES.sessionCardSubtext}>{session.ip_address || 'Unknown IP'}</Text>
-          </div>
-        </div>
-      </div>
-      <div className="flex items-center">
-        <span className={GROUP_CLASSNAMES.sessionCardCurrentBadge}>Current session</span>
-      </div>
-    </div>
-  );
-
-  const SessionCard: React.FC<{ session: UserSession; isActive?: boolean }> = ({ session, isActive = true }) => (
-    <div className={GROUP_CLASSNAMES.sessionCard}>
-      <div className={GROUP_CLASSNAMES.sessionCardContent}>
-        <div className={GROUP_CLASSNAMES.sessionCardIcon}>
-          <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-          </svg>
-        </div>
-        <div>
-          <Text className={GROUP_CLASSNAMES.sessionCardText}>{formatDeviceInfo(session)}</Text>
-          <div className="flex items-center space-x-2 mt-1">
-            <Text className={GROUP_CLASSNAMES.sessionCardSubtext}>{session.ip_address || 'Unknown IP'}</Text>
-            {isActive && (
-              <>
-                <span className="text-gray-300">•</span>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-      {isActive && (
-        <div className="flex items-center">
-          <button
-            onClick={() => handleLogoutSession(session._id)}
-            className={GROUP_CLASSNAMES.sessionLogoutButton}
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-      )}
-    </div>
-  );
+  const {
+    selectedMenu,
+    handleNavigate,
+    confirmModal,
+    setConfirmModal,
+    error,
+    isLoading,
+    currentSession,
+    getDisplayedActiveSessions,
+    handleLogoutAllSessions,
+    toggleShowAllSessions,
+    showAllActiveSessions,
+    activeSessions,
+    previousSessions,
+  } = useLoginSessions();
 
   return (
     <View className="w-full h-screen flex">
@@ -216,76 +38,39 @@ export default function LoginSessions() {
       />
       <View className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
-        <View
-          className={GROUP_CLASSNAMES.profileSidebar}
-          style={{
-            msOverflowStyle: 'none',
-            scrollbarWidth: 'none',
-            WebkitOverflowScrolling: 'touch'
-          }}
-        >
-          <style>
-            {`
-              div::-webkit-scrollbar {
-                display: none;
-              }
-            `}
-          </style>
+        <View className={GROUP_CLASSNAMES.profileSidebar}>
           <ul className="space-y-4 p-4">
-            <li>
-              <button
-                onClick={() => handleNavigate('profile', '/user-profile')}
-                className={`${GROUP_CLASSNAMES.profileSidebarButton} 
-                  ${selectedMenu === 'profile' ? GROUP_CLASSNAMES.profileSidebarButtonActive : GROUP_CLASSNAMES.profileSidebarButtonInactive}`}
-              >
-                Profile
-                <IconProps name="chevron" size={selectedMenu === 'profile' ? 28 : 20} className="ml-2" />
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => handleNavigate('achievements', '/achievements')}
-                className={`${GROUP_CLASSNAMES.profileSidebarButton} 
-                  ${selectedMenu === 'achievements' ? GROUP_CLASSNAMES.profileSidebarButtonActive : GROUP_CLASSNAMES.profileSidebarButtonInactive}`}
-              >
-                Achievements
-                <IconProps name="chevron" size={selectedMenu === 'achievements' ? 28 : 20} className="ml-2" />
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => handleNavigate('friends', '/friends')}
-                className={`${GROUP_CLASSNAMES.profileSidebarButton} 
-                  ${selectedMenu === 'friends' ? GROUP_CLASSNAMES.profileSidebarButtonActive : GROUP_CLASSNAMES.profileSidebarButtonInactive}`}
-              >
-                Friends
-                <IconProps name="chevron" size={selectedMenu === 'friends' ? 28 : 20} className="ml-2" />
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => handleNavigate('login-sessions', '/login-session')}
-                className={`${GROUP_CLASSNAMES.profileSidebarButton} 
-                  ${selectedMenu === 'login-sessions' ? GROUP_CLASSNAMES.profileSidebarButtonActive : GROUP_CLASSNAMES.profileSidebarButtonInactive}`}
-              >
-                Login Sessions
-                <IconProps name="chevron" size={selectedMenu === 'login-sessions' ? 28 : 20} className="ml-2" />
-              </button>
-            </li>
+            {['profile', 'achievements', 'friends', 'login-sessions'].map(
+              menu => (
+                <li key={menu}>
+                  <button
+                    onClick={() => handleNavigate(menu)}
+                    className={`${GROUP_CLASSNAMES.profileSidebarButton} ${selectedMenu === menu ? GROUP_CLASSNAMES.profileSidebarButtonActive : GROUP_CLASSNAMES.profileSidebarButtonInactive}`}
+                  >
+                    {menu
+                      .replace('-', ' ')
+                      .replace(/\b\w/g, c => c.toUpperCase())}
+                    <IconProps
+                      name="chevron"
+                      size={selectedMenu === menu ? 28 : 20}
+                      className="ml-2"
+                    />
+                  </button>
+                </li>
+              )
+            )}
           </ul>
         </View>
 
         {/* Main Content */}
-        <View
-          className={GROUP_CLASSNAMES.profileMainContent}
-          style={{
-            msOverflowStyle: 'none',
-            scrollbarWidth: 'none',
-            WebkitOverflowScrolling: 'touch'
-          }}
-        >
+        <View className={GROUP_CLASSNAMES.profileMainContent}>
           <div className="p-8">
-            <Text textStyle="regular32" className="mb-4 text-gray-800 text:bold">Login Sessions</Text>
+            <Text
+              textStyle="regular32"
+              className="mb-4 text-gray-800 text:bold"
+            >
+              Login Sessions
+            </Text>
             <hr className="mb-6 border-gray-200" />
 
             {error && (
@@ -301,13 +86,19 @@ export default function LoginSessions() {
             ) : (
               <div className="space-y-8">
                 <section>
-                  <h3 className={GROUP_CLASSNAMES.profileSection}>This device</h3>
-                  {currentSession && <ThisDeviceCard session={currentSession} />}
+                  <h3 className={GROUP_CLASSNAMES.profileSection}>
+                    This device
+                  </h3>
+                  {currentSession && (
+                    <ThisDeviceCard session={currentSession} />
+                  )}
                 </section>
 
                 <section>
                   <div className="flex justify-between items-center mb-4">
-                    <h3 className={GROUP_CLASSNAMES.profileSection}>Other active sessions</h3>
+                    <h3 className={GROUP_CLASSNAMES.profileSection}>
+                      Other active sessions
+                    </h3>
                     {getDisplayedActiveSessions().length > 0 && (
                       <button
                         onClick={handleLogoutAllSessions}
@@ -319,28 +110,20 @@ export default function LoginSessions() {
                   </div>
                   <div className="space-y-4">
                     {getDisplayedActiveSessions().map(session => (
-                      <SessionCard key={session._id} session={session} isActive={true} />
+                      <SessionCard
+                        key={session._id}
+                        session={session}
+                        isActive={true}
+                      />
                     ))}
-                    {activeSessions.filter(session => !session.is_current).length > SESSIONS_PER_PAGE && (
+                    {activeSessions.length > 2 && (
                       <button
                         onClick={toggleShowAllSessions}
                         className={GROUP_CLASSNAMES.sessionShowMoreButton}
                       >
-                        {showAllActiveSessions ? (
-                          <>
-                            <span>Show less</span>
-                            <svg className="w-4 h-4 inline-block ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7" />
-                            </svg>
-                          </>
-                        ) : (
-                          <>
-                            <span>Show {activeSessions.filter(session => !session.is_current).length - SESSIONS_PER_PAGE} more</span>
-                            <svg className="w-4 h-4 inline-block ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                            </svg>
-                          </>
-                        )}
+                        {showAllActiveSessions
+                          ? 'Show less'
+                          : `Show ${activeSessions.length - 2} more`}
                       </button>
                     )}
                   </div>
@@ -348,10 +131,16 @@ export default function LoginSessions() {
 
                 {previousSessions.length > 0 && (
                   <section>
-                    <h3 className={GROUP_CLASSNAMES.profileSection}>Previously logged-out sessions</h3>
+                    <h3 className={GROUP_CLASSNAMES.profileSection}>
+                      Previously logged-out sessions
+                    </h3>
                     <div className="space-y-4">
                       {previousSessions.map(session => (
-                        <SessionCard key={session._id} session={session} isActive={false} />
+                        <SessionCard
+                          key={session._id}
+                          session={session}
+                          isActive={false}
+                        />
                       ))}
                     </div>
                   </section>
@@ -363,4 +152,4 @@ export default function LoginSessions() {
       </View>
     </View>
   );
-} 
+}
