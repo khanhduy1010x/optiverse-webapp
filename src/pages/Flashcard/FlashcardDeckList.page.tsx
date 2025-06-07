@@ -4,8 +4,8 @@ import { Button, CircleButton } from '../../components/common/Button.component';
 import Icon from '../../components/common/Icon/Icon.component';
 import UpdateFlashcardDeck from './UpdateFlashcardDeck.screen';
 import AddFlashcardDeck from './AddFlashcardDeck.screen';
-import { useFlashcardDeck, FlashCardDeckMockList } from '../../hooks/flashcard/useFlashcardDeckList.hook';
-import { FlashCardDeckMock } from '../../types/flashcard/response/flashcard.response';
+import { useFlashcardDeckList } from '../../hooks/flashcard/useFlashcardDeckList.hook';
+import { FlashcardDeckMock } from '../../types/flashcard/response/flashcard.response';
 
 export default function FlashcardDeckList() {
   const navigate = useNavigate();
@@ -79,7 +79,7 @@ export default function FlashcardDeckList() {
       <CircleButton
         name="add"
         onClick={() => {
-          openPopup('add', FlashCardDeckMock);
+          openPopup('add', FlashcardDeckMock);
         }}
       ></CircleButton>
 

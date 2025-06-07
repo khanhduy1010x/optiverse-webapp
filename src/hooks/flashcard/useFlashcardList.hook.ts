@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   FlashcardDeck,
+  FlashcardDeckLoadingMock,
   Flashcard as FlashcardType,
 } from '../../types/flashcard/response/flashcard.response';
 import { token } from '../../utils/apitest';
@@ -9,15 +10,7 @@ import { token } from '../../utils/apitest';
 export function useFlashcardList() {
   const { deckId } = useParams();
   const [flashcards, setFlashcards] = useState<FlashcardType[]>([]);
-  const [deck, setDeck] = useState<FlashcardDeck>({
-    _id: '',
-    title: 'Loading',
-    lastReview: 0,
-    learningCount: 0,
-    newCount: 0,
-    reviewingCount: 0,
-    user_id: '',
-  });
+  const [deck, setDeck] = useState<FlashcardDeck>(FlashcardDeckLoadingMock);
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [popupType, setPopupType] = useState<'edit' | 'delete' | null>(null);

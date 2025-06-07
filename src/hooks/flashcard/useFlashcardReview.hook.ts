@@ -3,48 +3,21 @@ import { useParams, useLocation } from 'react-router-dom';
 import {
   FlashcardDeck,
   Flashcard,
+  initFlashcardDeckMock,
+  FlashcardMock,
 } from '../../types/flashcard/response/flashcard.response';
 import { token } from '../../utils/apitest';
 import { getDueFlashcards } from '../../utils/flashcard/flashcard.util';
-
-const initFlashcardDeck: FlashcardDeck = {
-  _id: '',
-  title: '',
-  lastReview: 0,
-  learningCount: 0,
-  newCount: 0,
-  reviewingCount: 0,
-  user_id: '',
-  description: '',
-  flashcards: [],
-};
-
-const initFlashcard: Flashcard = {
-  _id: '',
-  front: '',
-  back: '',
-  deck_id: '',
-  review: {
-    _id: '',
-    flashcard_id: '',
-    user_id: '',
-    ease_factor: 0,
-    interval: 0,
-    last_review: new Date(),
-    next_review: new Date(),
-    repetition_count: 0,
-    quality: 0,
-  },
-};
 
 export function useFlashcardReview() {
   const { deckId } = useParams();
   const location = useLocation();
   const { title } = location.state;
 
-  const [flashcardDeck, setFlashcardDeck] =
-    useState<FlashcardDeck>(initFlashcardDeck);
-  const [flashcard, setFlashcard] = useState<Flashcard>(initFlashcard);
+  const [flashcardDeck, setFlashcardDeck] = useState<FlashcardDeck>(
+    initFlashcardDeckMock
+  );
+  const [flashcard, setFlashcard] = useState<Flashcard>(FlashcardMock);
   const [showAnswer, setShowAnswer] = useState(false);
 
   const fetchData = async () => {
