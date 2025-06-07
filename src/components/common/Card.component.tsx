@@ -6,6 +6,7 @@ import Icon from './Icon/Icon.component';
 import Text from './Text.component';
 import { useTheme } from '../../contexts/theme.context';
 import logo from '../../assets/app-icon/optiverse.logo.svg';
+import { GROUP_CLASSNAMES } from '../../styles';
 import {
   CardInteractionProps,
   useCardInteractions,
@@ -53,7 +54,7 @@ export const FlashcardDeckCard: React.FC<FlashcardCardProps> = ({
         cursor: 'pointer',
         ...style,
       }}
-      className="select-none"
+      className={GROUP_CLASSNAMES.selectNone}
     >
       <img
         src={logo}
@@ -76,7 +77,7 @@ export const FlashcardDeckCard: React.FC<FlashcardCardProps> = ({
             fontSize: 16,
             textTransform: 'capitalize',
           }}
-          className="select-text"
+          className={GROUP_CLASSNAMES.selectText}
         >
           {title}
         </Text>

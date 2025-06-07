@@ -2,13 +2,14 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { TEXT } from '../../constants/typography.constant';
 import { useTheme } from '../../contexts/theme.context';
+import { GROUP_CLASSNAMES } from '../../styles';
 
 interface CustomTextProps {
   title?: string;
   translate?: boolean;
   className?: string;
   style?: React.CSSProperties;
-  textStyle?: keyof typeof TEXT; 
+  textStyle?: keyof typeof TEXT;
   children?: React.ReactNode;
 }
 
@@ -17,7 +18,7 @@ const Text: React.FC<CustomTextProps> = ({
   translate = true,
   className = '',
   style,
-  textStyle = 'regular20', 
+  textStyle = 'regular20',
   children,
   ...props
 }) => {
@@ -25,13 +26,13 @@ const Text: React.FC<CustomTextProps> = ({
   const { theme } = useTheme();
 
   const defaultStyles: React.CSSProperties = {
-    ...TEXT[textStyle], 
-    color: theme.text, 
+    ...TEXT[textStyle],
+    color: theme.text,
   };
 
   return (
     <span
-      className={`transition-colors duration-300 ${className}`}
+      className={`${GROUP_CLASSNAMES.transitionColors} ${className}`}
       style={{ ...defaultStyles, ...style }}
       {...props}
     >

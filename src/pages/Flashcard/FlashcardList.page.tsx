@@ -8,6 +8,11 @@ import {
 import { Button, CircleButton } from '../../components/common/Button.component';
 import Icon from '../../components/common/Icon/Icon.component';
 import UpdateFlashcard from './UpdateFlashcard.screen';
+import {
+  FlashcardDeck,
+  FlashCardDeckLoadingMock,
+  Flashcard as FlashcardType,
+} from '../../types/flashcard/response/flashcard.response';
 import { useFlashcardList } from '../../hooks/flashcard/useFlashcardList.hook';
 
 export default function FlashcardList() {

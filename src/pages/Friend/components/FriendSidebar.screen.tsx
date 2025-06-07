@@ -4,6 +4,7 @@ import Icon from '../../../components/common/Icon/Icon.component';
 import NavButton from '../../../components/common/Button/NavButton';
 import { FriendSidebarProps, SidebarItem } from '../../../types/friend/props/component.props';
 import { IconName } from '../../../assets/icons';
+import { GROUP_CLASSNAMES } from '../../../styles/group-class-name.style';
 
 const FriendSidebar: React.FC<FriendSidebarProps> = ({
   activeTab,
@@ -20,12 +21,12 @@ const FriendSidebar: React.FC<FriendSidebarProps> = ({
   ];
 
   return (
-    <div className="w-72 border-r border-gray-200 dark:border-gray-700 p-5 flex flex-col bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 shadow-lg">
+    <div className={GROUP_CLASSNAMES.sidebarContainer}>
       {/* User info */}
       {currentUser && (
         <div className="mb-8 p-4 bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300">
           <div className="flex flex-col items-center">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white text-2xl font-bold mb-3 shadow-md">
+            <div className={GROUP_CLASSNAMES.avatarSmall}>
               {currentUser.email ? currentUser.email.charAt(0).toUpperCase() : 'U'}
             </div>
             <h3 className="text-lg font-semibold text-center text-gray-800 dark:text-white">{(currentUser as any).full_name || currentUser.email}</h3>
