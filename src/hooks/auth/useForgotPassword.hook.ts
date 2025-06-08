@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import authService from '../../services/auth.service';
 
 export function useForgotPassword({
   onSuccess,
@@ -14,26 +15,11 @@ export function useForgotPassword({
     setMessage('');
     setLoading(true);
 
-    try {
-      const res = await fetch(
-        'http://localhost:81/core/auth/send-otp-reset-password',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, isVerify: false }),
-        }
-      );
+    await authService.forgotPassword(email);
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Đã xảy ra lỗi.');
-
-      setMessage('OTP đã được gửi tới email của bạn.');
-      onSuccess(email);
-    } catch (err: any) {
-      setMessage(err.message || 'Không thể gửi OTP.');
-    } finally {
-      setLoading(false);
-    }
+    setMessage('OTP đã được gửi tới email của bạn.');
+    onSuccess(email);
+    setLoading(false);
   };
 
   return {

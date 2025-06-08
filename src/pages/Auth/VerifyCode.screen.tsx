@@ -4,6 +4,8 @@ import {
   handleChangeOTP,
   handleKeyDownOTP,
 } from '../../utils/keyboard/keyboard-handler.util';
+import authService from '../../services/auth.service';
+import { VerifyCodeResponse } from '../../types/auth/response/auth.reponse';
 
 const VerifyCodeForm: React.FC<VerifyCodeFormProps> = ({
   data,
@@ -25,26 +27,19 @@ const VerifyCodeForm: React.FC<VerifyCodeFormProps> = ({
 
     setLoading(true);
     setMessage('');
-    try {
-      const res = await fetch('http://localhost:81/core/auth/verify-account', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: data, otp, isVerify: false }),
-      });
 
-      const result = await res.json();
-      const token = result.data.reset_token;
+    const result = await authService.verifyCode({
+      email: data,
+      otp: otp,
+      type: 'forgot',
+    });
 
-      if (!res.ok) throw new Error(result.message || 'Verification failed');
-      if (setToken) setToken(token);
-      setMessage('OTP verified. Redirecting...');
-      onSwitch('reset');
-    } catch (err) {
-      const error = err as Error;
-      setMessage(error.message || 'An error occurred');
-    } finally {
-      setLoading(false);
-    }
+    const token = result.data.reset_token;
+
+    if (setToken) setToken(token);
+    setMessage('OTP verified. Redirecting...');
+    onSwitch('reset');
+    setLoading(false);
   };
 
   const handleResend = async () => {

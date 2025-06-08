@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { token } from '../../utils/apitest';
+import focusService from '../../services/focus.service';
 
 export function useDeleteFocusSession() {
   const [loading, setLoading] = useState(false);
@@ -7,22 +7,8 @@ export function useDeleteFocusSession() {
   const deleteSession = async (id: string): Promise<boolean> => {
     setLoading(true);
     try {
-      const res = await fetch(
-        `http://localhost:81/productivity/focus-session/${id}`,
-        {
-          method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (res.ok) return true;
-      else {
-        alert('Failed to delete session.');
-        return false;
-      }
+      await focusService.deleteFocusTimer(id);
+      return true;
     } catch (err) {
       console.error(err);
       alert('An error occurred.');

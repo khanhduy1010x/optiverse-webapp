@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Task } from '../../types/task/response/task.response';
 import { Tag } from '../../types/task/response/tag.response';
-import { createTask, updateTask } from '../../services/task.service';
+import taskService from '../../services/task.service';
 
 export function useTaskForm(
   tasks: Task[],
@@ -87,7 +87,7 @@ export function useTaskForm(
       if (selectedTask) {
         // Update existing task
         console.log('Updating existing task:', selectedTask._id);
-        const response = await updateTask(selectedTask._id, {
+        const response = await taskService.updateTask(selectedTask._id, {
           title: titleToUse,
           description,
           status,
@@ -121,7 +121,7 @@ export function useTaskForm(
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         });
-        const createdTask = await createTask({
+        const createdTask = await taskService.createTask({
           title: titleToUse,
           description,
           status,

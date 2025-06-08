@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import authService from '../../services/auth.service';
 
 interface UseRegisterFormProps {
   onSuccess: (email: string) => void;
@@ -14,23 +15,12 @@ export function useRegisterForm({ onSuccess }: UseRegisterFormProps) {
 
     console.log('Registering with:', { fullName, email, password });
 
-    try {
-      await fetch(`http://localhost:81/core/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: email,
-          full_name: fullName,
-          password: password,
-        }),
-      });
-
-      onSuccess(email);
-    } catch (error) {
-      console.error('Lỗi khi fetch API:', error);
-    }
+    await authService.register({
+      email,
+      full_name: fullName,
+      password,
+    });
+    onSuccess(email);
   };
 
   return {

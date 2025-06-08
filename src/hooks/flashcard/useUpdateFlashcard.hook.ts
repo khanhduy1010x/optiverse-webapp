@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { token } from '../../utils/apitest';
 import { FlashcardResponse } from '../../types/flashcard/response/flashcard.response';
 import flashcardService from '../../services/flashcard.service';
 

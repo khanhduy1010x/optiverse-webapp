@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { setCurrentNote } from '../../store/slices/items.slice';
 import { setShowWarningModal } from '../../store/slices/ui.slice';
-import { NoteService } from '../../services/note.service';
+import noteService from '../../services/note.service';
 import SocketService from '../../services/socket.service';
 import ReactQuill from 'react-quill';
 
@@ -219,7 +219,7 @@ export const useMarkdownEditor = () => {
     setOldContent(currentNote.content || '');
     setShowAcceptReject(false);
     try {
-      let formatted = await NoteService.formatNoteWithGemini(
+      let formatted = await noteService.formatNoteWithGemini(
         currentNote.content || ''
       );
       formatted = cleanGeminiHtml(formatted);

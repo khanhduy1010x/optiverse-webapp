@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { NoteFolderService } from '../../services/noteFolder.service';
-import { NoteService } from '../../services/note.service';
+import noteService from '../../services/note.service';
 import { ItemsState, RootItem } from '../../types/note/note.types';
 import { FolderItem } from '../../types/note/response/folder.response';
 import { NoteItem } from '../../types/note/response/note.response';
@@ -28,7 +28,7 @@ export const createFolder = createAsyncThunk(
 export const createNote = createAsyncThunk(
   'items/createNote',
   async ({ parentId, title }: { parentId: string | null; title: string }) => {
-    const note = await NoteService.handleCreateNote(parentId, title);
+    const note = await noteService.handleCreateNote(parentId, title);
     return { note, parentId };
   }
 );
@@ -39,7 +39,7 @@ export const deleteItem = createAsyncThunk(
     if (item.type === 'folder') {
       await NoteFolderService.handleDeleteFolder(item);
     } else {
-      await NoteService.handleDeleteNote(item);
+      await noteService.handleDeleteNote(item);
     }
     return {
       _id: item._id,
@@ -54,7 +54,7 @@ export const renameItem = createAsyncThunk(
     if (item.type === 'folder') {
       await NoteFolderService.handleRenameFolder(name, item._id);
     } else {
-      await NoteService.handleRenameNote(name, item);
+      await noteService.handleRenameNote(name, item);
     }
     return {
       _id: item._id,
@@ -75,7 +75,7 @@ export const saveNote = createAsyncThunk(
   }) => {
     // Lưu ý: Chức năng này không còn được sử dụng cho realtime sync
     // Nhưng vẫn giữ lại cho các trường hợp lưu thủ công hoặc các chức năng khác
-    const response = await NoteService.saveNote(note);
+    const response = await noteService.saveNote(note);
     return { response, shouldSetCurrent };
   }
 );
