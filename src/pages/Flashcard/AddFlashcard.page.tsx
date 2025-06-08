@@ -1,8 +1,8 @@
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../../components/common/Button.component';
 import { useState } from 'react';
-import { token } from '../../utils/apitest';
 import { clearStates } from '../../utils/clear-state.util';
+import flashcardService from '../../services/flashcard.service';
 
 export default function AddFlashcard() {
   const { deckId } = useParams();
@@ -16,29 +16,13 @@ export default function AddFlashcard() {
     e.preventDefault();
     console.log('Add flashcard:', { front, back });
 
-    try {
-      const response = await fetch(
-        `http://localhost:81/productivity/flashcard`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            deck_id: deckId,
-            front: front,
-            back: back,
-          }),
-        }
-      );
+    await flashcardService.createFlashcard({
+      deck_id: deckId ? deckId : '',
+      front: front,
+      back: back,
+    });
 
-      const result = (await response.json()).data;
-      console.log(result);
-      clear();
-    } catch (error) {
-      console.error('Lỗi khi fetch API:', error);
-    }
+    clear();
   };
 
   const clear = () => {

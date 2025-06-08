@@ -1,20 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import {
-  FlashcardDeck,
-  FlashcardDeckLoadingMock,
-  Flashcard as FlashcardType,
+  flashcardDeckMock,
+  FlashcardDeckResponse,
+  FlashcardResponse,
 } from '../../types/flashcard/response/flashcard.response';
-import { token } from '../../utils/apitest';
+import flashcardService from '../../services/flashcard.service';
 
 export function useFlashcardList() {
   const { deckId } = useParams();
-  const [flashcards, setFlashcards] = useState<FlashcardType[]>([]);
-  const [deck, setDeck] = useState<FlashcardDeck>(FlashcardDeckLoadingMock);
+  const [deck, setDeck] = useState<FlashcardDeckResponse>(flashcardDeckMock);
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [popupType, setPopupType] = useState<'edit' | 'delete' | null>(null);
-  const [popupItem, setPopupItem] = useState<FlashcardType | null>(null);
+  const [popupItem, setPopupItem] = useState<FlashcardResponse | null>(null);
 
   const toggleOptions = (id: string) => {
     setSelectedId(prev => (prev === id ? null : id));
@@ -27,43 +26,15 @@ export function useFlashcardList() {
     setPopupItem(null);
   };
 
-  const handleDelete = async (item: FlashcardType) => {
-    try {
-      await fetch(`http://localhost:81/productivity/flashcard/${item._id}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      await closePopupAndRefresh();
-    } catch (error) {
-      console.error('Lỗi khi fetch API:', error);
-    }
+  const handleDelete = async (item: FlashcardResponse) => {
+    await flashcardService.deleteFlashcard(item._id);
+    await closePopupAndRefresh();
   };
 
   const fetchData = async () => {
-    try {
-      const response = await fetch(
-        `http://localhost:81/productivity/flashcard-deck/${deckId}`,
-        {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      const result = (await response.json()).data;
-      setDeck(result);
-      setFlashcards(result.flashcards);
-    } catch (error) {
-      console.error('Lỗi khi fetch API:', error);
-    } finally {
-      setLoading(false);
-    }
+    const data = await flashcardService.getFlashcardList(deckId ? deckId : '');
+    setDeck(data);
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -72,7 +43,6 @@ export function useFlashcardList() {
 
   return {
     deck,
-    flashcards,
     loading,
     selectedId,
     popupType,

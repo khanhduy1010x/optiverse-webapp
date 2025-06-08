@@ -1,4 +1,3 @@
-// screens/FlashcardList.screen.tsx
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -14,7 +13,6 @@ export default function FlashcardList() {
   const navigate = useNavigate();
   const {
     deck,
-    flashcards,
     selectedId,
     popupType,
     popupItem,
@@ -56,33 +54,34 @@ export default function FlashcardList() {
 
       <div className="flex-col flex gap-8">
         <h3 className="text-lg">Flashcards</h3>
-        {flashcards.map(item => (
-          <div key={item._id} className="relative">
-            <Flashcard
-              front={item.front}
-              back={item.back}
-              onClick={() => toggleOptions(item._id)}
-            />
-            {selectedId === item._id && (
-              <div className="absolute right-4 top-4 z-10 bg-white border shadow-md rounded px-3 py-2 text-sm flex flex-col space-y-1">
-                <Button
-                  leftComponent={<Icon name="brush" />}
-                  onClick={() => {
-                    setPopupType('edit');
-                    setPopupItem(item);
-                  }}
-                />
-                <Button
-                  leftComponent={<Icon name="close" />}
-                  onClick={() => {
-                    setPopupType('delete');
-                    setPopupItem(item);
-                  }}
-                />
-              </div>
-            )}
-          </div>
-        ))}
+        {deck.flashcards &&
+          deck.flashcards.map(item => (
+            <div key={item._id} className="relative">
+              <Flashcard
+                front={item.front}
+                back={item.back}
+                onClick={() => toggleOptions(item._id)}
+              />
+              {selectedId === item._id && (
+                <div className="absolute right-4 top-4 z-10 bg-white border shadow-md rounded px-3 py-2 text-sm flex flex-col space-y-1">
+                  <Button
+                    leftComponent={<Icon name="brush" />}
+                    onClick={() => {
+                      setPopupType('edit');
+                      setPopupItem(item);
+                    }}
+                  />
+                  <Button
+                    leftComponent={<Icon name="close" />}
+                    onClick={() => {
+                      setPopupType('delete');
+                      setPopupItem(item);
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          ))}
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 h-2 bg-gray-300"></div>

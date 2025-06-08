@@ -5,7 +5,7 @@ import Icon from '../../components/common/Icon/Icon.component';
 import UpdateFlashcardDeck from './UpdateFlashcardDeck.screen';
 import AddFlashcardDeck from './AddFlashcardDeck.screen';
 import { useFlashcardDeckList } from '../../hooks/flashcard/useFlashcardDeckList.hook';
-import { FlashcardDeckMock } from '../../types/flashcard/response/flashcard.response';
+import { flashcardDeckMock } from '../../types/flashcard/response/flashcard.response';
 
 export default function FlashcardDeckList() {
   const navigate = useNavigate();
@@ -61,7 +61,7 @@ export default function FlashcardDeckList() {
                 <div className="absolute right-4 top-4 z-10 bg-white border shadow-md rounded px-3 py-2 text-sm flex flex-col space-y-1">
                   <Button
                     leftComponent={<Icon name="brush"></Icon>}
-                    onClick={() => {}}
+                    onClick={() => openPopup('edit', item)}
                   ></Button>
                   <Button
                     leftComponent={<Icon name="close"></Icon>}
@@ -79,7 +79,7 @@ export default function FlashcardDeckList() {
       <CircleButton
         name="add"
         onClick={() => {
-          openPopup('add', FlashcardDeckMock);
+          openPopup('add', flashcardDeckMock);
         }}
       ></CircleButton>
 
@@ -101,7 +101,6 @@ export default function FlashcardDeckList() {
               <>
                 <h3 className="text-lg font-semibold mb-2">Create deck</h3>
                 <AddFlashcardDeck
-                  item={popupItem}
                   clear={closePopupAndRefresh}
                 ></AddFlashcardDeck>
               </>
