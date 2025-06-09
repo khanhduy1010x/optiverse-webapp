@@ -11,6 +11,7 @@ interface ThemeContextProps {
   primaryColor: string;
   setPrimaryColor: (color?: string) => void;
   resetTheme: () => void;
+  toggleTheme: () => void;
 }
 
 export const ThemeContext = createContext<ThemeContextProps | undefined>(
@@ -46,9 +47,23 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     setTheme(generateThemeFromPrimary(defaultPrimaryColor));
   };
 
+  const toggleTheme = () => {
+    console.log(theme.colors.primary);
+    console.log(defaultPrimaryColor);
+
+    if (
+      theme.colors.primary.toUpperCase() !== defaultPrimaryColor.toUpperCase()
+    ) {
+      resetTheme();
+      return;
+    }
+
+    setPrimaryColor(COLORS.black500);
+  };
+
   return (
     <ThemeContext.Provider
-      value={{ theme, primaryColor, setPrimaryColor, resetTheme }}
+      value={{ theme, primaryColor, setPrimaryColor, resetTheme, toggleTheme }}
     >
       {children}
     </ThemeContext.Provider>

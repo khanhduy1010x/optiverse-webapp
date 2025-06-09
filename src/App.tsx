@@ -63,14 +63,7 @@ const AppContent: React.FC = () => {
       >
         <Routes>
           {/* Public routes - accessible without authentication */}
-          <Route
-            path="/template"
-            element={
-              <PublicRoute restricted={true}>
-                <TemplateComponent />
-              </PublicRoute>
-            }
-          />
+          <Route path="/template" element={<TemplateComponent />} />
           <Route
             path="/"
             element={

@@ -16,7 +16,7 @@ const View: React.FC<CustomViewProps> = ({
 
   const themeStyles = {
     backgroundColor: theme.colors.background,
-    color: theme.colors.primary,
+    color: theme.colors.text,
   };
 
   return (
