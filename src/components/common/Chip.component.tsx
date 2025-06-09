@@ -51,7 +51,7 @@ const FlashcardChips: React.FC<FlashcardChipsProps> = ({
   return (
     <View
       className={`transition-all duration-300 w-full flex gap-4 ${className}`}
-      style={{ ...style }}
+      style={{ backgroundColor: 'transparent', ...style }}
     >
       <Chip title={`${newFlashcard} New`} bgColor={COLORS.green700} />
       <Chip title={`${learningFlashcard} Learning`} bgColor={COLORS.red700} />

@@ -3,38 +3,49 @@ import { Button } from '../../components/common/Button.component';
 import { useState } from 'react';
 import { clearStates } from '../../utils/clear-state.util';
 import flashcardService from '../../services/flashcard.service';
+import { FlashcardForm } from '../../types/flashcard/flashcard.types';
+import { useForm } from 'react-hook-form';
+import { TextareaField } from '../../components/common/Input.component';
+import { isNotEmpty } from '../../utils/validate.util';
 
 export default function AddFlashcard() {
   const { deckId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const { title } = location.state;
-  const [front, setFront] = useState('');
-  const [back, setBack] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Add flashcard:', { front, back });
+  const { handleSubmit, control, watch, reset } = useForm<FlashcardForm>();
 
-    await flashcardService.createFlashcard({
-      deck_id: deckId ? deckId : '',
-      front: front,
-      back: back,
-    });
+  const onSubmit = async (data: FlashcardForm) => {
+    try {
+      console.log('Add flashcard:', { data });
 
-    clear();
-  };
+      await flashcardService.createFlashcard({
+        deck_id: deckId ? deckId : '',
+        front: watch('front'),
+        back: watch('back'),
+      });
 
-  const clear = () => {
-    clearStates([
-      [setFront, ''],
-      [setBack, ''],
-    ]);
+      reset(
+        {
+          front: '',
+          back: '',
+        },
+        {
+          keepErrors: false,
+          keepDirty: false,
+          keepTouched: false,
+          keepIsValidating: true,
+        }
+      );
+    } catch {
+      navigate(`/flashcard-deck`);
+    }
   };
 
   return (
     <form
-      onSubmit={handleSubmit}
+      onSubmit={handleSubmit(onSubmit)}
       className="w-full h-full bg-white p-8 rounded-xl shadow-sm"
     >
       <h1
@@ -53,27 +64,43 @@ export default function AddFlashcard() {
 
       {/* Front Side */}
       <div className="mb-4">
-        <label className="block text-gray-700 font-medium mb-1">Front</label>
-        <textarea
-          className="w-full p-3 border rounded-md"
-          placeholder="Enter the front side content..."
-          onChange={e => setFront(e.target.value)}
-          value={front}
+        <TextareaField<FlashcardForm>
+          name="front"
+          control={control}
+          label="Front"
+          placeholder="Enter front..."
+          rules={{
+            required: 'must be required',
+            minLength: {
+              value: 10,
+              message: 'at least 10 characters',
+            },
+            setValueAs: v => v.trim(),
+            validate: v => isNotEmpty(v) || 'must not be only white space',
+          }}
         />
       </div>
 
       {/* Back Side */}
       <div className="mb-6">
-        <label className="block text-gray-700 font-medium mb-1">Back</label>
-        <textarea
-          className="w-full p-3 border rounded-md"
-          placeholder="Enter the back side content..."
-          onChange={e => setBack(e.target.value)}
-          value={back}
+        <TextareaField<FlashcardForm>
+          name="back"
+          control={control}
+          label="Back"
+          placeholder="Enter back..."
+          rules={{
+            required: 'must be required',
+            minLength: {
+              value: 10,
+              message: 'at least 10 characters',
+            },
+            setValueAs: v => v.trim(),
+            validate: v => isNotEmpty(v) || 'must not be only white space',
+          }}
         />
       </div>
 
-      <Button title="Add flashcard" className="w-full"></Button>
+      <Button title="Add flashcard" className="w-full" inverted></Button>
     </form>
   );
 }

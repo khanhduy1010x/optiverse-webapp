@@ -2,45 +2,61 @@ import React from 'react';
 import { Button } from '../../components/common/Button.component';
 import { useUpdateFlashcard } from '../../hooks/flashcard/useUpdateFlashcard.hook';
 import { FlashcardResponse } from '../../types/flashcard/response/flashcard.response';
+import { TextareaField } from '../../components/common/Input.component';
+import { FlashcardForm } from '../../types/flashcard/flashcard.types';
+import { isNotEmpty } from '../../utils/validate.util';
 
 export default function UpdateFlashcard({
   item,
   clear,
 }: {
   item: FlashcardResponse;
-  clear: () => void;
+  clear: () => Promise<void>;
 }) {
-  const { front, back, setFront, setBack, handleSubmit } = useUpdateFlashcard(
-    item,
-    clear
-  );
+  const { onSubmit, control, handleSubmit } = useUpdateFlashcard(item, clear);
 
   return (
     <form
-      onSubmit={handleSubmit}
+      onSubmit={handleSubmit(onSubmit)}
       className="w-full h-full bg-white p-8 rounded-xl shadow-sm"
     >
       <div className="mb-4">
-        <label className="block text-gray-700 font-medium mb-1">Front</label>
-        <textarea
-          className="w-full p-3 border rounded-md"
-          placeholder="Enter the front side content..."
-          onChange={e => setFront(e.target.value)}
-          value={front}
+        <TextareaField<FlashcardForm>
+          name="front"
+          control={control}
+          label="Front"
+          placeholder="Enter front..."
+          rules={{
+            required: 'must be required',
+            minLength: {
+              value: 10,
+              message: 'at least 10 characters',
+            },
+            setValueAs: v => v.trim(),
+            validate: v => isNotEmpty(v) || 'must not be only white space',
+          }}
         />
       </div>
 
       <div className="mb-6">
-        <label className="block text-gray-700 font-medium mb-1">Back</label>
-        <textarea
-          className="w-full p-3 border rounded-md"
-          placeholder="Enter the back side content..."
-          onChange={e => setBack(e.target.value)}
-          value={back}
+        <TextareaField<FlashcardForm>
+          name="back"
+          control={control}
+          label="Back"
+          placeholder="Enter back..."
+          rules={{
+            required: 'must be required',
+            minLength: {
+              value: 10,
+              message: 'at least 10 characters',
+            },
+            setValueAs: v => v.trim(),
+            validate: v => isNotEmpty(v) || 'must not be only white space',
+          }}
         />
       </div>
 
-      <Button title="Update flashcard" className="w-full" />
+      <Button title="Update flashcard" className="w-full" inverted />
     </form>
   );
 }
