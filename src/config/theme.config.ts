@@ -1,7 +1,4 @@
-const COLORS = {
-  white900: '#FFFFFF',
-  black500: '#1A202C',
-};
+import COLORS from '../constants/colors.constant';
 
 export const lightTheme = {
   background: COLORS.white900,

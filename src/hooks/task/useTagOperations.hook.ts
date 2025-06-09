@@ -1,12 +1,7 @@
 import { Task } from '../../types/task/response/task.response';
 import { Tag } from '../../types/task/response/tag.response';
-import {
-  createTaskTag,
-  deleteTaskTag,
-  createTag,
-  deleteTag,
-  fetchAllUserTags,
-} from '../../services/tag.service';
+import tagService from '../../services/tag.service';
+import taskService from '../../services/task.service';
 
 export function useTagOperations(
   tasks: Task[],
@@ -28,7 +23,7 @@ export function useTagOperations(
   // Fetch all user tags
   const fetchUserTags = async () => {
     try {
-      const tags = await fetchAllUserTags();
+      const tags = await tagService.fetchAllUserTags();
       setAllTags(tags);
       return tags;
     } catch (error) {
@@ -75,7 +70,7 @@ export function useTagOperations(
         createTagButton.textContent = 'Adding...';
       }
 
-      const newTag = await createTag({
+      const newTag = await tagService.createTag({
         name: newTagName,
         color: newTagColor,
       });
@@ -132,7 +127,7 @@ export function useTagOperations(
       tags.map(tag => tag.name)
     );
     setFilterTags(tags);
-    await filterTasksByTags(tags);
+    await taskService.filterTasksByTags(tags.map(tag => tag._id));
   };
 
   // Handle sort change
@@ -198,7 +193,7 @@ export function useTagOperations(
       setTaskTags(updatedTaskTags);
 
       // Delete the tag from the server
-      await deleteTag(tagToDelete._id);
+      await tagService.deleteTag(tagToDelete._id);
 
       // Close the confirmation dialog
       setShowDeleteTagConfirm(false);
@@ -252,7 +247,7 @@ export function useTagOperations(
         console.log(`Removing ${tagsToRemove.length} tags from task ${taskId}`);
         const removeTagPromises = tagsToRemove
           .filter(tag => tag.taskTagId) // Make sure we have the taskTagId
-          .map(tag => deleteTaskTag(tag.taskTagId!));
+          .map(tag => tagService.deleteTaskTag(tag.taskTagId!));
 
         await Promise.all(removeTagPromises);
       }
@@ -261,7 +256,7 @@ export function useTagOperations(
       if (tagsToAdd.length > 0) {
         console.log(`Adding ${tagsToAdd.length} tags to task ${taskId}`);
         const addTagPromises = tagsToAdd.map(tag =>
-          createTaskTag(taskId, tag._id)
+          tagService.createTaskTag(taskId, tag._id)
         );
 
         await Promise.all(addTagPromises);

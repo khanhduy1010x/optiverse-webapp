@@ -3,152 +3,160 @@ import { Tag, TaskTagRelation } from '../types/task/response/tag.response';
 import { Task } from '../types/task/response/task.response';
 import api from './api.service';
 
-// Fetch all tags for the current user
-export const fetchAllUserTags = async (): Promise<Tag[]> => {
-  try {
-    const response = await api.get<ApiResponse<Tag[]>>('/productivity/tag/all');
-    console.log('Tags response:', response.data);
+class TagService {
+  // Fetch all tags for the current user
+  async fetchAllUserTags(): Promise<Tag[]> {
+    try {
+      const response = await api.get<ApiResponse<Tag[]>>(
+        '/productivity/tag/all'
+      );
+      console.log('Tags response:', response.data);
 
-    // Normalize data to ensure consistent field names
-    if (response.data && response.data.data) {
-      const tags = Array.isArray(response.data.data) ? response.data.data : [];
-      return tags.map(tag => ({
-        ...tag,
-        createdAt: tag.createdAt || tag.created_at,
-        updatedAt: tag.updatedAt || tag.updated_at,
-      }));
+      // Normalize data to ensure consistent field names
+      if (response.data && response.data.data) {
+        const tags = Array.isArray(response.data.data)
+          ? response.data.data
+          : [];
+        return tags.map(tag => ({
+          ...tag,
+          createdAt: tag.createdAt || tag.created_at,
+          updatedAt: tag.updatedAt || tag.updated_at,
+        }));
+      }
+      return [];
+    } catch (error) {
+      console.error('Error fetching tags:', error);
+      return [];
     }
-    return [];
-  } catch (error) {
-    console.error('Error fetching tags:', error);
-    return [];
   }
-};
 
-// Create a new tag
-export const createTag = async (
-  tagData: Omit<Tag, '_id' | 'user_id'>
-): Promise<Tag> => {
-  try {
-    const response = await api.post<ApiResponse<{ tag: Tag }>>(
-      '/productivity/tag',
-      tagData
-    );
-    if (response.data && response.data.data && response.data.data.tag) {
-      const tag = response.data.data.tag;
-      return {
-        ...tag,
-        createdAt: tag.createdAt || tag.created_at,
-        updatedAt: tag.updatedAt || tag.updated_at,
-      };
+  // Create a new tag
+  async createTag(tagData: Omit<Tag, '_id' | 'user_id'>): Promise<Tag> {
+    try {
+      const response = await api.post<ApiResponse<{ tag: Tag }>>(
+        '/productivity/tag',
+        tagData
+      );
+      if (response.data && response.data.data && response.data.data.tag) {
+        const tag = response.data.data.tag;
+        return {
+          ...tag,
+          createdAt: tag.createdAt || tag.created_at,
+          updatedAt: tag.updatedAt || tag.updated_at,
+        };
+      }
+      throw new Error('Failed to create tag');
+    } catch (error) {
+      console.error('Error creating tag:', error);
+      throw error;
     }
-    throw new Error('Failed to create tag');
-  } catch (error) {
-    console.error('Error creating tag:', error);
-    throw error;
   }
-};
 
-// Delete a tag
-export const deleteTag = async (tagId: string): Promise<void> => {
-  try {
-    await api.delete(`/productivity/tag/${tagId}`);
-  } catch (error) {
-    console.error(`Error deleting tag ${tagId}:`, error);
-    throw error;
+  // Delete a tag
+  async deleteTag(tagId: string): Promise<void> {
+    try {
+      await api.delete(`/productivity/tag/${tagId}`);
+    } catch (error) {
+      console.error(`Error deleting tag ${tagId}:`, error);
+      throw error;
+    }
   }
-};
 
-// Create a task-tag association
-export const createTaskTag = async (taskId: string, tagId: string) => {
-  try {
-    const response = await api.post<ApiResponse<{ taskTag: TaskTagRelation }>>(
-      '/productivity/task-tag',
-      {
+  // Create a task-tag association
+  async createTaskTag(taskId: string, tagId: string) {
+    try {
+      const response = await api.post<
+        ApiResponse<{ taskTag: TaskTagRelation }>
+      >('/productivity/task-tag', {
         task_id: taskId,
         tag_id: tagId,
+      });
+
+      if (response.data && response.data.data && response.data.data.taskTag) {
+        return response.data.data.taskTag;
       }
-    );
-
-    if (response.data && response.data.data && response.data.data.taskTag) {
-      return response.data.data.taskTag;
+      throw new Error('Failed to associate tag with task');
+    } catch (error) {
+      console.error(
+        `Error associating tag ${tagId} with task ${taskId}:`,
+        error
+      );
+      throw error;
     }
-    throw new Error('Failed to associate tag with task');
-  } catch (error) {
-    console.error(`Error associating tag ${tagId} with task ${taskId}:`, error);
-    throw error;
   }
-};
 
-// Delete a task-tag association
-export const deleteTaskTag = async (taskTagId: string): Promise<void> => {
-  try {
-    await api.delete(`/productivity/task-tag/${taskTagId}`);
-  } catch (error) {
-    console.error(`Error deleting task-tag association ${taskTagId}:`, error);
-    throw error;
-  }
-};
-
-// Fetch tasks by tag ID
-export const fetchTasksByTagId = async (tagId: string): Promise<Task[]> => {
-  try {
-    // Get tag details which should include the tasks virtual field
-    const response = await api.get<ApiResponse<{ tag: Tag }>>(
-      `/productivity/tag/${tagId}`
-    );
-    if (
-      response.data &&
-      response.data.data &&
-      response.data.data.tag &&
-      response.data.data.tag.tasks
-    ) {
-      const tasks = response.data.data.tag.tasks;
-
-      // Map the tasks to a more usable format
-      return tasks
-        .map((taskRelation: TaskTagRelation) => {
-          if (taskRelation.task) {
-            return {
-              ...taskRelation.task,
-              createdAt:
-                taskRelation.task.createdAt || taskRelation.task.created_at,
-              updatedAt:
-                taskRelation.task.updatedAt || taskRelation.task.updated_at,
-              taskTagId: taskRelation._id, // Store the task-tag relation ID
-            } as Task;
-          }
-          return null;
-        })
-        .filter((task): task is Task => task !== null);
+  // Delete a task-tag association
+  async deleteTaskTag(taskTagId: string): Promise<void> {
+    try {
+      await api.delete(`/productivity/task-tag/${taskTagId}`);
+    } catch (error) {
+      console.error(`Error deleting task-tag association ${taskTagId}:`, error);
+      throw error;
     }
-    return [];
-  } catch (error) {
-    console.error(`Error fetching tasks for tag ${tagId}:`, error);
-    return [];
   }
-};
 
-// Fetch tasks by multiple tag IDs
-export const fetchTasksByMultipleTags = async (
-  tagIds: string[]
-): Promise<Task[]> => {
-  try {
-    const response = await api.post<ApiResponse<Task[]>>(
-      '/productivity/task/filter-by-tags',
-      { tagIds }
-    );
-    if (response.data && response.data.data) {
-      const tasks = Array.isArray(response.data.data) ? response.data.data : [];
-      return tasks.map((task: Task) => ({
-        ...task,
-        createdAt: task.createdAt || task.created_at,
-        updatedAt: task.updatedAt || task.updated_at,
-      }));
+  // Fetch tasks by tag ID
+  async fetchTasksByTagId(tagId: string): Promise<Task[]> {
+    try {
+      // Get tag details which should include the tasks virtual field
+      const response = await api.get<ApiResponse<{ tag: Tag }>>(
+        `/productivity/tag/${tagId}`
+      );
+      if (
+        response.data &&
+        response.data.data &&
+        response.data.data.tag &&
+        response.data.data.tag.tasks
+      ) {
+        const tasks = response.data.data.tag.tasks;
+
+        // Map the tasks to a more usable format
+        return tasks
+          .map((taskRelation: TaskTagRelation) => {
+            if (taskRelation.task) {
+              return {
+                ...taskRelation.task,
+                createdAt:
+                  taskRelation.task.createdAt || taskRelation.task.created_at,
+                updatedAt:
+                  taskRelation.task.updatedAt || taskRelation.task.updated_at,
+                taskTagId: taskRelation._id, // Store the task-tag relation ID
+              } as Task;
+            }
+            return null;
+          })
+          .filter((task): task is Task => task !== null);
+      }
+      return [];
+    } catch (error) {
+      console.error(`Error fetching tasks for tag ${tagId}:`, error);
+      return [];
     }
-    return [];
-  } catch (error) {
-    console.error('Error fetching tasks by multiple tags:', error);
-    return [];
   }
-};
+
+  // Fetch tasks by multiple tag IDs
+  async fetchTasksByMultipleTags(tagIds: string[]): Promise<Task[]> {
+    try {
+      const response = await api.post<ApiResponse<Task[]>>(
+        '/productivity/task/filter-by-tags',
+        { tagIds }
+      );
+      if (response.data && response.data.data) {
+        const tasks = Array.isArray(response.data.data)
+          ? response.data.data
+          : [];
+        return tasks.map((task: Task) => ({
+          ...task,
+          createdAt: task.createdAt || task.created_at,
+          updatedAt: task.updatedAt || task.updated_at,
+        }));
+      }
+      return [];
+    } catch (error) {
+      console.error('Error fetching tasks by multiple tags:', error);
+      return [];
+    }
+  }
+}
+
+export default new TagService();

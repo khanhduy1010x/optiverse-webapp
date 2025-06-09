@@ -6,6 +6,7 @@ import {
   handleChangeOTP,
   handleKeyDownOTP,
 } from '../../utils/keyboard/keyboard-handler.util';
+import authService from '../../services/auth.service';
 
 const VerifyCodeFormRegister: React.FC<VerifyCodeFormProps> = ({
   onSwitch,
@@ -22,31 +23,14 @@ const VerifyCodeFormRegister: React.FC<VerifyCodeFormProps> = ({
       return;
     }
     console.log('Verifying code:', fullCode);
-    try {
-      const response = await fetch(
-        `http://localhost:81/core/auth/verify-account`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email: data,
-            otp: fullCode,
-            isVerify: true,
-          }),
-        }
-      );
 
-      const result = await response.json();
-      if (result.code !== 1000) {
-        throw new Error(result.message);
-      }
+    await authService.verifyCode({
+      email: data,
+      otp: fullCode,
+      type: 'register',
+    });
 
-      onSwitch('login');
-    } catch (error) {
-      console.error('Lỗi khi fetch API:', error);
-    }
+    onSwitch('login');
   };
 
   const handleResend = () => {

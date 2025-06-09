@@ -5,8 +5,10 @@ import {
   FlashcardButton,
 } from '../../components/common/Button.component';
 import COLORS from '../../constants/colors.constant';
+import { useNavigate } from 'react-router-dom';
 
 export default function FlashcardReview() {
+  const navigate = useNavigate();
   const {
     title,
     flashcardDeck,
@@ -18,6 +20,13 @@ export default function FlashcardReview() {
 
   return (
     <div className="flex flex-col items-center justify-center w-full min-h-screen px-4 py-8 bg-gray-100">
+      <h1
+        className="w-1/2 text-xl mb-6 text-blue-600 cursor-pointer"
+        onClick={() => navigate(-1)}
+      >
+        Back
+      </h1>
+
       <h1 className="text-2xl font-bold mb-6">{title}</h1>
 
       <div className="w-1/2 flex flex-row">

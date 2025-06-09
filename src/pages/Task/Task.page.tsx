@@ -16,7 +16,7 @@ import { useTagOperations } from '../../hooks/task/useTagOperations.hook';
 import { useTaskForm } from '../../hooks/task/useTaskForm.hook';
 import { useSearchFilter } from '../../hooks/task/useSearchFilter.hook';
 import { Tag } from '../../types/task/response/tag.response';
-import { createTaskTag, deleteTaskTag } from '../../services/tag.service';
+import tagService from '../../services/tag.service';
 
 const TaskPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -70,7 +70,7 @@ const TaskPage: React.FC = () => {
     status,
     setStatus,
     priority,
-    setPriority
+    setPriority,
   } = useTaskState();
 
   // Define utility function for sorting tasks
@@ -122,7 +122,7 @@ const TaskPage: React.FC = () => {
     setFilterTags,
     taskTags,
     setTaskTags,
-    async (tags) => {
+    async tags => {
       // Implementation of filterTasksByTags
       // For now, just filter and update filteredTasks
       if (tags.length === 0) {
@@ -140,12 +140,13 @@ const TaskPage: React.FC = () => {
     sortTasksWithCompletedAtBottom
   );
 
-  const { fetchUserTags, handleCreateNewTag, handleFilterByTags } = tagOperations;
+  const { fetchUserTags, handleCreateNewTag, handleFilterByTags } =
+    tagOperations;
 
   // Create a function to confirm delete tag
   const confirmDeleteTag = (tag: Tag) => {
     // Implementation would set tag to delete and show confirmation
-    console.log("Confirming delete for tag:", tag);
+    console.log('Confirming delete for tag:', tag);
   };
 
   // Task form
@@ -159,9 +160,7 @@ const TaskPage: React.FC = () => {
         // Tìm tags cần xóa (có trong current nhưng không có trong selected)
         const tagsToRemove = currentTags.filter(
           currentTag =>
-            !newTags.some(
-              selectedTag => selectedTag._id === currentTag._id
-            )
+            !newTags.some(selectedTag => selectedTag._id === currentTag._id)
         );
 
         // Tìm tags cần thêm (có trong selected nhưng không có trong current)
@@ -181,10 +180,12 @@ const TaskPage: React.FC = () => {
 
         // Xóa tags không được chọn nữa
         if (tagsToRemove.length > 0) {
-          console.log(`Removing ${tagsToRemove.length} tags from task ${taskId}`);
+          console.log(
+            `Removing ${tagsToRemove.length} tags from task ${taskId}`
+          );
           const removeTagPromises = tagsToRemove
             .filter(tag => tag.taskTagId) // Make sure we have the taskTagId
-            .map(tag => deleteTaskTag(tag.taskTagId!));
+            .map(tag => tagService.deleteTaskTag(tag.taskTagId!));
 
           await Promise.all(removeTagPromises);
         }
@@ -193,7 +194,7 @@ const TaskPage: React.FC = () => {
         if (tagsToAdd.length > 0) {
           console.log(`Adding ${tagsToAdd.length} tags to task ${taskId}`);
           const addTagPromises = tagsToAdd.map(tag =>
-            createTaskTag(taskId, tag._id)
+            tagService.createTaskTag(taskId, tag._id)
           );
 
           await Promise.all(addTagPromises);
@@ -213,11 +214,7 @@ const TaskPage: React.FC = () => {
     }
   );
 
-  const {
-    handleEditTask,
-    handleSaveTask,
-    resetForm
-  } = taskForm;
+  const { handleEditTask, handleSaveTask, resetForm } = taskForm;
 
   // Search filter
   const searchFilter = useSearchFilter(
@@ -298,7 +295,7 @@ const TaskPage: React.FC = () => {
             handleTaskClick={handleTaskClick}
             handleTaskUpdate={handleTaskUpdate}
             confirmDeleteTask={confirmDeleteTask}
-            handleEditTask={(task) => handleEditTask(task, setSelectedTags)}
+            handleEditTask={task => handleEditTask(task, setSelectedTags)}
             loading={loading}
             setShowPopup={setShowPopup}
             searchQuery={searchQuery}
@@ -311,7 +308,7 @@ const TaskPage: React.FC = () => {
               selectedTask={selectedTask}
               taskTags={taskTags}
               setShowTaskDetail={setShowTaskDetail}
-              handleEditTask={(task) => handleEditTask(task, setSelectedTags)}
+              handleEditTask={task => handleEditTask(task, setSelectedTags)}
             />
           )}
 
@@ -319,9 +316,11 @@ const TaskPage: React.FC = () => {
           {showPopup && (
             <TaskForm
               title={title}
-              setTitle={(newTitle) => {
+              setTitle={newTitle => {
                 console.log('Setting title from TaskForm:', newTitle);
-                setTitle(typeof newTitle === 'function' ? newTitle(title) : newTitle);
+                setTitle(
+                  typeof newTitle === 'function' ? newTitle(title) : newTitle
+                );
               }}
               description={description}
               setDescription={setDescription}
@@ -341,10 +340,17 @@ const TaskPage: React.FC = () => {
               newTagColor={newTagColor}
               setNewTagColor={setNewTagColor}
               handleCreateNewTag={handleCreateNewTag}
-              handleSaveTask={(formTitle) => {
+              handleSaveTask={formTitle => {
                 const formTitleStr = formTitle ? String(formTitle) : '';
-                console.log('Calling handleSaveTask with title from task page:', formTitleStr);
-                return handleSaveTask(setShowPopup, setSelectedTags, formTitleStr);
+                console.log(
+                  'Calling handleSaveTask with title from task page:',
+                  formTitleStr
+                );
+                return handleSaveTask(
+                  setShowPopup,
+                  setSelectedTags,
+                  formTitleStr
+                );
               }}
             />
           )}
@@ -360,7 +366,7 @@ const TaskPage: React.FC = () => {
               }}
               onConfirm={() => {
                 // Handle delete confirmation
-                console.log("Confirming delete for task:", taskToDelete);
+                console.log('Confirming delete for task:', taskToDelete);
                 setShowDeleteConfirm(false);
                 // Implementation should call API
               }}

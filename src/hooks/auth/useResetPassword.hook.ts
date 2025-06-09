@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import authService from '../../services/auth.service';
 
 interface UseResetPasswordFormProps {
   token: string;
@@ -24,28 +25,13 @@ export function useResetPasswordForm({
     }
 
     setLoading(true);
-    try {
-      const res = await fetch('http://localhost:81/core/auth/reset-password', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ newPassword }),
-      });
-
-      const result = await res.json();
-      if (!res.ok)
-        throw new Error(result.message || 'Failed to reset password');
-
-      setMessage('Password reset successfully!');
-      setTimeout(onSuccess, 1500);
-    } catch (err) {
-      const error = err as Error;
-      setMessage(error.message || 'An error occurred');
-    } finally {
-      setLoading(false);
-    }
+    await authService.resetPassword({
+      newPassword,
+      token,
+    });
+    setMessage('Password reset successfully!');
+    setTimeout(onSuccess, 1500);
+    setLoading(false);
   };
 
   return {

@@ -7,7 +7,7 @@ import { useUserProfile } from '../../hooks/profile/useUserProfile.hook';
 import ChangePasswordPopup from './ChangePasswordPopup.screen';
 
 export default function UserProfile() {
-  const { themeType, toggleTheme } = useTheme();
+  const { theme, toggleTheme } = useTheme();
   const {
     avatar,
     showChangePasswordPopup,
@@ -33,7 +33,7 @@ export default function UserProfile() {
     setShowAvatarModal,
     handleViewAvatar,
     handleNameChange,
-    handleKeyPress
+    handleKeyPress,
   } = useUserProfile();
 
   return (
@@ -44,23 +44,31 @@ export default function UserProfile() {
           className="fixed inset-0 z-50 flex items-center justify-center"
           onClick={() => setShowAvatarModal(false)}
         >
-          <div
-            className="relative"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="relative" onClick={e => e.stopPropagation()}>
             <button
               onClick={() => setShowAvatarModal(false)}
               className="absolute -top-4 -right-4 w-8 h-8 bg-black/40 hover:bg-black/60 rounded-full flex items-center justify-center text-white/90 hover:text-white z-10 transition-all duration-200 border border-white/20 backdrop-blur-sm"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
             <img
               src={avatar}
               alt="User Avatar"
               className="max-w-[90vw] max-h-[80vh] object-contain rounded-lg"
-              onClick={(e) => e.stopPropagation()}
+              onClick={e => e.stopPropagation()}
             />
           </div>
         </div>
@@ -78,7 +86,11 @@ export default function UserProfile() {
                   hover:bg-gray-100`}
               >
                 Profile
-                <IconProps name="chevron" size={selectedMenu === 'profile' ? 28 : 20} className="ml-2" />
+                <IconProps
+                  name="chevron"
+                  size={selectedMenu === 'profile' ? 28 : 20}
+                  className="ml-2"
+                />
               </button>
             </li>
             <li>
@@ -89,7 +101,11 @@ export default function UserProfile() {
                   hover:bg-gray-100`}
               >
                 Achievements
-                <IconProps name="chevron" size={selectedMenu === 'achievements' ? 28 : 20} className="ml-2" />
+                <IconProps
+                  name="chevron"
+                  size={selectedMenu === 'achievements' ? 28 : 20}
+                  className="ml-2"
+                />
               </button>
             </li>
             <li>
@@ -100,18 +116,28 @@ export default function UserProfile() {
                   hover:bg-gray-100`}
               >
                 Friends
-                <IconProps name="chevron" size={selectedMenu === 'friends' ? 28 : 20} className="ml-2" />
+                <IconProps
+                  name="chevron"
+                  size={selectedMenu === 'friends' ? 28 : 20}
+                  className="ml-2"
+                />
               </button>
             </li>
             <li>
               <button
-                onClick={() => handleNavigate('login-sessions', '/login-session')}
+                onClick={() =>
+                  handleNavigate('login-sessions', '/login-session')
+                }
                 className={`w-full text-left flex justify-between items-center py-2 px-3 rounded 
                   ${selectedMenu === 'login-sessions' ? 'bg-gray-200 font-bold text-lg' : 'text-gray-500'} 
                   hover:bg-gray-100`}
               >
                 Login Sessions
-                <IconProps name="chevron" size={selectedMenu === 'login-sessions' ? 28 : 20} className="ml-2" />
+                <IconProps
+                  name="chevron"
+                  size={selectedMenu === 'login-sessions' ? 28 : 20}
+                  className="ml-2"
+                />
               </button>
             </li>
           </ul>
@@ -119,13 +145,24 @@ export default function UserProfile() {
 
         {/* Main Content */}
         <View className="flex-1 p-8 border-l border-gray-300 dark:border-gray-600">
-          <Text textStyle="regular32" className="mb-4 text-gray-800 text:bold">My Profile</Text>
+          <Text textStyle="regular32" className="mb-4 text-gray-800 text:bold">
+            My Profile
+          </Text>
           <hr className="mb-6 border-gray-200" />
 
           {error && (
             <div className="mb-4 p-3 bg-red-100 text-red-700 rounded flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 mr-2"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                  clipRule="evenodd"
+                />
               </svg>
               {error}
             </div>
@@ -143,7 +180,11 @@ export default function UserProfile() {
                   onMouseEnter={() => setShowAvatarMenu(true)}
                   onMouseLeave={() => setShowAvatarMenu(false)}
                 >
-                  <img src={avatar} alt="User Avatar" className="w-full h-full object-cover" />
+                  <img
+                    src={avatar}
+                    alt="User Avatar"
+                    className="w-full h-full object-cover"
+                  />
 
                   {/* Hover Menu */}
                   {showAvatarMenu && (
@@ -152,9 +193,25 @@ export default function UserProfile() {
                         onClick={handleViewAvatar}
                         className="text-white text-sm hover:text-blue-300 transition-colors flex items-center gap-1"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                          />
                         </svg>
                         View
                       </button>
@@ -163,8 +220,19 @@ export default function UserProfile() {
                         htmlFor="avatarUpload"
                         className="text-white text-sm hover:text-blue-300 transition-colors cursor-pointer flex items-center gap-1"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12" />
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12"
+                          />
                         </svg>
                         Change
                       </label>
@@ -233,7 +301,17 @@ export default function UserProfile() {
                           className="absolute right-3 top-1/2 transform -translate-y-1/2"
                         >
                           <div className="w-6 h-6 bg-blue-500 rounded flex items-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="white"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
                               <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
                             </svg>
                           </div>
@@ -263,7 +341,9 @@ export default function UserProfile() {
             </View>
           )}
 
-          <Text textStyle="regular20" className="mb-4 font-semibold">Others settings</Text>
+          <Text textStyle="regular20" className="mb-4 font-semibold">
+            Others settings
+          </Text>
           <hr className="mb-6 border-gray-300 dark:border-gray-600" />
 
           <View className="space-y-6">
@@ -275,18 +355,27 @@ export default function UserProfile() {
             </View>
             <View className="flex items-center justify-between">
               <Text>Theme</Text>
-              <button onClick={toggleTheme} className="w-32 p-1 border border-dark-300 rounded dark:bg-dark-800 dark:text-dark-200 hover:bg-dark-300 dark:hover:bg-dark-600">
-                {themeType === 'light' ? 'Light' : 'Dark'}
+              <button
+                onClick={toggleTheme}
+                className="w-32 p-1 border border-dark-300 rounded dark:bg-dark-800 dark:text-dark-200 hover:bg-dark-300 dark:hover:bg-dark-600"
+              >
+                {theme.colors.primary}
               </button>
             </View>
             <View className="flex items-center justify-between">
               <View>
                 <Text>Delete my account</Text>
-                <Text textStyle="regular12" className="block text-sm text-gray-500 dark:text-gray-400">
-                  Permanently delete the account and remove access from all workspaces.
+                <Text
+                  textStyle="regular12"
+                  className="block text-sm text-gray-500 dark:text-gray-400"
+                >
+                  Permanently delete the account and remove access from all
+                  workspaces.
                 </Text>
               </View>
-              <button className="bg-red-500 text-white py-1 px-4 rounded hover:bg-red-600">Delete</button>
+              <button className="bg-red-500 text-white py-1 px-4 rounded hover:bg-red-600">
+                Delete
+              </button>
             </View>
             <View className="flex justify-end mt-2">
               <button
@@ -301,7 +390,11 @@ export default function UserProfile() {
         </View>
       </View>
 
-      {showChangePasswordPopup && <ChangePasswordPopup onClose={() => setShowChangePasswordPopup(false)} />}
+      {showChangePasswordPopup && (
+        <ChangePasswordPopup
+          onClose={() => setShowChangePasswordPopup(false)}
+        />
+      )}
     </View>
   );
 }

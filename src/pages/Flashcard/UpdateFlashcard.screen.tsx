@@ -1,13 +1,13 @@
 import React from 'react';
-import { Flashcard } from '../../types/flashcard/response/flashcard.response';
 import { Button } from '../../components/common/Button.component';
 import { useUpdateFlashcard } from '../../hooks/flashcard/useUpdateFlashcard.hook';
+import { FlashcardResponse } from '../../types/flashcard/response/flashcard.response';
 
 export default function UpdateFlashcard({
   item,
   clear,
 }: {
-  item: Flashcard;
+  item: FlashcardResponse;
   clear: () => void;
 }) {
   const { front, back, setFront, setBack, handleSubmit } = useUpdateFlashcard(

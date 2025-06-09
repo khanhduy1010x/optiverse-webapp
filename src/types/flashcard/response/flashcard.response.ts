@@ -1,108 +1,76 @@
-export interface FlashcardDeck {
-  _id: string;
+import { WithSomeRequired } from '../../common/common.type';
+import { FlashcardBase } from '../entities/flashcard.entity';
+import { FlashcardDeckBase } from '../entities/flashcardDeck.entity';
+import { ReviewSessionBase } from '../entities/reviewSession.entity';
 
-  user_id: string;
-
-  title: string;
-
-  description?: string;
-
+interface ReviewLearning {
   lastReview: number;
   newCount: number;
   learningCount: number;
   reviewingCount: number;
-
-  flashcards?: Flashcard[];
 }
 
-// Mock data for flashcard deck
-export const FlashcardDeckMock: FlashcardDeck = {
+export interface ReviewResponse
+  extends WithSomeRequired<
+    ReviewSessionBase,
+    | '_id'
+    | 'flashcard_id'
+    | 'user_id'
+    | 'ease_factor'
+    | 'interval'
+    | 'last_review'
+    | 'next_review'
+    | 'repetition_count'
+    | 'quality'
+  > {}
+
+export interface FlashcardResponse
+  extends WithSomeRequired<
+    FlashcardBase,
+    '_id' | 'deck_id' | 'front' | 'back' | 'review'
+  > {
+  review: ReviewResponse;
+}
+
+export interface FlashcardDeckResponse
+  extends ReviewLearning,
+    WithSomeRequired<FlashcardDeckBase, '_id' | 'user_id' | 'title'> {
+  flashcards: FlashcardResponse[];
+}
+
+export const reviewMock: ReviewResponse = {
   _id: '',
-  title: '',
-  lastReview: 0,
-  learningCount: 0,
-  newCount: 0,
-  reviewingCount: 0,
+  flashcard_id: '',
   user_id: '',
+  ease_factor: 0,
+  interval: 0,
+  last_review: new Date(),
+  next_review: new Date(),
+  repetition_count: 0,
+  quality: 0,
 };
-export const FlashcardDeckLoadingMock: FlashcardDeck = {
-  ...FlashcardDeckMock,
-  title: 'Loading',
-};
-export const initFlashcardDeckMock: FlashcardDeck = {
+
+export const flashcardMock: FlashcardResponse = {
   _id: '',
-  lastReview: 0,
-  learningCount: 0,
-  newCount: 0,
-  reviewingCount: 0,
-  title: '',
-  user_id: '',
-  description: '',
-  flashcards: [
-    {
-      _id: '',
-      front: '',
-      back: '',
-      deck_id: '',
-      review: {
-        _id: '',
-        flashcard_id: '',
-        user_id: '',
-        ease_factor: 0,
-        interval: 0,
-        last_review: new Date(),
-        next_review: new Date(),
-        repetition_count: 0,
-        quality: 0,
-      },
-    },
-  ],
-};
-//End of mock data for flashcard deck
-export interface Flashcard {
-  _id: string;
-
-  deck_id: string;
-
-  front: string;
-
-  back: string;
-
-  review: FlashcardReview;
-}
-export interface FlashcardReview {
-  _id: string;
-
-  flashcard_id: string;
-
-  user_id: string;
-
-  last_review: Date;
-
-  next_review: Date;
-
-  interval: number;
-
-  ease_factor: number;
-
-  repetition_count: number;
-
-  quality: number;
-}
-export const FlashcardMock: Flashcard = {
-  _id: '',
+  deck_id: '',
   front: '',
   back: '',
-  deck_id: '',
   review: {
-    _id: '',
-    flashcard_id: '',
-    user_id: '',
-    ease_factor: 0,
-    interval: 0,
-    last_review: new Date(),
-    next_review: new Date(),
-    repetition_count: 0,
-    quality: 0,
+    ...reviewMock,
   },
+};
+
+export const flashcardDeckMock: FlashcardDeckResponse = {
+  _id: '',
+  title: '',
+  user_id: '',
+  flashcards: [
+    {
+      ...flashcardMock,
+    },
+  ],
+  lastReview: 0,
+  learningCount: 0,
+  newCount: 0,
+  reviewingCount: 0,
 };

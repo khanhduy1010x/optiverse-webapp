@@ -10,7 +10,7 @@ const COLORS = {
   red700: "#CB363B",
   red500: "#E23C42",
   red400: "#E86368",
-  pirple100: "#E5D4F4",
+  purple100: "#E5D4F4",
   green700: "#357A38",
   green500: "#4CAF50",
   green300: "#82C785",

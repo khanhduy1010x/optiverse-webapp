@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { token } from '../../utils/apitest';
+import focusService from '../../services/focus.service';
 
 const FOCUS_DURATION = 25 * 60;
 const BREAK_DURATION = 5 * 60;
@@ -31,16 +31,9 @@ export function useFocusTimer() {
     if (!startTime) return;
 
     const end = new Date();
-    await fetch('http://localhost:81/productivity/focus-session', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        start_time: startTime.toISOString(),
-        end_time: end.toISOString(),
-      }),
+    await focusService.createFocusTimer({
+      start_time: startTime,
+      end_time: end,
     });
 
     if (intervalId) clearInterval(intervalId);

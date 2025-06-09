@@ -37,7 +37,6 @@ const SliderBar: React.FC<SliderBarProps> = ({ activeSection, onNavClick }) => {
         >
           <Icon
             name="sidebar"
-            transparent={true}
             className="text-gray-600 flex items-center justify-center dark:text-gray-300"
           />
         </button>
@@ -53,7 +52,6 @@ const SliderBar: React.FC<SliderBarProps> = ({ activeSection, onNavClick }) => {
                     <Icon
                       name={section.icon || 'home'}
                       size={24}
-                      transparent={true}
                       className="text-gray-600 dark:text-gray-300"
                     />
                     {isSidebarOpen && (
@@ -65,7 +63,6 @@ const SliderBar: React.FC<SliderBarProps> = ({ activeSection, onNavClick }) => {
                       <Icon
                         name={expandedSections.includes(section.path) ? 'unfoldLess' : 'unfoldMore'}
                         size={16}
-                        transparent={true}
                         className="ml-auto text-gray-500 dark:text-gray-400"
                       />
                     )}
@@ -97,7 +94,6 @@ const SliderBar: React.FC<SliderBarProps> = ({ activeSection, onNavClick }) => {
                             <Icon
                               name={sub.icon || 'home'}
                               size={18}
-                              transparent={true}
                               className="text-gray-500 dark:text-gray-400"
                             />
                             <span className="text-gray-600 dark:text-gray-400 text-sm">

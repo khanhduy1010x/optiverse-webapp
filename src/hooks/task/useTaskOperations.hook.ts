@@ -1,14 +1,7 @@
 import { useEffect } from 'react';
 import { Task } from '../../types/task/response/task.response';
 import { Tag } from '../../types/task/response/tag.response';
-import {
-  fetchAllUserTasks,
-  createTask,
-  updateTask,
-  deleteTask,
-  getTaskTags,
-  filterTasksByTags,
-} from '../../services/task.service';
+import taskService from '../../services/task.service';
 
 export function useTaskOperations(
   tasks: Task[],
@@ -43,7 +36,8 @@ export function useTaskOperations(
   // Fetch tasks from API
   const fetchTasks = () => {
     setLoading(true);
-    fetchAllUserTasks()
+    taskService
+      .fetchAllUserTasks()
       .then(fetchedTasks => {
         // Sort tasks using our helper function
         const sortedTasks = sortTasksWithCompletedAtBottom(fetchedTasks);
@@ -67,7 +61,7 @@ export function useTaskOperations(
   // Fetch tags for a specific task
   const fetchTaskTags = async (taskId: string) => {
     try {
-      const tags = await getTaskTags(taskId);
+      const tags = await taskService.getTaskTags(taskId);
       console.log(`Tags for task ${taskId}:`, tags);
 
       // Ensure tags is an array before updating state
@@ -105,7 +99,7 @@ export function useTaskOperations(
       const tagIds = tags.map(tag => tag._id);
 
       // Use the service function to fetch tasks by multiple tags
-      const tasksWithAllTags = await filterTasksByTags(tagIds);
+      const tasksWithAllTags = await taskService.filterTasksByTags(tagIds);
       console.log(
         `Found ${tasksWithAllTags.length} tasks with all selected tags`
       );
@@ -196,7 +190,7 @@ export function useTaskOperations(
       });
 
       // Send the update to the server
-      const response = await updateTask(taskId, updatedFields);
+      const response = await taskService.updateTask(taskId, updatedFields);
 
       // If the update was successful, refresh the tasks
       if (response && response.data) {
@@ -228,7 +222,7 @@ export function useTaskOperations(
     if (!taskId) return;
 
     try {
-      await deleteTask(taskId);
+      await taskService.deleteTask(taskId);
 
       // Update the tasks list immediately without refetching
       setTasks(prevTasks => prevTasks.filter(task => task._id !== taskId));

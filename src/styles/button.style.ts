@@ -2,6 +2,7 @@ import COLORS from '../constants/colors.constant';
 import { TEXT } from '../constants/typography.constant';
 
 const rootBackgroundStyles = {
+  display: 'flex',
   padding: 12,
   borderRadius: 4,
   flexDirection: 'row',

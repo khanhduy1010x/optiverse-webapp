@@ -2,7 +2,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { GOOGLE_AUTH_CONFIG } from '../../config/google-auth.config';
-import { AuthService } from '../../services/auth.service';
+import authService from '../../services/auth.service';
 import { useAuth } from '../../contexts/auth.context';
 
 export function useLoginForm() {
@@ -75,7 +75,7 @@ export function useLoginForm() {
 
         if (event.data.type === 'googleCallback' && event.data.code) {
           try {
-            await AuthService.loginWithGoogle(event.data.code);
+            await authService.loginWithGoogle(event.data.code);
             await refreshTokens();
             navigate('/dashboard', { replace: true });
             popup.close();

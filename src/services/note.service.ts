@@ -4,8 +4,8 @@ import api from './api.service';
 
 const URLBASE = 'productivity/note';
 
-export const NoteService = {
-  saveNote: async (note: NoteItem): Promise<NoteItem> => {
+class NoteService {
+  async saveNote(note: NoteItem): Promise<NoteItem> {
     try {
       const response = await api.patch<ApiResponse<{ note: NoteItem }>>(
         `productivity/note/${note._id}`,
@@ -27,9 +27,9 @@ export const NoteService = {
       );
       throw new Error(`Could not save note ${note.title}`);
     }
-  },
+  }
 
-  handleDeleteNote: async (note: NoteItem): Promise<void> => {
+  async handleDeleteNote(note: NoteItem): Promise<void> {
     try {
       await api.delete(`${URLBASE}/${note._id}`);
     } catch (error: any) {
@@ -42,12 +42,12 @@ export const NoteService = {
       );
       throw new Error(`Could not delete note ${note.title}`);
     }
-  },
+  }
 
-  handleCreateNote: async (
+  async handleCreateNote(
     folder_id: string | null,
     title: string
-  ): Promise<NoteItem> => {
+  ): Promise<NoteItem> {
     try {
       const response = await api.post<ApiResponse<{ note: NoteItem }>>(
         `${URLBASE}`,
@@ -65,9 +65,9 @@ export const NoteService = {
       });
       throw new Error(`Could not create note ${title}`);
     }
-  },
+  }
 
-  handleRenameNote: async (title: string, item: NoteItem): Promise<void> => {
+  async handleRenameNote(title: string, item: NoteItem): Promise<void> {
     try {
       await api.patch(`${URLBASE}/${item._id}`, {
         title,
@@ -84,9 +84,9 @@ export const NoteService = {
       );
       throw new Error(`Could not rename note to ${title}`);
     }
-  },
+  }
 
-  formatNoteWithGemini: async (content: string): Promise<string> => {
+  async formatNoteWithGemini(content: string): Promise<string> {
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
     if (!apiKey) throw new Error('Missing Gemini API key');
 
@@ -139,5 +139,7 @@ ${content}
     const formattedContent = data?.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!formattedContent) throw new Error('No formatted content from Gemini');
     return formattedContent;
-  },
-};
+  }
+}
+
+export default new NoteService();

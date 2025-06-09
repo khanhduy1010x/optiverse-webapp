@@ -1,12 +1,18 @@
 import { ApiResponse } from '../types/api/api.interface';
+import {
+  RegisterRequest,
+  ResetPasswordRequest,
+  VerifyRequest,
+} from '../types/auth/request/auth.request';
 import { LoginResponse } from '../types/auth/response/auth.reponse';
 import api from './api.service';
+class AuthService {
+  private readonly authPath = '/core/auth';
 
-export const AuthService = {
-  loginWithEmail: async (
+  public async loginWithEmail(
     email: string,
     password: string
-  ): Promise<LoginResponse> => {
+  ): Promise<LoginResponse> {
     try {
       const response = await api.post<ApiResponse<LoginResponse>>(
         'core/auth/login',
@@ -53,9 +59,9 @@ export const AuthService = {
 
       throw new Error(errorMessage);
     }
-  },
+  }
 
-  loginWithGoogle: async (token: string): Promise<LoginResponse> => {
+  public async loginWithGoogle(token: string): Promise<LoginResponse> {
     try {
       const response = await api.post<ApiResponse<LoginResponse>>(
         'core/auth/google',
@@ -75,9 +81,9 @@ export const AuthService = {
       });
       throw new Error('Google login failed');
     }
-  },
+  }
 
-  refreshToken: async (): Promise<LoginResponse> => {
+  public async refreshToken(): Promise<LoginResponse> {
     try {
       const refreshToken = localStorage.getItem('refreshToken');
 
@@ -109,10 +115,88 @@ export const AuthService = {
       });
       throw new Error('Token refresh failed');
     }
-  },
+  }
 
-  logout: () => {
+  public logout() {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
-  },
-};
+  }
+
+  public async register(registerRequest: RegisterRequest): Promise<any> {
+    try {
+      const response = await api.post<ApiResponse<RegisterRequest>>(
+        `${this.authPath}/register`,
+        {
+          email: registerRequest.email,
+          full_name: registerRequest.full_name,
+          password: registerRequest.password,
+        } as RegisterRequest
+      );
+      const data = response.data.data;
+      return data;
+    } catch (error) {
+      console.error('Lỗi khi fetch API:', error);
+    }
+    return null;
+  }
+
+  public async forgotPassword(email: string): Promise<any> {
+    try {
+      const response = await api.post<ApiResponse<any>>(
+        `${this.authPath}/send-otp-reset-password`,
+        {
+          email,
+          isVerify: false,
+        }
+      );
+      const data = response.data.data;
+      return data;
+    } catch (error) {
+      console.error('Lỗi khi fetch API:', error);
+    }
+    return null;
+  }
+
+  public async verifyCode(verifyRequest: VerifyRequest): Promise<any> {
+    try {
+      const response = await api.post<ApiResponse<any>>(
+        `${this.authPath}/verify-account`,
+        {
+          email: verifyRequest.email,
+          otp: verifyRequest.otp,
+          isVerify: verifyRequest.type === 'register',
+        }
+      );
+      const data = response.data;
+      return data;
+    } catch (error) {
+      console.error('Lỗi khi fetch API:', error);
+    }
+    return null;
+  }
+
+  public async resetPassword(
+    resetPassword: ResetPasswordRequest
+  ): Promise<any> {
+    try {
+      const response = await api.post<ApiResponse<any>>(
+        `${this.authPath}/reset-password`,
+        {
+          newPassword: resetPassword.newPassword,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${resetPassword.token}`,
+          },
+        }
+      );
+      const data = response.data.data;
+      return data;
+    } catch (error) {
+      console.error('Lỗi khi fetch API:', error);
+    }
+    return null;
+  }
+}
+
+export default new AuthService();

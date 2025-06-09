@@ -1,6 +1,12 @@
-import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import React, {
+  createContext,
+  useState,
+  useContext,
+  useEffect,
+  ReactNode,
+} from 'react';
 import api from '../services/api.service';
-import { AuthService } from '../services/auth.service';
+import authService from '../services/auth.service';
 import { LoginResponse } from '../types/auth/response/auth.reponse';
 import { ApiResponse } from '../types/api/api.interface';
 
@@ -27,7 +33,9 @@ export const useAuth = () => {
   return context;
 };
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [user, setUser] = useState<any | null>(null);
@@ -97,7 +105,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = async (googleToken: string): Promise<LoginResponse> => {
     try {
-      const response = await AuthService.loginWithGoogle(googleToken);
+      const response = await authService.loginWithGoogle(googleToken);
       setIsAuthenticated(true);
       // Optional: get user info if available in response
       // setUser(response.user);
@@ -109,7 +117,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const logout = () => {
-    AuthService.logout();
+    authService.logout();
     setIsAuthenticated(false);
     setUser(null);
   };
@@ -128,8 +136,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         {},
         {
           headers: {
-            Authorization: `Bearer ${refreshToken}`
-          }
+            Authorization: `Bearer ${refreshToken}`,
+          },
         }
       );
 
@@ -151,15 +159,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider value={{
-      isAuthenticated,
-      loading,
-      login,
-      logout,
-      refreshTokens,
-      user
-    }}>
+    <AuthContext.Provider
+      value={{
+        isAuthenticated,
+        loading,
+        login,
+        logout,
+        refreshTokens,
+        user,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
-}; 
+};
