@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { NoteFolderService } from '../../services/noteFolder.service';
+import noteFolderService from '../../services/noteFolder.service';
 import noteService from '../../services/note.service';
 import { ItemsState, RootItem } from '../../types/note/note.types';
 import { FolderItem } from '../../types/note/response/folder.response';
@@ -14,13 +14,13 @@ const initialState: ItemsState = {
 };
 
 export const fetchItems = createAsyncThunk('items/fetchItems', async () => {
-  return await NoteFolderService.getAllRootItems();
+  return await noteFolderService.getAllRootItems();
 });
 
 export const createFolder = createAsyncThunk(
   'items/createFolder',
   async ({ parentId, name }: { parentId: string | null; name: string }) => {
-    const folder = await NoteFolderService.handleAddFolder(parentId, name);
+    const folder = await noteFolderService.handleAddFolder(parentId, name);
     return { folder, parentId };
   }
 );
@@ -37,7 +37,7 @@ export const deleteItem = createAsyncThunk(
   'items/deleteItem',
   async (item: RootItem) => {
     if (item.type === 'folder') {
-      await NoteFolderService.handleDeleteFolder(item);
+      await noteFolderService.handleDeleteFolder(item);
     } else {
       await noteService.handleDeleteNote(item);
     }
@@ -52,7 +52,7 @@ export const renameItem = createAsyncThunk(
   'items/renameItem',
   async ({ name, item }: { name: string; item: RootItem }) => {
     if (item.type === 'folder') {
-      await NoteFolderService.handleRenameFolder(name, item._id);
+      await noteFolderService.handleRenameFolder(name, item._id);
     } else {
       await noteService.handleRenameNote(name, item);
     }

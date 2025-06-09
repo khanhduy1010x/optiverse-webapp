@@ -70,3 +70,5 @@ class NoteFolderService {
     }
   }
 };
+
+export default new NoteFolderService()

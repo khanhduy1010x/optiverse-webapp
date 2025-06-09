@@ -31,6 +31,7 @@ import FocusSessionList from './pages/FocusTimer/FocusTimerList.page';
 import { AuthViewType } from './types/auth/auth.types';
 import LoginSessions from './pages/Profile/LoginSession.page';
 import TaskPage from './pages/Task/Task.page';
+import TemplateComponent from './pages/Template/TemplateComponent.page';
 
 const AppContent: React.FC = () => {
   const location = useLocation();
@@ -40,6 +41,7 @@ const AppContent: React.FC = () => {
 
   const showSidebar =
     location.pathname !== '/' &&
+    !location.pathname.startsWith('/template') &&
     !location.pathname.startsWith('/auth/google') &&
     !location.pathname.startsWith('/forgot-password');
   const activeSection = getSectionKeyFromPath(location.pathname);
@@ -55,11 +57,20 @@ const AppContent: React.FC = () => {
       )}
 
       <div
-        className={`flex-1 transition-all duration-300 ease-in-out ${showSidebar ? '' : 'ml-0'
-          } h-full w-full overflow-auto`}
+        className={`flex-1 transition-all duration-300 ease-in-out ${
+          showSidebar ? '' : 'ml-0'
+        } h-full w-full overflow-auto`}
       >
         <Routes>
           {/* Public routes - accessible without authentication */}
+          <Route
+            path="/template"
+            element={
+              <PublicRoute restricted={true}>
+                <TemplateComponent />
+              </PublicRoute>
+            }
+          />
           <Route
             path="/"
             element={
@@ -68,7 +79,6 @@ const AppContent: React.FC = () => {
               </PublicRoute>
             }
           />
-
           <Route path="/auth/google/callback" element={<GoogleCallback />} />
           <Route
             path="/forgot-password"
@@ -97,7 +107,7 @@ const AppContent: React.FC = () => {
             }
           />
           <Route
-            path="/flashcard-static"
+            path="/flashcard-statistic"
             element={
               <ProtectedRoute>
                 <FlashcardStatistic />

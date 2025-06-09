@@ -1,35 +1,31 @@
 import React from 'react';
-import { useAppSelector } from '../../../store/hooks';
 import { IconName, ICONS } from '../../../assets/icons';
+import { useTheme } from '../../../contexts/theme.context';
 
 export interface IconProps extends React.SVGProps<SVGSVGElement> {
   name: IconName;
   size?: number;
   color?: string;
-  transparent?: boolean;
+  inverted?: boolean;
 }
 
 const Icon: React.FC<IconProps> = ({
   name,
   size = 20,
   color,
-  transparent = false,
+  inverted = false,
   ...props
 }) => {
-  const theme = useAppSelector(state => state.theme.theme);
+  const { theme } = useTheme();
+  const { components } = theme;
 
   const SVGIcon = ICONS[name];
 
-  // Màu sắc dựa trên theme (light/dark) nếu không truyền color
   const iconColor = color
     ? color
-    : transparent
-      ? theme === 'dark'
-        ? '#fff'
-        : '#000'
-      : theme === 'light'
-        ? '#000'
-        : '#fff';
+    : inverted
+      ? components.button.inverted.text
+      : components.button.default.text;
 
   return <SVGIcon width={size} height={size} fill={iconColor} {...props} />;
 };

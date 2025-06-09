@@ -15,6 +15,7 @@ interface ButtonProps {
   fontType?: keyof typeof TEXT;
   translate?: boolean;
   transparent?: boolean;
+  inverted?: boolean;
   leftComponent?: React.ReactNode;
   rightComponent?: React.ReactNode;
   className?: string;
@@ -46,7 +47,7 @@ const Button: React.FC<ButtonProps> = ({
   style,
   textStyle,
   translate = true,
-  transparent = false,
+  inverted = false,
   leftComponent,
   rightComponent,
   leftStyle,
@@ -56,15 +57,20 @@ const Button: React.FC<ButtonProps> = ({
   ...props
 }) => {
   const { theme } = useTheme();
+  const { colors, components, fonts } = theme;
 
   return (
     <button
       className={`${GROUP_CLASSNAMES.transition} ${className}`}
       style={{
         ...BUTTON_STYLES.rootbg,
-        backgroundColor: transparent
-          ? COLORS.transparent
-          : theme.buttonBackground,
+        backgroundColor: inverted
+          ? components.button.inverted.background
+          : components.button.default.background,
+        border: '2px solid',
+        borderColor: inverted
+          ? components.button.inverted.text
+          : components.button.default.text,
         ...style,
       }}
       {...props}
@@ -93,7 +99,9 @@ const Button: React.FC<ButtonProps> = ({
             title={title}
             textStyle={fontType}
             style={{
-              color: transparent ? theme.buttonBackground : theme.buttonText,
+              color: inverted
+                ? components.button.inverted.text
+                : components.button.default.text,
               ...textStyle,
             }}
             translate={translate}
@@ -117,18 +125,36 @@ const Button: React.FC<ButtonProps> = ({
 
 const CircleButton: React.FC<CircleButtonProps> = ({
   name = 'add',
+  inverted = false,
   ...props
 }) => {
+  const { theme } = useTheme();
+  const { components } = theme;
   return (
     <Button
-      leftComponent={<Icon name={name} />}
+      leftComponent={
+        <Icon
+          name={name}
+          color={
+            inverted
+              ? components.button.inverted.text
+              : components.button.default.text
+          }
+        />
+      }
       rightStyle={{ display: 'none' }}
       style={{
-        ...BUTTON_STYLES.circlebg,
+        ...BUTTON_STYLES.rootbg,
+        backgroundColor: inverted
+          ? components.button.inverted.background
+          : components.button.default.background,
+        justifyContent: 'center',
         position: 'absolute',
         width: 60,
-        bottom: 32,
-        right: 24,
+        height: 60,
+        bottom: 54,
+        right: 54,
+        borderRadius: '50%',
       }}
       {...props}
     />
@@ -147,19 +173,20 @@ const FlashcardButton: React.FC<FlashcardButtonProps> = ({
   ...props
 }) => {
   const { theme } = useTheme();
+  const { colors, components, fonts } = theme;
 
   return (
     <button
       className={`${GROUP_CLASSNAMES.transition} flex flex-col ${className}`}
       style={{
         ...BUTTON_STYLES.rootbg,
-        flexDirection: "column",
+        flexDirection: 'column',
         width: 100,
         paddingTop: 4,
         paddingBottom: 4,
         paddingLeft: 8,
         paddingRight: 8,
-        backgroundColor: theme.buttonBackground,
+        backgroundColor: components.button.default.background,
         ...style,
       }}
       onClick={onClick}
@@ -169,7 +196,7 @@ const FlashcardButton: React.FC<FlashcardButtonProps> = ({
         title={difficulty}
         textStyle={fontType}
         style={{
-          color: theme.buttonText,
+          color: components.button.default.text,
           ...textStyle,
         }}
         translate={translate}
@@ -178,7 +205,7 @@ const FlashcardButton: React.FC<FlashcardButtonProps> = ({
         title={`${minutes} minutes`}
         textStyle="regular12"
         style={{
-          color: theme.buttonText,
+          color: components.button.default.text,
           ...textStyle,
         }}
         translate={translate}
