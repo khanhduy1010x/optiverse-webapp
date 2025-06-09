@@ -26,7 +26,18 @@ export default function AddFlashcard() {
         back: watch('back'),
       });
 
-      reset();
+      reset(
+        {
+          front: '',
+          back: '',
+        },
+        {
+          keepErrors: false,
+          keepDirty: false,
+          keepTouched: false,
+          keepIsValidating: true,
+        }
+      );
     } catch {
       navigate(`/flashcard-deck`);
     }
