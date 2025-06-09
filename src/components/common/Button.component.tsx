@@ -80,6 +80,7 @@ const Button: React.FC<ButtonProps> = ({
           ...BUTTON_STYLES.rootView,
           backgroundColor: COLORS.transparent,
           color: COLORS.white900,
+
           ...leftStyle,
         }}
       >
@@ -173,7 +174,7 @@ const FlashcardButton: React.FC<FlashcardButtonProps> = ({
   ...props
 }) => {
   const { theme } = useTheme();
-  const { colors, components, fonts } = theme;
+  const { components, fonts } = theme;
 
   return (
     <button
@@ -181,7 +182,9 @@ const FlashcardButton: React.FC<FlashcardButtonProps> = ({
       style={{
         ...BUTTON_STYLES.rootbg,
         flexDirection: 'column',
+        justifyContent: 'center',
         width: 100,
+        height: 80,
         paddingTop: 4,
         paddingBottom: 4,
         paddingLeft: 8,
@@ -196,20 +199,19 @@ const FlashcardButton: React.FC<FlashcardButtonProps> = ({
         title={difficulty}
         textStyle={fontType}
         style={{
-          color: components.button.default.text,
+          fontFamily: fonts.bold,
           ...textStyle,
         }}
         translate={translate}
       />
-      <Text
+      {/* <Text
         title={`${minutes} minutes`}
         textStyle="regular12"
         style={{
-          color: components.button.default.text,
           ...textStyle,
         }}
         translate={translate}
-      />
+      /> */}
     </button>
   );
 };

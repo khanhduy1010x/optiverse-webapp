@@ -121,10 +121,10 @@ class FlashcardService {
       const data = response.data.data;
       console.log(data);
       return data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Lỗi khi fetch API:', error);
+      throw Error(error.message);
     }
-    return null;
   }
 
   public async deleteFlashcard(id: string): Promise<any> {

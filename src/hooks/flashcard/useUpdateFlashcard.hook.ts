@@ -1,32 +1,36 @@
-import { useState } from 'react';
 import { FlashcardResponse } from '../../types/flashcard/response/flashcard.response';
 import flashcardService from '../../services/flashcard.service';
+import { FlashcardForm } from '../../types/flashcard/flashcard.types';
+import { useForm } from 'react-hook-form';
 
 export function useUpdateFlashcard(
   item: FlashcardResponse,
   clear: () => Promise<void>
 ) {
-  const [front, setFront] = useState(item.front);
-  const [back, setBack] = useState(item.back);
+  const { handleSubmit, control, watch } = useForm<FlashcardForm>({
+    values: {
+      front: item.front,
+      back: item.back,
+    },
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Update flashcard:', { front, back });
+  const onSubmit = async (data: FlashcardForm) => {
+    console.log('Add:', { data });
+
+    console.log('Update flashcard:', { data });
 
     await flashcardService.updateFlashcard({
       _id: item._id,
-      front,
-      back,
+      front: watch('front'),
+      back: watch('back'),
     });
 
     await clear();
   };
 
   return {
-    front,
-    back,
-    setFront,
-    setBack,
+    onSubmit,
+    control,
     handleSubmit,
   };
 }

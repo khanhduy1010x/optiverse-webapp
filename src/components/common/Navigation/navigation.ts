@@ -23,13 +23,10 @@ export const NAV_SECTIONS: NavSection[] = [
   },
   {
     label: "Flash card",
-    path: "/manage-flash-card-father",
+    path: "/flashcard-deck",
     icon: "flashcard",
     subsections: [
-      { label: "Flashcard Deck", path: "/manage-deck", icon: "folder" },
-      { label: "View Flash card", path: "/view-flashcard", icon: "flashcard" },
-      { label: "Add Flash card", path: "/add-flashcard", icon: "add" },
-      { label: "Manage Flash card", path: "/manage-flashcard", icon: "edit" },
+      { label: "Flashcard Deck", path: "/flashcard-deck", icon: "folder" },
     ],
   },
   { label: "Setting", path: "/settings", icon: "setting" },

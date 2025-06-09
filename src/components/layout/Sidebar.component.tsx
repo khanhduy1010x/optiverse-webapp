@@ -53,6 +53,7 @@ const SliderBar: React.FC<SliderBarProps> = ({ activeSection, onNavClick }) => {
                       name={section.icon || 'home'}
                       size={24}
                       className="text-gray-600 dark:text-gray-300"
+                      color='#fff'
                     />
                     {isSidebarOpen && (
                       <span className="text-gray-800 dark:text-gray-200 font-semibold text-sm tracking-wide">

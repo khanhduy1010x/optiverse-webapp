@@ -1,5 +1,3 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   FlashcardDeckCard,
   Flashcard,
@@ -10,8 +8,8 @@ import UpdateFlashcard from './UpdateFlashcard.screen';
 import { useFlashcardList } from '../../hooks/flashcard/useFlashcardList.hook';
 
 export default function FlashcardList() {
-  const navigate = useNavigate();
   const {
+    navigate,
     deck,
     selectedId,
     popupType,
@@ -65,18 +63,24 @@ export default function FlashcardList() {
               {selectedId === item._id && (
                 <div className="absolute right-4 top-4 z-10 bg-white border shadow-md rounded px-3 py-2 text-sm flex flex-col space-y-1">
                   <Button
-                    leftComponent={<Icon name="brush" />}
+                    leftComponent={<Icon name="brush" inverted></Icon>}
                     onClick={() => {
                       setPopupType('edit');
                       setPopupItem(item);
                     }}
+                    style={{ justifyContent: 'center' }}
+                    rightStyle={{ display: 'none' }}
+                    inverted
                   />
                   <Button
-                    leftComponent={<Icon name="close" />}
+                    leftComponent={<Icon name="delete" inverted></Icon>}
                     onClick={() => {
                       setPopupType('delete');
                       setPopupItem(item);
                     }}
+                    style={{ justifyContent: 'center' }}
+                    rightStyle={{ display: 'none' }}
+                    inverted
                   />
                 </div>
               )}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   flashcardDeckMock,
   FlashcardDeckResponse,
@@ -8,6 +8,7 @@ import {
 import flashcardService from '../../services/flashcard.service';
 
 export function useFlashcardList() {
+  const navigate = useNavigate();
   const { deckId } = useParams();
   const [deck, setDeck] = useState<FlashcardDeckResponse>(flashcardDeckMock);
   const [loading, setLoading] = useState(true);
@@ -32,9 +33,18 @@ export function useFlashcardList() {
   };
 
   const fetchData = async () => {
-    const data = await flashcardService.getFlashcardList(deckId ? deckId : '');
-    setDeck(data);
-    setLoading(false);
+    try {
+      const data = await flashcardService.getFlashcardList(
+        deckId ? deckId : ''
+      );
+      if (data === undefined) {
+        throw Error('Cannot find data');
+      }
+      setDeck(data);
+      setLoading(false);
+    } catch {
+      navigate('/flashcard-deck');
+    }
   };
 
   useEffect(() => {
@@ -42,6 +52,7 @@ export function useFlashcardList() {
   }, []);
 
   return {
+    navigate,
     deck,
     loading,
     selectedId,

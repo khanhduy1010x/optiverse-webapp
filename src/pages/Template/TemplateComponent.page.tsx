@@ -21,10 +21,12 @@ export default function TemplateComponent() {
   const { colors, components, fonts } = theme;
 
   // form
-  const { handleSubmit, control } = useForm<FormValues>();
+  const { handleSubmit, control, getValues, watch } = useForm<FormValues>();
 
   const onSubmit = (data: FormValues) => {
     console.log('Form submitted:', data);
+    console.log('Email: ', watch('email'));
+    console.log('Description: ', getValues().description)
   };
 
   return (
