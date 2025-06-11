@@ -126,7 +126,9 @@ export const TextareaField = <T extends FieldValues>({
 
 export const PasswordInputField = <T extends FieldValues>({
   name,
+  label,
   control,
+  rules,
 }: FieldProps<T>) => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
 
@@ -134,7 +136,7 @@ export const PasswordInputField = <T extends FieldValues>({
     <InputField<T>
       name={name}
       control={control}
-      label="Password"
+      label={label}
       type={showPassword ? 'text' : 'password'}
       placeholder="Enter password"
       rules={{
@@ -145,6 +147,7 @@ export const PasswordInputField = <T extends FieldValues>({
         },
         setValueAs: v => v.trim(),
         validate: v => isNotEmpty(v) || 'not only white space',
+        ...rules,
       }}
       iconName={showPassword ? 'eye' : 'hiddenEye'}
       onClickIcon={() => {

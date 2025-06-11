@@ -14,7 +14,7 @@ const RegisterFormScreen: React.FC<RegisterFormProps> = ({
   onSwitch,
   setData,
 }) => {
-  const { onSubmit, control, handleSubmit } = useRegisterForm({
+  const { onSubmit, control, handleSubmit, watch } = useRegisterForm({
     onSuccess: (email: string) => {
       setData(email);
       onSwitch('verify-register');
@@ -63,9 +63,25 @@ const RegisterFormScreen: React.FC<RegisterFormProps> = ({
         </div>
 
         <div>
-          <PasswordInputField<RegisterForm> control={control} name="password" />
+          <PasswordInputField<RegisterForm>
+            control={control}
+            name="password"
+            label={'Password'}
+          />
         </div>
-        <Button title="Create Account" className="w-full" />
+
+        <div>
+          <PasswordInputField<RegisterForm>
+            control={control}
+            name="confirmPassword"
+            label={'Confirm Password'}
+            rules={{
+              validate: value =>
+                value === watch('password') || 'does not match password',
+            }}
+          />
+        </div>
+        <Button title="Create Account" className="w-full" inverted />
       </form>
       <p
         onClick={() => onSwitch('login')}

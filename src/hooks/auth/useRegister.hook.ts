@@ -24,5 +24,6 @@ export function useRegisterForm({ onSuccess }: UseRegisterFormProps) {
     onSubmit,
     control,
     handleSubmit,
+    watch,
   };
 }
