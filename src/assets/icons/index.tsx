@@ -21,6 +21,7 @@ import { ReactComponent as devices } from './devices.svg';
 import { ReactComponent as draft } from './draft.svg';
 import { ReactComponent as edit } from './edit.svg';
 import { ReactComponent as email } from './email.svg';
+import { ReactComponent as eye } from './eye.svg';
 import { ReactComponent as file } from './file.svg';
 import { ReactComponent as flag } from './flag.svg';
 import { ReactComponent as flashcard } from './flashcard.svg';
@@ -82,6 +83,7 @@ export const ICONS = {
   draft: draft,
   edit: edit,
   email: email,
+  eye: eye,
   file: file,
   flag: flag,
   flashcard: flashcard,

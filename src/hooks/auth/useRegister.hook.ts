@@ -1,35 +1,28 @@
-import { useState } from 'react';
 import authService from '../../services/auth.service';
+import { RegisterForm } from '../../types/auth/auth.types';
+import { useForm } from 'react-hook-form';
 
 interface UseRegisterFormProps {
   onSuccess: (email: string) => void;
 }
 
 export function useRegisterForm({ onSuccess }: UseRegisterFormProps) {
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const { handleSubmit, control, watch } = useForm<RegisterForm>();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    console.log('Registering with:', { fullName, email, password });
+  const onSubmit = async (data: RegisterForm) => {
+    console.log('Registering with:', { data });
 
     await authService.register({
-      email,
-      full_name: fullName,
-      password,
+      email: watch('email'),
+      full_name: watch('full_name'),
+      password: watch('password'),
     });
-    onSuccess(email);
+    onSuccess(watch('email'));
   };
 
   return {
-    fullName,
-    setFullName,
-    email,
-    setEmail,
-    password,
-    setPassword,
+    onSubmit,
+    control,
     handleSubmit,
   };
 }

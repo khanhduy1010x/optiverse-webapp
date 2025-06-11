@@ -6,6 +6,7 @@ import ColorPicker, {
 import Icon from '../../components/common/Icon/Icon.component';
 import { useTheme } from '../../contexts/theme.context';
 import InputField, {
+  PasswordInputField,
   TextareaField,
 } from '../../components/common/Input.component';
 import { isNotEmpty } from '../../utils/validate.util';
@@ -18,7 +19,7 @@ type FormValues = {
 
 export default function TemplateComponent() {
   const { theme } = useTheme();
-  const { colors, components, fonts } = theme;
+  const { colors, fonts } = theme;
 
   // form
   const { handleSubmit, control, getValues, watch } = useForm<FormValues>();
@@ -26,7 +27,7 @@ export default function TemplateComponent() {
   const onSubmit = (data: FormValues) => {
     console.log('Form submitted:', data);
     console.log('Email: ', watch('email'));
-    console.log('Description: ', getValues().description)
+    console.log('Description: ', getValues().description);
   };
 
   return (
@@ -130,45 +131,30 @@ export default function TemplateComponent() {
               label="Email"
               placeholder="you@example.com"
               rules={{
-                required: 'là bắt buộc',
+                required: 'is required',
                 pattern: {
                   value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                  message: 'không hợp lệ',
+                  message: 'is invalid',
                 },
                 setValueAs: v => v.trim(),
               }}
             />
 
-            <InputField<FormValues>
-              name="password"
-              control={control}
-              label="Mật khẩu"
-              type="password"
-              placeholder="*********"
-              rules={{
-                required: 'là bắt buộc',
-                minLength: {
-                  value: 6,
-                  message: 'ít nhất 6 ký tự',
-                },
-                setValueAs: v => v.trim(),
-                validate: v => isNotEmpty(v) || 'không được chỉ chứa dấu cách',
-              }}
-            />
+            <PasswordInputField<FormValues> control={control} name="password" />
 
             <TextareaField<FormValues>
               name="description"
               control={control}
-              label="Mô tả"
-              placeholder="Nhập nội dung..."
+              label="Description"
+              placeholder="Enter description..."
               rules={{
-                required: 'là bắt buộc',
+                required: 'is required',
                 minLength: {
                   value: 10,
-                  message: 'ít nhất 10 ký tự',
+                  message: 'at least 10 characters',
                 },
                 setValueAs: v => v.trim(),
-                validate: v => isNotEmpty(v) || 'không được chỉ chứa dấu cách',
+                validate: v => isNotEmpty(v) || 'not only white space',
               }}
             />
 

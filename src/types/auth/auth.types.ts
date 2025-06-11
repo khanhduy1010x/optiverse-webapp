@@ -14,3 +14,9 @@ export interface AuthView {
 export interface AuthState {
   user: { userId: string; email: string } | null;
 }
+
+export type RegisterForm = {
+  full_name: string;
+  email: string;
+  password: string;
+};
