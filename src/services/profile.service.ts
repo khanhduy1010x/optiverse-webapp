@@ -89,15 +89,10 @@ class ProfileService {
    */
   public async logout(): Promise<void> {
     try {
-      // Production code (uncomment when authentication is properly implemented)
-      // const token = localStorage.getItem('authToken');
-      // if (!token) {
-      //   throw new Error('No authentication token found');
-      // }
-
-      // Development code (remove in production)
-      const token =
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2ODI5YTA3MDM5M2I1ODE3OTY4NjA2OTQiLCJlbWFpbCI6Im5ndXllbmtoYW5oZHV5QGdtYWlsLmNvbSIsImZ1bGxfbmFtZSI6IkxhZG8iLCJzZXNzaW9uX2lkIjoiNjg0MTNlNzY2YjBjNzgxZWFkMWYxNjU5IiwiaWF0IjoxNzQ5MTA2Mjk0LCJleHAiOjE3NDkxOTI2OTR9.qGwrujvelYY6QhXaa598OuxsVfJWsLq3ARM7SMHnDvE';
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
 
       const payload = decodeToken(token);
       if (!payload || !payload.session_id) {
@@ -108,20 +103,17 @@ class ProfileService {
         session_id: payload.session_id,
       });
 
-      // Production code (uncomment when authentication is properly implemented)
-      // localStorage.removeItem('authToken');
-      // localStorage.removeItem('user');  // If you store user data
-      // sessionStorage.clear();  // Clear any session storage data
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');  // If you store user data
+      sessionStorage.clear();  // Clear any session storage data
 
-      // Development code (remove in production)
       window.location.href = '/';
     } catch (error: any) {
       console.error('Error logging out:', error);
       if (error.response?.status === 401) {
-        // Production code (uncomment when authentication is properly implemented)
-        // localStorage.removeItem('authToken');
-        // localStorage.removeItem('user');
-        // sessionStorage.clear();
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        sessionStorage.clear();
 
         window.location.href = '/';
         return;
@@ -139,7 +131,7 @@ class ProfileService {
       const sessions = response.data.data;
 
       // Identify current session using the token's session_id
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('accessToken');
       const currentSessionId = token ? decodeToken(token)?.session_id : null;
 
       // Transform the data to match our frontend structure

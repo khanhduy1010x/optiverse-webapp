@@ -71,8 +71,20 @@ export function useLoginSessions() {
       onConfirm: async () => {
         try {
           await profileService.logoutSession(sessionId);
-          await fetchLoginSessions();
           setConfirmModal(prev => ({ ...prev, isOpen: false }));
+          
+          // Update active sessions state directly
+          setActiveSessions(prevSessions => 
+            prevSessions.filter(session => session._id !== sessionId)
+          );
+          
+          // Move the logged out session to previous sessions
+          const loggedOutSession = activeSessions.find(
+            session => session._id === sessionId
+          );
+          if (loggedOutSession) {
+            setPreviousSessions(prev => [loggedOutSession, ...prev]);
+          }
         } catch (error: any) {
           setError(
             error.message || 'Failed to logout session. Please try again.'
@@ -90,8 +102,8 @@ export function useLoginSessions() {
       onConfirm: async () => {
         try {
           await profileService.logoutAllOtherSessions();
-          await fetchLoginSessions();
           setConfirmModal(prev => ({ ...prev, isOpen: false }));
+          await fetchLoginSessions();
         } catch (error: any) {
           setError(
             error.message || 'Failed to logout all sessions. Please try again.'
