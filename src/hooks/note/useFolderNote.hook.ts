@@ -21,6 +21,7 @@ import { FilterType, RootItem } from '../../types/note/note.types';
 import { NoteItem } from '../../types/note/response/note.response';
 import { FolderItem } from '../../types/note/response/folder.response';
 import { toast } from 'react-toastify';
+import SocketService from '../../services/socket.service';
 
 export const useFolderNote = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -53,6 +54,60 @@ export const useFolderNote = () => {
   useEffect(() => {
     dispatch(fetchItems());
   }, [dispatch]);
+
+  // Xử lý khi folder hiện tại bị xóa
+  const handleFolderDeleted = (data: any) => {
+    // Kiểm tra xem có đang ở trong folder bị xóa không
+    const currentFolder =
+      folderStack.length > 0 ? folderStack[folderStack.length - 1] : null;
+
+    // Trường hợp 1: Thư mục hiện tại bị xóa
+    if (currentFolder && currentFolder._id === data.folderId) {
+      console.log('Current folder was deleted by another user');
+
+      // Chuyển hướng về thư mục cha
+      if (folderStack.length > 1) {
+        // Nếu có thư mục cha, trở về thư mục cha (bỏ thư mục hiện tại khỏi stack)
+        const parentStack = folderStack.slice(0, -1);
+        dispatch(setFolderStack(parentStack));
+        toast.warning(
+          'This folder has been deleted by another user. Redirecting to parent folder.'
+        );
+      } else {
+        // Nếu đang ở thư mục gốc bị xóa, trở về root
+        dispatch(setFolderStack([]));
+        toast.warning(
+          'This folder has been deleted by another user. Redirecting to root.'
+        );
+      }
+      return;
+    }
+
+    // Trường hợp 2: Một thư mục cha trong đường dẫn hiện tại bị xóa
+    const folderIndex = folderStack.findIndex(
+      folder => folder._id === data.folderId
+    );
+    if (folderIndex !== -1) {
+      console.log('A parent folder in the current path was deleted');
+
+      // Trở về thư mục cha của thư mục bị xóa
+      const newStack = folderStack.slice(0, folderIndex);
+      dispatch(setFolderStack(newStack));
+      toast.warning(
+        'A parent folder has been deleted by another user. Redirecting to available parent folder.'
+      );
+    }
+  };
+
+  useEffect(() => {
+    // Đăng ký lắng nghe sự kiện folder_deleted
+    SocketService.on('folder_deleted', handleFolderDeleted);
+
+    return () => {
+      // Hủy đăng ký khi component unmount
+      SocketService.off('folder_deleted', handleFolderDeleted);
+    };
+  }, [folderStack, dispatch]);
 
   const currentItems = useMemo(() => {
     if (folderStack.length > 0) {
@@ -209,9 +264,11 @@ export const useFolderNote = () => {
       if (createType === 'folder') {
         await dispatch(createFolder({ parentId, name: itemName })).unwrap();
         toast.success('Folder created successfully');
+        SocketService.emitFolderStructureChanged();
       } else {
         await dispatch(createNote({ parentId, title: itemName })).unwrap();
         toast.success('Note created successfully');
+        SocketService.emitFolderStructureChanged();
       }
 
       await dispatch(fetchItems());
@@ -280,24 +337,36 @@ export const useFolderNote = () => {
         toast.error('Invalid note selected');
         return;
       }
-
-      // Kiểm tra xem có đang trong chế độ format AI không
       if (isAiFormatting) {
         dispatch(setShowWarningModal(true));
-        return; // Không cho phép chuyển note
+        return;
       }
 
-      // Không cần lưu note hiện tại nữa vì đã được xử lý realtime
-      const stateNote = findNoteInState(note._id);
-      if (stateNote) {
-        dispatch(setCurrentNote(stateNote));
-        console.log('Selected note:', stateNote.title);
-      } else {
-        dispatch(setCurrentNote(note));
-        console.warn(
-          'Note not found in state, using selected note:',
-          note.title
+      // Nếu đang chọn chính note hiện tại thì không làm gì
+      if (currentNote && currentNote._id === note._id) {
+        return;
+      }
+
+      try {
+        // Chỉ gửi các thông tin cơ bản của note mà không bao gồm nội dung
+        // Nội dung sẽ được lấy thông qua socket khi kết nối
+        dispatch(
+          setCurrentNote({
+            _id: note._id,
+            title: note.title,
+            type: 'file',
+            content: '', // Để trống nội dung
+            folder_id: note.folder_id,
+            user_id: note.user_id,
+            createdAt: note.createdAt,
+            updatedAt: note.updatedAt,
+          })
         );
+
+        // Socket sẽ tự động lấy nội dung đầy đủ khi kết nối tới note
+      } catch (error) {
+        console.error('Error selecting note:', error);
+        toast.error('Failed to load note');
       }
     }
   };
@@ -345,13 +414,8 @@ export const useFolderNote = () => {
   };
 
   const handleClickItem = (item: RootItem) => {
-    console.log('DEBUG handleClickItem', { searchTerm, item });
     if (searchTerm.trim() !== '' && item.type === 'file') {
       const path = buildPathToFileFromRoot(items, item._id) || [];
-      console.log(
-        'DEBUG path to file:',
-        path.map(f => ({ id: f._id, name: f.name }))
-      );
       dispatch(setFolderStack(path));
       setSearchTerm('');
     } else if (searchTerm.trim() !== '' && item.type === 'folder') {

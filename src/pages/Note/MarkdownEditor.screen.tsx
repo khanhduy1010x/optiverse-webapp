@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import '../../styles/note/MarkdownEditor.style.css';
@@ -18,6 +18,7 @@ const MarkdownEditor: React.FC = () => {
     showAcceptReject,
     showWarningModal,
     aiContent,
+    isNoteDeleted,
     handleChange,
     handleAction,
     handleFormatAI,
@@ -25,6 +26,70 @@ const MarkdownEditor: React.FC = () => {
     handleReject,
     dispatch
   } = useMarkdownEditor();
+
+  // Theo dõi trạng thái của ignoreValuePropUpdate
+  const [shouldIgnoreValue, setShouldIgnoreValue] = useState(false);
+
+  // Cập nhật state shouldIgnoreValue khi ignoreValuePropUpdate.current thay đổi
+  useEffect(() => {
+    const checkIgnoreProp = () => {
+      if (quillRef.current && 'ignoreValuePropUpdate' in quillRef.current) {
+        const ignoreValue = (quillRef.current as any).ignoreValuePropUpdate?.current;
+        setShouldIgnoreValue(!!ignoreValue);
+      }
+    };
+
+    // Kiểm tra ban đầu
+    checkIgnoreProp();
+
+    // Kiểm tra định kỳ
+    const interval = setInterval(checkIgnoreProp, 100);
+
+    return () => clearInterval(interval);
+  }, [quillRef]);
+
+  if (isNoteDeleted || !currentNote) {
+    return (
+      <div className="flex w-full flex-col h-full relative">
+        <div className="flex items-center justify-between p-4 bg-gray-100 border-b">
+          <div>
+            <h1 className="text-lg font-semibold text-gray-900">
+              {isNoteDeleted ? 'Note Deleted' : 'No Note Selected'}
+            </h1>
+          </div>
+        </div>
+        <div className="flex-1 flex items-center justify-center bg-gray-50">
+          <div className="text-center p-8 max-w-md">
+            {isNoteDeleted ? (
+              <>
+                <div className="bg-red-100 rounded-full p-4 mx-auto mb-4 w-16 h-16 flex items-center justify-center">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-red-500">
+                    <path d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-bold text-gray-800 mb-2">Note Deleted</h2>
+                <p className="text-gray-600 mb-4">
+                  This note has been deleted by another user. Please select or create another note.
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="bg-blue-100 rounded-full p-4 mx-auto mb-4 w-16 h-16 flex items-center justify-center">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-500">
+                    <path d="M16 18l2-2m0 0l-2-2m2 2l-2 2m2-2l2 2M4 6h16M4 12h9" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-bold text-gray-800 mb-2">No Note Selected</h2>
+                <p className="text-gray-600 mb-4">
+                  Please select a note from the list or create a new one to get started.
+                </p>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex w-full flex-col h-full relative">
@@ -83,7 +148,7 @@ const MarkdownEditor: React.FC = () => {
         <div className="relative">
           <ReactQuill
             ref={quillRef}
-            value={showAcceptReject && aiContent !== null ? aiContent : currentNote?.content || ''}
+            value={shouldIgnoreValue ? undefined : (showAcceptReject && aiContent !== null ? aiContent : currentNote?.content || '')}
             onChange={handleChange}
             className="flex-1 markdown-editor"
             theme="snow"

@@ -13,12 +13,13 @@ class AuthService {
 
   public async loginWithEmail(
     email: string,
-    password: string
+    password: string,
+    device_info?: any
   ): Promise<LoginResponse> {
     try {
       const response = await api.post<ApiResponse<LoginResponse>>(
         'core/auth/login',
-        { email, password }
+        { email, password, device_info }
       );
 
       // Check if response has the expected structure
@@ -63,11 +64,14 @@ class AuthService {
     }
   }
 
-  public async loginWithGoogle(token: string): Promise<LoginResponse> {
+  public async loginWithGoogle(
+    token: string,
+    device_info?: any
+  ): Promise<LoginResponse> {
     try {
       const response = await api.post<ApiResponse<LoginResponse>>(
         'core/auth/google',
-        { token: token, is_web: true }
+        { token: token, is_web: true, device_info }
       );
       const { access_token, refresh_token } = response.data.data;
 

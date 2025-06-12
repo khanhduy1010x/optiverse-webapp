@@ -7,6 +7,7 @@ import svgr from '@svgr/rollup';
 export default defineConfig({
   plugins: [react(), tailwindcss(),svgr(),mkcert()],
   server: {
+    host: true,
     allowedHosts: true
   },
 });

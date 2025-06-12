@@ -1,9 +1,90 @@
 import { useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { GOOGLE_AUTH_CONFIG } from '../../config/google-auth.config';
 import authService from '../../services/auth.service';
 import { useAuth } from '../../contexts/auth.context';
+
+/**
+ * Thu thập thông tin về trình duyệt và hệ điều hành dưới dạng chuỗi đơn giản
+ * Ví dụ: "Chrome 96/MacOS" hoặc "Firefox 95/Windows 10"
+ */
+const getDeviceInfo = (): string => {
+  const { userAgent } = navigator;
+
+  // Xác định trình duyệt và phiên bản
+  let browser = 'Unknown';
+  let version = '';
+
+  // Chrome
+  if (userAgent.indexOf('Chrome') > -1) {
+    browser = 'Chrome';
+    const match = userAgent.match(/Chrome\/(\d+(\.\d+)?)/);
+    if (match) version = match[1];
+  }
+  // Safari
+  else if (userAgent.indexOf('Safari') > -1) {
+    browser = 'Safari';
+    const match = userAgent.match(/Version\/(\d+(\.\d+)?)/);
+    if (match) version = match[1];
+  }
+  // Firefox
+  else if (userAgent.indexOf('Firefox') > -1) {
+    browser = 'Firefox';
+    const match = userAgent.match(/Firefox\/(\d+(\.\d+)?)/);
+    if (match) version = match[1];
+  }
+  // Internet Explorer
+  else if (
+    userAgent.indexOf('MSIE') > -1 ||
+    userAgent.indexOf('Trident') > -1
+  ) {
+    browser = 'Internet Explorer';
+    const match = userAgent.match(/MSIE (\d+(\.\d+)?)/);
+    if (match) version = match[1];
+    else {
+      const tridentMatch = userAgent.match(/Trident\/(\d+(\.\d+)?)/);
+      if (tridentMatch) {
+        // Trident 7.0 = IE 11
+        const tridentVersion = parseFloat(tridentMatch[1]);
+        version = (tridentVersion + 4).toString();
+      }
+    }
+  }
+  // Edge
+  else if (userAgent.indexOf('Edg') > -1) {
+    browser = 'Edge';
+    const match = userAgent.match(/Edg\/(\d+(\.\d+)?)/);
+    if (match) version = match[1];
+  }
+
+  // Chỉ lấy phiên bản chính (major version)
+  if (version && version.indexOf('.') > -1) {
+    version = version.split('.')[0];
+  }
+
+  // Xác định hệ điều hành
+  let os = 'Unknown';
+  if (userAgent.indexOf('Win') > -1) {
+    os = 'Windows';
+    if (userAgent.indexOf('Windows NT 10.0') > -1) os = 'Windows 10';
+    else if (userAgent.indexOf('Windows NT 6.3') > -1) os = 'Windows 8.1';
+    else if (userAgent.indexOf('Windows NT 6.2') > -1) os = 'Windows 8';
+    else if (userAgent.indexOf('Windows NT 6.1') > -1) os = 'Windows 7';
+  } else if (userAgent.indexOf('Mac') > -1) {
+    os = 'MacOS';
+  } else if (userAgent.indexOf('Android') > -1) {
+    os = 'Android';
+  } else if (userAgent.indexOf('Linux') > -1) {
+    os = 'Linux';
+  } else if (
+    userAgent.indexOf('iPhone') > -1 ||
+    userAgent.indexOf('iPad') > -1
+  ) {
+    os = 'iOS';
+  }
+
+  return version ? `${browser} ${version}/${os}` : `${browser}/${os}`;
+};
 
 export function useLoginForm() {
   const [email, setEmail] = useState('');
@@ -23,25 +104,17 @@ export function useLoginForm() {
     setIsEmailLoginLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:81/core/auth/login', {
-        email,
-        password,
-      });
+      // Thu thập thông tin thiết bị dưới dạng chuỗi đơn giản
+      const device_info = getDeviceInfo();
 
-      const { access_token, refresh_token } = response.data.data;
-
-      localStorage.setItem('accessToken', access_token);
-      localStorage.setItem('refreshToken', refresh_token);
+      // Sử dụng authService.loginWithEmail thay vì axios.post trực tiếp
+      await authService.loginWithEmail(email, password, device_info);
 
       await refreshTokens();
       navigate('/dashboard', { replace: true });
     } catch (err: any) {
       console.error('Login error:', err);
-      if (err.response?.status === 401) {
-        setError('Invalid email or password. Please try again.');
-      } else {
-        setError(err.message || 'Login failed. Please try again later.');
-      }
+      setError(err.message || 'Login failed. Please try again later.');
     } finally {
       setIsEmailLoginLoading(false);
     }
@@ -75,7 +148,11 @@ export function useLoginForm() {
 
         if (event.data.type === 'googleCallback' && event.data.code) {
           try {
-            await authService.loginWithGoogle(event.data.code);
+            // Thu thập thông tin thiết bị dưới dạng chuỗi đơn giản
+            const device_info = getDeviceInfo();
+
+            // Truyền thêm device_info vào hàm đăng nhập Google
+            await authService.loginWithGoogle(event.data.code, device_info);
             await refreshTokens();
             navigate('/dashboard', { replace: true });
             popup.close();
