@@ -38,7 +38,7 @@ const AuthContainer: React.FC<AuthContainerProps> = ({
   return (
     <div className="flex flex-row w-full h-full p-20">
       <div className="w-5/11 flex justify-center items-center bg-white border-r-2 border-black">
-        {<LogoInAuth></LogoInAuth>}
+        {<LogoInAuth onSwitch={setView} />}
       </div>
       <div className="w-6/11 flex justify-center items-center bg-white">
         {renderForm()}

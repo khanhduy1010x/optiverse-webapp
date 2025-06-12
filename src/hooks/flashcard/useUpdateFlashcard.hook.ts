@@ -15,8 +15,6 @@ export function useUpdateFlashcard(
   });
 
   const onSubmit = async (data: FlashcardForm) => {
-    console.log('Add:', { data });
-
     console.log('Update flashcard:', { data });
 
     await flashcardService.updateFlashcard({
