@@ -1,10 +1,12 @@
 import { ApiResponse } from '../types/api/api.interface';
 import {
   RegisterRequest,
+  ResendCodeRequest,
   ResetPasswordRequest,
   VerifyRequest,
 } from '../types/auth/request/auth.request';
 import { LoginResponse } from '../types/auth/response/auth.reponse';
+import { ErrorCode, ErrorDetails } from '../types/error-code.enum';
 import api from './api.service';
 class AuthService {
   private readonly authPath = '/core/auth';
@@ -134,10 +136,21 @@ class AuthService {
       );
       const data = response.data.data;
       return data;
-    } catch (error) {
-      console.error('Lỗi khi fetch API:', error);
+    } catch (error: any) {
+      if (
+        error.response.data.code === ErrorDetails[ErrorCode.EMAIL_EXISTS].code
+      ) {
+        throw {
+          type: 'email',
+          message: 'exists. Try another email.',
+        };
+      }
+
+      throw {
+        type: 'form',
+        message: 'Something went wrong on our side. Please try again later.',
+      };
     }
-    return null;
   }
 
   public async forgotPassword(email: string): Promise<any> {
@@ -169,10 +182,15 @@ class AuthService {
       );
       const data = response.data;
       return data;
-    } catch (error) {
-      console.error('Lỗi khi fetch API:', error);
+    } catch (error: any) {
+      if (
+        error.response.data.code === ErrorDetails[ErrorCode.INVALID_OTP].code
+      ) {
+        throw Error('Incorrect OTP. Please try again.');
+      }
+
+      throw Error('Something went wrong on our side. Please try again later.');
     }
-    return null;
   }
 
   public async resetPassword(
@@ -196,6 +214,22 @@ class AuthService {
       console.error('Lỗi khi fetch API:', error);
     }
     return null;
+  }
+
+  public async resendCode(request: ResendCodeRequest): Promise<any> {
+    try {
+      const response = await api.post<ApiResponse<any>>(
+        `${this.authPath}/resend-otp`,
+        {
+          email: request.email,
+          isVerify: request.type === 'register',
+        }
+      );
+      const data = response.data;
+      return data;
+    } catch (error: any) {
+      throw Error(error.response.data.message);
+    }
   }
 }
 

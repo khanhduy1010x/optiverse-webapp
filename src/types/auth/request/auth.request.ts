@@ -4,11 +4,16 @@ export interface RegisterRequest {
   password: string;
 }
 
-export interface VerifyRequest {
+interface VerifyBase {
   email: string;
-  otp: string;
   type: 'forgot' | 'register';
 }
+
+export interface VerifyRequest extends VerifyBase {
+  otp: string;
+}
+
+export interface ResendCodeRequest extends VerifyBase {}
 
 export interface ResetPasswordRequest {
   token: string;

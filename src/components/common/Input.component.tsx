@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { FieldValues, useController } from 'react-hook-form';
 import { FieldProps } from '../../types/props/input/input.prop';
 import COLORS from '../../constants/colors.constant';
 import { useTheme } from '../../contexts/theme.context';
 import Icon from './Icon/Icon.component';
-import { isNotEmpty } from '../../utils/validate.util';
+import { validatePassword } from '../../utils/validate.util';
 
 const InputField = <T extends FieldValues>({
   name,
@@ -38,6 +38,7 @@ const InputField = <T extends FieldValues>({
         <input
           id={name}
           {...field}
+          value={field.value ?? ''}
           type={type}
           placeholder={placeholder}
           style={{
@@ -141,12 +142,8 @@ export const PasswordInputField = <T extends FieldValues>({
       placeholder="Enter password"
       rules={{
         required: 'is required',
-        minLength: {
-          value: 6,
-          message: 'at least 6 characters',
-        },
         setValueAs: v => v.trim(),
-        validate: v => isNotEmpty(v) || 'not only white space',
+        validate: v => validatePassword(v),
         ...rules,
       }}
       iconName={showPassword ? 'eye' : 'hiddenEye'}
@@ -154,6 +151,90 @@ export const PasswordInputField = <T extends FieldValues>({
         setShowPassword(val => !val);
       }}
     />
+  );
+};
+
+export const OTPInputField = <T extends FieldValues>({
+  name,
+  control,
+  label,
+  rules,
+  otpLength = 6,
+}: FieldProps<T>) => {
+  const { theme } = useTheme();
+  const {
+    field,
+    fieldState: { error },
+  } = useController({ name, control, rules });
+
+  const inputRefs = useRef<HTMLInputElement[]>([]);
+
+  const handleChange = (i: number, value: string) => {
+    const newValue = field.value?.split('') || Array(otpLength).fill('');
+    newValue[i] = value;
+    field.onChange(newValue.join(''));
+
+    if (value && i < otpLength - 1) {
+      inputRefs.current[i + 1]?.focus();
+    }
+  };
+
+  const handleKeyDown = (
+    i: number,
+    e: React.KeyboardEvent<HTMLInputElement>
+  ) => {
+    if (e.key === 'Backspace' && !field.value?.[i] && i > 0) {
+      inputRefs.current[i - 1]?.focus();
+    }
+  };
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8,
+        alignItems: 'center',
+      }}
+    >
+      {label && (
+        <label
+          htmlFor={name}
+          style={{
+            color: error ? COLORS.red500 : theme.components.button.default.text,
+          }}
+        >
+          {error ? `${error.message}` : label}
+        </label>
+      )}
+      <div style={{ display: 'flex', gap: 8 }}>
+        {[...Array(otpLength)].map((_, i) => (
+          <input
+            key={i}
+            type="text"
+            maxLength={1}
+            {...field}
+            value={field.value?.[i] || ''}
+            onChange={e => handleChange(i, e.target.value)}
+            onKeyDown={e => handleKeyDown(i, e)}
+            ref={el => {
+              if (el) inputRefs.current[i] = el;
+            }}
+            style={{
+              width: '40px',
+              height: '40px',
+              textAlign: 'center',
+              fontSize: '1.25rem',
+              border: '2px solid',
+              borderColor: error
+                ? COLORS.red500
+                : theme.components.button.default.text,
+              borderRadius: '6px',
+            }}
+          />
+        ))}
+      </div>
+    </div>
   );
 };
 

@@ -11,4 +11,5 @@ export interface FieldProps<T extends FieldValues> {
   rows?: number;
   iconName?: IconName;
   onClickIcon?: () => void;
+  otpLength?: number;
 }
