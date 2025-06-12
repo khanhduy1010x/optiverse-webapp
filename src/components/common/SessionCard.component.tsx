@@ -2,10 +2,7 @@ import React from 'react';
 import Text from '../../components/common/Text.component';
 import { UserSession } from '../../types/profile/response/profile.response';
 import { GROUP_CLASSNAMES } from '../../styles/group-class-name.style';
-import {
-  useLoginSessions,
-  formatDeviceInfo,
-} from '../../hooks/profile/useLoginSession.hook';
+import { formatDeviceInfo } from '../../hooks/profile/useLoginSession.hook';
 
 export const ThisDeviceCard: React.FC<{ session: UserSession }> = ({
   session,
@@ -51,8 +48,8 @@ export const ThisDeviceCard: React.FC<{ session: UserSession }> = ({
 export const SessionCard: React.FC<{
   session: UserSession;
   isActive?: boolean;
-}> = ({ session, isActive = true }) => {
-  const { handleLogoutSession } = useLoginSessions();
+  onLogout?: (sessionId: string) => void;
+}> = ({ session, isActive = true, onLogout }) => {
   return (
     <div className={GROUP_CLASSNAMES.sessionCard}>
       <div className={GROUP_CLASSNAMES.sessionCardContent}>
@@ -83,10 +80,10 @@ export const SessionCard: React.FC<{
           </div>
         </div>
       </div>
-      {isActive && (
+      {isActive && onLogout && (
         <div className="flex items-center">
           <button
-            onClick={() => handleLogoutSession(session._id)}
+            onClick={() => onLogout(session._id)}
             className={GROUP_CLASSNAMES.sessionLogoutButton}
           >
             <svg

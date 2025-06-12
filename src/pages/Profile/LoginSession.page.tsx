@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import View from '../../components/common/View.component';
 import Text from '../../components/common/Text.component';
 import IconProps from '../../components/common/Icon/Icon.component';
@@ -25,6 +25,7 @@ export default function LoginSessions() {
     showAllActiveSessions,
     activeSessions,
     previousSessions,
+    handleLogoutSession,
   } = useLoginSessions();
 
   return (
@@ -114,8 +115,9 @@ export default function LoginSessions() {
                         key={session._id}
                         session={session}
                         isActive={true}
+                        onLogout={handleLogoutSession}
                       />
-                    ))}
+                    ))} 
                     {activeSessions.length > 2 && (
                       <button
                         onClick={toggleShowAllSessions}
