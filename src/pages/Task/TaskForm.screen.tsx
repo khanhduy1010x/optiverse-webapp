@@ -128,11 +128,13 @@ const TaskForm: React.FC<TaskFormProps> = ({
                                                     type="button"
                                                     onClick={() => handleTagSelect(tag)}
                                                     className="ml-1 focus:outline-none"
+                                                    aria-label="Remove tag"
                                                 >
                                                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                                                     </svg>
                                                 </button>
+
                                             </span>
                                         ))
                                     )}
@@ -184,8 +186,10 @@ const TaskForm: React.FC<TaskFormProps> = ({
                                                         type="color"
                                                         value={newTagColor}
                                                         onChange={(e) => setNewTagColor(e.target.value)}
+                                                        aria-label="Choose tag color"
                                                         className="w-5 h-5 p-0 border-0 rounded-full cursor-pointer"
                                                     />
+
                                                     <button
                                                         id="create-tag-button"
                                                         type="button"
