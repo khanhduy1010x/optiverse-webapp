@@ -29,15 +29,28 @@ export function useTaskState() {
   // Form state
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [status, setStatus] = useState<'pending' | 'completed' | 'overdue'>(
-    'pending'
-  );
+  const [status, setStatus] = useState<'pending' | 'completed' | 'overdue'>('pending');
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('low');
 
-  // Log title changes
-  const wrappedSetTitle = (value: string) => {
+  // Log state changes
+  const wrappedSetTitle = (value: string | ((prev: string) => string)) => {
     console.log('useTaskState setTitle called with:', value);
     setTitle(value);
+  };
+
+  const wrappedSetDescription = (value: string | ((prev: string) => string)) => {
+    console.log('useTaskState setDescription called with:', value);
+    setDescription(value);
+  };
+
+  const wrappedSetStatus = (value: 'pending' | 'completed' | 'overdue' | ((prev: 'pending' | 'completed' | 'overdue') => 'pending' | 'completed' | 'overdue')) => {
+    console.log('useTaskState setStatus called with:', value);
+    setStatus(value);
+  };
+
+  const wrappedSetPriority = (value: 'low' | 'medium' | 'high' | ((prev: 'low' | 'medium' | 'high') => 'low' | 'medium' | 'high')) => {
+    console.log('useTaskState setPriority called with:', value);
+    setPriority(value);
   };
 
   // Effect để đóng menu khi click ra ngoài
@@ -117,8 +130,19 @@ export function useTaskState() {
       setShowNewTagForm(false);
       setNewTagName('');
       setNewTagColor('#3B82F6');
+      setSelectedTask(null);
     }
   }, [showPopup]);
+
+  // Update form state when selectedTask changes
+  useEffect(() => {
+    if (selectedTask) {
+      setTitle(selectedTask.title);
+      setDescription(selectedTask.description || '');
+      setStatus(selectedTask.status);
+      setPriority(selectedTask.priority);
+    }
+  }, [selectedTask]);
 
   return {
     // States
@@ -169,10 +193,10 @@ export function useTaskState() {
     title,
     setTitle: wrappedSetTitle,
     description,
-    setDescription,
+    setDescription: wrappedSetDescription,
     status,
-    setStatus,
+    setStatus: wrappedSetStatus,
     priority,
-    setPriority,
+    setPriority: wrappedSetPriority,
   };
 }

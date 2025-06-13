@@ -77,36 +77,46 @@ export function useTagOperations(
 
       console.log('New tag created:', newTag);
 
-      // Proceed even with a temporary ID - the server sync can happen later
-      // Add the new tag to allTags and selectedTags
+      // Đảm bảo tag có đủ các trường cần thiết
+      const completeTag: Tag = {
+        // Lấy tất cả các trường từ API trả về
+        ...newTag,
+        // Đảm bảo các trường quan trọng luôn tồn tại
+        _id: newTag._id || `temp-${Date.now()}`,
+        name: newTag.name || newTagName,
+        color: newTag.color || newTagColor
+      };
+
+      // Cập nhật allTags
       setAllTags(prevAllTags => {
-        // Check if we already have this tag (by name)
-        if (prevAllTags.some(tag => tag.name === newTag.name)) {
+        // Check if we already have this tag (by name or ID)
+        if (prevAllTags.some(tag => tag.name === completeTag.name || tag._id === completeTag._id)) {
           console.log(
             'Tag with this name already exists, not adding duplicate'
           );
           return prevAllTags;
         }
-        return [...prevAllTags, newTag];
+        return [...prevAllTags, completeTag];
       });
 
+      // Cập nhật selectedTags
       setSelectedTags(prevSelectedTags => {
         // Check if we already have this tag selected (by name or id)
         if (
           prevSelectedTags.some(
-            tag => tag.name === newTag.name || tag._id === newTag._id
+            tag => tag.name === completeTag.name || tag._id === completeTag._id
           )
         ) {
           console.log('Tag already selected, not adding duplicate');
           return prevSelectedTags;
         }
-        return [...prevSelectedTags, newTag];
+        return [...prevSelectedTags, completeTag];
       });
 
       // Reset form
       resetForm();
 
-      return newTag;
+      return completeTag;
     } catch (error) {
       console.error('Error creating new tag:', error);
       return null;

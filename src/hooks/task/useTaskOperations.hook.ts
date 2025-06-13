@@ -8,9 +8,7 @@ export function useTaskOperations(
   setTasks: React.Dispatch<React.SetStateAction<Task[]>>,
   setFilteredTasks: React.Dispatch<React.SetStateAction<Task[]>>,
   taskTags: { [taskId: string]: Tag[] },
-  setTaskTags: React.Dispatch<
-    React.SetStateAction<{ [taskId: string]: Tag[] }>
-  >,
+  setTaskTags: React.Dispatch<React.SetStateAction<{ [taskId: string]: Tag[] }>>,
   setLoading: React.Dispatch<React.SetStateAction<boolean>>,
   selectedTask: Task | null,
   setSelectedTask: React.Dispatch<React.SetStateAction<Task | null>>,
@@ -199,22 +197,17 @@ export function useTaskOperations(
         // If there was an issue with the response, revert back and fetch tasks
         fetchTasks();
       }
-
-      // Update selected task if it's currently being viewed
-      if (selectedTask && selectedTask._id === taskId) {
-        setSelectedTask({ ...selectedTask, ...updatedFields });
-      }
     } catch (error) {
-      console.error('Update task failed:', error);
-      // Revert the optimistic update by refetching tasks
+      console.error('Error updating task:', error);
+      // Revert changes on error
       fetchTasks();
     }
   };
 
-  // Confirm task deletion
-  const confirmDeleteTask = (taskId: string) => {
-    setTaskToDelete(taskId);
-    setShowDeleteConfirm(true);
+  // Handle task click
+  const handleTaskClick = (task: Task) => {
+    setSelectedTask(task);
+    setShowTaskDetail(true);
   };
 
   // Handle task deletion
@@ -223,43 +216,23 @@ export function useTaskOperations(
 
     try {
       await taskService.deleteTask(taskId);
-
-      // Update the tasks list immediately without refetching
       setTasks(prevTasks => prevTasks.filter(task => task._id !== taskId));
-      setFilteredTasks(prevFilteredTasks =>
-        prevFilteredTasks.filter(task => task._id !== taskId)
-      );
-
-      // Close task detail if the deleted task was being viewed
-      if (selectedTask && selectedTask._id === taskId) {
-        setShowTaskDetail(false);
-        setSelectedTask(null);
-      }
-
-      return true;
+      setFilteredTasks(prevTasks => prevTasks.filter(task => task._id !== taskId));
+      setTaskToDelete(null);
+      setShowDeleteConfirm(false);
     } catch (error) {
-      console.error('Delete task failed:', error);
-      return false;
+      console.error('Error deleting task:', error);
+      alert('Failed to delete task. Please try again.');
     }
   };
 
-  // Handle task click to show details
-  const handleTaskClick = (task: Task) => {
-    setSelectedTask(task);
-    setShowTaskDetail(true);
-
-    // Make sure we have the latest tags
-    fetchTaskTags(task._id);
-  };
-
   return {
+    sortTasksWithCompletedAtBottom,
     fetchTasks,
     fetchTaskTags,
-    filterTasksByTags: filterTasksByTagsLocal,
+    filterTasksByTagsLocal,
     handleTaskUpdate,
-    confirmDeleteTask,
-    handleDeleteTask,
     handleTaskClick,
-    sortTasksWithCompletedAtBottom,
+    handleDeleteTask
   };
 }

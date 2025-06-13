@@ -60,35 +60,42 @@ export interface TaskDetailProps {
   setShowTaskDetail: React.Dispatch<React.SetStateAction<boolean>>;
   handleEditTask: (task: Task) => void;
 }
-export interface TaskFormProps {
+
+export interface CreateTaskFormProps {
   title: string;
   setTitle: React.Dispatch<React.SetStateAction<string>>;
   description: string;
   setDescription: React.Dispatch<React.SetStateAction<string>>;
-  status: 'pending' | 'completed' | 'overdue';
-  setStatus: React.Dispatch<
-    React.SetStateAction<'pending' | 'completed' | 'overdue'>
-  >;
   priority: 'low' | 'medium' | 'high';
   setPriority: React.Dispatch<React.SetStateAction<'low' | 'medium' | 'high'>>;
-  selectedTask: Task | null;
   setShowPopup: React.Dispatch<React.SetStateAction<boolean>>;
   selectedTags: Tag[];
   allTags: Tag[];
   handleTagSelect: (tag: Tag) => void;
   showNewTagForm: boolean;
   setShowNewTagForm: React.Dispatch<React.SetStateAction<boolean>>;
-  newTagName: string;
-  setNewTagName: React.Dispatch<React.SetStateAction<string>>;
-  newTagColor: string;
-  setNewTagColor: React.Dispatch<React.SetStateAction<string>>;
-  handleCreateNewTag: (
-    newTagName: string,
-    newTagColor: string,
-    resetForm: () => void
-  ) => Promise<Tag | null>;
   handleSaveTask: (title?: string) => Promise<boolean>;
 }
+
+export interface EditTaskFormProps {
+  title: string;
+  setTitle: React.Dispatch<React.SetStateAction<string>>;
+  description: string;
+  setDescription: React.Dispatch<React.SetStateAction<string>>;
+  status: 'pending' | 'completed' | 'overdue';
+  setStatus: React.Dispatch<React.SetStateAction<'pending' | 'completed' | 'overdue'>>;
+  priority: 'low' | 'medium' | 'high';
+  setPriority: React.Dispatch<React.SetStateAction<'low' | 'medium' | 'high'>>;
+  selectedTask: Task;
+  setShowPopup: React.Dispatch<React.SetStateAction<boolean>>;
+  selectedTags: Tag[];
+  allTags: Tag[];
+  handleTagSelect: (tag: Tag) => void;
+  showNewTagForm: boolean;
+  setShowNewTagForm: React.Dispatch<React.SetStateAction<boolean>>;
+  handleSaveTask: (title?: string) => Promise<boolean>;
+}
+
 export interface TaskHeaderProps {
   searchQuery: string;
   setSearchQuery: React.Dispatch<React.SetStateAction<string>>;

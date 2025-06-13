@@ -109,14 +109,14 @@ const TaskList: React.FC<TaskListComponentProps> = ({
                                     {taskTags[task._id] && taskTags[task._id].length > 0 ? (
                                         taskTags[task._id].map((tag) => (
                                             <span
-                                                key={tag._id}
+                                                key={tag._id || `temp-${tag.name}-${Math.random().toString(36).substr(2, 9)}`}
                                                 className={GROUP_CLASSNAMES.tagItem}
                                                 style={{
-                                                    backgroundColor: `${tag.color}15`,
-                                                    color: tag.color
+                                                    backgroundColor: tag.color ? `${tag.color}15` : '#e5e7eb15',
+                                                    color: tag.color || '#6b7280'
                                                 }}
                                             >
-                                                {tag.name}
+                                                {tag.name || 'Unnamed Tag'}
                                             </span>
                                         ))
                                     ) : (
