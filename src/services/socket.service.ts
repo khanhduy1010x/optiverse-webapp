@@ -12,7 +12,7 @@ class SocketService {
   public connect(): void {
     if (this.socket) return;
 
-    this.socket = io('http://localhost:81', {
+    this.socket = io('https://api.duynkdev.id.vn/', {
       path: '/productivity/socket.io',
       transports: ['websocket'],
     });
@@ -46,6 +46,24 @@ class SocketService {
       if (data.noteId === this.currentNoteId) {
         this.notifyListeners('stop_typing', data);
       }
+    });
+
+    this.socket.on('note_deleted', data => {
+      this.notifyListeners('note_deleted', data);
+    });
+
+    this.socket.on('note_renamed', data => {
+      this.notifyListeners('note_renamed', data);
+    });
+
+    this.socket.on('folder_deleted', data => {
+      console.log('Folder deleted event received:', data);
+      this.notifyListeners('folder_deleted', data);
+    });
+
+    this.socket.on('folder_structure_changed', () => {
+      console.log('Folder structure changed event received');
+      this.notifyListeners('folder_structure_changed', {});
     });
   }
 
@@ -81,14 +99,12 @@ class SocketService {
 
     this.currentNoteId = noteId;
     this.socket?.emit('join_note', { noteId });
-    console.log('Joined note room:', noteId);
   }
 
   public leaveNote(noteId: string): void {
     if (!this.socket) return;
 
     this.socket.emit('leave_note', { noteId });
-    console.log('Left note room:', noteId);
 
     if (this.currentNoteId === noteId) {
       this.currentNoteId = null;
@@ -121,10 +137,38 @@ class SocketService {
       this.updateTimeout = null;
     }
 
+    this.sendTypingStatus();
+
     this.socket.emit('note_update', {
       noteId: this.currentNoteId,
       content,
     });
+  }
+
+  public emitNoteDeleted(noteId: string): void {
+    if (!this.socket) return;
+
+    this.socket.emit('note_deleted', { noteId });
+  }
+
+  public emitNoteRenamed(noteId: string, newTitle: string): void {
+    if (!this.socket) return;
+
+    this.socket.emit('note_renamed', { noteId, newTitle });
+  }
+
+  public emitFolderStructureChanged(): void {
+    if (!this.socket) return;
+
+    this.socket.emit('folder_structure_changed');
+    console.log('Emitted folder_structure_changed event');
+  }
+
+  public emitFolderDeleted(folderId: string): void {
+    if (!this.socket) return;
+
+    this.socket.emit('folder_deleted', { folderId });
+    console.log('Emitted folder_deleted event for:', folderId);
   }
 
   private sendTypingStatus(): void {

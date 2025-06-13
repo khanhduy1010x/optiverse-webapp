@@ -96,11 +96,12 @@ const itemsSlice = createSlice({
       state.folderStack.pop();
     },
     setCurrentNote: (state, action) => {
-      console.log('Dispatch setCurrentNote:', {
-        id: action.payload?._id,
-        title: action.payload?.title,
-      });
       state.currentNote = action.payload;
+    },
+    updateCurrentNoteContent: (state, action) => {
+      if (state.currentNote) {
+        state.currentNote.content = action.payload;
+      }
     },
   },
   extraReducers: builder => {
@@ -284,6 +285,7 @@ export const {
   pushFolderStack,
   popFolderStack,
   setCurrentNote,
+  updateCurrentNoteContent,
 } = itemsSlice.actions;
 export default itemsSlice.reducer;
 

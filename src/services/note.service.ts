@@ -1,6 +1,7 @@
 import { ApiResponse } from '../types/api/api.interface';
 import { NoteItem } from '../types/note/response/note.response';
 import api from './api.service';
+import SocketService from './socket.service';
 
 const URLBASE = 'productivity/note';
 
@@ -8,7 +9,7 @@ class NoteService {
   async saveNote(note: NoteItem): Promise<NoteItem> {
     try {
       const response = await api.patch<ApiResponse<{ note: NoteItem }>>(
-        `productivity/note/${note._id}`,
+        `${URLBASE}/${note._id}`,
         {
           content: note.content,
           title: note.title,
@@ -32,6 +33,8 @@ class NoteService {
   async handleDeleteNote(note: NoteItem): Promise<void> {
     try {
       await api.delete(`${URLBASE}/${note._id}`);
+
+      SocketService.emitNoteDeleted(note._id);
     } catch (error: any) {
       console.error(
         `Failed to delete note ${note._id} (folder_id: ${note.folder_id}):`,
@@ -57,6 +60,9 @@ class NoteService {
           content: '',
         }
       );
+
+      SocketService.emitFolderStructureChanged();
+
       return { ...response.data.data.note, type: 'file' as const };
     } catch (error: any) {
       console.error('Failed to create note:', {
@@ -74,6 +80,8 @@ class NoteService {
         content: item.content,
         folder_id: item.folder_id,
       });
+
+      SocketService.emitNoteRenamed(item._id, title);
     } catch (error: any) {
       console.error(
         `Failed to rename note ${item._id} (folder_id: ${item.folder_id}):`,
@@ -101,10 +109,10 @@ class NoteService {
 <h1>, <h2>, <p>, <ul>, <li>, <strong>, <em>, <pre>, <a>, And Others When Appropriate.
 
 ✅ Keep In Mind:
-– Preserve The Original Meaning And Wording — Don’t Paraphrase, Remove, Or Add New Content.
+– Preserve The Original Meaning And Wording — Don't Paraphrase, Remove, Or Add New Content.
 – Feel Free To Group Related Lines, Create Sections, Or Use Headings Where They Make Sense.
 – If Something Looks Like A List Or A Schedule, Format It As Such.
-– Don’t Overuse <p> — Mix And Match Tags Naturally For Better Structure.
+– Don't Overuse <p> — Mix And Match Tags Naturally For Better Structure.
 – Do Not Repeat Titles Or Headers That Already Exist In The Text.
 – No Explanation Is Needed; Just Return The Clean HTML.
 

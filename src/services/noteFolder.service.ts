@@ -2,12 +2,15 @@ import { ApiResponse } from '../types/api/api.interface';
 import { RootItem } from '../types/note/note.types';
 import { FolderItem } from '../types/note/response/folder.response';
 import api from './api.service';
+import SocketService from './socket.service';
+
+const URLBASE = 'productivity/note-folder';
 
 class NoteFolderService {
   async getAllRootItems(): Promise<RootItem[]> {
     try {
       const response = await api.get<ApiResponse<RootItem[]>>(
-        'productivity/note-folder/root/retrive-web'
+        `${URLBASE}/root/retrive-web`
       );
       return response.data.data || [];
     } catch (error) {
@@ -19,7 +22,7 @@ class NoteFolderService {
   async getFolderById(id: string): Promise<FolderItem> {
     try {
       const response = await api.get<ApiResponse<FolderItem>>(
-        `productivity/note-folder/${id}`
+        `${URLBASE}/${id}`
       );
       return { ...response.data.data, type: 'folder' as const };
     } catch (error) {
@@ -30,7 +33,13 @@ class NoteFolderService {
 
   async handleDeleteFolder(item: FolderItem): Promise<void> {
     try {
-      await api.delete(`productivity/note-folder/${item._id}`);
+      await api.delete(`${URLBASE}/${item._id}`);
+
+      // Phát ra sự kiện thông báo folder đã bị xóa
+      SocketService.emitFolderDeleted(item._id);
+
+      // Phát ra sự kiện thông báo cấu trúc thư mục đã thay đổi
+      SocketService.emitFolderStructureChanged();
     } catch (error) {
       console.error(`Failed to delete folder ${item._id}:`, error);
       throw new Error(`Could not delete folder ${item.name}`);
@@ -43,12 +52,16 @@ class NoteFolderService {
   ): Promise<FolderItem> {
     try {
       const response = await api.post<ApiResponse<{ noteFolder: FolderItem }>>(
-        'productivity/note-folder',
+        `${URLBASE}`,
         {
           parent_folder_id,
           name,
         }
       );
+
+      // Phát ra sự kiện thông báo cấu trúc thư mục đã thay đổi
+      SocketService.emitFolderStructureChanged();
+
       return {
         ...response.data.data.noteFolder,
         type: 'folder' as const,
@@ -63,12 +76,15 @@ class NoteFolderService {
 
   async handleRenameFolder(name: string, id: string): Promise<void> {
     try {
-      await api.patch(`productivity/note-folder/${id}`, { name });
+      await api.patch(`${URLBASE}/${id}`, { name });
+
+      // Phát ra sự kiện thông báo cấu trúc thư mục đã thay đổi
+      SocketService.emitFolderStructureChanged();
     } catch (error) {
       console.error(`Failed to rename folder ${id}:`, error);
       throw new Error(`Could not rename folder to ${name}`);
     }
   }
-};
+}
 
-export default new NoteFolderService()
+export default new NoteFolderService();
