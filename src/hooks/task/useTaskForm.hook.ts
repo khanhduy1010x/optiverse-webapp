@@ -2,27 +2,44 @@ import { useState, useEffect } from 'react';
 import { Task } from '../../types/task/response/task.response';
 import { Tag } from '../../types/task/response/tag.response';
 import taskService from '../../services/task.service';
+import { useTaskOperations } from './useTaskOperations.hook';
 
 export function useTaskForm(
   tasks: Task[],
+  setTasks: React.Dispatch<React.SetStateAction<Task[]>>,
+  setFilteredTasks: React.Dispatch<React.SetStateAction<Task[]>>,
   taskTags: { [taskId: string]: Tag[] },
-  selectedTags: Tag[],
-  fetchTasks: () => void,
-  updateTaskTags: (
-    taskId: string,
-    selectedTags: Tag[],
-    currentTags: Tag[]
-  ) => Promise<boolean>
+  setTaskTags: React.Dispatch<React.SetStateAction<{ [taskId: string]: Tag[] }>>,
+  setLoading: React.Dispatch<React.SetStateAction<boolean>>,
+  selectedTask: Task | null,
+  setSelectedTask: React.Dispatch<React.SetStateAction<Task | null>>,
+  setShowTaskDetail: React.Dispatch<React.SetStateAction<boolean>>,
+  sortOrder: 'newest' | 'oldest',
+  setTaskToDelete: React.Dispatch<React.SetStateAction<string | null>>,
+  setShowDeleteConfirm: React.Dispatch<React.SetStateAction<boolean>>
 ) {
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [showPopup, setShowPopup] = useState(false);
-  const [showTaskDetail, setShowTaskDetail] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [status, setStatus] = useState<'pending' | 'completed' | 'overdue'>(
-    'pending'
-  );
+  const [status, setStatus] = useState<'pending' | 'completed' | 'overdue'>('pending');
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('low');
+  const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
+  const [showPopup, setShowPopup] = useState(false);
+  const [showTaskDetail, setShowTaskDetailLocal] = useState(false);
+
+  const { sortTasksWithCompletedAtBottom, fetchTasks } = useTaskOperations(
+    tasks,
+    setTasks,
+    setFilteredTasks,
+    taskTags,
+    setTaskTags,
+    setLoading,
+    selectedTask,
+    setSelectedTask,
+    setShowTaskDetail,
+    sortOrder,
+    setTaskToDelete,
+    setShowDeleteConfirm
+  );
 
   // Reset form when popup is closed
   useEffect(() => {
@@ -37,6 +54,38 @@ export function useTaskForm(
     setStatus('pending');
     setPriority('low');
     setSelectedTask(null);
+  };
+
+  // Update task tags
+  const updateTaskTags = async (taskId: string, newTags: Tag[], currentTags: Tag[]) => {
+    try {
+      // Find tags to remove and add
+      const tagsToRemove = currentTags.filter(
+        currentTag => !newTags.some(selectedTag => selectedTag._id === currentTag._id)
+      );
+      const tagsToAdd = newTags.filter(
+        selectedTag => !currentTags.some(currentTag => currentTag._id === selectedTag._id)
+      );
+
+      // Remove tags
+      if (tagsToRemove.length > 0) {
+        await Promise.all(tagsToRemove.map(tag => 
+          taskService.deleteTaskTag(tag.taskTagId!)
+        ));
+      }
+
+      // Add tags
+      if (tagsToAdd.length > 0) {
+        await Promise.all(tagsToAdd.map(tag =>
+          taskService.createTaskTag(taskId, tag._id)
+        ));
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error updating task tags:', error);
+      return false;
+    }
   };
 
   const handleEditTask = (
@@ -61,20 +110,21 @@ export function useTaskForm(
   const handleSaveTask = async (
     setShowPopup: React.Dispatch<React.SetStateAction<boolean>>,
     setSelectedTags: React.Dispatch<React.SetStateAction<Tag[]>>,
-    currentTitle?: string | undefined
+    currentTitle?: string | undefined,
+    externalSelectedTask?: Task | null
   ) => {
     // Sử dụng title từ bên ngoài nếu có, ngược lại sử dụng state nội bộ
-    const titleToUse =
-      currentTitle !== undefined ? String(currentTitle) : title;
+    const titleToUse = currentTitle !== undefined ? String(currentTitle) : title;
+    
+    // Use external selectedTask if provided, otherwise use internal state
+    const taskToUpdate = externalSelectedTask || selectedTask;
 
     console.log('handleSaveTask in hook, title state:', title);
     console.log('handleSaveTask in hook, title from param:', currentTitle);
-    console.log(
-      'handleSaveTask in hook, title to use:',
-      titleToUse,
-      'title empty?:',
-      !titleToUse.trim()
-    );
+    console.log('handleSaveTask in hook, description:', description);
+    console.log('handleSaveTask in hook, status:', status);
+    console.log('handleSaveTask in hook, priority:', priority);
+    console.log('handleSaveTask in hook, selectedTask:', taskToUpdate);
 
     if (!titleToUse.trim()) {
       alert('Please enter a title');
@@ -84,31 +134,59 @@ export function useTaskForm(
     try {
       let taskId: string;
 
-      if (selectedTask) {
+      if (taskToUpdate) {
         // Update existing task
-        console.log('Updating existing task:', selectedTask._id);
-        const response = await taskService.updateTask(selectedTask._id, {
+        console.log('Updating existing task:', taskToUpdate._id);
+        
+        // Preserve the existing description if the current description is empty
+        const descriptionToUse = description.trim() !== '' ? description : (taskToUpdate.description || '');
+        
+        // Prepare update data
+        const updateData = {
           title: titleToUse,
-          description,
-          status,
-          priority,
+          description: descriptionToUse,
+          status: status || taskToUpdate.status,
+          priority: priority || taskToUpdate.priority,
+        };
+
+        console.log('Sending update data:', updateData);
+
+        // Optimistic update
+        setTasks(prevTasks => {
+          const updatedTasks = prevTasks.map(task =>
+            task._id === taskToUpdate._id ? { ...task, ...updateData } : task
+          );
+          return sortTasksWithCompletedAtBottom(updatedTasks);
         });
 
+        // Send update to server
+        const response = await taskService.updateTask(taskToUpdate._id, updateData);
+
         if (response && response.data && response.data.task) {
-          taskId = selectedTask._id;
+          taskId = taskToUpdate._id;
           console.log('Task updated successfully:', response.data.task);
         } else {
+          // Revert on failure
+          fetchTasks();
           throw new Error('Failed to update task');
         }
 
         // Handle tag updates
         if (taskTags[taskId]) {
           const currentTags = taskTags[taskId];
-          await updateTaskTags(taskId, selectedTags, currentTags);
+          const tagUpdateSuccess = await updateTaskTags(taskId, selectedTags, currentTags);
+          if (!tagUpdateSuccess) {
+            // Revert tags on failure
+            fetchTasks();
+          }
         } else {
           // If no existing tags, just add all selected tags
           if (selectedTags.length > 0) {
-            await updateTaskTags(taskId, selectedTags, []);
+            const tagUpdateSuccess = await updateTaskTags(taskId, selectedTags, []);
+            if (!tagUpdateSuccess) {
+              // Revert tags on failure
+              fetchTasks();
+            }
           }
         }
       } else {
@@ -116,7 +194,7 @@ export function useTaskForm(
         console.log('Creating new task:', {
           title: titleToUse,
           description,
-          status,
+          status: 'pending',
           priority,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -124,7 +202,7 @@ export function useTaskForm(
         const createdTask = await taskService.createTask({
           title: titleToUse,
           description,
-          status,
+          status: 'pending',
           priority,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -139,11 +217,20 @@ export function useTaskForm(
 
         // Add tags to the newly created task
         if (selectedTags.length > 0 && taskId) {
-          await updateTaskTags(taskId, selectedTags, []);
+          console.log('Adding tags to new task:', selectedTags);
+          
+          // Đảm bảo các tag có đủ thông tin cần thiết
+          const validTags = selectedTags.filter(tag => tag._id && tag.name);
+          
+          if (validTags.length > 0) {
+            await updateTaskTags(taskId, selectedTags, []);
+          } else {
+            console.warn('No valid tags to add to task');
+          }
         }
       }
 
-      // Reset form and close popup
+      // Only reset form and close popup after successful update
       setShowPopup(false);
       resetForm();
       setSelectedTags([]);
@@ -154,7 +241,7 @@ export function useTaskForm(
       return true;
     } catch (error) {
       console.error(
-        selectedTask ? 'Update task failed:' : 'Create task failed:',
+        taskToUpdate ? 'Update task failed:' : 'Create task failed:',
         error
       );
       alert('There was an error creating/updating the task. Please try again.');
@@ -168,7 +255,7 @@ export function useTaskForm(
     showPopup,
     setShowPopup,
     showTaskDetail,
-    setShowTaskDetail,
+    setShowTaskDetail: setShowTaskDetailLocal,
     title,
     setTitle,
     description,
@@ -177,8 +264,10 @@ export function useTaskForm(
     setStatus,
     priority,
     setPriority,
-    resetForm,
+    selectedTags,
+    setSelectedTags,
     handleEditTask,
     handleSaveTask,
+    resetForm
   };
 }

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { format } from 'date-fns';
 import { Task } from '../../types/task/response/task.response';
@@ -79,22 +78,22 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                             </svg>
                             <div className="text-sm text-gray-700">Tags:</div>
-                            <div className="ml-auto flex flex-wrap justify-end gap-1">
+                            <div className={GROUP_CLASSNAMES.tagContainer}>
                                 {taskTags[selectedTask._id] && taskTags[selectedTask._id].length > 0 ? (
                                     taskTags[selectedTask._id].map((tag) => (
                                         <span
-                                            key={tag._id}
+                                            key={tag._id || `temp-${tag.name}-${Math.random().toString(36).substr(2, 9)}`}
                                             className={GROUP_CLASSNAMES.tagItem}
                                             style={{
-                                                backgroundColor: `${tag.color}15`,
-                                                color: tag.color
+                                                backgroundColor: tag.color ? `${tag.color}15` : '#e5e7eb15',
+                                                color: tag.color || '#6b7280'
                                             }}
                                         >
-                                            {tag.name}
+                                            {tag.name || 'Unnamed Tag'}
                                         </span>
                                     ))
                                 ) : (
-                                    <span className="text-xs text-gray-500">No tags</span>
+                                    <span className="text-sm text-gray-400">No tags</span>
                                 )}
                             </div>
                         </div>

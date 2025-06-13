@@ -70,10 +70,12 @@ class TaskService {
   // Update an existing task
   async updateTask(taskId: string, taskData: Partial<Task>) {
     try {
+      console.log('Updating task with data:', taskData);
       const response = await api.put<ApiResponse<{ task: Task }>>(
         `/productivity/task/${taskId}`,
         taskData
       );
+      console.log('Update response:', response.data);
       if (response.data && response.data.data) {
         return response.data;
       }
@@ -150,6 +152,33 @@ class TaskService {
     } catch (error) {
       console.error('Error filtering tasks by tags:', error);
       return [];
+    }
+  }
+
+  // Create a task-tag relation
+  async createTaskTag(taskId: string, tagId: string) {
+    try {
+      const response = await api.post<ApiResponse<{ taskTag: any }>>(
+        '/productivity/task-tag',
+        { taskId, tagId }
+      );
+      if (response.data && response.data.data) {
+        return response.data.data.taskTag;
+      }
+      throw new Error('Failed to create task-tag relation');
+    } catch (error) {
+      console.error('Error creating task-tag relation:', error);
+      throw error;
+    }
+  }
+
+  // Delete a task-tag relation
+  async deleteTaskTag(taskTagId: string) {
+    try {
+      await api.delete(`/productivity/task-tag/${taskTagId}`);
+    } catch (error) {
+      console.error(`Error deleting task-tag relation ${taskTagId}:`, error);
+      throw error;
     }
   }
 }
