@@ -1,38 +1,26 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { ToolBarNoteProps } from '../../types/note/props/component.props';
 
 
 
 const ToolBarNote: React.FC<ToolBarNoteProps> = ({ onAction, formatState = { bold: false, italic: false, header: false, strike: false } }) => {
 
-  useEffect(() => {
-    console.log("ToolbarNote received formatState:", JSON.stringify(formatState));
-  }, [formatState]);
-
   const isActive = (key: string): boolean => {
-    const result = (() => {
-      switch (key) {
-        case 'bold': return !!formatState.bold;
-        case 'italic': return !!formatState.italic;
-        case 'title': return !!formatState.header;
-        case 'strike': return !!formatState.strike;
-        default: return false;
-      }
-    })();
-
-    // Chỉ log các nút format chính để giảm số lượng log
-    if (['bold', 'italic', 'title', 'strike'].includes(key)) {
-      console.log(`isActive(${key}) = ${result}, formatState:`, JSON.stringify(formatState));
+    switch (key) {
+      case 'bold': return formatState.bold;
+      case 'italic': return formatState.italic;
+      case 'title': return formatState.header;
+      case 'strike': return formatState.strike;
+      default: return false;
     }
-    return result;
   };
 
 
   const getButtonClass = (key: string): string => {
     const baseClass = "p-2 rounded-md transition-colors";
     return isActive(key)
-      ? `${baseClass} bg-gray-500 hover:bg-gray-600 text-white`
-      : `${baseClass} hover:bg-gray-100`;
+      ? `${baseClass} bg-blue-100`
+      : baseClass;
   };
 
   const icons = [
