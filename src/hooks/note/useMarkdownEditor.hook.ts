@@ -242,12 +242,6 @@ export const useMarkdownEditor = () => {
   };
 
   const handleAction = (action: string) => {
-    console.log(`Action triggered: ${action}`);
-    console.log(
-      `Current formatState before action: `,
-      JSON.stringify(formatState)
-    );
-
     if (isNoteDeleted) {
       toast.error('Không thể chỉnh sửa: ghi chú này đã bị xóa', {
         position: 'top-center',
@@ -261,74 +255,40 @@ export const useMarkdownEditor = () => {
     const range = quill.getSelection();
     if (!range) return;
 
-    // Lấy format hiện tại tại vị trí con trỏ để đảm bảo các thao tác toggle chính xác
-    const currentFormat =
-      range.length > 0
-        ? quill.getFormat(range)
-        : quill.getFormat(range.index, 1);
-    console.log(`Current format from Quill: ${JSON.stringify(currentFormat)}`);
+    // Lưu vị trí hiện tại của con trỏ
+    const currentRange = { ...range };
+
+    // Tạm thời vô hiệu hóa việc cập nhật formatState từ selection-change
+    isUpdatingRef.current = true;
+
+    // Thực hiện định dạng
+    let newFormatState = { ...formatState };
 
     switch (action) {
       case 'bold':
-        console.log(
-          `Toggling bold from ${!!currentFormat.bold} to ${!currentFormat.bold}`
-        );
-        quill.format('bold', !currentFormat.bold);
-        setFormatState(prev => {
-          const newState = { ...prev, bold: !currentFormat.bold };
-          console.log('New formatState after bold toggle:', newState);
-          return newState;
-        });
+        quill.format('bold', !formatState.bold);
+        newFormatState.bold = !formatState.bold;
         break;
       case 'italic':
-        console.log(
-          `Toggling italic from ${!!currentFormat.italic} to ${!currentFormat.italic}`
-        );
-        quill.format('italic', !currentFormat.italic);
-        setFormatState(prev => {
-          const newState = { ...prev, italic: !currentFormat.italic };
-          console.log('New formatState after italic toggle:', newState);
-          return newState;
-        });
+        quill.format('italic', !formatState.italic);
+        newFormatState.italic = !formatState.italic;
         break;
       case 'title':
-        console.log(
-          `Toggling header from ${!!currentFormat.header} to ${!currentFormat.header}`
-        );
-        quill.format('header', currentFormat.header ? false : 1);
-        setFormatState(prev => {
-          const newState = { ...prev, header: !currentFormat.header };
-          console.log('New formatState after header toggle:', newState);
-          return newState;
-        });
+        quill.format('header', formatState.header ? false : 1);
+        newFormatState.header = !formatState.header;
         break;
       case 'strike':
-        console.log(
-          `Toggling strike from ${!!currentFormat.strike} to ${!currentFormat.strike}`
-        );
-        quill.format('strike', !currentFormat.strike);
-        setFormatState(prev => {
-          const newState = { ...prev, strike: !currentFormat.strike };
-          console.log('New formatState after strike toggle:', newState);
-          return newState;
-        });
+        quill.format('strike', !formatState.strike);
+        newFormatState.strike = !formatState.strike;
         break;
       case 'clear-format':
-        console.log('Clearing format for selection');
         quill.removeFormat(range.index, range.length);
-        setFormatState(prev => {
-          const newState = {
-            bold: false,
-            italic: false,
-            header: false,
-            strike: false,
-          };
-          console.log(
-            'New formatState after clearing format:',
-            JSON.stringify(newState)
-          );
-          return newState;
-        });
+        newFormatState = {
+          bold: false,
+          italic: false,
+          header: false,
+          strike: false,
+        };
         break;
       case 'list-dot':
         quill.format(
@@ -352,16 +312,24 @@ export const useMarkdownEditor = () => {
         break;
     }
 
-    setTimeout(() => {
-      quill.setSelection(range.index, range.length);
+    // Cập nhật formatState
+    setFormatState(newFormatState);
 
-      if (currentNote) {
-        const content = quill.root.innerHTML;
-        const processedContent = preserveTrailingSpaces(content);
-        dispatch(updateCurrentNoteContent(processedContent));
-        SocketService.updateNoteImmediate(processedContent);
-      }
-    }, 0);
+    // Cập nhật nội dung
+    if (currentNote) {
+      const content = quill.root.innerHTML;
+      const processedContent = preserveTrailingSpaces(content);
+      dispatch(updateCurrentNoteContent(processedContent));
+      SocketService.updateNoteImmediate(processedContent);
+    }
+
+    // Khôi phục vị trí con trỏ và cho phép cập nhật formatState từ selection-change
+    requestAnimationFrame(() => {
+      quill.setSelection(currentRange.index, currentRange.length);
+      setTimeout(() => {
+        isUpdatingRef.current = false;
+      }, 50);
+    });
   };
 
   const handleFormatAI = async () => {
@@ -434,81 +402,50 @@ export const useMarkdownEditor = () => {
     setOldContent(null);
   };
 
-  // Cập nhật trạng thái định dạng khi selection thay đổi
+  // Biến để kiểm tra trạng thái cập nhật
+  const isUpdatingRef = useRef(false);
+
+  // Cập nhật trạng thái định dạng khi vùng chọn thay đổi
   useEffect(() => {
     if (!quillRef.current) return;
 
-    console.log('useEffect formatState setup', formatState);
-
     const quill = quillRef.current.getEditor();
 
-    // Hàm cập nhật trạng thái định dạng
-    const updateFormat = (range: { index: number; length: number } | null) => {
-      if (!range) {
-        console.log('No selection, keeping current format state');
-        return;
-      }
+    // Hàm cập nhật trạng thái định dạng hiện tại
+    const updateFormatState = () => {
+      if (!quill || isUpdatingRef.current) return;
+
+      const selection = quill.getSelection();
+      if (!selection) return;
+
+      isUpdatingRef.current = true;
 
       try {
-        // Lấy định dạng tại vị trí con trỏ
-        // Nếu có selection với length > 0, sử dụng range
-        // Nếu chỉ là con trỏ (length = 0), sử dụng vị trí con trỏ
-        const format =
-          range.length > 0
-            ? quill.getFormat(range)
-            : quill.getFormat(range.index, 1);
-
-        console.log('Format from Quill (detailed):', JSON.stringify(format));
-
-        const newFormatState = {
+        const format = quill.getFormat(selection);
+        setFormatState({
           bold: !!format.bold,
           italic: !!format.italic,
           header: !!format.header,
           strike: !!format.strike,
-        };
-
-        console.log('New format detailed:', JSON.stringify(newFormatState));
-
-        // Cập nhật state ngay lập tức nếu có sự thay đổi
-        setFormatState(prevState => {
-          const isDifferent =
-            JSON.stringify(newFormatState) !== JSON.stringify(prevState);
-          console.log('Format changed:', isDifferent);
-
-          if (isDifferent) {
-            return newFormatState;
-          }
-          return prevState;
         });
-      } catch (error) {
-        console.error('Error getting format:', error);
+      } finally {
+        // Đảm bảo reset cờ ngay cả khi có lỗi xảy ra
+        setTimeout(() => {
+          isUpdatingRef.current = false;
+        }, 0);
       }
     };
 
-    // Lắng nghe sự kiện selection-change
-    quill.on('selection-change', updateFormat);
+    // Chỉ lắng nghe sự kiện thay đổi vùng chọn
+    quill.on('selection-change', updateFormatState);
 
-    // Lắng nghe sự kiện text-change để cập nhật format khi text thay đổi
-    const textChangeHandler = () => {
-      const range = quill.getSelection();
-      if (range) {
-        updateFormat(range);
-      }
-    };
-    quill.on('text-change', textChangeHandler);
-
-    // Thực hiện update format ban đầu nếu đã có selection
-    const initialSelection = quill.getSelection();
-    if (initialSelection) {
-      updateFormat(initialSelection);
-    }
+    // Cập nhật trạng thái ban đầu sau một khoảng thời gian nhỏ
+    setTimeout(updateFormatState, 50);
 
     return () => {
-      console.log('Removing Quill event listeners');
-      quill.off('selection-change', updateFormat);
-      quill.off('text-change', textChangeHandler);
+      quill.off('selection-change', updateFormatState);
     };
-  }, [quillRef.current]);
+  }, [quillRef.current, currentNote]);
 
   return {
     quillRef,
