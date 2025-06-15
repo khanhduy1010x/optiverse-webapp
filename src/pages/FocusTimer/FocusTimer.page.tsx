@@ -26,11 +26,10 @@ export default function FocusTimerPage() {
         <div className="flex gap-4 justify-center">
           <button
             onClick={isRunning ? stopSession : startSession}
-            className={`px-6 py-2 rounded-md text-white transition-colors ${
-              isRunning
-                ? 'bg-red-500 hover:bg-red-600'
-                : 'bg-green-500 hover:bg-green-600'
-            }`}
+            className={`px-6 py-2 rounded-md text-white transition-colors ${isRunning
+              ? 'bg-red-500 hover:bg-red-600'
+              : 'bg-green-500 hover:bg-green-600'
+              }`}
           >
             {isRunning ? 'Stop' : 'Start'}
           </button>

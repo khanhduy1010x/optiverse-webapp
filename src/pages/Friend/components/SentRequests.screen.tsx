@@ -14,29 +14,18 @@ const SentRequests: React.FC<SentRequestsProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  // Hàm tạo màu gradient cho avatar dựa trên chuỗi
-  const getColorFromString = (str: string) => {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const hue1 = hash % 360;
-    const hue2 = (hash + 120) % 360;
-    return `from-[hsl(${hue1},70%,60%)] to-[hsl(${hue2},70%,45%)]`;
-  };
-
   if (loading) {
     return (
       <div className="flex flex-col gap-4">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-md">
+          <div key={i} className="bg-white rounded-lg p-5 shadow-sm border border-gray-200">
             <div className="animate-pulse flex items-center space-x-4">
-              <div className="rounded-full bg-gray-300 dark:bg-gray-600 h-16 w-16"></div>
+              <div className="rounded-lg bg-gray-200 h-16 w-16"></div>
               <div className="flex-1 space-y-4 py-1">
-                <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-3/4"></div>
+                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
                 <div className="space-y-2">
-                  <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded"></div>
-                  <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-5/6"></div>
+                  <div className="h-4 bg-gray-200 rounded"></div>
+                  <div className="h-4 bg-gray-200 rounded w-5/6"></div>
                 </div>
               </div>
             </div>
@@ -48,24 +37,24 @@ const SentRequests: React.FC<SentRequestsProps> = ({
 
   if (sentRequests.length === 0) {
     return (
-      <div className={GROUP_CLASSNAMES.emptyStateSentContainer}>
-        <div className={GROUP_CLASSNAMES.avatarPurple}>
-          <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <div className="bg-white rounded-lg shadow-sm p-8 text-center border border-gray-200">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 text-gray-500 mb-4">
+          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
           </svg>
         </div>
-        <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-3">{t('No sent requests')}</h3>
-        <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto text-base">
+        <h3 className="text-xl font-semibold text-gray-800 mb-2">{t('No Sent Requests')}</h3>
+        <p className="text-gray-500 mb-6">
           {t('You have not sent any friend requests yet. Use the search function to find and connect with other users.')}
         </p>
         <button
-          className={GROUP_CLASSNAMES.buttonPurple}
-          onClick={() => document.querySelector('[data-tab="search"]')?.dispatchEvent(new Event('click'))}
+          className="px-4 py-2 bg-[#21b4ca] text-white rounded-lg hover:bg-[#1c9eb1] transition-colors duration-300"
+          onClick={() => window.location.hash = '/friends/search'}
         >
-          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <svg className="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
-          {t('Search for friends')}
+          {t('Search for Friends')}
         </button>
       </div>
     );
@@ -85,16 +74,16 @@ const SentRequests: React.FC<SentRequestsProps> = ({
     <div>
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-violet-500 flex items-center justify-center text-white mr-3 shadow-md">
+          <div className="w-10 h-10 rounded-full bg-[#21b4ca] flex items-center justify-center text-white mr-3 shadow-sm">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
             </svg>
           </div>
-          <p className="text-lg font-bold text-gray-700 dark:text-gray-200">
-            {t('Total')}: <span className="text-purple-600 dark:text-purple-400">{sentRequests.length}</span> {t('sent requests')}
+          <p className="text-lg font-bold text-gray-700">
+            {t('Total')}: <span className="text-[#21b4ca]">{sentRequests.length}</span> {t('sent requests')}
           </p>
         </div>
-        <div className="text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">
+        <div className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
           {t('Last updated')}: <span className="font-medium">{new Date().toLocaleTimeString()}</span>
         </div>
       </div>
@@ -102,12 +91,12 @@ const SentRequests: React.FC<SentRequestsProps> = ({
       <div className="space-y-6">
         {Object.entries(groupedRequests).map(([status, requests]) => (
           <div key={status} className="space-y-4">
-            <h3 className={GROUP_CLASSNAMES.sectionHeader}>
+            <h3 className="text-md font-semibold text-gray-700 capitalize border-b border-gray-200 pb-2 flex items-center">
               <span className={`w-3 h-3 rounded-full mr-2 ${status === 'pending'
-                ? 'bg-yellow-400 dark:bg-yellow-500'
+                ? 'bg-yellow-400'
                 : status === 'accepted'
-                  ? 'bg-green-400 dark:bg-green-500'
-                  : 'bg-red-400 dark:bg-red-500'
+                  ? 'bg-green-400'
+                  : 'bg-red-400'
                 }`}></span>
               {t(status)} ({requests.length})
             </h3>
@@ -118,23 +107,19 @@ const SentRequests: React.FC<SentRequestsProps> = ({
                   ? request.friendInfo.full_name.charAt(0).toUpperCase()
                   : request.friendInfo?.email?.charAt(0).toUpperCase() || request.friend_id.charAt(0).toUpperCase();
 
-                // Lấy màu dựa trên ID
-                const gradientClass = getColorFromString(request.friend_id);
-
                 return (
                   <div
                     key={request._id}
-                    className={GROUP_CLASSNAMES.cardContainer}
+                    className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden group"
                   >
-                    <div className="h-2 bg-gradient-to-r w-full group-hover:scale-105 transition-transform duration-300 ease-out" style={{ backgroundImage: `linear-gradient(to right, #a855f7, #8b5cf6)` }}></div>
-                    <div className="p-5 flex items-start justify-between">
+                    <div className="p-5 flex items-center justify-between">
                       <div className="flex items-center">
-                        <div className={`${GROUP_CLASSNAMES.avatarMedium} ${gradientClass} flex items-center justify-center text-white text-2xl font-bold mr-4 shadow-md transform transition-transform group-hover:scale-105`}>
+                        <div className="w-16 h-16 rounded-lg bg-[#21b4ca] flex items-center justify-center text-white text-2xl font-bold mr-4 shadow-sm">
                           {initial}
                         </div>
                         <div>
-                          <div className="font-medium text-lg text-gray-900 dark:text-white flex items-center">
-                            <svg className="w-4 h-4 mr-1 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <div className="font-medium text-lg text-gray-900 flex items-center">
+                            <svg className="w-4 h-4 mr-1 text-[#21b4ca]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
                             </svg>
                             {t('To')}
@@ -142,10 +127,10 @@ const SentRequests: React.FC<SentRequestsProps> = ({
                           {request.friendInfo ? (
                             <div className="mt-1 ml-2">
                               {request.friendInfo.full_name && (
-                                <div className="font-medium text-base text-gray-800 dark:text-white">{request.friendInfo.full_name}</div>
+                                <div className="font-medium text-base text-gray-800">{request.friendInfo.full_name}</div>
                               )}
                               {request.friendInfo.email && (
-                                <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center">
+                                <div className="text-sm text-gray-500 flex items-center">
                                   <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                   </svg>
@@ -160,10 +145,10 @@ const SentRequests: React.FC<SentRequestsProps> = ({
                           )}
                           <div className="flex items-center mt-2 flex-wrap gap-2">
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${status === 'pending'
-                              ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                              ? 'bg-yellow-100 text-yellow-800'
                               : status === 'accepted'
-                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-gray-100 text-gray-800'
                               }`}>
                               {status === 'pending' && (
                                 <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -177,7 +162,7 @@ const SentRequests: React.FC<SentRequestsProps> = ({
                               )}
                               {t(status)}
                             </span>
-                            <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
+                            <span className="text-xs text-gray-500 flex items-center">
                               <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                               </svg>
@@ -190,7 +175,7 @@ const SentRequests: React.FC<SentRequestsProps> = ({
                         <div>
                           <button
                             onClick={() => onCancelRequest(request._id)}
-                            className={GROUP_CLASSNAMES.buttonRemoveFriend}
+                            className="px-4 py-2 bg-[#607D8B] text-white rounded-lg hover:bg-red-500 transition-all duration-200 cursor-pointer flex items-center gap-2"
                             disabled={loading}
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

@@ -9,6 +9,7 @@ import {
   SessionCard,
   ThisDeviceCard,
 } from '../../components/common/SessionCard.component';
+import ProfileSidebar from './ProfileSidebar.component';
 
 export default function LoginSessions() {
   const {
@@ -38,30 +39,8 @@ export default function LoginSessions() {
         message={confirmModal.message}
       />
       <View className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
-        <View className={GROUP_CLASSNAMES.profileSidebar}>
-          <ul className="space-y-4 p-4">
-            {['profile', 'achievements', 'friends', 'login-sessions'].map(
-              menu => (
-                <li key={menu}>
-                  <button
-                    onClick={() => handleNavigate(menu)}
-                    className={`${GROUP_CLASSNAMES.profileSidebarButton} ${selectedMenu === menu ? GROUP_CLASSNAMES.profileSidebarButtonActive : GROUP_CLASSNAMES.profileSidebarButtonInactive}`}
-                  >
-                    {menu
-                      .replace('-', ' ')
-                      .replace(/\b\w/g, c => c.toUpperCase())}
-                    <IconProps
-                      name="chevron"
-                      size={selectedMenu === menu ? 28 : 20}
-                      className="ml-2"
-                    />
-                  </button>
-                </li>
-              )
-            )}
-          </ul>
-        </View>
+        {/* Using the shared ProfileSidebar component */}
+        <ProfileSidebar selectedMenu={selectedMenu} handleNavigate={handleNavigate} />
 
         {/* Main Content */}
         <View className={GROUP_CLASSNAMES.profileMainContent}>
@@ -117,7 +96,7 @@ export default function LoginSessions() {
                         isActive={true}
                         onLogout={handleLogoutSession}
                       />
-                    ))} 
+                    ))}
                     {activeSessions.length > 2 && (
                       <button
                         onClick={toggleShowAllSessions}
