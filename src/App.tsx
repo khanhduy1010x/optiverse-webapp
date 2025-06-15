@@ -32,6 +32,7 @@ import { AuthViewType } from './types/auth/auth.types';
 import LoginSessions from './pages/Profile/LoginSession.page';
 import TaskPage from './pages/Task/Task.page';
 import TemplateComponent from './pages/Template/TemplateComponent.page';
+import FocusTimerLayout from './pages/FocusTimer/FocusTimerLayout.page';
 
 const AppContent: React.FC = () => {
   const location = useLocation();
@@ -57,9 +58,8 @@ const AppContent: React.FC = () => {
       )}
 
       <div
-        className={`flex-1 transition-all duration-300 ease-in-out ${
-          showSidebar ? '' : 'ml-0'
-        } h-full w-full overflow-auto`}
+        className={`flex-1 transition-all bg-white duration-300 ease-in-out ${showSidebar ? '' : 'ml-0'
+          } h-full w-full overflow-auto`}
       >
         <Routes>
           {/* Public routes - accessible without authentication */}
@@ -147,22 +147,30 @@ const AppContent: React.FC = () => {
               </ProtectedRoute>
             }
           />
+
+          {/* Focus Timer routes with shared layout */}
           <Route
-            path="/focus-timer"
+            path="/"
             element={
               <ProtectedRoute>
-                <FocusTimer />
+                <FocusTimerLayout />
               </ProtectedRoute>
             }
-          />
-          <Route
-            path="/manage-focus-timer"
-            element={
-              <ProtectedRoute>
-                <FocusSessionList />
-              </ProtectedRoute>
-            }
-          />
+          >
+            <Route
+              path="focus-timer"
+              element={<FocusTimer />}
+            />
+            <Route
+              path="manage-focus-timer"
+              element={<FocusSessionList />}
+            />
+            <Route
+              path="statistics-timer"
+              element={<FocusTimerStatistic />}
+            />
+          </Route>
+
           <Route
             path="/note"
             element={
@@ -176,14 +184,6 @@ const AppContent: React.FC = () => {
             element={
               <ProtectedRoute>
                 <TaskPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/focus-timer/statistic"
-            element={
-              <ProtectedRoute>
-                <FocusTimerStatistic />
               </ProtectedRoute>
             }
           />

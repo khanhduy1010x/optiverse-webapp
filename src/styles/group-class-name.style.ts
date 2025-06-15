@@ -148,14 +148,13 @@ export const GROUP_CLASSNAMES = {
   headerContainer: 'bg-white shadow-sm border-b border-gray-200',
 
   // Profile and Login Session styles
-  profileSidebar: 'w-1/5 overflow-y-auto bg-white',
+  profileSidebar: 'w-1/6 bg-white',
   profileSidebarButton:
     'w-full text-left flex justify-between items-center py-2 px-3 rounded hover:bg-gray-100',
-  profileSidebarButtonActive: 'bg-gray-200 font-bold text-lg',
+  profileSidebarButtonActive: 'bg-gray-200 font-bold text-xl',
   profileSidebarButtonInactive: 'text-gray-500',
-  profileMainContent:
-    'flex-1 overflow-y-auto border-l border-gray-300 dark:border-gray-600',
-  profileSection: 'text-lg font-medium text-gray-900 mb-4',
+  profileMainContent: 'flex-1 overflow-y-auto',
+  profileSection: 'text-xl font-medium text-gray-900 mb-4',
 
   // Session cards
   sessionCard:
@@ -228,7 +227,7 @@ export const GROUP_CLASSNAMES = {
 
   taskEmptyState: 'text-center py-12',
   taskEmptyIcon: 'mx-auto h-12 w-12 text-gray-400',
-  taskEmptyTitle: 'mt-2 text-lg font-medium text-gray-900',
+  taskEmptyTitle: 'mt-2 text-xl font-medium text-gray-900',
   taskEmptyDescription: 'mt-1 text-sm text-gray-500',
   taskEmptyAction: 'mt-6',
 
@@ -257,7 +256,7 @@ export const GROUP_CLASSNAMES = {
   deleteConfirmIcon:
     'w-10 h-10 rounded-full bg-red-100 flex items-center justify-center',
   deleteConfirmIconSvg: 'h-6 w-6 text-red-600',
-  deleteConfirmTitle: 'text-lg font-medium text-center text-gray-900 mb-2',
+  deleteConfirmTitle: 'text-xl font-medium text-center text-gray-900 mb-2',
   deleteConfirmDescription: 'text-sm text-center text-gray-500 mb-4',
   deleteConfirmButtons: 'flex justify-center space-x-3',
   deleteConfirmCancelButton:
@@ -283,7 +282,7 @@ export const GROUP_CLASSNAMES = {
   friendSearchResultCardAvatar: 'flex items-center',
   friendSearchResultCardInfo: 'flex flex-col',
   friendSearchResultCardName:
-    'font-medium text-lg text-gray-900 dark:text-white',
+    'font-medium text-xl text-gray-900 dark:text-white',
   friendSearchResultCardSelf: 'text-sm text-gray-500 dark:text-gray-400 mt-1',
   friendSearchResultCardPending:
     'text-sm text-yellow-500 dark:text-yellow-400 mt-1 flex items-center',

@@ -1,10 +1,10 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import Icon from '../../../components/common/Icon/Icon.component';
-import NavButton from '../../../components/common/Button/NavButton';
+import View from '../../../components/common/View.component';
 import { FriendSidebarProps, SidebarItem } from '../../../types/friend/props/component.props';
 import { IconName } from '../../../assets/icons';
 import { GROUP_CLASSNAMES } from '../../../styles/group-class-name.style';
+import Icon from '../../../components/common/Icon/Icon.component';
 
 const FriendSidebar: React.FC<FriendSidebarProps> = ({
   activeTab,
@@ -21,59 +21,64 @@ const FriendSidebar: React.FC<FriendSidebarProps> = ({
   ];
 
   return (
-    <div className={GROUP_CLASSNAMES.sidebarContainer}>
-      {/* User info */}
-      {currentUser && (
-        <div className="mb-8 p-4 bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300">
-          <div className="flex flex-col items-center">
-            <div className={GROUP_CLASSNAMES.avatarSmall}>
-              {currentUser.email ? currentUser.email.charAt(0).toUpperCase() : 'U'}
-            </div>
-            <h3 className="text-lg font-semibold text-center text-gray-800 dark:text-white">{(currentUser as any).full_name || currentUser.email}</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 text-center mt-1">{currentUser.email}</p>
-            <div className="mt-3 w-full pt-3 border-t border-gray-200 dark:border-gray-700">
-              <p className="text-xs text-center text-gray-500 dark:text-gray-400">{t('Manage your friend connections')}</p>
+    <View className="w-64 border-r border-gray-200">
+      <div className="h-full flex flex-col">
+        {/* Header section */}
+        <div className="p-6 border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-800">Friends</h2>
+          <p className="text-sm text-gray-500 mt-1">Manage your connections</p>
+        </div>
+
+        {/* User info - Simplified */}
+        {currentUser && (
+          <div className="px-6 py-4 border-b border-gray-200">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-[#21b4ca] flex items-center justify-center text-white font-medium">
+                {currentUser.email ? currentUser.email.charAt(0).toUpperCase() : 'U'}
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-gray-800">{(currentUser as any).full_name || currentUser.email}</h3>
+                <p className="text-xs text-gray-500">{currentUser.email}</p>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      <h2 className="text-xl font-bold mb-6 text-gray-800 dark:text-gray-200 px-2">{t('Friend Management')}</h2>
-      <div className="flex-1 space-y-3">
-        {sidebarItems.map((item) => (
-          <NavButton
-            key={item.key}
-            label={
-              <div className="flex items-center justify-between w-full">
-                <div className="flex items-center gap-3">
-                  <Icon
-                    name={item.icon}
-                    size={24}
-                    transparent={true}
-                    className="text-gray-600 dark:text-gray-300"
-                  />
-                  <span className="text-gray-800 dark:text-gray-200 font-semibold text-sm tracking-wide">
-                    {item.label}
-                  </span>
-                </div>
-              </div>
-            }
-            isActive={activeTab === item.path}
-            onClick={() => onTabChange(item.path)}
-            className={`w-full py-3 px-4 rounded-xl transition-all duration-300 ease-in-out ${activeTab === item.path
-              ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
-              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-              }`}
-          />
-        ))}
-      </div>
-      <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-        <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
-          <p>{t('Optiverse Friend System')}</p>
-          <p className="mt-1">© {new Date().getFullYear()}</p>
+        {/* Navigation items - Centered with proper spacing */}
+        <div className="flex-1 flex flex-col pt-10 px-6 space-y-4">
+          {sidebarItems.map(item => (
+            <button
+              key={item.key}
+              onClick={() => onTabChange(item.path)}
+              className={`
+                px-6 py-3 rounded-lg text-left cursor-pointer transition-all duration-200 flex items-center
+                ${activeTab === item.path
+                  ? 'bg-[#e7f6f7] text-[#21b4ca]'
+                  : 'text-gray-700 hover:bg-gray-50'
+                }
+              `}
+            >
+              <Icon
+                name={item.icon || 'home'}
+                size={18}
+                className={`mr-3 ${activeTab === item.path ? 'text-[#21b4ca]' : 'text-gray-500'}`}
+              />
+              <span className="font-medium text-sm">
+                {item.label}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {/* Footer section */}
+        <div className="p-6 border-t border-gray-200">
+          <div className="text-xs text-gray-500 text-center">
+            <p>{t('Optiverse Friend System')}</p>
+            <p className="mt-1">© {new Date().getFullYear()}</p>
+          </div>
         </div>
       </div>
-    </div>
+    </View>
   );
 };
 

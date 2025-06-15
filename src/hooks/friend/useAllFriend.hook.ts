@@ -1,13 +1,37 @@
 import { useTranslation } from 'react-i18next';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../store';
 import { AllFriendsProps } from '../../types/friend/props/component.props';
+import {
+  setFriends,
+  setSentRequests,
+  setPendingRequests,
+  setUser,
+  setError,
+  setLoading,
+  setSearchedUsers,
+  addFriend,
+  acceptFriend,
+  cancelFriendRequest,
+  removeFriend,
+} from '../../store/slices/friend.slice';
+import FriendService from '../../services/friend.service';
 
 export const useAllFriend = ({
   friends,
   loading,
 }: Pick<AllFriendsProps, 'friends' | 'loading'>) => {
   const { t } = useTranslation();
+  const dispatch = useDispatch<AppDispatch>();
 
+  useEffect(() => {
+    const fetchFriends = async () => {
+      const friends = await FriendService.viewAllFriends();
+      dispatch(setFriends(friends));
+    };
+    fetchFriends();
+  }, []);
   const getColorFromString = (str: string) => {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {

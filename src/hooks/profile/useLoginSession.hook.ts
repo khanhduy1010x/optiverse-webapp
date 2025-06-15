@@ -52,15 +52,9 @@ export function useLoginSessions() {
     }
   };
 
-  const handleNavigate = (menuKey: string) => {
+  const handleNavigate = (menuKey: string, path: string) => {
     setSelectedMenu(menuKey);
-    const paths: Record<string, string> = {
-      profile: '/user-profile',
-      achievements: '/achievements',
-      friends: '/friends',
-      'login-sessions': '/login-session',
-    };
-    navigate(paths[menuKey]);
+    navigate(path);
   };
 
   const handleLogoutSession = async (sessionId: string) => {
@@ -72,12 +66,12 @@ export function useLoginSessions() {
         try {
           await profileService.logoutSession(sessionId);
           setConfirmModal(prev => ({ ...prev, isOpen: false }));
-          
+
           // Update active sessions state directly
-          setActiveSessions(prevSessions => 
+          setActiveSessions(prevSessions =>
             prevSessions.filter(session => session._id !== sessionId)
           );
-          
+
           // Move the logged out session to previous sessions
           const loggedOutSession = activeSessions.find(
             session => session._id === sessionId

@@ -1,68 +1,56 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import { FriendHeaderProps } from '../../../types/friend/props/component.props';
-import { GROUP_CLASSNAMES } from '../../../styles';
+import { useTranslation } from 'react-i18next';
 
-
-const FriendHeader: React.FC<FriendHeaderProps> = ({ activeTab, loading, onRefresh }) => {
+const FriendHeader: React.FC<FriendHeaderProps> = ({
+  activeTab,
+  loading,
+  onRefresh,
+}) => {
   const { t } = useTranslation();
 
-  // Xác định tiêu đề và mô tả dựa trên tab hiện tại
-  const getHeaderContent = () => {
-    switch (activeTab) {
-      case 'friends':
-        return {
-          title: t('All Friends'),
-          description: t('Manage your connections with other users')
-        };
-      case 'pending':
-        return {
-          title: t('Pending Requests'),
-          description: t('Friend requests waiting for your approval')
-        };
-      case 'sent':
-        return {
-          title: t('Sent Requests'),
-          description: t('Friend requests you have sent to others')
-        };
-      case 'search':
-        return {
-          title: t('Search Users'),
-          description: t('Find and connect with other users')
-        };
-      default:
-        return {
-          title: t('Friend Management'),
-          description: t('Manage your social connections')
-        };
-    }
+  // Map tab keys to display titles
+  const tabTitles: Record<string, string> = {
+    friends: t('All Friends'),
+    pending: t('Pending Requests'),
+    sent: t('Sent Requests'),
+    search: t('Search Users'),
   };
-
-  const { title, description } = getHeaderContent();
 
   return (
     <div className="mb-6">
-      <div className={GROUP_CLASSNAMES.flexJustifyBetween}>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
-            {title}
-          </h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            {description}
-          </p>
-        </div>
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold text-gray-800">
+          {tabTitles[activeTab] || t('Friend Management')}
+        </h1>
         <button
           onClick={onRefresh}
-          className={GROUP_CLASSNAMES.buttonRefresh}
           disabled={loading}
+          className="px-4 py-2 bg-[#21b4ca] text-white rounded-lg hover:bg-[#1c9eb1] transition-colors duration-300 flex items-center gap-2 disabled:opacity-50"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          <svg
+            className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+            />
           </svg>
           {loading ? t('Refreshing...') : t('Refresh')}
         </button>
       </div>
-      <div className={`mt-4 ${GROUP_CLASSNAMES.gradientBar}`}></div>
+      <p className="text-gray-500 mt-1">
+        {activeTab === 'friends' && t('View and manage your friend connections')}
+        {activeTab === 'pending' && t('Accept or decline friend requests')}
+        {activeTab === 'sent' && t('View and manage your sent friend requests')}
+        {activeTab === 'search' && t('Search for users to add as friends')}
+      </p>
+      <div className="h-1 bg-gray-200 mt-4"></div>
     </div>
   );
 };

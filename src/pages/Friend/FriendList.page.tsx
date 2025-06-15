@@ -70,55 +70,17 @@ const FriendList: React.FC = () => {
     );
   };
 
-  // Xử lý khi chuyển tab
-  const handleTabChange = (tabKey: string) => {
-    console.log('Tab đã chuyển sang:', tabKey);
-    setActiveTab(tabKey);
-
-    // Xóa cache và làm mới dữ liệu khi chuyển tab
-    FriendService.clearCache();
-
-    // Xóa kết quả tìm kiếm và thông báo lỗi khi chuyển tab
-    if (tabKey !== 'search') {
-      dispatch(setSearchedUsers([]));
-      dispatch(setError(null));
-      setSearchEmail('');
-    }
-
-    // Tải dữ liệu tương ứng với tab được chọn
-    if (tabKey === 'sent') {
-      console.log('Tab sent: Gọi fetchSentRequests');
-      fetchSentRequests();
-    } else if (tabKey === 'pending') {
-      console.log('Tab pending: Gọi fetchPendingRequests');
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    if (tab === 'pending' && pendingRequests.length === 0) {
       fetchPendingRequests();
-    } else if (tabKey === 'friends') {
-      console.log('Tab friends: Gọi fetchData và viewAllFriends trực tiếp');
-      // Gọi trực tiếp API để đảm bảo request được gửi đi
-      fetchData();
-
-      // Gọi trực tiếp API và cập nhật state để đảm bảo
-      dispatch(setLoading(true));
-      FriendService.viewAllFriends()
-        .then(friendList => {
-          console.log('Kết quả trực tiếp từ viewAllFriends:', friendList);
-          if (friendList && friendList.length > 0) {
-            dispatch(setFriends(friendList));
-          }
-          dispatch(setLoading(false));
-        })
-        .catch(err => {
-          console.error('Lỗi khi gọi trực tiếp viewAllFriends:', err);
-          dispatch(setLoading(false));
-        });
-    } else {
-      console.log('Tab khác: Gọi fetchData');
-      fetchData();
+    } else if (tab === 'sent' && sentRequests.length === 0) {
+      fetchSentRequests();
     }
   };
 
   return (
-    <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
+    <div className="flex h-screen bg-white">
       {/* Sidebar */}
       <FriendSidebar
         activeTab={activeTab}
