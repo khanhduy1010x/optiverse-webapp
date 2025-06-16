@@ -103,9 +103,10 @@ class TaskService {
       const response = await api.get<ApiResponse<{ task: Task }>>(
         `/productivity/task/${taskId}`
       );
+      console.log('API getTaskTags response:', response.data);
       if (response.data && response.data.data && response.data.data.task) {
         const task = response.data.data.task;
-
+        console.log('Task object in getTaskTags:', task);
         // Extract tags from the virtual field
         if (task.tags && Array.isArray(task.tags)) {
           // Map the tags to a more usable format
@@ -122,7 +123,11 @@ class TaskService {
               return null;
             })
             .filter(tag => tag !== null);
+        } else {
+          console.warn('No tags array found in task:', task);
         }
+      } else {
+        console.warn('No task found in getTaskTags response:', response.data);
       }
       return [];
     } catch (error) {
