@@ -181,40 +181,18 @@ const TaskPage: React.FC = () => {
     setTaskToEdit(null);
   };
 
-  // Hàm fetch tags cho task
-  const fetchTagsForTask = async (taskId: string) => {
-    const tags = await taskService.getTaskTags(taskId);
-    setSelectedTags(tags);
-  };
-
   // Sửa hàm mở form sửa task
-  const openEditTaskForm = async (task: Task) => {
+  const openEditTaskForm = (task: Task) => {
     setTaskToEdit(task);
     setTitle(task.title);
     setDescription(task.description || '');
     setStatus(task.status);
     setPriority(task.priority);
+    if (taskTags[task._id]) {
+      setSelectedTags(taskTags[task._id]);
+    }
     setShowEditTaskForm(true);
     setShowCreateTaskForm(false);
-    // Luôn fetch lại tags từ backend
-    await fetchTagsForTask(task._id);
-  };
-
-  // Viết lại handleTagSelect
-  const handleTagSelect = async (tag: Tag) => {
-    if (!taskToEdit) return;
-    const isSelected = selectedTags.some(t => t._id === tag._id);
-    if (isSelected) {
-      // Tìm taskTagId để xóa
-      const tagObj = selectedTags.find(t => t._id === tag._id);
-      if (tagObj && tagObj.taskTagId) {
-        await taskService.deleteTaskTag(tagObj.taskTagId);
-      }
-    } else {
-      await taskService.createTaskTag(taskToEdit._id, tag._id);
-    }
-    // Fetch lại tags cho task
-    await fetchTagsForTask(taskToEdit._id);
   };
 
   // Search filter
@@ -257,28 +235,42 @@ const TaskPage: React.FC = () => {
     setFilteredTasks(prev => sortTasksWithCompletedAtBottom([...prev]));
   };
 
+  // Define a handler for tag selection
+  const handleTagSelect = (tag: Tag) => {
+    const isSelected = selectedTags.some(t => t._id === tag._id);
+    if (isSelected) {
+      setSelectedTags(prev => prev.filter(t => t._id !== tag._id));
+    } else {
+      setSelectedTags(prev => [...prev, tag]);
+    }
+  };
+
   const handleUpdateTask = async (updatedTask: Partial<Task>) => {
-    if (!taskToEdit) return;
+    if (!selectedTask) return;
+
+    // Đảm bảo truyền đủ trường khi update
     const dataToUpdate = {
-      title: updatedTask.title ?? taskToEdit.title,
-      description: updatedTask.description ?? taskToEdit.description,
-      status: updatedTask.status ?? taskToEdit.status,
-      priority: updatedTask.priority ?? taskToEdit.priority,
-      tags: selectedTags.map(tag => tag._id),
+      title: updatedTask.title ?? selectedTask.title,
+      description: updatedTask.description ?? selectedTask.description,
+      status: updatedTask.status ?? selectedTask.status,
+      priority: updatedTask.priority ?? selectedTask.priority,
     };
+
     try {
-      // Cập nhật ngay lập tức trong state
       setTasks(prevTasks => {
-        return prevTasks.map(task =>
-          task._id === taskToEdit._id ? { ...task, ...dataToUpdate } : task
+        const updatedTasks = prevTasks.map(task =>
+          task._id === selectedTask._id ? { ...task, ...dataToUpdate } : task
         );
+        return sortTasksWithCompletedAtBottom(updatedTasks);
       });
-      setShowEditTaskForm(false);
-      setTaskToEdit(null);
-      // Gọi API update
-      await taskService.updateTask(taskToEdit._id, dataToUpdate);
-      // Sau đó fetch lại để đồng bộ toàn bộ danh sách
-      await fetchTasks();
+
+      const response = await taskService.updateTask(selectedTask._id, dataToUpdate);
+      if (response && response.data && response.data.task) {
+        fetchTasks();
+      } else {
+        fetchTasks();
+        throw new Error('Failed to update task');
+      }
     } catch (error) {
       alert('Failed to update task. Please try again.');
     }
@@ -379,6 +371,8 @@ const TaskPage: React.FC = () => {
                   status: updated.status as "pending" | "completed" | "overdue",
                   priority: updated.priority as "low" | "medium" | "high",
                 });
+                setShowEditTaskForm(false);
+                setTaskToEdit(null);
               }}
               selectedTags={selectedTags}
               allTags={allTags}
