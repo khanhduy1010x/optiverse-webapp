@@ -80,6 +80,11 @@ const TaskPage: React.FC = () => {
     setShowDeleteTagConfirm,
   } = useTaskState();
 
+  // Thêm state mới cho form
+  const [showCreateTaskForm, setShowCreateTaskForm] = useState(false);
+  const [showEditTaskForm, setShowEditTaskForm] = useState(false);
+  const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
+
   // Define utility function for sorting tasks
   const sortTasksWithCompletedAtBottom = (tasksToSort: any[]) => {
     return [...tasksToSort].sort((a, b) => {
@@ -168,20 +173,48 @@ const TaskPage: React.FC = () => {
 
   const { handleEditTask, handleSaveTask, resetForm } = taskForm;
 
-  // Sửa lỗi edit task: cập nhật state cha khi bấm Edit
-  const handleEditTaskWrapper = (task: Task, setSelectedTags: React.Dispatch<React.SetStateAction<Tag[]>>) => {
-    setSelectedTask(task);
+  // Sửa hàm mở form tạo task
+  const openCreateTaskForm = () => {
+    resetForm();
+    setShowCreateTaskForm(true);
+    setShowEditTaskForm(false);
+    setTaskToEdit(null);
+  };
+
+  // Hàm fetch tags cho task
+  const fetchTagsForTask = async (taskId: string) => {
+    const tags = await taskService.getTaskTags(taskId);
+    setSelectedTags(tags);
+  };
+
+  // Sửa hàm mở form sửa task
+  const openEditTaskForm = async (task: Task) => {
+    setTaskToEdit(task);
     setTitle(task.title);
-    // Make sure description is properly set, even if it's empty
     setDescription(task.description || '');
-    console.log('Setting description in handleEditTaskWrapper:', task.description || '');
     setStatus(task.status);
     setPriority(task.priority);
-    if (taskTags[task._id]) {
-      setSelectedTags(taskTags[task._id]);
+    setShowEditTaskForm(true);
+    setShowCreateTaskForm(false);
+    // Luôn fetch lại tags từ backend
+    await fetchTagsForTask(task._id);
+  };
+
+  // Viết lại handleTagSelect
+  const handleTagSelect = async (tag: Tag) => {
+    if (!taskToEdit) return;
+    const isSelected = selectedTags.some(t => t._id === tag._id);
+    if (isSelected) {
+      // Tìm taskTagId để xóa
+      const tagObj = selectedTags.find(t => t._id === tag._id);
+      if (tagObj && tagObj.taskTagId) {
+        await taskService.deleteTaskTag(tagObj.taskTagId);
+      }
+    } else {
+      await taskService.createTaskTag(taskToEdit._id, tag._id);
     }
-    setShowTaskDetail(false);
-    setShowPopup(true);
+    // Fetch lại tags cho task
+    await fetchTagsForTask(taskToEdit._id);
   };
 
   // Search filter
@@ -224,41 +257,29 @@ const TaskPage: React.FC = () => {
     setFilteredTasks(prev => sortTasksWithCompletedAtBottom([...prev]));
   };
 
-  // Define a handler for tag selection
-  const handleTagSelect = (tag: Tag) => {
-    const isSelected = selectedTags.some(t => t._id === tag._id);
-    if (isSelected) {
-      setSelectedTags(prev => prev.filter(t => t._id !== tag._id));
-    } else {
-      setSelectedTags(prev => [...prev, tag]);
-    }
-  };
-
   const handleUpdateTask = async (updatedTask: Partial<Task>) => {
-    if (!selectedTask) return;
-
+    if (!taskToEdit) return;
+    const dataToUpdate = {
+      title: updatedTask.title ?? taskToEdit.title,
+      description: updatedTask.description ?? taskToEdit.description,
+      status: updatedTask.status ?? taskToEdit.status,
+      priority: updatedTask.priority ?? taskToEdit.priority,
+      tags: selectedTags.map(tag => tag._id),
+    };
     try {
-      // Optimistic update
+      // Cập nhật ngay lập tức trong state
       setTasks(prevTasks => {
-        const updatedTasks = prevTasks.map(task =>
-          task._id === selectedTask._id ? { ...task, ...updatedTask } : task
+        return prevTasks.map(task =>
+          task._id === taskToEdit._id ? { ...task, ...dataToUpdate } : task
         );
-        return sortTasksWithCompletedAtBottom(updatedTasks);
       });
-
-      // Send update to server
-      const response = await taskService.updateTask(selectedTask._id, updatedTask);
-      if (response && response.data && response.data.task) {
-        console.log('Task updated successfully:', response.data.task);
-        // Refresh task list
-        fetchTasks();
-      } else {
-        // Revert on failure
-        fetchTasks();
-        throw new Error('Failed to update task');
-      }
+      setShowEditTaskForm(false);
+      setTaskToEdit(null);
+      // Gọi API update
+      await taskService.updateTask(taskToEdit._id, dataToUpdate);
+      // Sau đó fetch lại để đồng bộ toàn bộ danh sách
+      await fetchTasks();
     } catch (error) {
-      console.error('Error updating task:', error);
       alert('Failed to update task. Please try again.');
     }
   };
@@ -271,11 +292,7 @@ const TaskPage: React.FC = () => {
           <TaskHeader
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
-            setShowPopup={() => {
-              // Reset selectedTask when opening the create task form
-              setSelectedTask(null);
-              setShowPopup(true);
-            }}
+            setShowPopup={openCreateTaskForm}
             showFilterMenu={showFilterMenu}
             setShowFilterMenu={setShowFilterMenu}
             showSortMenu={showSortMenu}
@@ -296,7 +313,7 @@ const TaskPage: React.FC = () => {
             handleTaskClick={handleTaskClick}
             handleTaskUpdate={handleTaskUpdate}
             confirmDeleteTask={confirmDeleteTask}
-            handleEditTask={task => handleEditTaskWrapper(task, setSelectedTags)}
+            handleEditTask={openEditTaskForm}
             loading={loading}
             setShowPopup={setShowPopup}
             searchQuery={searchQuery}
@@ -309,75 +326,66 @@ const TaskPage: React.FC = () => {
               selectedTask={selectedTask}
               taskTags={taskTags}
               setShowTaskDetail={setShowTaskDetail}
-              handleEditTask={task => handleEditTaskWrapper(task, setSelectedTags)}
+              handleEditTask={task => openEditTaskForm(task)}
             />
           )}
 
           {/* Task Form */}
-          {showPopup && (
-            console.log('Rendering task form, selectedTask:', selectedTask ? 'exists' : 'null'),
-            selectedTask ? (
-              <EditTaskForm
-                task={selectedTask}
-                onClose={() => {
-                  setSelectedTask(null);
-                  setShowTaskDetail(false);
-                }}
-                onSave={handleUpdateTask}
-                setTitle={(newTitle) => {
-                  console.log('Task.page.tsx - setTitle called with:', newTitle);
-                  setSelectedTask(prev => prev ? { ...prev, title: newTitle } : null);
-                }}
-                setDescription={(newDescription) => {
-                  console.log('Task.page.tsx - setDescription called with:', newDescription);
-                  setSelectedTask(prev => prev ? { ...prev, description: newDescription } : null);
-                }}
-                setStatus={(newStatus) => {
-                  console.log('Task.page.tsx - setStatus called with:', newStatus);
-                  setSelectedTask(prev => prev ? { ...prev, status: newStatus } : null);
-                }}
-                setPriority={(newPriority) => {
-                  console.log('Task.page.tsx - setPriority called with:', newPriority);
-                  setSelectedTask(prev => prev ? { ...prev, priority: newPriority } : null);
-                }}
-              />
-            ) : (
-              <CreateTaskForm
-                title={title}
-                setTitle={setTitle}
-                description={description}
-                setDescription={setDescription}
-                priority={priority}
-                setPriority={setPriority}
-                setShowPopup={setShowPopup}
-                selectedTags={selectedTags}
-                allTags={allTags}
-                handleTagSelect={handleTagSelect}
-                showNewTagForm={showNewTagForm}
-                setShowNewTagForm={setShowNewTagForm}
-                handleSaveTask={async (title) => {
-                  try {
-                    const response = await taskService.createTask({
-                      title: title || '',
-                      description,
-                      priority,
-                      status: 'pending'
-                    });
-                    if (response) {
-                      console.log('Task created successfully:', response);
-                      fetchTasks();
-                      setShowPopup(false);
-                      return true;
-                    }
-                    return false;
-                  } catch (error) {
-                    console.error('Error creating task:', error);
-                    alert('Failed to create task. Please try again.');
-                    return false;
+          {showCreateTaskForm && (
+            <CreateTaskForm
+              title={title}
+              setTitle={setTitle}
+              description={description}
+              setDescription={setDescription}
+              priority={priority}
+              setPriority={setPriority}
+              setShowPopup={setShowCreateTaskForm}
+              selectedTags={selectedTags}
+              allTags={allTags}
+              handleTagSelect={handleTagSelect}
+              showNewTagForm={showNewTagForm}
+              setShowNewTagForm={setShowNewTagForm}
+              handleSaveTask={async (title) => {
+                try {
+                  const response = await taskService.createTask({
+                    title: title || '',
+                    description,
+                    priority,
+                    status: 'pending'
+                  });
+                  if (response) {
+                    fetchTasks();
+                    setShowCreateTaskForm(false);
+                    return true;
                   }
-                }}
-              />
-            )
+                  return false;
+                } catch (error) {
+                  alert('Failed to create task. Please try again.');
+                  return false;
+                }
+              }}
+            />
+          )}
+          {showEditTaskForm && taskToEdit && (
+            <EditTaskForm
+              task={taskToEdit}
+              onClose={() => {
+                setShowEditTaskForm(false);
+                setTaskToEdit(null);
+              }}
+              onSave={async (updated) => {
+                await handleUpdateTask({
+                  ...updated,
+                  status: updated.status as "pending" | "completed" | "overdue",
+                  priority: updated.priority as "low" | "medium" | "high",
+                });
+              }}
+              selectedTags={selectedTags}
+              allTags={allTags}
+              handleTagSelect={handleTagSelect}
+              showNewTagForm={showNewTagForm}
+              setShowNewTagForm={setShowNewTagForm}
+            />
           )}
 
           {/* Delete Confirmation */}
