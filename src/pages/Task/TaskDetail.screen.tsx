@@ -4,7 +4,7 @@ import { Task } from '../../types/task/response/task.response';
 import { Tag } from '../../types/task/response/tag.response';
 import { GROUP_CLASSNAMES } from '../../styles';
 import { TaskDetailProps } from '../../types/task/props/component.props';
-
+import Modal from 'react-modal';
 
 
 const TaskDetail: React.FC<TaskDetailProps> = ({
@@ -16,8 +16,10 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
     if (!selectedTask) return null;
 
     return (
-        <div className={GROUP_CLASSNAMES.taskModalOverlay}>
-            <div className={GROUP_CLASSNAMES.taskModalContent}>
+        <Modal isOpen={true}
+            className="fixed bottom-50 left-1/2 -translate-x-1/2 w-[450px] max-w-[90vw] bg-white rounded-2xl shadow-2xl z-[2000] outline-none"
+            overlayClassName="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000]"
+        >               <div className={GROUP_CLASSNAMES.taskModalContent}>
                 {/* Task title */}
                 <div className={GROUP_CLASSNAMES.taskDetailHeader}>
                     <h2 className="text-xl font-medium text-gray-900">
@@ -129,7 +131,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
                     </svg>
                 </button>
             </div>
-        </div>
+        </Modal>
     );
 };
 

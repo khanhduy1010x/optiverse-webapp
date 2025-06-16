@@ -2,7 +2,7 @@ import React from 'react';
 import { Tag } from '../../types/task/response/tag.response';
 import { GROUP_CLASSNAMES } from '../../styles';
 import { TagManagementProps } from '../../types/task/props/component.props';
-
+import Modal from 'react-modal';
 
 const TagManagement: React.FC<TagManagementProps> = ({
     allTags,
@@ -20,8 +20,10 @@ const TagManagement: React.FC<TagManagementProps> = ({
     };
 
     return (
-        <div className={GROUP_CLASSNAMES.taskModalOverlay}>
-            <div className={GROUP_CLASSNAMES.taskModalContent}>
+        <Modal isOpen={true}
+            className="fixed bottom-70 left-1/2 -translate-x-1/2 w-[450px] max-w-[90vw] bg-white rounded-2xl shadow-2xl z-[2000] outline-none"
+            overlayClassName="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000]"
+        >             <div className={GROUP_CLASSNAMES.taskModalContent}>
                 {/* Header */}
                 <div className={GROUP_CLASSNAMES.taskModalHeader}>
                     <h3 className="text-lg font-medium text-gray-900">Manage Tags</h3>
@@ -110,7 +112,7 @@ const TagManagement: React.FC<TagManagementProps> = ({
                     </div>
                 </div>
             </div>
-        </div>
+        </Modal>
     );
 };
 

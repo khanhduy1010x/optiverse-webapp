@@ -1,9 +1,18 @@
-import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
-import { AUTH_ERROR_EVENT, TOKEN_REFRESH_SUCCESS } from '../contexts/auth.context';
+import axios, {
+  AxiosInstance,
+  InternalAxiosRequestConfig,
+  AxiosResponse,
+  AxiosError,
+} from 'axios';
+import {
+  AUTH_ERROR_EVENT,
+  TOKEN_REFRESH_SUCCESS,
+  SESSION_EXPIRED_EVENT,
+} from '../contexts/auth.context';
 
 const api: AxiosInstance = axios.create({
-  baseURL: 'http://localhost:81', 
-  timeout: 10000, 
+  baseURL: 'https://api.optiverse.io.vn',
+  timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -26,7 +35,7 @@ const processQueue = (error: any = null, token: string | null = null) => {
       request.resolve(api(request.config));
     }
   });
-  
+
   failedQueue = [];
 };
 
@@ -39,7 +48,7 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => {
+  error => {
     return Promise.reject(error);
   }
 );
@@ -57,37 +66,60 @@ if (typeof window !== 'undefined') {
 
 // Add response interceptor for error handling and token refresh
 api.interceptors.response.use(
-  (response) => response,
+  response => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig;
     const requestUrl = originalRequest?.url || '';
-    
+
     // Do not intercept auth/login errors - let them be handled by the components
     if (requestUrl.includes('auth/login')) {
       return Promise.reject(error);
     }
-    
+
     // Check if error is due to authentication (Unauthenticated, code 1005)
     if (
-      error.response?.status === 401 && 
-      error.response?.data && 
-      (error.response.data as any).code === 1005 && 
+      error.response?.status === 401 &&
+      error.response?.data &&
+      (error.response.data as any).code === 1005 &&
       !originalRequest?.headers['X-Retry']
     ) {
       // Dispatch auth error event for the AuthContext to handle
       window.dispatchEvent(new Event(AUTH_ERROR_EVENT));
-      
+
       // Add this request to the queue
       return new Promise((resolve, reject) => {
         failedQueue.push({ resolve, reject, config: originalRequest });
       });
     }
-    
+
+    // Handle "Account is log out" error (code 1019) with HTTP status 400
+    if (
+      error.response?.status === 400 ||
+      (error.response?.data &&
+        (error.response.data as any).code === 1019 &&
+        (error.response.data as any).message === 'Account is log out')
+    ) {
+      console.log('Session expired or logged out: clearing auth data');
+
+      // Dispatch session expired event
+      window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
+
+      // Clear all localStorage
+      localStorage.clear();
+
+      // Redirect to login page if not already there
+      if (!window.location.pathname.includes('/')) {
+        window.location.href = '/';
+      }
+
+      return Promise.reject(error);
+    }
+
     // Handle other errors
     // Don't redirect to login page if we're already on a login-related endpoint
     if (
-      error.response?.status === 401 && 
-      !requestUrl.includes('auth/login') && 
+      error.response?.status === 401 &&
+      !requestUrl.includes('auth/login') &&
       !requestUrl.includes('auth/google')
     ) {
       localStorage.removeItem('accessToken');
@@ -97,7 +129,7 @@ api.interceptors.response.use(
         window.location.href = '/login';
       }
     }
-    
+
     return Promise.reject(error);
   }
 );

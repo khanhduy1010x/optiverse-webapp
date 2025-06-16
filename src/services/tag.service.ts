@@ -65,16 +65,31 @@ class TagService {
   // Create a task-tag association
   async createTaskTag(taskId: string, tagId: string) {
     try {
-      const response = await api.post<
-        ApiResponse<{ taskTag: TaskTagRelation }>
-      >('/productivity/task-tag', {
+      console.log(
+        `Creating task-tag association: taskId=${taskId}, tagId=${tagId}`
+      );
+
+      const payload = {
         task_id: taskId,
         tag_id: tagId,
-      });
+      };
+
+      console.log('Task-tag request payload:', payload);
+
+      const response = await api.post<
+        ApiResponse<{ taskTag: TaskTagRelation }>
+      >('/productivity/task-tag', payload);
+
+      console.log('Task-tag creation response:', response.data);
 
       if (response.data && response.data.data && response.data.data.taskTag) {
+        console.log('Task-tag created successfully');
         return response.data.data.taskTag;
       }
+
+      console.error(
+        'Failed to create task-tag: API response did not contain expected data'
+      );
       throw new Error('Failed to associate tag with task');
     } catch (error) {
       console.error(

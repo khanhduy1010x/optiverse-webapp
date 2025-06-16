@@ -8,7 +8,9 @@ export function useTaskOperations(
   setTasks: React.Dispatch<React.SetStateAction<Task[]>>,
   setFilteredTasks: React.Dispatch<React.SetStateAction<Task[]>>,
   taskTags: { [taskId: string]: Tag[] },
-  setTaskTags: React.Dispatch<React.SetStateAction<{ [taskId: string]: Tag[] }>>,
+  setTaskTags: React.Dispatch<
+    React.SetStateAction<{ [taskId: string]: Tag[] }>
+  >,
   setLoading: React.Dispatch<React.SetStateAction<boolean>>,
   selectedTask: Task | null,
   setSelectedTask: React.Dispatch<React.SetStateAction<Task | null>>,
@@ -217,7 +219,9 @@ export function useTaskOperations(
     try {
       await taskService.deleteTask(taskId);
       setTasks(prevTasks => prevTasks.filter(task => task._id !== taskId));
-      setFilteredTasks(prevTasks => prevTasks.filter(task => task._id !== taskId));
+      setFilteredTasks(prevTasks =>
+        prevTasks.filter(task => task._id !== taskId)
+      );
       setTaskToDelete(null);
       setShowDeleteConfirm(false);
     } catch (error) {
@@ -233,6 +237,6 @@ export function useTaskOperations(
     filterTasksByTagsLocal,
     handleTaskUpdate,
     handleTaskClick,
-    handleDeleteTask
+    handleDeleteTask,
   };
 }

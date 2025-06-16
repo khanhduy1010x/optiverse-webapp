@@ -144,8 +144,8 @@ export const GROUP_CLASSNAMES = {
 
   // Layout containers
   pageContainer: 'min-h-screen bg-gray-50',
-  contentContainer: 'max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6',
-  headerContainer: 'bg-white shadow-sm border-b border-gray-200',
+  contentContainer: ' px-8 py-6',
+  headerContainer: 'bg-white shadow-sm border-b rounded-xl border-gray-200',
 
   // Profile and Login Session styles
   profileSidebar: 'w-1/6 bg-white',
@@ -185,8 +185,7 @@ export const GROUP_CLASSNAMES = {
   // Task page styles
   taskModalOverlay:
     'fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50',
-  taskModalContent:
-    'relative bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden',
+  taskModalContent: 'relative bg-white rounded-lg shadow-xl overflow-hidden',
   taskModalHeader:
     'flex justify-between items-center px-4 py-3 border-b border-gray-200',
   taskModalFooter: 'px-6 py-4 bg-gray-50 flex justify-end space-x-3',
@@ -200,7 +199,7 @@ export const GROUP_CLASSNAMES = {
 
   taskListContainer: 'bg-white rounded-lg shadow',
   taskListItem:
-    'px-6 py-3 hover:bg-gray-50 cursor-pointer transition-colors group',
+    ' py-3 px-2 hover:bg-gray-50 cursor-pointer transition-colors group',
   taskCheckbox:
     'flex-shrink-0 mt-1 w-5 h-5 rounded-full border flex items-center justify-center cursor-pointer transition-colors',
   taskCheckboxCompleted: 'bg-green-500 border-green-500 text-white',
@@ -251,8 +250,7 @@ export const GROUP_CLASSNAMES = {
     'text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-gray-100',
 
   // Delete confirmation modal
-  deleteConfirmModal:
-    'bg-white rounded-lg shadow-xl p-5 w-[350px] max-w-[90vw]',
+  deleteConfirmModal: 'bg-white rounded-lg shadow-xl p-5 max-w-[90vw]',
   deleteConfirmIcon:
     'w-10 h-10 rounded-full bg-red-100 flex items-center justify-center',
   deleteConfirmIconSvg: 'h-6 w-6 text-red-600',

@@ -54,11 +54,10 @@ class ProfileService {
       return response.data.data || response.data;
     } catch (error: any) {
       console.error('Error updating profile:', error);
-      
+
       // Handle specific error codes from backend
       if (error.response?.data?.code) {
         switch (error.response.data.code) {
-      
           case 1022:
             throw new Error('Name cannot contain numbers');
           case 1023:
@@ -68,7 +67,9 @@ class ProfileService {
           case 1025:
             throw new Error('Name cannot be blank');
           default:
-            throw new Error(error.response.data.message || 'Failed to update profile');
+            throw new Error(
+              error.response.data.message || 'Failed to update profile'
+            );
         }
       }
 
@@ -91,20 +92,26 @@ class ProfileService {
       await api.post('/core/auth/change-password', data);
     } catch (error: any) {
       console.error('Error changing password:', error);
-      
+
       // Handle specific error codes from backend
       if (error.response?.data?.code) {
         switch (error.response.data.code) {
           case 1001:
             throw new Error('Current password is incorrect');
           case 1002:
-            throw new Error('New password must be different from current password');
+            throw new Error(
+              'New password must be different from current password'
+            );
           case 1003:
             throw new Error('Password must be at least 8 characters long');
           case 1004:
-            throw new Error('Password must contain at least one uppercase letter, one lowercase letter, one number and one special character');
+            throw new Error(
+              'Password must contain at least one uppercase letter, one lowercase letter, one number and one special character'
+            );
           default:
-            throw new Error(error.response.data.message || 'Failed to change password');
+            throw new Error(
+              error.response.data.message || 'Failed to change password'
+            );
         }
       }
 
@@ -135,8 +142,8 @@ class ProfileService {
       });
 
       localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');  // If you store user data
-      sessionStorage.clear();  // Clear any session storage data
+      localStorage.removeItem('refreshToken'); // If you store user data
+      sessionStorage.clear(); // Clear any session storage data
 
       window.location.href = '/';
     } catch (error: any) {
@@ -176,6 +183,7 @@ class ProfileService {
       const otherSessions = sessions.filter(
         (s: UserSession) => s._id !== currentSessionId
       );
+      console.log(otherSessions);
 
       return {
         current_session: currentSession || otherSessions[0], // Fallback to first session if current not found
@@ -247,19 +255,23 @@ class ProfileService {
       return response.data.data;
     } catch (error: any) {
       console.error('Error updating avatar:', error);
-      
+
       // Handle specific error codes from backend
       if (error.response?.data?.code) {
         switch (error.response.data.code) {
           case 2001:
             throw new Error('File size too large. Maximum size is 5MB');
           case 2002:
-            throw new Error('Invalid file type. Only JPG, PNG and GIF are allowed');
+            throw new Error(
+              'Invalid file type. Only JPG, PNG and GIF are allowed'
+            );
           case 2003:
             throw new Error('Image dimensions too large. Maximum size is 50MB');
-   
+
           default:
-            throw new Error(error.response.data.message || 'Failed to update avatar');
+            throw new Error(
+              error.response.data.message || 'Failed to update avatar'
+            );
         }
       }
 

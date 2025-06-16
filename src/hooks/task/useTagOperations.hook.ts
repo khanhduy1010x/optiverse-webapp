@@ -84,13 +84,17 @@ export function useTagOperations(
         // Đảm bảo các trường quan trọng luôn tồn tại
         _id: newTag._id || `temp-${Date.now()}`,
         name: newTag.name || newTagName,
-        color: newTag.color || newTagColor
+        color: newTag.color || newTagColor,
       };
 
       // Cập nhật allTags
       setAllTags(prevAllTags => {
         // Check if we already have this tag (by name or ID)
-        if (prevAllTags.some(tag => tag.name === completeTag.name || tag._id === completeTag._id)) {
+        if (
+          prevAllTags.some(
+            tag => tag.name === completeTag.name || tag._id === completeTag._id
+          )
+        ) {
           console.log(
             'Tag with this name already exists, not adding duplicate'
           );
@@ -136,8 +140,31 @@ export function useTagOperations(
       `Filtering by ${tags.length} tags:`,
       tags.map(tag => tag.name)
     );
+
+    // Update filter tags state
     setFilterTags(tags);
-    await taskService.filterTasksByTags(tags.map(tag => tag._id));
+
+    // Thực hiện filter trực tiếp từ data sẵn có
+    if (tags.length === 0) {
+      console.log('No tags selected, showing all tasks');
+      setFilteredTasks(sortTasksWithCompletedAtBottom([...tasks]));
+    } else {
+      console.log('Filtering tasks locally by tags:', tags);
+
+      // Filter tasks that have ALL selected tags
+      const filteredResult = tasks.filter(task => {
+        const taskTagsList = taskTags[task._id] || [];
+        // Kiểm tra task có chứa tất cả tags được chọn không
+        return tags.every(filterTag =>
+          taskTagsList.some(taskTag => taskTag._id === filterTag._id)
+        );
+      });
+
+      console.log(
+        `Found ${filteredResult.length} tasks matching selected tags`
+      );
+      setFilteredTasks(sortTasksWithCompletedAtBottom(filteredResult));
+    }
   };
 
   // Handle sort change
@@ -179,17 +206,22 @@ export function useTagOperations(
 
       // If this was the filtered tag, reset the filter
       if (filterTags.some(t => t._id === tagToDelete._id)) {
-        setFilterTags(filterTags.filter(t => t._id !== tagToDelete._id));
+        // Lọc bỏ tag khỏi danh sách filter
+        const remainingTags = filterTags.filter(t => t._id !== tagToDelete._id);
+        setFilterTags(remainingTags);
 
-        // If no more filter tags, show all tasks
-        if (filterTags.length <= 1) {
+        // Nếu không còn tag nào để filter, hiển thị tất cả task
+        if (remainingTags.length === 0) {
           setFilteredTasks(sortTasksWithCompletedAtBottom([...tasks]));
         } else {
-          // Otherwise, reapply filter with remaining tags
-          const remainingTags = filterTags.filter(
-            t => t._id !== tagToDelete._id
-          );
-          await handleFilterByTags(remainingTags);
+          // Ngược lại, filter lại tasks với các tag còn lại
+          const filteredResult = tasks.filter(task => {
+            const taskTagsList = taskTags[task._id] || [];
+            return remainingTags.every(filterTag =>
+              taskTagsList.some(taskTag => taskTag._id === filterTag._id)
+            );
+          });
+          setFilteredTasks(sortTasksWithCompletedAtBottom(filteredResult));
         }
       }
 

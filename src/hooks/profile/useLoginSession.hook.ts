@@ -33,13 +33,11 @@ export function useLoginSessions() {
       setError(null);
 
       const data = await profileService.getLoginSessions();
-
+      console.log(data);
       setCurrentSession(data.current_session);
       setActiveSessions(
         data.active_sessions.filter(
-          (session: UserSession) =>
-            session._id !== data.current_session._id &&
-            session.ip_address !== data.current_session.ip_address
+          (session: UserSession) => session._id !== data.current_session._id
         )
       );
       setPreviousSessions(data.previous_sessions);
@@ -112,11 +110,8 @@ export function useLoginSessions() {
   };
 
   const getDisplayedActiveSessions = () => {
-    return showAllActiveSessions
-      ? activeSessions
-      : activeSessions
-          .filter(session => !session.is_current)
-          .slice(0, SESSIONS_PER_PAGE);
+    console.log(activeSessions);
+    return activeSessions;
   };
 
   return {

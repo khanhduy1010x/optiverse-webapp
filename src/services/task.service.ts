@@ -139,20 +139,34 @@ class TaskService {
   // Filter tasks by multiple tags
   async filterTasksByTags(tagIds: string[]): Promise<Task[]> {
     try {
-      const response = await api.post<ApiResponse<Task[]>>(
+      console.log('Calling filter API with tag IDs:', tagIds);
+
+      // Create payload with proper format - backend might expect 'tag_ids' instead of 'tagIds'
+      const payload = {
+        tagIds: tagIds, // Try this format first
+      };
+
+      console.log('Filter API payload:', payload);
+
+      const response = await api.post<ApiResponse<{ listTask: Task[] }>>(
         '/productivity/task/filter-by-tags',
-        { tagIds }
+        payload
       );
-      if (response.data && response.data.data) {
-        const tasks = Array.isArray(response.data.data)
-          ? response.data.data
-          : [];
+
+      console.log('Filter API response:', response.data);
+
+      if (response.data && response.data.data && response.data.data.listTask) {
+        const tasks = response.data.data.listTask || [];
+
+        console.log('Parsed tasks from response:', tasks);
+
         return tasks.map(task => ({
           ...task,
           createdAt: task.createdAt || task.created_at,
           updatedAt: task.updatedAt || task.updated_at,
         }));
       }
+      console.warn('No data returned from filter API');
       return [];
     } catch (error) {
       console.error('Error filtering tasks by tags:', error);
@@ -165,7 +179,10 @@ class TaskService {
     try {
       const response = await api.post<ApiResponse<{ taskTag: any }>>(
         '/productivity/task-tag',
-        { taskId, tagId }
+        {
+          task_id: taskId,
+          tag_id: tagId,
+        }
       );
       if (response.data && response.data.data) {
         return response.data.data.taskTag;
