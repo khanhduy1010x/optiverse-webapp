@@ -1,7 +1,7 @@
 import React from 'react';
 import { GROUP_CLASSNAMES } from '../../styles';
 import { DeleteConfirmationProps } from '../../types/task/props/component.props';
-
+import Modal from 'react-modal';
 
 
 const DeleteConfirmation: React.FC<DeleteConfirmationProps> = ({
@@ -11,8 +11,10 @@ const DeleteConfirmation: React.FC<DeleteConfirmationProps> = ({
     onConfirm
 }) => {
     return (
-        <div className={GROUP_CLASSNAMES.taskModalOverlay}>
-            <div className={GROUP_CLASSNAMES.deleteConfirmModal}>
+        <Modal isOpen={true}
+            className="fixed bottom-70 left-1/2 -translate-x-1/2 w-[450px] max-w-[90vw] bg-white rounded-2xl shadow-2xl z-[2000] outline-none"
+            overlayClassName="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000]"
+        >             <div className={GROUP_CLASSNAMES.deleteConfirmModal}>
                 <div className="flex items-center justify-center mb-4">
                     <div className={GROUP_CLASSNAMES.deleteConfirmIcon}>
                         <svg className={GROUP_CLASSNAMES.deleteConfirmIconSvg} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -39,7 +41,7 @@ const DeleteConfirmation: React.FC<DeleteConfirmationProps> = ({
                     </button>
                 </div>
             </div>
-        </div>
+        </Modal>
     );
 };
 

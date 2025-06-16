@@ -1,6 +1,7 @@
 import React from 'react';
 import { useChangePassword } from '../../hooks/profile/useChangePassword.hook';
 import { ChangePasswordPopupProps } from '../../types/profile/props/component.props';
+import Modal from 'react-modal';
 
 const ChangePasswordPopup: React.FC<ChangePasswordPopupProps> = ({ onClose }) => {
     const {
@@ -22,7 +23,10 @@ const ChangePasswordPopup: React.FC<ChangePasswordPopupProps> = ({ onClose }) =>
     } = useChangePassword(onClose);
 
     return (
-        <div className="fixed inset-0 flex justify-center items-center z-50 bg-white/10">
+        <Modal isOpen={true}
+            className="fixed bottom-50 left-1/2 -translate-x-1/2 w-[360px] max-w-[90vw] bg-white rounded-2xl shadow-2xl z-[2000] outline-none"
+            overlayClassName="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000]"
+        >
             <div className="w-full max-w-sm p-6 rounded-xl shadow-xl bg-white border border-gray-200">
                 <h2 className="text-lg font-bold text-center mb-4 text-gray-800">Change Password</h2>
 
@@ -133,7 +137,7 @@ const ChangePasswordPopup: React.FC<ChangePasswordPopupProps> = ({ onClose }) =>
                     Cancel
                 </button>
             </div>
-        </div>
+        </Modal>
     );
 };
 

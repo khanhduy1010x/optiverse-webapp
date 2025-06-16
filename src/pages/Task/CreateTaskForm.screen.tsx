@@ -1,5 +1,6 @@
 import React from 'react';
 import { GROUP_CLASSNAMES } from '../../styles';
+import Modal from 'react-modal';
 import { CreateTaskFormProps } from '../../types/task/props/component.props';
 
 const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
@@ -18,8 +19,10 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
     handleSaveTask
 }) => {
     return (
-        <div className={GROUP_CLASSNAMES.taskModalOverlay}>
-            <div className={GROUP_CLASSNAMES.taskModalContent}>
+        <Modal isOpen={true}
+            className="fixed bottom-50 left-1/2 -translate-x-1/2 w-[450px] max-w-[90vw] bg-white rounded-2xl shadow-2xl z-[2000] outline-none"
+            overlayClassName="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000]"
+        >            <div className={GROUP_CLASSNAMES.taskModalContent}>
                 {/* Task name */}
                 <div className={GROUP_CLASSNAMES.taskDetailHeader}>
                     <input
@@ -110,7 +113,7 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                                         <div className="fixed top-1/3 left-1/3 transform -translate-x-1/2 -translate-y-1/2 w-64 bg-white rounded-md shadow-xl z-50 max-h-96 overflow-y-auto border border-gray-200">
                                             <div className="sticky top-0 bg-white px-4 py-3 border-b border-gray-200 flex justify-between items-center">
                                                 <span className="font-medium">Select Tags</span>
-                                                <button 
+                                                <button
                                                     onClick={() => setShowNewTagForm(false)}
                                                     className="text-gray-500 hover:text-gray-700"
                                                 >
@@ -119,14 +122,14 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                                                     </svg>
                                                 </button>
                                             </div>
-                                            
+
                                             {allTags.length === 0 ? (
                                                 <div className="px-4 py-3 text-sm text-gray-500">No tags available. Please create tags in the tag management section.</div>
                                             ) : (
                                                 <div className="py-2">
                                                     {allTags.map(tag => {
-                                                        const isSelected = selectedTags.some(t => 
-                                                            (t._id && tag._id && t._id === tag._id) || 
+                                                        const isSelected = selectedTags.some(t =>
+                                                            (t._id && tag._id && t._id === tag._id) ||
                                                             (t.name && tag.name && t.name === tag.name)
                                                         );
                                                         return (
@@ -186,7 +189,7 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                     </button>
                 </div>
             </div>
-        </div>
+        </Modal>
     );
 };
 

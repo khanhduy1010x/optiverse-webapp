@@ -264,6 +264,6 @@ export function useFriendList() {
     handleRemoveFriend,
     handleSearchUser,
     dispatch,
-    forceRefreshAllData
+    forceRefreshAllData,
   };
 }

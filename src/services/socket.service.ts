@@ -12,7 +12,7 @@ class SocketService {
   public connect(): void {
     if (this.socket) return;
 
-    this.socket = io('https://api.duynkdev.id.vn/', {
+    this.socket = io('https://api.optiverse.io.vn/', {
       path: '/productivity/socket.io',
       transports: ['websocket'],
     });

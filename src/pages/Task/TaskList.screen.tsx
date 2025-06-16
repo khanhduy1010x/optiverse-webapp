@@ -53,7 +53,7 @@ const TaskList: React.FC<TaskListComponentProps> = ({
     }
 
     return (
-        <ul className="divide-y divide-gray-100">
+        <ul className="divide-y divide-gray-100 max-w-6x px-6  py-6">
             {filteredTasks.map((task) => (
                 <li
                     key={task._id}

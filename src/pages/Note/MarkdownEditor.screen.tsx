@@ -110,13 +110,13 @@ const MarkdownEditor: React.FC = () => {
           </div>
         </div>
         <div className="flex gap-2 items-center">
-          <button
+          {/* <button
             className="px-4 py-2 bg-blue-600 cursor-pointer disabled:cursor-not-allowed flex items-center justify-between gap-1 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:text-gray-400 transition-all duration-150"
             onClick={handleFormatAI}
             disabled={isFormatting || showAcceptReject || !currentNote?.content.trim()}
           >
             AI Formatter <Icon name='blinkAI' />
-          </button>
+          </button> */}
           {showAcceptReject && (
             <>
               <button

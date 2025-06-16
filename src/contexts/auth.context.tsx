@@ -24,6 +24,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // Create a custom event for auth errors
 export const AUTH_ERROR_EVENT = 'auth_error';
 export const TOKEN_REFRESH_SUCCESS = 'token_refresh_success';
+export const SESSION_EXPIRED_EVENT = 'session_expired';
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -95,11 +96,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       }
     };
 
-    // Add event listener for auth errors
+    // Handler for session expiration events
+    const handleSessionExpired = () => {
+      console.log('Session expired event received');
+      logout();
+    };
+
+    // Add event listeners
     window.addEventListener(AUTH_ERROR_EVENT, handleAuthError);
+    window.addEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
 
     return () => {
       window.removeEventListener(AUTH_ERROR_EVENT, handleAuthError);
+      window.removeEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
     };
   }, []);
 
