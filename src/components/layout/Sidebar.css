@@ -1,0 +1,27 @@
+.sidebar-label {
+  transform: translateY(-50%) translateX(-100%);
+  opacity: 0;
+  transition:
+    transform 0.3s ease-out,
+    opacity 0.2s ease-out;
+  z-index: -10;
+  position: relative;
+  overflow: hidden;
+}
+
+.group:hover .sidebar-label {
+  transform: translateY(-50%) translateX(0);
+  opacity: 1;
+}
+
+.sidebar-label span {
+  position: relative;
+  z-index: -1;
+}
+.text-label-container {
+  transform: translateZ(-10px);
+}
+.slidebar-container {
+  transform-style: preserve-3d;
+  position: relative;
+}
