@@ -37,6 +37,9 @@ const FolderNote: React.FC = () => {
     filteredItems,
     groupedItems,
     itemCount,
+    renameLoading,
+    createLoading,
+    deleteLoading,
 
     // State setters
     setIsModalInputName,
@@ -63,6 +66,12 @@ const FolderNote: React.FC = () => {
     handleContextMenu,
     getFilterDisplayText,
   } = useFolderNote();
+
+  // Hàm truncate tên để hiển thị
+  const truncateName = (name: string, maxLength: number = 15) => {
+    if (name.length <= maxLength) return name;
+    return name.substring(0, maxLength) + '...';
+  };
 
   const renderItemRow = (item: RootItem) => (
     <div
@@ -96,8 +105,8 @@ const FolderNote: React.FC = () => {
         )}
       </div>
       <div className="flex-1">
-        <div className="font-medium text-gray-900">
-          {item.type === 'folder' ? item.name : item.title}
+        <div className="font-medium text-gray-900" title={item.type === 'folder' ? item.name : item.title}>
+          {item.type === 'folder' ? truncateName(item.name) : truncateName(item.title)}
         </div>
         <div className="text-sm text-gray-500">
           {formatDateTime(item.updatedAt).replace(' ', ' ')}
@@ -239,7 +248,7 @@ const FolderNote: React.FC = () => {
                 <path d="M560-280 360-480l200-200v400Z" />
               </svg>
             </button>
-            <div className="flex items-center overflow-x-auto">
+            <div className="flex items-center overflow-x-auto custom-scrollbar-2">
               <button
                 onClick={() => dispatch(setFolderStack([]))}
                 className="text-sm font-medium text-gray-700 hover:text-blue-600 cursor-pointer"
@@ -359,7 +368,7 @@ const FolderNote: React.FC = () => {
         setItemName={setItemName}
         createType={createType}
         onCreate={handleCreateItem}
-        loading={loading}
+        loading={createLoading}
         errorMessage={createErrorMessage}
       />
       <RenameModal
@@ -373,6 +382,7 @@ const FolderNote: React.FC = () => {
         selectedItem={selectedItem}
         onRename={handleRenameItem}
         errorMessage={renameErrorMessage}
+        loading={renameLoading}
       />
       <DeleteModal
         isOpen={isActionModalVisible && isDeleteConfirmVisible}
@@ -387,6 +397,7 @@ const FolderNote: React.FC = () => {
           setIsDeleteConfirmVisible(false);
           setIsActionModalVisible(true);
         }}
+        loading={deleteLoading}
       />
     </div>
   );

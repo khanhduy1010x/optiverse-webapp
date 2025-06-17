@@ -9,7 +9,21 @@ const DeleteModal: React.FC<DeleteModalProps> = ({
   onClose,
   selectedItem,
   onDelete,
+  loading = false
 }) => {
+  const [localLoading, setLocalLoading] = React.useState(false);
+
+  const handleDelete = async () => {
+    setLocalLoading(true);
+    try {
+      await onDelete();
+    } finally {
+      setLocalLoading(false);
+    }
+  };
+
+  const isButtonLoading = loading || localLoading;
+
   return (
     <Modal
       isOpen={isOpen}
@@ -42,23 +56,34 @@ const DeleteModal: React.FC<DeleteModalProps> = ({
         </div>
         <div className="space-y-3 px-6 pb-6">
           <button
-            onClick={onDelete}
-            className="w-full px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+            onClick={handleDelete}
+            disabled={isButtonLoading}
+            className="w-full px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 disabled:bg-red-300"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M3 6H5H21M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            <span>Delete Permanently</span>
+            {isButtonLoading ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                <span>Deleting...</span>
+              </>
+            ) : (
+              <>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M3 6H5H21M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <span>Delete Permanently</span>
+              </>
+            )}
           </button>
           <button
             onClick={onClose}
-            className="w-full px-4 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-medium transition-colors"
+            disabled={isButtonLoading}
+            className="w-full px-4 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-medium transition-colors disabled:bg-gray-100 disabled:text-gray-400"
           >
             Cancel
           </button>

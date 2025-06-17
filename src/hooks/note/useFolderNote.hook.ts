@@ -38,6 +38,9 @@ export const useFolderNote = () => {
   const [renameModalVisible, setRenameModalVisible] = useState(false);
   const [itemName, setItemName] = useState('');
   const [renameErrorMessage, setRenameErrorMessage] = useState('');
+  const [createLoading, setCreateLoading] = useState(false);
+  const [renameLoading, setRenameLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const [contextMenu, setContextMenu] = useState<{
     x: number;
@@ -232,15 +235,29 @@ export const useFolderNote = () => {
     return !invalidPattern.test(name);
   };
 
+  // Kiểm tra độ dài tên (tối đa 30 ký tự)
+  const isValidNameLength = (name: string) => {
+    return name.trim().length <= 30;
+  };
+
   const handleCreateItem = async () => {
+    setCreateLoading(true);
+
     if (!itemName.trim()) {
       setCreateErrorMessage('Name cannot be empty');
+      setCreateLoading(false);
+      return;
+    }
+    if (!isValidNameLength(itemName)) {
+      setCreateErrorMessage('Name must be 30 characters or less');
+      setCreateLoading(false);
       return;
     }
     if (!isValidWindowsName(itemName)) {
       setCreateErrorMessage(
         'Name contains invalid characters (\\ / : * ? " < > |) or is not allowed.'
       );
+      setCreateLoading(false);
       return;
     }
     const isDuplicate = checkNameExistsInCurrentFolder(
@@ -251,6 +268,7 @@ export const useFolderNote = () => {
       setCreateErrorMessage(
         `A ${createType === 'folder' ? 'folder' : 'note'} with that name already exists in this folder.`
       );
+      setCreateLoading(false);
       return;
     }
     setCreateErrorMessage('');
@@ -278,6 +296,8 @@ export const useFolderNote = () => {
     } catch (error: any) {
       console.error('Cannot create item:', error.message);
       toast.error('Failed to create item');
+    } finally {
+      setCreateLoading(false);
     }
   };
 
@@ -431,6 +451,7 @@ export const useFolderNote = () => {
 
   const handleDeleteItem = async () => {
     if (!selectedItem) return;
+    setDeleteLoading(true);
     try {
       const stackIds = folderStack.map(folder => folder._id);
 
@@ -444,11 +465,18 @@ export const useFolderNote = () => {
     } catch (error: any) {
       console.error('Cannot delete item:', error.message);
       toast.error('Failed to delete item');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
   const handleRenameItem = async () => {
-    if (!selectedItem || !renameInput.trim()) return;
+    setRenameLoading(true);
+
+    if (!selectedItem || !renameInput.trim()) {
+      setRenameLoading(false);
+      return;
+    }
 
     const isNote = selectedItem.type === 'file';
     const currentName = isNote ? selectedItem.title : selectedItem.name;
@@ -457,17 +485,25 @@ export const useFolderNote = () => {
       setRenameModalVisible(false);
       setIsActionModalVisible(false);
       setRenameInput('');
+      setRenameLoading(false);
+      return;
+    }
+    if (!isValidNameLength(renameInput)) {
+      setRenameErrorMessage('Name must be 30 characters or less');
+      setRenameLoading(false);
       return;
     }
     if (!isValidWindowsName(renameInput)) {
       setRenameErrorMessage(
         'Name contains invalid characters (\ / : * ? " < > |) or is not allowed.'
       );
+      setRenameLoading(false);
       return;
     }
     const isDuplicate = checkNameExistsInCurrentFolder(renameInput, isNote);
     if (isDuplicate) {
       setRenameErrorMessage('Name already exists in this folder');
+      setRenameLoading(false);
       return;
     }
 
@@ -486,6 +522,8 @@ export const useFolderNote = () => {
     } catch (error: any) {
       console.error('Cannot rename item:', error.message);
       toast.error('Failed to rename item');
+    } finally {
+      setRenameLoading(false);
     }
   };
 
@@ -611,6 +649,9 @@ export const useFolderNote = () => {
     filteredItems,
     groupedItems,
     itemCount,
+    createLoading,
+    renameLoading,
+    deleteLoading,
 
     // State setters
     setIsModalInputName,

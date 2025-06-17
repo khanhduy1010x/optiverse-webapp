@@ -14,3 +14,15 @@ body {
 .custom-scrollbar:hover::-webkit-scrollbar-thumb {
   background: #a0aec0;
 }
+.custom-scrollbar-2::-webkit-scrollbar {
+  width: 50%;
+  height: 4px;
+  background: transparent;
+}
+.custom-scrollbar-2::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 500px;
+}
+.custom-scrollbar-2:hover::-webkit-scrollbar-thumb {
+  background: #a0aec0;
+}
