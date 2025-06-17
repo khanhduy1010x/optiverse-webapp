@@ -88,9 +88,21 @@ const PendingRequests: React.FC<PendingRequestsProps> = ({
           <div key={request._id} className="bg-white rounded-lg p-5 shadow-sm border border-gray-200">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <div className="w-16 h-16 rounded-lg bg-[#21b4ca] flex items-center justify-center text-white text-2xl font-medium mr-4 shadow-sm">
-                  {initial}
-                </div>
+                {request.friendInfo?.avatar_url ? (
+                  <img 
+                    src={request.friendInfo.avatar_url}
+                    alt={request.friendInfo.full_name || 'User'}
+                    className="w-16 h-16 rounded-lg object-cover mr-4 shadow-sm"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null; 
+                      e.currentTarget.src = `https://ui-avatars.com/api/?name=${initial}&background=random&color=fff`;
+                    }}
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-lg bg-[#21b4ca] flex items-center justify-center text-white text-2xl font-medium mr-4 shadow-sm">
+                    {initial}
+                  </div>
+                )}
                 <div>
                   {request.friendInfo ? (
                     <div className="flex flex-col">

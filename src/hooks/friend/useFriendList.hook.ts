@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../store';
 import FriendService from '../../services/friend.service';
@@ -39,9 +39,10 @@ export function useFriendList() {
   const [activeTab, setActiveTab] = useState('friends');
   const [fetchAttempts, setFetchAttempts] = useState(0);
   const [currentUser, setCurrentUser] = useState<any>(null);
-  const [localSentRequests, setLocalSentRequests] = useState<any[]>([]);
-  const [localPendingRequests, setLocalPendingRequests] = useState<any[]>([]);
   const MAX_FETCH_ATTEMPTS = 3;
+  
+  // Tracking refreshes
+  const refreshInterval = useRef<NodeJS.Timeout | null>(null);
 
   // Các hàm fetch chính: fetchData, fetchSentRequests, fetchPendingRequests...
   const fetchUserBatch = async (userIds: string[]) => {
@@ -68,7 +69,7 @@ export function useFriendList() {
     try {
       dispatch(setLoading(true));
       const pendingList = await FriendService.viewAllPending();
-      setLocalPendingRequests(pendingList || []);
+      dispatch(setPendingRequests(pendingList || []));
       await fetchUserBatch(pendingList.map(r => r.user_id));
     } catch (error) {
       console.error('Error fetching pending requests:', error);
@@ -81,7 +82,7 @@ export function useFriendList() {
     try {
       dispatch(setLoading(true));
       const sentList = await FriendService.viewAllSent();
-      setLocalSentRequests(sentList || []);
+      dispatch(setSentRequests(sentList || []));
       await fetchUserBatch(sentList.map(r => r.friend_id));
     } catch (error) {
       console.error('Error fetching sent requests:', error);
@@ -148,7 +149,7 @@ export function useFriendList() {
       }
 
       setActiveTab('sent');
-      await fetchSentRequests();
+      await fetchSentRequests(); // Gọi API để lấy dữ liệu mới từ backend
     } catch (err) {
       dispatch(setError(t('Failed to add friend')));
     } finally {
@@ -162,14 +163,12 @@ export function useFriendList() {
       const accepted = await FriendService.acceptFriend(friendId);
       if (accepted) {
         dispatch(acceptFriend(accepted));
-        setLocalPendingRequests(prev =>
-          prev.filter(r => r._id !== accepted._id)
-        );
+        // Sau khi chấp nhận, cập nhật dữ liệu mới từ backend
+        await fetchPendingRequests();
         dispatch(setError(null));
       }
       setActiveTab('friends');
-      await fetchData();
-      await fetchPendingRequests();
+      await fetchData(); // Tải lại tất cả dữ liệu
     } catch (err) {
       dispatch(setError(t('Failed to accept friend')));
     } finally {
@@ -183,10 +182,10 @@ export function useFriendList() {
       const canceled = await FriendService.cancelFriendRequest(friendId);
       if (canceled) {
         dispatch(cancelFriendRequest(canceled._id));
-        setLocalSentRequests(prev => prev.filter(r => r._id !== canceled._id));
+        // Cập nhật dữ liệu sau khi hủy request
+        await fetchSentRequests();
         dispatch(setError(null));
       }
-      await fetchSentRequests();
     } catch (err) {
       dispatch(setError(t('Failed to cancel friend request')));
     } finally {
@@ -202,7 +201,7 @@ export function useFriendList() {
         dispatch(removeFriend(removed._id));
         dispatch(setError(null));
       }
-      await fetchData();
+      await fetchData(); // Tải lại dữ liệu bạn bè
     } catch (err) {
       dispatch(setError(t('Failed to remove friend')));
     } finally {
@@ -221,7 +220,6 @@ export function useFriendList() {
         dispatch(setError(null));
       } else {
         dispatch(setSearchedUsers([]));
-        dispatch(setError(t('User not found')));
       }
     } catch (err) {
       dispatch(setError(t('Failed to search user')));
@@ -230,13 +228,144 @@ export function useFriendList() {
     }
   };
 
-  const forceRefreshAllData = () => {
-    FriendService.clearCache(); // Clear all cached data
+  const forceRefreshAllData = async () => {
+    try {
+      dispatch(setLoading(true));
+      
+      // Xóa cache để đảm bảo lấy dữ liệu mới
+      FriendService.clearCache();
     setFetchAttempts(0);
-    fetchData(); // Gọi ngay lập tức
-    fetchSentRequests(); // Tải lại sent requests
-    fetchPendingRequests(); // Tải lại pending requests
+      
+      console.log('Force refreshing data for tab:', activeTab);
+      
+      // Gọi API dựa trên tab hiện tại
+      if (activeTab === 'friends') {
+        const friendList = await FriendService.viewAllFriends();
+        
+        // Kiểm tra xem có thay đổi không
+        const hasChanges = JSON.stringify(friendList) !== JSON.stringify(friends);
+        
+        dispatch(setFriends(friendList || []));
+        await fetchUserBatch(friendList.map(f => f.friend_id));
+        
+        return {
+          tab: 'friends',
+          hasChanges,
+          count: friendList.length
+        };
+      } 
+      else if (activeTab === 'pending') {
+        const pendingList = await FriendService.viewAllPending();
+        
+        // Kiểm tra xem có thay đổi không
+        const hasChanges = JSON.stringify(pendingList) !== JSON.stringify(pendingRequests);
+        
+        dispatch(setPendingRequests(pendingList || []));
+        await fetchUserBatch(pendingList.map(p => p.user_id));
+        
+        return {
+          tab: 'pending',
+          hasChanges,
+          count: pendingList.length
+        };
+      } 
+      else if (activeTab === 'sent') {
+        const sentList = await FriendService.viewAllSent();
+        
+        // Kiểm tra xem có thay đổi không
+        const hasChanges = JSON.stringify(sentList) !== JSON.stringify(sentRequests);
+        
+        dispatch(setSentRequests(sentList || []));
+        await fetchUserBatch(sentList.map(s => s.friend_id));
+        
+        return {
+          tab: 'sent',
+          hasChanges,
+          count: sentList.length
+        };
+      } 
+      else if (activeTab === 'search' && searchedUsers?.length > 0) {
+        // Nếu đang ở tab search và có kết quả tìm kiếm, cập nhật trạng thái của các người dùng
+        const [friendList, sentList, pendingList] = await Promise.all([
+          FriendService.viewAllFriends(),
+          FriendService.viewAllSent(),
+          FriendService.viewAllPending(),
+        ]);
+        
+        // Kiểm tra xem có thay đổi không
+        const hasChanges = 
+          JSON.stringify(friendList) !== JSON.stringify(friends) ||
+          JSON.stringify(sentList) !== JSON.stringify(sentRequests) ||
+          JSON.stringify(pendingList) !== JSON.stringify(pendingRequests);
+        
+        dispatch(setFriends(friendList || []));
+        dispatch(setSentRequests(sentList || []));
+        dispatch(setPendingRequests(pendingList || []));
+        
+        return {
+          tab: 'search',
+          hasChanges,
+          friendsCount: friendList.length,
+          sentCount: sentList.length,
+          pendingCount: pendingList.length
+        };
+      }
+      
+      dispatch(setError(null));
+      return { tab: activeTab, hasChanges: false };
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+      dispatch(setError(t('Failed to refresh data')));
+      throw error;
+    } finally {
+      dispatch(setLoading(false));
+    }
   };
+
+  // Auto-refresh data khi tab thay đổi
+  useEffect(() => {
+    if (activeTab === 'pending') {
+      fetchPendingRequests();
+    } else if (activeTab === 'sent') {
+      fetchSentRequests();
+    } else if (activeTab === 'friends') {
+      fetchData();
+    }
+  }, [activeTab, fetchPendingRequests, fetchSentRequests, fetchData]);
+
+  // Thiết lập polling để làm mới dữ liệu định kỳ
+  useEffect(() => {
+    // Xóa interval cũ nếu có
+    if (refreshInterval.current) {
+      clearInterval(refreshInterval.current);
+    }
+
+    // Thiết lập interval mới - cập nhật mỗi 30 giây
+    refreshInterval.current = setInterval(() => {
+      // Kiểm tra tab hiện tại và làm mới dữ liệu tương ứng
+      if (activeTab === 'pending') {
+        fetchPendingRequests();
+      } else if (activeTab === 'sent') {
+        fetchSentRequests();
+      } else if (activeTab === 'friends') {
+        fetchData();
+      }
+    }, 30000); // 30 giây
+
+    // Cleanup khi component unmount
+    return () => {
+      if (refreshInterval.current) {
+        clearInterval(refreshInterval.current);
+      }
+    };
+  }, [activeTab, fetchData, fetchPendingRequests, fetchSentRequests]);
+
+  // Tải dữ liệu ban đầu
+  useEffect(() => {
+    if (userId) {
+      fetchData();
+    }
+  }, [userId, fetchData]);
 
   return {
     t,
@@ -250,8 +379,6 @@ export function useFriendList() {
     loading,
     activeTab,
     currentUser,
-    localPendingRequests,
-    localSentRequests,
     searchEmail,
     setSearchEmail,
     setActiveTab,

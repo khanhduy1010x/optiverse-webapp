@@ -6,7 +6,7 @@ import { AxiosResponse } from 'axios';
 
 class FriendServiceClass {
   private cache: Record<string, CacheItem<any>> = {};
-  private cacheDuration = 60000; // 1 phút (60000ms)
+  private cacheDuration = 10000; // Giảm xuống còn 10 giây (từ 60000ms)
   private userCache: Record<string, UserDto> = {};
   private retryAttempt = false;
 
@@ -50,9 +50,20 @@ class FriendServiceClass {
   // Lấy danh sách bạn bè theo userId
   async getFriendsByUserId(userId: string): Promise<Friend[]> {
     try {
+      const cacheKey = `friends_by_user_${userId}`;
+      const cachedData = this.getFromCache<Friend[]>(cacheKey);
+      
+      if (cachedData) {
+        return cachedData;
+      }
+
       const response: AxiosResponse<ApiResponse<Friend[]>> = await api.get(
         `/productivity/friend/user/${userId}`
       );
+      
+      // Cache kết quả với thời gian ngắn
+      this.saveToCache(cacheKey, response.data.data, 5000); // Chỉ cache 5 giây
+      
       return response.data.data;
     } catch (error) {
       console.error(`Error fetching friends for user ${userId}:`, error);
@@ -91,7 +102,9 @@ class FriendServiceClass {
 
   // Tìm kiếm người dùng theo email
   async searchUserByEmail(email: string): Promise<UserDto | null> {
-    const encodedEmail = encodeURIComponent(email);
+    // Loại bỏ khoảng trắng ở đầu và cuối email
+    const cleanedEmail = email.trim();
+    const encodedEmail = encodeURIComponent(cleanedEmail);
 
     try {
       const response: AxiosResponse<ApiResponse<UserDto>> = await api.get(
@@ -107,7 +120,7 @@ class FriendServiceClass {
 
       return response.data.data;
     } catch (error) {
-      console.error(`Error searching user by email ${email}:`, error);
+      console.error(`Error searching user by email ${cleanedEmail}:`, error);
       return null;
     }
   }
@@ -118,8 +131,10 @@ class FriendServiceClass {
       const response: AxiosResponse<ApiResponse<Friend>> = await api.post(
         `/productivity/friend/add/${friendId}`
       );
-      // Xóa cache liên quan
+      // Xóa cache liên quan để đảm bảo dữ liệu mới
       this.invalidateCache('sent');
+      this.invalidateCache('friends_');
+      this.invalidateCache('pending');
       return response.data.data;
     } catch (error) {
       console.error(`Error adding friend ${friendId}:`, error);
@@ -136,6 +151,7 @@ class FriendServiceClass {
       // Xóa cache liên quan
       this.invalidateCache('pending');
       this.invalidateCache('friends_');
+      this.invalidateCache('sent');
       return response.data.data;
     } catch (error) {
       console.error(`Error accepting friend request ${friendId}:`, error);
@@ -146,6 +162,7 @@ class FriendServiceClass {
   // Xem danh sách yêu cầu kết bạn đang chờ xử lý
   async viewAllPending(): Promise<Friend[]> {
     try {
+      // Luôn truy vấn trực tiếp từ backend mà không sử dụng cache
       const response: AxiosResponse<ApiResponse<Friend[]>> = await api.get(
         '/productivity/friend/view-all/pending'
       );
@@ -211,21 +228,11 @@ class FriendServiceClass {
   // Xem danh sách lời mời kết bạn đã gửi
   async viewAllSent(): Promise<Friend[]> {
     try {
-      const cacheKey = 'sent_requests';
-      const cachedData = this.getFromCache<Friend[]>(cacheKey);
-
-      if (cachedData) {
-        console.log('Returning cached sent requests');
-        return cachedData;
-      }
-
+      // Luôn truy vấn trực tiếp từ backend mà không sử dụng cache
       console.log('Fetching sent requests from API');
       const response: AxiosResponse<ApiResponse<Friend[]>> = await api.get(
         '/productivity/friend/view-all/sent'
       );
-
-      // Lưu kết quả vào cache
-      this.saveToCache(cacheKey, response.data.data);
 
       return response.data.data;
     } catch (error) {
@@ -242,6 +249,8 @@ class FriendServiceClass {
       );
       // Xóa cache liên quan
       this.invalidateCache('sent');
+      this.invalidateCache('pending');
+      this.invalidateCache('friends_');
       return response.data.data;
     } catch (error) {
       console.error(`Error canceling friend request ${friendId}:`, error);
@@ -249,14 +258,16 @@ class FriendServiceClass {
     }
   }
 
-  // Xóa bạn bè đã chấp nhận
+  // Xóa bạn bè
   async removeFriend(friendId: string): Promise<Friend> {
     try {
       const response: AxiosResponse<ApiResponse<Friend>> = await api.delete(
         `/productivity/friend/${friendId}`
       );
-      // Xóa cache liên quan
+      // Xóa tất cả các cache liên quan để đảm bảo dữ liệu mới
       this.invalidateCache('friends_');
+      this.invalidateCache('sent');
+      this.invalidateCache('pending');
       return response.data.data;
     } catch (error) {
       console.error(`Error removing friend ${friendId}:`, error);
@@ -264,19 +275,20 @@ class FriendServiceClass {
     }
   }
 
+  // Lấy thông tin user theo ID
   async getUserById(userId: string): Promise<UserDto> {
-    // Kiểm tra trong userCache trước
+    try {
+      // Kiểm tra trong cache trước
     if (this.userCache[userId]) {
       return this.userCache[userId];
     }
 
-    try {
       const response: AxiosResponse<ApiResponse<UserDto>> = await api.get(
-        `/auth/user/${userId}`
+        `/productivity/friend/user-by-id/${userId}`
       );
 
       if (response.data.data) {
-        // Lưu vào userCache
+        // Cache user info cho lần sử dụng tiếp theo
         this.userCache[userId] = response.data.data;
       }
 
@@ -287,9 +299,52 @@ class FriendServiceClass {
     }
   }
 
-  // Manually refresh data
+  // Xóa tất cả cache
   clearCache(): void {
+    console.log('Clearing all friend service cache');
     this.cache = {};
+    // Chỉ giữ lại cache user info vì nó ít thay đổi
+  }
+
+  // Lấy tất cả mối quan hệ (cả hai chiều) liên quan đến một user
+  async getAllRelationshipsWithUser(userId: string): Promise<{
+    isFriend: boolean;
+    friendRelation?: Friend;
+    pendingIncoming?: Friend;
+    sentRequest?: Friend;
+  }> {
+    try {
+      // Xóa cache trước khi lấy dữ liệu mới
+      this.clearCache();
+      
+      // Lấy tất cả dữ liệu bạn bè từ backend
+      const [allFriends, allSentRequests, allPendingRequests] = await Promise.all([
+        this.viewAllFriends(),
+        this.viewAllSent(),
+        this.viewAllPending()
+      ]);
+      
+      // Kiểm tra xem có là bạn bè hay không (cả hai chiều)
+      const friendRelation = allFriends.find(f => 
+        f.friend_id === userId || f.user_id === userId
+      );
+      
+      // Kiểm tra xem có yêu cầu đang pending không
+      const pendingIncoming = allPendingRequests.find(r => r.user_id === userId);
+      
+      // Kiểm tra xem có sent request không
+      const sentRequest = allSentRequests.find(r => r.friend_id === userId);
+      
+      return {
+        isFriend: !!friendRelation,
+        friendRelation,
+        pendingIncoming,
+        sentRequest
+      };
+    } catch (error) {
+      console.error(`Error getting relationships with user ${userId}:`, error);
+      return { isFriend: false };
+    }
   }
 }
 
