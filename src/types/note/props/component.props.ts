@@ -33,6 +33,7 @@ export interface DeleteModalProps {
   selectedItem: RootItem | null;
   onDelete: () => Promise<void>;
   onOpenActionModal: () => void;
+  loading?: boolean;
 }
 
 export interface RenameModalProps {
@@ -43,6 +44,7 @@ export interface RenameModalProps {
   selectedItem: RootItem | null;
   onRename: () => Promise<void>;
   errorMessage?: string;
+  loading?: boolean;
 }
 
 export interface RadioButtonProps {

@@ -15,6 +15,19 @@ const CreateModal: React.FC<CreateModalProps> = ({
   errorMessage,
 }) => {
   const [isFocused, setIsFocused] = React.useState(false);
+  const [localLoading, setLocalLoading] = React.useState(false);
+
+  const handleCreate = async () => {
+    setLocalLoading(true);
+    try {
+      await onCreate();
+    } finally {
+      setLocalLoading(false);
+    }
+  };
+
+  const isButtonLoading = loading || localLoading;
+  const remainingChars = 30 - itemName.length;
 
   return (
     <Modal
@@ -31,6 +44,7 @@ const CreateModal: React.FC<CreateModalProps> = ({
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700 p-1 rounded-lg"
+            disabled={isButtonLoading}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
               <path
@@ -60,43 +74,51 @@ const CreateModal: React.FC<CreateModalProps> = ({
               type="text"
               value={itemName}
               onChange={e => setItemName(e.target.value)}
+              maxLength={30}
               className={GROUP_CLASSNAMES.inputTransparent}
               autoFocus
-              disabled={loading}
+              disabled={isButtonLoading}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
               onKeyPress={e => {
-                if (e.key === 'Enter' && itemName.trim() && !loading) {
-                  onCreate();
+                if (e.key === 'Enter' && itemName.trim() && !isButtonLoading) {
+                  handleCreate();
                 }
               }}
             />
 
-            {loading && (
+            {isButtonLoading && (
               <div className={GROUP_CLASSNAMES.absoluteCenter}>
                 <div className={GROUP_CLASSNAMES.loadingSpinner}></div>
               </div>
             )}
           </div>
-          {errorMessage && (
-            <p className="mt-2 text-sm text-red-500 animate-in slide-in-from-top-1 duration-200">{errorMessage}</p>
-          )}
+
+          {/* Hiển thị số ký tự còn lại */}
+          <div className="flex justify-between items-center mt-1">
+            {errorMessage && (
+              <p className="text-sm text-red-500 animate-in slide-in-from-top-1 duration-200">{errorMessage}</p>
+            )}
+            <div className={`text-xs ${remainingChars < 0 ? 'text-red-500' : remainingChars <= 5 ? 'text-yellow-500' : 'text-gray-400'}`}>
+              {remainingChars} characters left
+            </div>
+          </div>
         </div>
 
         <div className="flex gap-3">
           <button
             onClick={onClose}
             className={GROUP_CLASSNAMES.buttonSecondary + " flex-1"}
-            disabled={loading}
+            disabled={isButtonLoading}
           >
             Cancel
           </button>
           <button
-            onClick={onCreate}
-            disabled={!itemName.trim() || loading}
+            onClick={handleCreate}
+            disabled={!itemName.trim() || isButtonLoading}
             className={GROUP_CLASSNAMES.buttonPrimary + " flex-1 flex items-center justify-center gap-2"}
           >
-            {loading ? (
+            {isButtonLoading ? (
               <>
                 <div className={GROUP_CLASSNAMES.loadingSpinnerSmall}></div>
                 <span>Creating...</span>
