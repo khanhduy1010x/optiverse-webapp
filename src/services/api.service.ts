@@ -18,8 +18,9 @@ const api: AxiosInstance = axios.create({
   },
 });
 
-// Store pending requests that need to be retried after token refresh
 let isRefreshing = false;
+let hasAttemptedRefresh = false;
+let refreshSuccessTimestamp = 0;
 let failedQueue: Array<{
   resolve: (value?: unknown) => void;
   reject: (reason?: any) => void;
@@ -27,6 +28,7 @@ let failedQueue: Array<{
 }> = [];
 
 const processQueue = (error: any = null, token: string | null = null) => {
+  console.log(`Processing queue with ${failedQueue.length} pending requests`);
   failedQueue.forEach(request => {
     if (error) {
       request.reject(error);
@@ -39,9 +41,27 @@ const processQueue = (error: any = null, token: string | null = null) => {
   failedQueue = [];
 };
 
+const handleLogout = () => {
+  console.log('Session expired: logging out');
+
+  processQueue(new Error('Session expired'), null);
+
+  localStorage.clear();
+  window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
+
+  if (!window.location.pathname.includes('/')) {
+    window.location.href = '/';
+  }
+};
+
+const resetRefreshState = () => {
+  console.log('Resetting refresh token state');
+  hasAttemptedRefresh = false;
+  refreshSuccessTimestamp = Date.now();
+};
+
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // Get token from localStorage
     const token = localStorage.getItem('accessToken');
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -53,81 +73,125 @@ api.interceptors.request.use(
   }
 );
 
-// Listen for token refresh success events
 let tokenRefreshPromise: Promise<void> | null = null;
 
 if (typeof window !== 'undefined') {
   window.addEventListener(TOKEN_REFRESH_SUCCESS, () => {
-    // Retry all requests in the queue with the new token
+    resetRefreshState();
+
     const newToken = localStorage.getItem('accessToken');
     processQueue(null, newToken);
   });
 }
 
-// Add response interceptor for error handling and token refresh
 api.interceptors.response.use(
   response => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig;
+    if (!originalRequest) {
+      return Promise.reject(error);
+    }
+
     const requestUrl = originalRequest?.url || '';
 
-    // Do not intercept auth/login errors - let them be handled by the components
-    if (requestUrl.includes('auth/login')) {
+    if (
+      requestUrl.includes('auth/login') ||
+      requestUrl.includes('refresh-token')
+    ) {
       return Promise.reject(error);
     }
 
-    // Check if error is due to authentication (Unauthenticated, code 1005)
     if (
-      error.response?.status === 401 &&
       error.response?.data &&
-      (error.response.data as any).code === 1005 &&
-      !originalRequest?.headers['X-Retry']
-    ) {
-      // Dispatch auth error event for the AuthContext to handle
-      window.dispatchEvent(new Event(AUTH_ERROR_EVENT));
-
-      // Add this request to the queue
-      return new Promise((resolve, reject) => {
-        failedQueue.push({ resolve, reject, config: originalRequest });
-      });
-    }
-
-    // Handle "Account is log out" error (code 1019) with HTTP status 400
-    if (
-      error.response?.status === 400 ||
-      (error.response?.data &&
-        (error.response.data as any).code === 1019 &&
+      ((error.response.data as any).code === 1019 ||
         (error.response.data as any).message === 'Account is log out')
     ) {
-      console.log('Session expired or logged out: clearing auth data');
-
-      // Dispatch session expired event
-      window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
-
-      // Clear all localStorage
-      localStorage.clear();
-
-      // Redirect to login page if not already there
-      if (!window.location.pathname.includes('/')) {
-        window.location.href = '/';
-      }
-
+      handleLogout();
       return Promise.reject(error);
     }
 
-    // Handle other errors
-    // Don't redirect to login page if we're already on a login-related endpoint
-    if (
-      error.response?.status === 401 &&
-      !requestUrl.includes('auth/login') &&
-      !requestUrl.includes('auth/google')
-    ) {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      // Redirect to login page if not already there
-      if (!window.location.pathname.includes('/login')) {
-        window.location.href = '/login';
+    const shouldAttemptRefresh = () => {
+      if (error.code === 'ERR_NETWORK') return true;
+
+      if (
+        error.response?.status &&
+        error.response.status !== 400 &&
+        error.response.status !== 404
+      ) {
+        return true;
       }
+
+      return false;
+    };
+
+    if (shouldAttemptRefresh() && !originalRequest?.headers['X-Retry']) {
+      const now = Date.now();
+      const MIN_REFRESH_INTERVAL = 5000;
+
+      if (isRefreshing) {
+        console.log('Another refresh is in progress, adding request to queue');
+        return new Promise<unknown>((resolve, reject) => {
+          failedQueue.push({
+            resolve,
+            reject,
+            config: originalRequest,
+          });
+        });
+      }
+
+      const retryRequest = new Promise<unknown>((resolve, reject) => {
+        failedQueue.push({
+          resolve,
+          reject,
+          config: originalRequest,
+        });
+      });
+
+      console.log('Starting token refresh process');
+      isRefreshing = true;
+
+      try {
+        const refreshToken = localStorage.getItem('refreshToken');
+        if (!refreshToken) {
+          throw new Error('No refresh token available');
+        }
+
+        console.log('Attempting to refresh token...');
+        const response = await axios.post(
+          'https://api.optiverse.io.vn/core/auth/refresh-token',
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${refreshToken}`,
+            },
+          }
+        );
+
+        const data = response.data;
+
+        if (!data?.data?.access_token) {
+          throw new Error('Invalid refresh token response');
+        }
+
+        const newToken = data.data.access_token;
+        const newRefreshToken = data.data.refresh_token;
+
+        localStorage.setItem('accessToken', newToken);
+        localStorage.setItem('refreshToken', newRefreshToken);
+
+        console.log('Token refreshed successfully, processing queue');
+
+        window.dispatchEvent(new Event(TOKEN_REFRESH_SUCCESS));
+      } catch (refreshError) {
+        console.error('Token refresh failed:', refreshError);
+        handleLogout();
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+        tokenRefreshPromise = null;
+      }
+
+      return retryRequest;
     }
 
     return Promise.reject(error);
