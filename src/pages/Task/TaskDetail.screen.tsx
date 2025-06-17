@@ -17,7 +17,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
 
     return (
         <Modal isOpen={true}
-            className="fixed bottom-50 left-1/2 -translate-x-1/2 w-[450px] max-w-[90vw] bg-white rounded-2xl shadow-2xl z-[2000] outline-none"
+            className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[450px] max-w-[90vw] bg-white rounded-2xl shadow-2xl z-[2000] outline-none"
             overlayClassName="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000]"
         >               <div className={GROUP_CLASSNAMES.taskModalContent}>
                 {/* Task title */}

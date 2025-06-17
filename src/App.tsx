@@ -13,7 +13,7 @@ import AuthContainer from './pages/Auth/AuthContainer.page';
 import GoogleCallback from './pages/Auth/GoogleCallback.page';
 import FlashcardDeckList from './pages/Flashcard/FlashcardDeckList.page';
 import './App.css';
-import { getSectionKeyFromPath } from './components/common/Navigation/navigation';
+import { getMainSidebarActiveSection } from './components/common/Navigation/navigation';
 import SliderBar from './components/layout/Sidebar.component';
 import AddFlashcard from './pages/Flashcard/AddFlashcard.page';
 import UserProfile from './pages/Profile/UserProfile.page';
@@ -45,7 +45,9 @@ const AppContent: React.FC = () => {
     !location.pathname.startsWith('/template') &&
     !location.pathname.startsWith('/auth/google') &&
     !location.pathname.startsWith('/forgot-password');
-  const activeSection = getSectionKeyFromPath(location.pathname);
+
+  // Sử dụng hàm mới để lấy active section cho sidebar chính
+  const activeSection = getMainSidebarActiveSection(location.pathname);
 
   const handleNavClick = (path: string) => {
     navigate(path);
