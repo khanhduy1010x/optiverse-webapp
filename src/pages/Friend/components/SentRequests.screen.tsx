@@ -47,15 +47,6 @@ const SentRequests: React.FC<SentRequestsProps> = ({
         <p className="text-gray-500 mb-6">
           {t('You have not sent any friend requests yet. Use the search function to find and connect with other users.')}
         </p>
-        <button
-          className="px-4 py-2 bg-[#21b4ca] text-white rounded-lg hover:bg-[#1c9eb1] transition-colors duration-300"
-          onClick={() => window.location.hash = '/friends/search'}
-        >
-          <svg className="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          {t('Search for Friends')}
-        </button>
       </div>
     );
   }
@@ -114,9 +105,21 @@ const SentRequests: React.FC<SentRequestsProps> = ({
                   >
                     <div className="p-5 flex items-center justify-between">
                       <div className="flex items-center">
-                        <div className="w-16 h-16 rounded-lg bg-[#21b4ca] flex items-center justify-center text-white text-2xl font-bold mr-4 shadow-sm">
-                          {initial}
-                        </div>
+                        {request.friendInfo?.avatar_url ? (
+                          <img 
+                            src={request.friendInfo.avatar_url}
+                            alt={request.friendInfo.full_name || 'Friend'}
+                            className="w-16 h-16 rounded-lg object-cover mr-4 shadow-sm"
+                            onError={(e) => {
+                              e.currentTarget.onerror = null; 
+                              e.currentTarget.src = `https://ui-avatars.com/api/?name=${initial}&background=random&color=fff`;
+                            }}
+                          />
+                        ) : (
+                          <div className="w-16 h-16 rounded-lg bg-[#21b4ca] flex items-center justify-center text-white text-2xl font-bold mr-4 shadow-sm">
+                            {initial}
+                          </div>
+                        )}
                         <div>
                           <div className="font-medium text-lg text-gray-900 flex items-center">
                             <svg className="w-4 h-4 mr-1 text-[#21b4ca]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import FriendService from '../../services/friend.service';
 import {
   setFriends,
@@ -16,6 +16,7 @@ import {
   ErrorDisplay,
 } from './components';
 import { useFriendList } from '../../hooks/friend/useFriendList.hook';
+import { toast } from 'react-toastify';
 
 const FriendList: React.FC = () => {
   const {
@@ -30,8 +31,6 @@ const FriendList: React.FC = () => {
     loading,
     activeTab,
     currentUser,
-    localPendingRequests,
-    localSentRequests,
     searchEmail,
     setSearchEmail,
     setActiveTab,
@@ -72,10 +71,50 @@ const FriendList: React.FC = () => {
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
-    if (tab === 'pending' && pendingRequests.length === 0) {
+    if (tab === 'pending') {
       fetchPendingRequests();
-    } else if (tab === 'sent' && sentRequests.length === 0) {
+    } else if (tab === 'sent') {
       fetchSentRequests();
+    } else if (tab === 'friends') {
+      fetchData();
+    }
+  };
+
+  const handleRefresh = async () => {
+    try {
+      const result = await forceRefreshAllData();
+      
+      if (result.tab === 'friends') {
+        if (result.hasChanges) {
+          toast.success(`Friend list updated. You have ${result.count} friends.`);
+        } else {
+          toast.info('Your friend list is already up-to-date.');
+        }
+      }
+      else if (result.tab === 'pending') {
+        if (result.hasChanges) {
+          toast.success(`Pending requests updated. You have ${result.count} pending requests.`);
+        } else {
+          toast.info('Your pending requests list is already up-to-date.');
+        }
+      }
+      else if (result.tab === 'sent') {
+        if (result.hasChanges) {
+          toast.success(`Sent requests updated. You have ${result.count} sent requests.`);
+        } else {
+          toast.info('Your sent requests list is already up-to-date.');
+        }
+      }
+      else if (result.tab === 'search') {
+        if (result.hasChanges) {
+          toast.success('Search results updated with the latest friend data.');
+        } else {
+          toast.info('Your search results are already up-to-date.');
+        }
+      }
+    } catch (e) {
+      toast.error('Failed to refresh. Please try again later.');
+      console.error('Refresh error:', e);
     }
   };
 
@@ -93,7 +132,7 @@ const FriendList: React.FC = () => {
         <FriendHeader
           activeTab={activeTab}
           loading={loading}
-          onRefresh={forceRefreshAllData}
+          onRefresh={handleRefresh}
         />
 
         <ErrorDisplay error={error} loading={loading} />
@@ -105,13 +144,14 @@ const FriendList: React.FC = () => {
             loading={loading}
             onRemoveFriend={handleRemoveFriend}
             renderUserInfo={renderUserInfo}
+            onRefresh={handleRefresh}
           />
         )}
 
         {/* Pending Requests */}
         {activeTab === 'pending' && (
           <PendingRequests
-            pendingRequests={localPendingRequests}
+            pendingRequests={pendingRequests}
             loading={loading}
             onAcceptFriend={handleAcceptFriend}
             renderUserInfo={renderUserInfo}
@@ -121,7 +161,7 @@ const FriendList: React.FC = () => {
         {/* Sent Requests */}
         {activeTab === 'sent' && (
           <SentRequests
-            sentRequests={localSentRequests}
+            sentRequests={sentRequests}
             loading={loading}
             onCancelRequest={handleCancelFriendRequest}
             renderUserInfo={renderUserInfo}
@@ -141,9 +181,11 @@ const FriendList: React.FC = () => {
             onRemoveFriend={handleRemoveFriend}
             renderUserInfo={renderUserInfo}
             friends={friends}
-            sentRequests={localSentRequests}
-            pendingRequests={localPendingRequests}
-            onAcceptFriend={handleAcceptFriend}
+            sentRequests={sentRequests}
+            pendingRequests={pendingRequests}
+            onAcceptRequest={handleAcceptFriend}
+            userId={userId}
+            refreshFriendData={forceRefreshAllData}
           />
         )}
       </div>

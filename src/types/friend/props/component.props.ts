@@ -7,6 +7,7 @@ export interface AllFriendsProps {
   loading: boolean;
   onRemoveFriend: (id: string) => void;
   renderUserInfo: (userId: string, showId?: boolean) => React.ReactNode;
+  onRefresh?: () => void | Promise<void>;
 }
 
 export interface ErrorDisplayProps {
@@ -17,7 +18,7 @@ export interface ErrorDisplayProps {
 export interface FriendHeaderProps {
   activeTab: string;
   loading: boolean;
-  onRefresh: () => void;
+  onRefresh: () => void | Promise<void>;
 }
 
 export interface FriendSidebarProps {
@@ -53,7 +54,9 @@ export interface SearchUsersProps {
   friends: any[];
   sentRequests: any[];
   pendingRequests?: any[];
-  onAcceptFriend?: (id: string) => void;
+  onAcceptRequest?: (id: string) => void;
+  userId?: string;
+  refreshFriendData?: () => void;
 }
 
 export interface SentRequestsProps {

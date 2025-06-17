@@ -8,6 +8,7 @@ const AllFriends: React.FC<AllFriendsProps> = ({
   loading,
   onRemoveFriend,
   renderUserInfo,
+  onRefresh
 }) => {
   const { t, getColorFromString, totalFriends, hasNoFriends } = useAllFriend({
     friends,
@@ -63,12 +64,6 @@ const AllFriends: React.FC<AllFriendsProps> = ({
         <p className="text-gray-500 mb-6">
           {t('You have not added any friends yet. Start by searching for users to add.')}
         </p>
-        <button
-          onClick={() => window.location.hash = '/friends/search'}
-          className="px-4 py-2 bg-[#21b4ca] text-white rounded-lg hover:bg-[#1c9eb1] transition-colors duration-300"
-        >
-          {t('Search for Friends')}
-        </button>
       </div>
     );
   }
@@ -85,9 +80,21 @@ const AllFriends: React.FC<AllFriendsProps> = ({
           <div key={friend._id} className="bg-white rounded-lg p-5 shadow-sm border border-gray-200">
             <div className="flex items-start justify-between">
               <div className="flex items-center">
+                {friend.friendInfo?.avatar_url ? (
+                  <img 
+                    src={friend.friendInfo.avatar_url}
+                    alt={friend.friendInfo.full_name || 'Friend'}
+                    className="w-16 h-16 rounded-full object-cover mr-4"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null; 
+                      e.currentTarget.src = `https://ui-avatars.com/api/?name=${initial}&background=random&color=fff`;
+                    }}
+                  />
+                ) : (
                 <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 text-2xl font-medium mr-4">
                   {initial}
                 </div>
+                )}
                 <div>
                   {friend.friendInfo ? (
                     <div className="flex flex-col">

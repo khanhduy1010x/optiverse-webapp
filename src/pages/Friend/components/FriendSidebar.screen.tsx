@@ -33,9 +33,22 @@ const FriendSidebar: React.FC<FriendSidebarProps> = ({
         {currentUser && (
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#21b4ca] flex items-center justify-center text-white font-medium">
-                {currentUser.email ? currentUser.email.charAt(0).toUpperCase() : 'U'}
-              </div>
+              {currentUser.avatar_url ? (
+                <img 
+                  src={currentUser.avatar_url}
+                  alt={(currentUser as any).full_name || currentUser.email}
+                  className="w-10 h-10 rounded-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    const initial = currentUser.email ? currentUser.email.charAt(0).toUpperCase() : 'U';
+                    e.currentTarget.src = `https://ui-avatars.com/api/?name=${initial}&background=21b4ca&color=fff`;
+                  }}
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-[#21b4ca] flex items-center justify-center text-white font-medium">
+                  {currentUser.email ? currentUser.email.charAt(0).toUpperCase() : 'U'}
+                </div>
+              )}
               <div>
                 <h3 className="text-sm font-medium text-gray-800">{(currentUser as any).full_name || currentUser.email}</h3>
                 <p className="text-xs text-gray-500">{currentUser.email}</p>
