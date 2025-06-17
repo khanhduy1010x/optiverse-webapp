@@ -5,6 +5,7 @@ export interface NavSection {
   path: string;
   icon?: IconName;
   subsections?: NavSection[];
+  parentPath?: string;
 }
 
 export const NAV_SECTIONS: NavSection[] = [
@@ -16,9 +17,24 @@ export const NAV_SECTIONS: NavSection[] = [
     icon: 'timer',
     path: '/focus-timer',
     subsections: [
-      { label: 'Manage ', path: '/manage-focus-timer', icon: 'timer' },
-      { label: 'Timer', path: '/focus-timer', icon: 'timer' },
-      { label: 'Statistics ', path: '/statistics-timer', icon: 'timer' },
+      {
+        label: 'Manage ',
+        path: '/manage-focus-timer',
+        icon: 'timer',
+        parentPath: '/focus-timer',
+      },
+      {
+        label: 'Timer',
+        path: '/focus-timer',
+        icon: 'timer',
+        parentPath: '/focus-timer',
+      },
+      {
+        label: 'Statistics ',
+        path: '/statistics-timer',
+        icon: 'timer',
+        parentPath: '/focus-timer',
+      },
     ],
   },
   {
@@ -29,19 +45,62 @@ export const NAV_SECTIONS: NavSection[] = [
   // { label: 'Setting', path: '/settings', icon: 'setting' },
   { label: 'Friend', path: '/friends', icon: 'friend' },
 
-  { label: 'User Profile', path: '/user-profile', icon: 'star' },
+  {
+    label: 'User Profile',
+    path: '/user-profile',
+    icon: 'profile',
+    subsections: [
+      {
+        label: 'Profile',
+        path: '/user-profile',
+        icon: 'profile',
+        parentPath: '/user-profile',
+      },
+      {
+        label: 'Login Sessions',
+        path: '/login-session',
+        icon: 'devices',
+        parentPath: '/user-profile',
+      },
+    ],
+  },
 ];
 
-export const getSectionKeyFromPath = (path: string): string => {
-  const section = NAV_SECTIONS.find(section => section.path === path);
-  if (section) return section.path || 'dashboard';
+// Map các path con tới path cha để dễ dàng tìm kiếm
+const PATH_MAPPING: Record<string, string> = {
+  '/manage-focus-timer': '/focus-timer',
+  '/focus-timer': '/focus-timer',
+  '/statistics-timer': '/focus-timer',
+  '/user-profile': '/user-profile',
+  '/login-session': '/user-profile',
+};
 
+export const getSectionKeyFromPath = (path: string): string => {
+  // Kiểm tra xem path có trong mapping không
+  const parentPath = PATH_MAPPING[path];
+  if (parentPath) {
+    return parentPath;
+  }
+
+  // Kiểm tra xem path có trùng với section nào không
+  const section = NAV_SECTIONS.find(section => section.path === path);
+  if (section) return section.path;
+
+  // Tìm kiếm trong các subsection
   for (const parent of NAV_SECTIONS) {
     if (parent.subsections) {
       const subsection = parent.subsections.find(sub => sub.path === path);
-      if (subsection) return subsection.path || 'dashboard';
+      if (subsection) {
+        // Trả về path của section cha thay vì section con
+        return subsection.parentPath || parent.path;
+      }
     }
   }
 
   return '/dashboard'; // Mặc định
+};
+
+// Hàm mới để lấy path hiện tại cho sidebar chính
+export const getMainSidebarActiveSection = (path: string): string => {
+  return PATH_MAPPING[path] || path;
 };

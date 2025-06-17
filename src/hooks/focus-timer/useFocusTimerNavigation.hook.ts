@@ -1,9 +1,22 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 
-export function useFocusTimerNavigation(initialMenu: string = 'manage') {
+export function useFocusTimerNavigation(initialMenu: string = 'timer') {
   const navigate = useNavigate();
+  const location = useLocation();
   const [selectedMenu, setSelectedMenu] = useState<string>(initialMenu);
+
+  // Xác định menu được chọn dựa trên đường dẫn hiện tại
+  useEffect(() => {
+    const path = location.pathname;
+    if (path === '/focus-timer') {
+      setSelectedMenu('timer');
+    } else if (path === '/manage-focus-timer') {
+      setSelectedMenu('manage');
+    } else if (path === '/statistics-timer') {
+      setSelectedMenu('statistics');
+    }
+  }, [location.pathname]);
 
   const handleNavigate = (menuKey: string, path: string) => {
     setSelectedMenu(menuKey);

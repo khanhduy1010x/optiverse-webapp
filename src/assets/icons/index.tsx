@@ -59,6 +59,7 @@ import { ReactComponent as unfoldMore } from './unfold-more.svg';
 import { ReactComponent as web } from './web.svg';
 import { ReactComponent as blinkAI } from './blinkAI.svg';
 import { ReactComponent as friend } from './friend.svg';
+import { ReactComponent as profile } from './profile.svg';
 
 export const ICONS = {
   add: add,
@@ -122,6 +123,7 @@ export const ICONS = {
   web: web,
   blinkAI: blinkAI,
   friend: friend,
+  profile: profile
 };
 
 export type IconName = keyof typeof ICONS;
