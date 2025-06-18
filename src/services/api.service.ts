@@ -8,7 +8,7 @@ import {
   AUTH_ERROR_EVENT,
   TOKEN_REFRESH_SUCCESS,
   SESSION_EXPIRED_EVENT,
-} from '../contexts/auth.context';
+} from '../constants/auth.constants';
 
 const api: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_URL_BASE,
@@ -158,7 +158,7 @@ api.interceptors.response.use(
 
         console.log('Attempting to refresh token...');
         const response = await axios.post(
-          'https://api.optiverse.io.vn/core/auth/refresh-token',
+          `${import.meta.env.VITE_URL_BASE}/core/auth/refresh-token`,
           {},
           {
             headers: {
