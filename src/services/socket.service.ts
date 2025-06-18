@@ -12,7 +12,7 @@ class SocketService {
   public connect(): void {
     if (this.socket) return;
 
-    this.socket = io('https://api.optiverse.io.vn/', {
+    this.socket = io(`${import.meta.env.VITE_URL_BASE}`, {
       path: '/productivity/socket.io',
       transports: ['websocket'],
     });
