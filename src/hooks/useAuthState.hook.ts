@@ -201,7 +201,7 @@ export const useRedirectIfAuthenticated = () => {
 
   useEffect(() => {
     if (!auth.isLoading && auth.isAuthenticated) {
-      navigate('/dashboard');
+      navigate('/task');
     }
   }, [auth.isLoading, auth.isAuthenticated, navigate]);
 

@@ -24,10 +24,10 @@ const ChangePasswordPopup: React.FC<ChangePasswordPopupProps> = ({ onClose }) =>
 
     return (
         <Modal isOpen={true}
-            className="fixed bottom-50 left-1/2 -translate-x-1/2 w-[360px] max-w-[90vw] bg-white rounded-2xl shadow-2xl z-[2000] outline-none"
+            className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[450px]  bg-white rounded-2xl shadow-2xl z-[2000] outline-none"
             overlayClassName="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000]"
         >
-            <div className="w-full max-w-sm p-6 rounded-xl shadow-xl bg-white border border-gray-200">
+            <div className="w-full  p-6 rounded-xl shadow-xl bg-white border border-gray-200">
                 <h2 className="text-lg font-bold text-center mb-4 text-gray-800">Change Password</h2>
 
                 {error && (
