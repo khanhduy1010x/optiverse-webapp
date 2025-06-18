@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import { GOOGLE_AUTH_CONFIG } from '../../config/google-auth.config';
 import authService from '../../services/auth.service';
-import { useAuth } from '../../contexts/auth.context';
+import { setUser, setLoading } from '../../store/slices/auth.slice';
+import { AppDispatch } from '../../store';
 
 /**
  * Thu thập thông tin về trình duyệt và hệ điều hành dưới dạng chuỗi đơn giản
@@ -94,7 +96,7 @@ export function useLoginForm() {
   const [error, setError] = useState<string | null>(null);
 
   const navigate = useNavigate();
-  const { refreshTokens } = useAuth();
+  const dispatch = useDispatch<AppDispatch>();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,6 +104,7 @@ export function useLoginForm() {
 
     setError(null);
     setIsEmailLoginLoading(true);
+    dispatch(setLoading(true));
 
     try {
       // Thu thập thông tin thiết bị dưới dạng chuỗi đơn giản
@@ -110,11 +113,15 @@ export function useLoginForm() {
       // Sử dụng authService.loginWithEmail thay vì axios.post trực tiếp
       await authService.loginWithEmail(email, password, device_info);
 
-      await refreshTokens();
+      // Lấy thông tin người dùng sau khi login thành công
+      const userInfo = await authService.getUserInfo();
+      dispatch(setUser(userInfo));
+
       navigate('/dashboard', { replace: true });
     } catch (err: any) {
       console.error('Login error:', err);
       setError(err.message || 'Login failed. Please try again later.');
+      dispatch(setLoading(false));
     } finally {
       setIsEmailLoginLoading(false);
     }
@@ -153,12 +160,17 @@ export function useLoginForm() {
 
             // Truyền thêm device_info vào hàm đăng nhập Google
             await authService.loginWithGoogle(event.data.code, device_info);
-            await refreshTokens();
+
+            // Lấy thông tin người dùng sau khi login thành công
+            const userInfo = await authService.getUserInfo();
+            dispatch(setUser(userInfo));
+
             navigate('/dashboard', { replace: true });
             popup.close();
           } catch (err) {
             setError('Google login failed. Please try again.');
             console.error('Google login error:', err);
+            dispatch(setLoading(false));
           } finally {
             setIsGoogleLoginLoading(false);
             window.removeEventListener('message', messageHandler);

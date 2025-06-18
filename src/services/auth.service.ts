@@ -6,6 +6,7 @@ import {
   VerifyRequest,
 } from '../types/auth/request/auth.request';
 import { LoginResponse } from '../types/auth/response/auth.reponse';
+import { UserResponse } from '../types/auth/auth.types';
 import { ErrorCode, ErrorDetails } from '../types/error-code.enum';
 import api from './api.service';
 class AuthService {
@@ -22,7 +23,6 @@ class AuthService {
         { email, password, device_info }
       );
 
-      // Check if response has the expected structure
       if (
         !response.data ||
         !response.data.data ||
@@ -32,10 +32,12 @@ class AuthService {
       }
 
       const { access_token, refresh_token } = response.data.data;
-
-      // Save tokens to localStorage
       localStorage.setItem('accessToken', access_token);
       localStorage.setItem('refreshToken', refresh_token);
+
+      // Lấy thông tin user và lưu user_id
+      const userInfo = await this.getUserInfo();
+      localStorage.setItem('user_id', userInfo.user_id);
 
       return response.data.data;
     } catch (error: any) {
@@ -45,12 +47,10 @@ class AuthService {
         data: error.response?.data,
       });
 
-      // Throw specific error for 401 status (Unauthorized)
       if (error.response?.status === 401) {
         throw new Error('Invalid email or password. Please try again.');
       }
 
-      // Try to extract error message from different response formats
       const errorMessage =
         error.response?.data?.message ||
         error.response?.data?.error ||
@@ -74,10 +74,12 @@ class AuthService {
         { token: token, is_web: true, device_info }
       );
       const { access_token, refresh_token } = response.data.data;
-
-      // Save tokens to localStorage
       localStorage.setItem('accessToken', access_token);
       localStorage.setItem('refreshToken', refresh_token);
+
+      // Lấy thông tin user và lưu user_id
+      const userInfo = await this.getUserInfo();
+      localStorage.setItem('user_id', userInfo.user_id);
 
       return response.data.data;
     } catch (error: any) {
@@ -89,43 +91,14 @@ class AuthService {
     }
   }
 
-  public async refreshToken(): Promise<LoginResponse> {
-    try {
-      const refreshToken = localStorage.getItem('refreshToken');
-
-      if (!refreshToken) {
-        throw new Error('No refresh token available');
-      }
-
-      const response = await api.post<ApiResponse<LoginResponse>>(
-        'core/auth/refresh-token',
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${refreshToken}`,
-          },
-        }
-      );
-
-      const { access_token, refresh_token } = response.data.data;
-
-      // Save tokens to localStorage
-      localStorage.setItem('accessToken', access_token);
-      localStorage.setItem('refreshToken', refresh_token);
-
-      return response.data.data;
-    } catch (error: any) {
-      console.error('Token refresh failed:', {
-        error: error.message,
-        response: error.response?.data,
-      });
-      throw new Error('Token refresh failed');
-    }
-  }
-
   public logout() {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
+  }
+
+  public async getUserInfo(): Promise<UserResponse> {
+    const response = await api.get<ApiResponse<UserResponse>>('core/auth/me');
+    return response.data.data;
   }
 
   public async register(registerRequest: RegisterRequest): Promise<any> {

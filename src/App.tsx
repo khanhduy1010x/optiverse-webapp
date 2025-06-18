@@ -26,7 +26,7 @@ import FlashcardReview from './pages/Flashcard/FlashcardReview.page';
 import FriendList from './pages/Friend/FriendList.page';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { PublicRoute } from './components/PublicRoute';
-import { AuthProvider } from './contexts/auth.context';
+import { AuthChecker } from './components/auth/AuthChecker';
 import FocusSessionList from './pages/FocusTimer/FocusTimerList.page';
 import { AuthViewType } from './types/auth/auth.types';
 import LoginSessions from './pages/Profile/LoginSession.page';
@@ -215,9 +215,9 @@ const App: React.FC = () => {
   return (
     <ThemeProvider>
       <Router>
-        <AuthProvider>
+        <AuthChecker>
           <AppContent />
-        </AuthProvider>
+        </AuthChecker>
       </Router>
     </ThemeProvider>
   );
