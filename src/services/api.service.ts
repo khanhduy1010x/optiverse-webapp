@@ -11,7 +11,7 @@ import {
 } from '../contexts/auth.context';
 
 const api: AxiosInstance = axios.create({
-  baseURL: 'https://api.optiverse.io.vn',
+  baseURL: import.meta.env.VITE_URL_BASE,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
