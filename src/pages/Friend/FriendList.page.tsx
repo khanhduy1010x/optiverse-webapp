@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import FriendService from '../../services/friend.service';
 import {
   setFriends,
@@ -19,6 +20,8 @@ import { useFriendList } from '../../hooks/friend/useFriendList.hook';
 import { toast } from 'react-toastify';
 
 const FriendList: React.FC = () => {
+  const navigate = useNavigate();
+  
   const {
     t,
     userId,
@@ -78,6 +81,10 @@ const FriendList: React.FC = () => {
     } else if (tab === 'friends') {
       fetchData();
     }
+  };
+
+  const handleStartChat = (friendId: string) => {
+    navigate('/chat', { state: { friendId } });
   };
 
   const handleRefresh = async () => {
@@ -145,6 +152,7 @@ const FriendList: React.FC = () => {
             onRemoveFriend={handleRemoveFriend}
             renderUserInfo={renderUserInfo}
             onRefresh={handleRefresh}
+            onStartChat={handleStartChat}
           />
         )}
 

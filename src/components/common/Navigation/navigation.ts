@@ -44,6 +44,7 @@ export const NAV_SECTIONS: NavSection[] = [
   },
   // { label: 'Setting', path: '/settings', icon: 'setting' },
   { label: 'Friend', path: '/friends', icon: 'friend' },
+  { label: 'Chat', path: '/chat', icon: 'message' },
 
   {
     label: 'User Profile',
