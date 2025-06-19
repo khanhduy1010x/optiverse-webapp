@@ -13,6 +13,7 @@ import AuthContainer from './pages/Auth/AuthContainer.page';
 import GoogleCallback from './pages/Auth/GoogleCallback.page';
 import FlashcardDeckList from './pages/Flashcard/FlashcardDeckList.page';
 import './App.css';
+import "./i18n.ts"
 import { getMainSidebarActiveSection } from './components/common/Navigation/navigation';
 import SliderBar from './components/layout/Sidebar.component';
 import AddFlashcard from './pages/Flashcard/AddFlashcard.page';

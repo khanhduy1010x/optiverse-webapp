@@ -10,6 +10,10 @@ import InputField, {
   TextareaField,
 } from '../../components/common/Input.component';
 import { isNotEmpty } from '../../utils/validate.util';
+import {
+  useAppTranslate,
+  useChangeLanguage,
+} from '../../hooks/useAppTranslate';
 
 type FormValues = {
   email: string;
@@ -20,6 +24,8 @@ type FormValues = {
 export default function TemplateComponent() {
   const { theme } = useTheme();
   const { colors, fonts } = theme;
+  const { t } = useAppTranslate();
+  const { changeLanguage, i18n } = useChangeLanguage();
 
   // form
   const { handleSubmit, control, getValues, watch } = useForm<FormValues>();
@@ -160,6 +166,18 @@ export default function TemplateComponent() {
 
             <Button title="Submit" inverted></Button>
           </form>
+        </div>
+        <h3>Language Sample</h3>
+        <div className="flex gap-20 m-auto">
+          <select
+            className="w-32 p-1 border border-gray-300 rounded dark:bg-gray-800 dark:text-gray-200"
+            onChange={changeLanguage}
+            value={i18n.language}
+          >
+            <option value={'en'}>English</option>
+            <option value={'vi'}>Tiếng Việt</option>
+          </select>
+          <div>{t('template_demo')}</div>
         </div>
       </div>
     </div>
