@@ -79,7 +79,7 @@ const AppContent: React.FC = () => {
           <Route
             path="/forgot-password"
             element={
-              <PublicRoute restricted={false}>
+              <PublicRoute restricted={true}>
                 <AuthContainer initialView="forgot" />
               </PublicRoute>
             }
@@ -87,8 +87,16 @@ const AppContent: React.FC = () => {
           <Route
             path="/reset-password"
             element={
-              <PublicRoute restricted={false}>
+              <PublicRoute restricted={true}>
                 <AuthContainer initialView="verify" />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="*"
+            element={
+              <PublicRoute restricted={true}>
+                <AuthContainer initialView={initialView} />
               </PublicRoute>
             }
           />
@@ -96,6 +104,14 @@ const AppContent: React.FC = () => {
           {/* Protected routes - require authentication */}
           <Route
             path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="*"
             element={
               <ProtectedRoute>
                 <Dashboard />

@@ -211,7 +211,6 @@ class AuthService {
   public async verifyToken(): Promise<string | null> {
     try {
       const response = await api.get('/core/auth/verify');
-      // Lấy header X-User-Info (có thể viết thường hoặc hoa)
       const userInfo =
         response.headers['x-user-info'] || response.headers['X-User-Info'];
       return userInfo || null;

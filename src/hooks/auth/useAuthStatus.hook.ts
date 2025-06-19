@@ -41,7 +41,7 @@ export const useAuthStatus = () => {
       setIsLoading(false);
     };
     checkAuthStatus();
-    // Có thể lắng nghe storage nếu muốn sync đa tab
+    console.log('isAuthenticated', isAuthenticated);
   }, []);
 
   const logout = () => {
