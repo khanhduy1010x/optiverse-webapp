@@ -92,8 +92,7 @@ class AuthService {
   }
 
   public logout() {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
+    localStorage.clear();
   }
 
   public async getUserInfo(): Promise<UserResponse> {
@@ -207,6 +206,34 @@ class AuthService {
     } catch (error: any) {
       throw Error(error.response.data.message);
     }
+  }
+
+  public async verifyToken(): Promise<string | null> {
+    try {
+      const response = await api.get('/core/auth/verify');
+      // Lấy header X-User-Info (có thể viết thường hoặc hoa)
+      const userInfo =
+        response.headers['x-user-info'] || response.headers['X-User-Info'];
+      return userInfo || null;
+    } catch (error: any) {
+      return null;
+    }
+  }
+
+  public async refreshToken(): Promise<void> {
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (!refreshToken) throw new Error('No refresh token available');
+    const response = await api.post(
+      '/core/auth/refresh-token',
+      {},
+      {
+        headers: { Authorization: `Bearer ${refreshToken}` },
+      }
+    );
+    const data = response.data?.data;
+    if (!data?.access_token) throw new Error('Invalid refresh token response');
+    localStorage.setItem('accessToken', data.access_token);
+    localStorage.setItem('refreshToken', data.refresh_token);
   }
 }
 
