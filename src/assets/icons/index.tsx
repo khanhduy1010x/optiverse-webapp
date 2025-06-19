@@ -36,6 +36,7 @@ import { ReactComponent as italic } from './italic.svg';
 import { ReactComponent as language } from './language.svg';
 import { ReactComponent as laptop } from './laptop.svg';
 import { ReactComponent as logout } from './logout.svg';
+import { ReactComponent as message } from './message.svg';
 import { ReactComponent as moreHoriz } from './more horiz.svg';
 import { ReactComponent as moreVert } from './more-vert.svg';
 import { ReactComponent as note } from './note.svg';
@@ -100,6 +101,7 @@ export const ICONS = {
   language: language,
   laptop: laptop,
   logout: logout,
+  message: message,
   moreHoriz: moreHoriz,
   moreVert: moreVert,
   note: note,

@@ -33,6 +33,7 @@ import LoginSessions from './pages/Profile/LoginSession.page';
 import TaskPage from './pages/Task/Task.page';
 import TemplateComponent from './pages/Template/TemplateComponent.page';
 import FocusTimerLayout from './pages/FocusTimer/FocusTimerLayout.page';
+import ChatPage from './pages/chat/ChatPage';
 
 const AppContent: React.FC = () => {
   const location = useLocation();
@@ -194,6 +195,14 @@ const AppContent: React.FC = () => {
             element={
               <ProtectedRoute>
                 <FriendList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/chat"
+            element={
+              <ProtectedRoute>
+                <ChatPage />
               </ProtectedRoute>
             }
           />

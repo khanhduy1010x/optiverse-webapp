@@ -8,6 +8,7 @@ export interface AllFriendsProps {
   onRemoveFriend: (id: string) => void;
   renderUserInfo: (userId: string, showId?: boolean) => React.ReactNode;
   onRefresh?: () => void | Promise<void>;
+  onStartChat?: (friendId: string) => void;
 }
 
 export interface ErrorDisplayProps {
