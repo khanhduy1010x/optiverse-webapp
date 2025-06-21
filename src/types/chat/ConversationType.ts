@@ -10,4 +10,11 @@ export interface ConversationType {
     senderId: string;
     createdAt: number;
   };
-} 
+  theme?: {
+    backgroundUrl?: string;
+    backgroundColor?: string;
+    textColor?: string;
+    updatedAt?: number;
+    updatedBy?: string;
+  };
+}

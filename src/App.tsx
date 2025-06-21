@@ -35,12 +35,16 @@ import TaskPage from './pages/Task/Task.page';
 import TemplateComponent from './pages/Template/TemplateComponent.page';
 import FocusTimerLayout from './pages/FocusTimer/FocusTimerLayout.page';
 import ChatPage from './pages/chat/ChatPage';
+import { useNewMessageNotification } from './hooks/chat/useNewMessageNotification';
 
 const AppContent: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const initialView = (searchParams.get('view') as AuthViewType) || 'login';
+
+  // Sử dụng hook để lắng nghe tin nhắn mới
+  useNewMessageNotification();
 
   const showSidebar =
     location.pathname !== '/' &&

@@ -5,10 +5,14 @@ import { useMessages } from '../../hooks/chat/useMessages';
 import { useSendMessage } from '../../hooks/chat/useSendMessage';
 import { useTypingStatus } from '../../hooks/chat/useTypingStatus';
 import { useUnreadCount } from '../../hooks/chat/useUnreadCount';
+import { useConversationTheme } from '../../hooks/chat/useConversationTheme';
 import ConversationList from './ConversationList';
+import ThemeSelector from '../../components/chat/ThemeSelector';
 import { UserResponse } from '../../types/auth/auth.types';
 import friendService from '../../services/friend.service';
 import { Friend } from '../../types/friend/response/friend.response';
+import { ref, update } from 'firebase/database';
+import { db } from '../../firebase';
 
 interface LocationState {
   friendId?: string;
@@ -17,41 +21,47 @@ interface LocationState {
 const ChatPage: React.FC = () => {
   const location = useLocation();
   const state = location.state as LocationState | null;
-  
+
   // Get conversation list and user information
   const { conversations, users, loading, getOrCreateConversation } = useConversation();
-  
+
   // State to manage active conversation
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
-  
+
   // State to manage message content
   const [messageText, setMessageText] = useState('');
-  
+
   // State to save friends list for creating new conversations
   const [friends, setFriends] = useState<Friend[]>([]);
   const [friendsLoading, setFriendsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredFriends, setFilteredFriends] = useState<Friend[]>([]);
   const [showFriendsList, setShowFriendsList] = useState(false);
-  
+
+  // State for theme selector
+  const [showThemeSelector, setShowThemeSelector] = useState(false);
+
+  // Get theme for active conversation
+  const { theme } = useConversationTheme(activeConversationId || '');
+
   // Ref for message container to scroll to bottom
   const messageContainerRef = useRef<HTMLDivElement>(null);
-  
+
   // Ref for message input to auto focus
   const messageInputRef = useRef<HTMLInputElement>(null);
-  
+
   // Ref for search container to handle click outside
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
   // Get messages for current conversation
   const { messages, loading: messagesLoading } = useMessages(activeConversationId || '');
-  
+
   // Hook to send new messages
   const sendMessage = useSendMessage(activeConversationId || '');
-  
+
   // Hook to manage typing status
   const { setTyping } = useTypingStatus(activeConversationId || '', '');
-  
+
   // Hook to mark messages as read
   const { markAsRead } = useUnreadCount(activeConversationId || '');
 
@@ -62,7 +72,7 @@ const ChatPage: React.FC = () => {
         setShowFriendsList(false);
       }
     }
-    
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
@@ -85,12 +95,12 @@ const ChatPage: React.FC = () => {
     setShowFriendsList(true);
     const query = searchQuery.toLowerCase();
     const filtered = friends.filter(
-      friend => 
+      friend =>
         friend.friendInfo?.full_name?.toLowerCase().includes(query) ||
         friend.friendInfo?.email?.toLowerCase().includes(query) ||
         friend.friend_id.toLowerCase().includes(query)
     );
-    
+
     setFilteredFriends(filtered);
   }, [searchQuery, friends]);
 
@@ -101,7 +111,7 @@ const ChatPage: React.FC = () => {
         const conversationId = await getOrCreateConversation(state.friendId);
         if (conversationId) {
           setActiveConversationId(conversationId);
-          
+
           // Auto focus on message input
           setTimeout(() => {
             messageInputRef.current?.focus();
@@ -109,7 +119,7 @@ const ChatPage: React.FC = () => {
         }
       }
     };
-    
+
     if (state?.friendId) {
       initiateChatWithFriend();
     }
@@ -118,16 +128,16 @@ const ChatPage: React.FC = () => {
   // Get other user info in chat from friends list instead of users
   const getOtherUserInChat = (): { name: string, avatar: string, email: string } | undefined => {
     if (!activeConversationId) return undefined;
-    
+
     const conversation = conversations.find(conv => conv.id === activeConversationId);
     if (!conversation) return undefined;
-    
+
     const currentUserId = localStorage.getItem('user_id');
     if (!currentUserId) return undefined;
-    
+
     const otherUserId = Object.keys(conversation.members).find(id => id !== currentUserId);
     if (!otherUserId) return undefined;
-    
+
     // Find user info from friends list
     const friend = friends.find(f => f.friend_id === otherUserId);
     if (friend && friend.friendInfo) {
@@ -137,7 +147,7 @@ const ChatPage: React.FC = () => {
         email: friend.friendInfo.email || ''
       };
     }
-    
+
     // Fallback: use info from users object
     const userFromAPI = users[otherUserId];
     if (userFromAPI) {
@@ -147,7 +157,7 @@ const ChatPage: React.FC = () => {
         email: userFromAPI.email || ''
       };
     }
-    
+
     return {
       name: otherUserId,
       avatar: '',
@@ -168,7 +178,7 @@ const ChatPage: React.FC = () => {
         setFriendsLoading(false);
       }
     };
-    
+
     fetchFriends();
   }, []);
 
@@ -176,7 +186,7 @@ const ChatPage: React.FC = () => {
   useEffect(() => {
     if (messageContainerRef.current && messages.length > 0) {
       messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
-      
+
       // Mark messages as read when opening conversation
       markAsRead();
     }
@@ -187,7 +197,7 @@ const ChatPage: React.FC = () => {
     setActiveConversationId(conversationId);
     setMessageText('');
     markAsRead();
-    
+
     // Auto focus on message input
     setTimeout(() => {
       messageInputRef.current?.focus();
@@ -201,12 +211,12 @@ const ChatPage: React.FC = () => {
       setActiveConversationId(conversationId);
       setSearchQuery('');
       setShowFriendsList(false);
-      
+
       // Clear notification if user opens new chat
       if (!conversations.some(conv => conv.id === conversationId)) {
         setMessageText(''); // Clear current message if exists
       }
-      
+
       // Auto focus on message input
       setTimeout(() => {
         messageInputRef.current?.focus();
@@ -217,18 +227,19 @@ const ChatPage: React.FC = () => {
   // Handle sending a message
   const handleSendMessage = () => {
     if (!messageText.trim() || !activeConversationId) return;
-    
+
     const currentUserId = localStorage.getItem('user_id');
     if (!currentUserId) return;
-    
+
+    // Send message using the hook
     sendMessage({
       senderId: currentUserId,
       text: messageText.trim()
     });
-    
+
     setMessageText('');
     setTyping(false);
-    
+
     // Focus back on input after sending message
     messageInputRef.current?.focus();
   };
@@ -257,19 +268,27 @@ const ChatPage: React.FC = () => {
     return name.charAt(0).toUpperCase();
   };
 
+  const uniqueConversations = Array.from(
+    new Map(conversations.map(item => [item.id, item])).values()
+  );
+
+  const uniqueFriends = Array.from(
+    new Map(filteredFriends.map(item => [item.friend_id, item])).values()
+  );
+
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar - Conversation list */}
-      <div className="w-1/4 border-r border-gray-200 bg-white p-4 overflow-y-auto">
+      <div className="w-1/4 border-r border-gray-200 bg-white p-4 overflow-y-auto custom-scrollbar-3 overflow-x-hidden">
         <h2 className="text-xl font-semibold mb-4">Messages</h2>
-        
+
         {/* Friends list */}
         <div className="mb-6 relative" ref={searchContainerRef}>
           <h3 className="text-sm font-medium text-gray-500 mb-2">Friends</h3>
-          
+
           {/* Search input */}
           <div className="mb-1">
-            <input 
+            <input
               type="text"
               placeholder="Search friends..."
               value={searchQuery}
@@ -278,60 +297,58 @@ const ChatPage: React.FC = () => {
               className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          
+
           {/* Search results dropdown - Absolute positioning */}
           {showFriendsList && (
-            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto custom-scrollbar-3 overflow-x-hidden">
               {friendsLoading ? (
                 <p className="text-sm text-gray-400 p-3">Loading...</p>
-              ) : filteredFriends.length > 0 ? (
+              ) : uniqueFriends.length > 0 ? (
                 <div className="py-1">
-                  {filteredFriends.map(friend => {
-                    const isActive = activeConversationId && conversations.some(conv => 
-                      conv.id === activeConversationId && 
+                  {uniqueFriends.map(friend => {
+                    const isActive = activeConversationId && conversations.some(conv =>
+                      conv.id === activeConversationId &&
                       conv.members[friend.friend_id]
                     );
-                    
+
                     // Get display info
                     const displayName = friend.friendInfo?.full_name || friend.friendInfo?.email || friend.friend_id;
                     const initial = getInitials(displayName);
                     const avatarUrl = friend.friendInfo?.avatar_url;
-                    
+
                     return (
                       <div
                         key={friend.friend_id}
                         onClick={() => handleStartChat(friend.friend_id)}
-                        className={`flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-50 ${
-                          isActive ? 'bg-blue-50' : ''
-                        }`}
+                        className={`flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-50 ${isActive ? 'bg-blue-50' : ''
+                          }`}
                       >
                         {avatarUrl ? (
-                          <img 
+                          <img
                             src={avatarUrl}
                             alt={displayName}
                             className="w-8 h-8 rounded-full object-cover"
                           />
                         ) : (
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                            isActive ? 'bg-blue-100 text-blue-600' : 'bg-gray-200 text-gray-700'
-                          }`}>
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${isActive ? 'bg-blue-100 text-blue-600' : 'bg-gray-200 text-gray-700'
+                            }`}>
                             {initial}
                           </div>
                         )}
                         <span className="text-sm truncate flex-1">{displayName}</span>
                         {/* Chat icon */}
-                        <svg 
-                          xmlns="http://www.w3.org/2000/svg" 
-                          className="h-4 w-4 text-gray-500" 
-                          fill="none" 
-                          viewBox="0 0 24 24" 
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4 text-gray-500"
+                          fill="none"
+                          viewBox="0 0 24 24"
                           stroke="currentColor"
                         >
-                          <path 
-                            strokeLinecap="round" 
-                            strokeLinejoin="round" 
-                            strokeWidth={2} 
-                            d="M8 12h.01M12 12h.01M16 12h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" 
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 12h.01M12 12h.01M16 12h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
                           />
                         </svg>
                       </div>
@@ -345,7 +362,7 @@ const ChatPage: React.FC = () => {
               )}
             </div>
           )}
-          
+
           {/* Placeholder text when empty */}
           {!showFriendsList && (
             <p className="text-sm text-gray-400 mb-3 mt-1">
@@ -353,10 +370,10 @@ const ChatPage: React.FC = () => {
             </p>
           )}
         </div>
-        
+
         {/* Conversation list */}
         <ConversationList
-          conversations={conversations}
+          conversations={uniqueConversations}
           users={users}
           loading={loading}
           activeConversationId={activeConversationId}
@@ -370,40 +387,70 @@ const ChatPage: React.FC = () => {
           <>
             {/* Header */}
             <div className="p-4 border-b border-gray-200 bg-white">
-              <div className="flex items-center">
-                {(() => {
-                  const otherUser = getOtherUserInChat();
-                  return (
-                    <>
-                      {otherUser?.avatar ? (
-                        <img
-                          src={otherUser.avatar}
-                          alt={otherUser.name}
-                          className="w-10 h-10 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-medium">
-                          {getInitials(otherUser?.name || '')}
-                        </div>
-                      )}
-                      <div className="ml-3">
-                        <h3 className="font-medium">
-                          {otherUser?.name}
-                        </h3>
-                        {otherUser?.email && (
-                          <span className="text-xs text-gray-500">{otherUser.email}</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  {(() => {
+                    const otherUser = getOtherUserInChat();
+                    return (
+                      <>
+                        {otherUser?.avatar ? (
+                          <img
+                            src={otherUser.avatar}
+                            alt={otherUser.name}
+                            className="w-10 h-10 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-medium">
+                            {getInitials(otherUser?.name || '')}
+                          </div>
                         )}
-                      </div>
-                    </>
-                  );
-                })()}
+                        <div className="ml-3">
+                          <h3 className="font-medium">
+                            {otherUser?.name}
+                          </h3>
+                          {otherUser?.email && (
+                            <span className="text-xs text-gray-500">{otherUser.email}</span>
+                          )}
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+
+                {/* Theme button */}
+                <button
+                  onClick={() => setShowThemeSelector(!showThemeSelector)}
+                  className="p-2 rounded-full hover:bg-gray-100"
+                  title="Thay đổi theme"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v11a3 3 0 106 0V4a2 2 0 00-2-2H4zm1 14a1 1 0 100-2 1 1 0 000 2zm5-1.757l4.9-4.9a2 2 0 000-2.828L13.485 5.1a2 2 0 00-2.828 0L10 5.757v8.486zM16 18H9.071l6-6H16a2 2 0 012 2v2a2 2 0 01-2 2z" clipRule="evenodd" />
+                  </svg>
+                </button>
               </div>
+
+              {/* Theme selector */}
+              {showThemeSelector && activeConversationId && (
+                <div className="absolute right-4 top-16 z-10">
+                  <ThemeSelector
+                    conversationId={activeConversationId}
+                    onClose={() => setShowThemeSelector(false)}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Messages area */}
-            <div 
+            <div
               ref={messageContainerRef}
-              className="flex-1 p-4 overflow-y-auto"
+              className="flex-1 p-4 overflow-y-auto custom-scrollbar-3 overflow-x-hidden"
+              style={{
+                backgroundColor: theme?.backgroundColor || 'transparent',
+                backgroundImage: theme?.backgroundUrl ? `url(${theme.backgroundUrl})` : 'none',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                color: theme?.textColor || 'inherit'
+              }}
             >
               {messagesLoading ? (
                 <div className="flex justify-center items-center h-full">
@@ -418,18 +465,17 @@ const ChatPage: React.FC = () => {
                   {messages.map(message => {
                     const isCurrentUser = message.senderId === localStorage.getItem('user_id');
                     return (
-                      <div 
+                      <div
                         key={message.id}
                         className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
                       >
-                        <div 
-                          className={`max-w-xs rounded-lg px-4 py-2 ${
-                            isCurrentUser 
-                              ? 'bg-blue-600 text-white' 
+                        <div
+                          className={`max-w-xs rounded-lg px-4 py-2 ${isCurrentUser
+                              ? 'bg-blue-600 text-white'
                               : 'bg-gray-200 text-gray-800'
-                          }`}
+                            }`}
                         >
-                          <p>{message.text}</p>
+                          <p className="break-words">{message.text}</p>
                           <span className="text-xs opacity-70 block text-right">
                             {new Date(message.createdAt).toLocaleTimeString([], {
                               hour: '2-digit',
