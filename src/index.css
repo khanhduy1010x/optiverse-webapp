@@ -26,3 +26,21 @@ body {
 .custom-scrollbar-2:hover::-webkit-scrollbar-thumb {
   background: #a0aec0;
 }
+
+/* Custom scrollbar rõ ràng hơn */
+.custom-scrollbar-3::-webkit-scrollbar {
+  width: 6px;
+  height: 10%;
+  background-color: #21b4ca;
+}
+.custom-scrollbar-3::-webkit-scrollbar-thumb {
+  background: #21b4ca;
+  border-radius: 4px;
+}
+.custom-scrollbar-3:hover::-webkit-scrollbar-thumb {
+  background: #21b4ca;
+}
+.custom-scrollbar-3::-webkit-scrollbar-track {
+  background-color: #f1f1f1;
+  border-radius: 4px;
+}
