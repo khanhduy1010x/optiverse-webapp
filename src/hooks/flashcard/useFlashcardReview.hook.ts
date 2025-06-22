@@ -12,7 +12,7 @@ import flashcardService from '../../services/flashcard.service';
 export function useFlashcardReview() {
   const { deckId } = useParams();
   const location = useLocation();
-  const { title } = location.state;
+  const { title, mode } = location.state;
 
   const [flashcardDeck, setFlashcardDeck] =
     useState<FlashcardDeckResponse>(flashcardDeckMock);
@@ -22,7 +22,7 @@ export function useFlashcardReview() {
   const fetchData = async () => {
     const data = await flashcardService.getFlashcardList(deckId ? deckId : '');
     if (data.flashcards) {
-      const dueFlashcards = getDueFlashcards(data.flashcards);
+      const dueFlashcards = getDueFlashcards(data.flashcards, mode);
       data.flashcards = dueFlashcards;
       if (dueFlashcards.length > 0) {
         setFlashcard(dueFlashcards[0]);

@@ -1,8 +1,22 @@
 import { useState, useEffect } from 'react';
 import { FlashcardDeckResponse } from '../../types/flashcard/response/flashcard.response';
 import flashcardService from '../../services/flashcard.service';
+import { useAppTranslate } from '../useAppTranslate';
+import { SearchForm } from '../../types/flashcard/flashcard.types';
+import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
 
 export function useFlashcardDeckList() {
+  const navigate = useNavigate();
+
+  const { t } = useAppTranslate();
+  const { handleSubmit, control, watch, reset } = useForm<SearchForm>({
+    values: {
+      search: '',
+    },
+  });
+
+  const [orgDecks, setOrgDecks] = useState<FlashcardDeckResponse[]>([]);
   const [decks, setDecks] = useState<FlashcardDeckResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -17,9 +31,19 @@ export function useFlashcardDeckList() {
     setSelectedId(prev => (prev === id ? null : id));
   };
 
+  const onSubmit = async (data: SearchForm) => {
+    console.log('Search flashcard deck:', { data });
+    setDecks(
+      orgDecks.filter(deck =>
+        deck.title.toLowerCase().includes(watch('search').trim().toLowerCase())
+      )
+    );
+  };
+
   const fetchData = async () => {
     const data: FlashcardDeckResponse[] =
       await flashcardService.getFlashcardDeckList();
+    setOrgDecks(data);
     setDecks(data);
     setLoading(false);
   };
@@ -49,10 +73,23 @@ export function useFlashcardDeckList() {
 
   const closePopupAndRefresh = async () => {
     closePopup();
+    await refresh();
+  };
+
+  const refresh = async () => {
+    reset({
+      search: '',
+    });
+
     await fetchData();
   };
 
   return {
+    t,
+    onSubmit,
+    control,
+    handleSubmit,
+    refresh,
     decks,
     loading,
     selectedId,
@@ -62,7 +99,6 @@ export function useFlashcardDeckList() {
     openPopup,
     closePopup,
     handleDelete,
-    fetchData,
     closePopupAndRefresh,
   };
 }

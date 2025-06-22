@@ -27,18 +27,18 @@ const Text: React.FC<CustomTextProps> = ({
 
   const defaultStyles: React.CSSProperties = {
     ...TEXT[textStyle],
-    color: theme.text,
+    color: theme.colors.text,
   };
 
   return (
-    <span
-      className={`${GROUP_CLASSNAMES.transitionColors} ${className}`}
+    <div
+      className={`break-words ${GROUP_CLASSNAMES.transitionColors} ${className}`}
       style={{ ...defaultStyles, ...style }}
       {...props}
     >
       {title ? (translate ? t(`${title}`, { defaultValue: title }) : title) : null}
       {children}
-    </span>
+    </div>
   );
 };
 

@@ -12,17 +12,12 @@ export function useFlashcardList() {
   const { deckId } = useParams();
   const [deck, setDeck] = useState<FlashcardDeckResponse>(flashcardDeckMock);
   const [loading, setLoading] = useState(true);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [popupType, setPopupType] = useState<'edit' | 'delete' | null>(null);
   const [popupItem, setPopupItem] = useState<FlashcardResponse | null>(null);
 
-  const toggleOptions = (id: string) => {
-    setSelectedId(prev => (prev === id ? null : id));
-  };
 
   const closePopupAndRefresh = async () => {
     await fetchData();
-    setSelectedId(null);
     setPopupType(null);
     setPopupItem(null);
   };
@@ -55,10 +50,8 @@ export function useFlashcardList() {
     navigate,
     deck,
     loading,
-    selectedId,
     popupType,
     popupItem,
-    toggleOptions,
     setPopupType,
     setPopupItem,
     closePopupAndRefresh,

@@ -72,8 +72,8 @@ export default function AddFlashcard() {
           rules={{
             required: 'must be required',
             minLength: {
-              value: 10,
-              message: 'at least 10 characters',
+              value: 1,
+              message: 'at least 1 characters',
             },
             setValueAs: v => v.trim(),
             validate: v => isNotEmpty(v) || 'must not be only white space',
@@ -91,8 +91,8 @@ export default function AddFlashcard() {
           rules={{
             required: 'must be required',
             minLength: {
-              value: 10,
-              message: 'at least 10 characters',
+              value: 1,
+              message: 'at least 1 characters',
             },
             setValueAs: v => v.trim(),
             validate: v => isNotEmpty(v) || 'must not be only white space',
