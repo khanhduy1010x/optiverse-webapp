@@ -1,33 +1,35 @@
-import React from 'react';
-import { Flashcard, FlashcardDeck } from '../response/flashcard.response';
+import {
+  FlashcardDeckResponse,
+  FlashcardResponse,
+} from '../response/flashcard.response';
 
 export interface FlashcardDeckListProps {
-  decks: FlashcardDeck[];
+  decks: FlashcardDeckResponse[];
   onAddDeck: () => void;
-  onSelectDeck: (deck: FlashcardDeck) => void;
+  onSelectDeck: (deck: FlashcardDeckResponse) => void;
   onDeleteDeck: (id: string) => void;
-  onEditDeck: (deck: FlashcardDeck) => void;
+  onEditDeck: (deck: FlashcardDeckResponse) => void;
 }
 
 export interface FlashcardDeckItemProps {
-  deck: FlashcardDeck;
-  onSelect: (deck: FlashcardDeck) => void;
+  deck: FlashcardDeckResponse;
+  onSelect: (deck: FlashcardDeckResponse) => void;
   onDelete: (id: string) => void;
-  onEdit: (deck: FlashcardDeck) => void;
+  onEdit: (deck: FlashcardDeckResponse) => void;
 }
 
 export interface FlashcardListProps {
-  deck: FlashcardDeck;
-  flashcards: Flashcard[];
+  deck: FlashcardDeckResponse;
+  flashcards: FlashcardResponse[];
   onAddFlashcard: () => void;
-  onEditFlashcard: (flashcard: Flashcard) => void;
+  onEditFlashcard: (flashcard: FlashcardResponse) => void;
   onDeleteFlashcard: (id: string) => void;
   onStartReview: () => void;
 }
 
 export interface FlashcardItemProps {
-  flashcard: Flashcard;
-  onEdit: (flashcard: Flashcard) => void;
+  flashcard: FlashcardResponse;
+  onEdit: (flashcard: FlashcardResponse) => void;
   onDelete: (id: string) => void;
 }
 
@@ -52,8 +54,27 @@ export interface FlashcardDeckFormProps {
 }
 
 export interface FlashcardReviewProps {
-  flashcard: Flashcard;
+  flashcard: FlashcardResponse;
   onAnswer: (quality: number) => void;
   isShowingAnswer: boolean;
   setIsShowingAnswer: (value: boolean) => void;
+}
+
+export interface ReviewStatistics {
+  totalDeckCount: number;
+  totalFlashcardCount: number;
+  totalReviewSessionCount: number;
+  dueTodayCount: number;
+  averageEaseFactor: number;
+  averageQuality: number;
+
+  // Thêm cho pie chart
+  newCount: number;
+  learningCount: number;
+  reviewingCount: number;
+}
+
+export interface DeckDueItem {
+  deckTitle: string;
+  dueTodayCount: number;
 }
