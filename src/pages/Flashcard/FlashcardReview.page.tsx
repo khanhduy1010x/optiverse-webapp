@@ -20,7 +20,7 @@ export default function FlashcardReview() {
   } = useFlashcardReview();
 
   return (
-    <div className="flex flex-col items-center justify-center w-full min-h-screen px-4 py-8 bg-gray-100 gap-4">
+    <div className="flex flex-col items-center justify-start w-full min-h-screen px-4 py-8 bg-gray-100 gap-4">
       <h1
         className="w-1/2 text-xl mb-6 text-blue-600 cursor-pointer"
         onClick={() => navigate(-1)}

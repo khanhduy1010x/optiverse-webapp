@@ -19,8 +19,8 @@ const getDueFlashcards = (
         }
 
         return (
-          new Date(a.review.next_review).getTime() -
-          new Date(b.review.next_review).getTime()
+          new Date(a.review.last_review).getTime() -
+          new Date(b.review.last_review).getTime()
         );
       });
   }
