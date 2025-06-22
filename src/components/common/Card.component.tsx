@@ -47,7 +47,7 @@ export const FlashcardDeckCard: React.FC<FlashcardCardProps> = ({
         display: 'flex',
         alignItems: 'center',
         gap: 12,
-        backgroundColor: transparent ? 'transparent' : theme.background,
+        backgroundColor: 'transparent',
         padding: 8,
         borderRadius: 8,
         border: `0.5px solid ${COLORS.black200}`,
@@ -120,31 +120,42 @@ export const Flashcard: React.FC<FlashcardProps> = ({
 
   return (
     <div
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
-      onContextMenu={handleContextMenu}
       style={{
-        display: 'flex',
-        flexDirection: 'column',
-        backgroundColor: transparent ? 'transparent' : '#f5f5f5',
-        padding: 8,
-        borderRadius: 8,
-        border: `0.5px solid ${COLORS.black200}`,
-        gap: 12,
+        minHeight: '100px',
         ...style,
       }}
+      className="w-full flex flex-row gap-4 justify-between"
     >
-      <Text style={{ fontSize: 16 }}>{front}</Text>
       <div
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
+        onContextMenu={handleContextMenu}
         style={{
-          height: 1,
-          backgroundColor: COLORS.black200,
-          margin: '12px 0',
-          width: '50%',
-          alignSelf: 'flex-start',
+          backgroundColor: 'transparent',
+          padding: 8,
+          borderRadius: 8,
+          border: `0.5px solid ${COLORS.black200}`,
+          ...style,
         }}
-      />
-      <Text style={{ fontSize: 16 }}>{back}</Text>
+        className="w-1/2 break-words min-w-0"
+      >
+        <Text style={{ fontSize: 16 }}>{front}</Text>
+      </div>
+      <div
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
+        onContextMenu={handleContextMenu}
+        style={{
+          backgroundColor: 'transparent',
+          padding: 8,
+          borderRadius: 8,
+          border: `0.5px solid ${COLORS.black200}`,
+          ...style,
+        }}
+        className="w-1/2 break-words min-w-0"
+      >
+        <Text style={{ fontSize: 16 }}>{back}</Text>
+      </div>
     </div>
   );
 };

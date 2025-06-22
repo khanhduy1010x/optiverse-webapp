@@ -6,10 +6,16 @@ import UpdateFlashcardDeck from './UpdateFlashcardDeck.screen';
 import AddFlashcardDeck from './AddFlashcardDeck.screen';
 import { useFlashcardDeckList } from '../../hooks/flashcard/useFlashcardDeckList.hook';
 import { flashcardDeckMock } from '../../types/flashcard/response/flashcard.response';
+import { SearchInputField } from '../../components/common/Input.component';
 
 export default function FlashcardDeckList() {
   const navigate = useNavigate();
   const {
+    t,
+    onSubmit,
+    control,
+    handleSubmit,
+    refresh,
     decks,
     loading,
     selectedId,
@@ -37,6 +43,23 @@ export default function FlashcardDeckList() {
             <circle cx="19" cy="12" r="2" />
           </svg>
         </button>
+      </div>
+
+      <div className="mb-8 flex flex-row gap-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex-11/12">
+          <SearchInputField
+            name="search"
+            control={control}
+            placeholder="Enter title..."
+          ></SearchInputField>
+        </form>
+
+        <Button
+          title="Reset"
+          className="flex-1/12"
+          inverted
+          onClick={refresh}
+        ></Button>
       </div>
 
       {loading ? (

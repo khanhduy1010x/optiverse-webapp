@@ -15,6 +15,7 @@ const InputField = <T extends FieldValues>({
   rules,
   iconName,
   onClickIcon,
+  className,
 }: FieldProps<T>) => {
   const { theme } = useTheme();
   const {
@@ -51,6 +52,7 @@ const InputField = <T extends FieldValues>({
               : theme.components.button.default.text,
             color: error ? COLORS.red500 : theme.components.button.default.text,
           }}
+          className={className}
         />
         {iconName && (
           <div
@@ -233,6 +235,65 @@ export const OTPInputField = <T extends FieldValues>({
             }}
           />
         ))}
+      </div>
+    </div>
+  );
+};
+
+export const SearchInputField = <T extends FieldValues>({
+  name,
+  control,
+  label,
+  placeholder,
+  type = 'text',
+  rules,
+  className,
+}: FieldProps<T>) => {
+  const { theme } = useTheme();
+  const {
+    field,
+    fieldState: { error },
+  } = useController({ name, control, rules });
+
+  return (
+    <div
+      style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
+      className={className}
+    >
+      {label && (
+        <label
+          htmlFor={name}
+          style={{
+            color: error ? COLORS.red500 : theme.components.button.default.text,
+          }}
+        >
+          {error ? `${label} ${error.message}` : label}
+        </label>
+      )}
+      <div style={{ position: 'relative', width: '100%' }}>
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <svg
+            className="h-5 w-5 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
+        </div>
+        <input
+          id={name}
+          {...field}
+          value={field.value ?? ''}
+          type={type}
+          placeholder={placeholder}
+          className={`pl-10 p-3 w-full border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900`}
+        />
       </div>
     </div>
   );

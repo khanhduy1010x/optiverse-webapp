@@ -11,10 +11,8 @@ export default function FlashcardList() {
   const {
     navigate,
     deck,
-    selectedId,
     popupType,
     popupItem,
-    toggleOptions,
     setPopupItem,
     setPopupType,
     handleDelete,
@@ -30,60 +28,85 @@ export default function FlashcardList() {
         >
           Back
         </h1>
-        <h1
-          className="text-xl mb-6 text-blue-600 cursor-pointer"
-          onClick={() =>
-            navigate(`/flashcard-deck/${deck._id}/learn`, {
-              state: { title: deck.title },
-            })
-          }
-        >
-          Learn
-        </h1>
       </div>
 
-      <FlashcardDeckCard
-        title={deck.title}
-        lastReview={deck.lastReview}
-        learningFlashcard={deck.learningCount}
-        newFlashcard={deck.newCount}
-        reviewingFlashcard={deck.reviewingCount}
-      />
+      <div className="w-full flex flex-row gap-4 justify-between">
+        <FlashcardDeckCard
+          title={deck.title}
+          lastReview={deck.lastReview}
+          learningFlashcard={deck.learningCount}
+          newFlashcard={deck.newCount}
+          reviewingFlashcard={deck.reviewingCount}
+          style={{
+            width: '75%',
+          }}
+        />
+        <div className="w-1/4 flex flex-col flex-wrap gap-4">
+          <Button
+            title="Spaced repetition"
+            fontType="bold12"
+            inverted
+            onClick={() =>
+              navigate(`/flashcard-deck/${deck._id}/learn`, {
+                state: { title: deck.title, mode: 'space-repetition' },
+              })
+            }
+          ></Button>
+          <Button
+            title="Unlimited study"
+            fontType="bold12"
+            inverted
+            onClick={() =>
+              navigate(`/flashcard-deck/${deck._id}/learn`, {
+                state: { title: deck.title, mode: 'unlimited' },
+              })
+            }
+          ></Button>
+        </div>
+      </div>
 
       <div className="flex-col flex gap-8">
         <h3 className="text-lg">Flashcards</h3>
         {deck.flashcards &&
-          deck.flashcards.map(item => (
+          deck.flashcards.map((item, index) => (
             <div key={item._id} className="relative">
-              <Flashcard
-                front={item.front}
-                back={item.back}
-                onClick={() => toggleOptions(item._id)}
-              />
-              {selectedId === item._id && (
-                <div className="absolute right-4 top-4 z-10 bg-white border shadow-md rounded px-3 py-2 text-sm flex flex-col space-y-1">
-                  <Button
-                    leftComponent={<Icon name="brush" inverted></Icon>}
-                    onClick={() => {
-                      setPopupType('edit');
-                      setPopupItem(item);
-                    }}
-                    style={{ justifyContent: 'center' }}
-                    rightStyle={{ display: 'none' }}
-                    inverted
-                  />
-                  <Button
-                    leftComponent={<Icon name="delete" inverted></Icon>}
-                    onClick={() => {
-                      setPopupType('delete');
-                      setPopupItem(item);
-                    }}
-                    style={{ justifyContent: 'center' }}
-                    rightStyle={{ display: 'none' }}
-                    inverted
-                  />
-                </div>
-              )}
+              <div
+                className="absolute right-full top-0 bottom-0 mr-4 z-10 rounded px-3 py-2 text-sm flex flex-col space-y-1
+                items-center justify-center 
+              "
+              >
+                {index + 1}
+              </div>
+              <Flashcard front={item.front} back={item.back} />
+              <div
+                className="absolute left-full bottom-0 ml-2 z-10-md rounded px-3 text-sm flex flex-col items-center justify-center space-y-1
+                h-full"
+              >
+                <Button
+                  leftComponent={<Icon name="brush"></Icon>}
+                  onClick={() => {
+                    setPopupType('edit');
+                    setPopupItem(item);
+                  }}
+                  style={{
+                    justifyContent: 'center',
+                    borderColor: 'transparent',
+                  }}
+                  rightStyle={{ display: 'none' }}
+                />
+                <Button
+                  leftComponent={<Icon name="delete"></Icon>}
+                  onClick={() => {
+                    setPopupType('delete');
+                    setPopupItem(item);
+                  }}
+                  style={{
+                    justifyContent: 'center',
+                    borderColor: 'transparent',
+                  }}
+                  rightStyle={{ display: 'none' }}
+                />
+              </div>
             </div>
           ))}
       </div>
@@ -134,17 +157,21 @@ export default function FlashcardList() {
                 </p>
                 <div className="flex justify-end gap-2">
                   <Button
-                    onClick={() => handleDelete(popupItem)}
-                    className="bg-red-500 text-white px-3 py-1 rounded"
-                    title="Delete"
-                  />
-                  <Button
                     onClick={() => {
                       setPopupType(null);
                       setPopupItem(null);
                     }}
                     className="bg-gray-200 px-3 py-1 rounded"
                     title="Cancel"
+                    style={{
+                      borderColor: 'transparent'
+                    }}
+                  />
+                  <Button
+                    onClick={() => handleDelete(popupItem)}
+                    className="bg-red-500 text-white px-3 py-1 rounded"
+                    title="Delete"
+                    inverted
                   />
                 </div>
               </>

@@ -1,7 +1,7 @@
 import { Control, RegisterOptions, FieldValues, Path } from 'react-hook-form';
 import { IconName } from '../../../assets/icons';
 
-export interface FieldProps<T extends FieldValues> {
+export type FieldProps<T extends FieldValues> = {
   name: Path<T>;
   control: Control<T>;
   label?: string;
@@ -12,4 +12,4 @@ export interface FieldProps<T extends FieldValues> {
   iconName?: IconName;
   onClickIcon?: () => void;
   otpLength?: number;
-}
+} & React.InputHTMLAttributes<HTMLInputElement>;

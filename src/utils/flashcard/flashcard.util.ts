@@ -1,7 +1,29 @@
-import { Flashcard } from '../../types/flashcard/response/flashcard.response';
+import { FlashcardResponse } from '../../types/flashcard/response/flashcard.response';
 
-const getDueFlashcards = (flashcards: Flashcard[]): Flashcard[] => {
+const getDueFlashcards = (
+  flashcards: FlashcardResponse[],
+  mode: string
+): FlashcardResponse[] => {
   const now = new Date().getTime();
+
+  if (mode === 'unlimited') {
+    return flashcards
+      .map((fc, index) => ({ ...fc, index }))
+      .sort((a, b) => {
+        if (!a.review) {
+          return 1;
+        }
+
+        if (!b.review) {
+          return -1;
+        }
+
+        return (
+          new Date(a.review.next_review).getTime() -
+          new Date(b.review.next_review).getTime()
+        );
+      });
+  }
 
   return flashcards.filter(fc => {
     if (!fc.review) return true;
