@@ -48,6 +48,7 @@ import { ReactComponent as setting } from './setting.svg';
 import { ReactComponent as sidebar } from './sidebar.svg';
 import { ReactComponent as sortAZ } from './sort-a-z.svg';
 import { ReactComponent as star } from './star.svg';
+import { ReactComponent as statistic } from './statistic.svg';
 import { ReactComponent as strike } from './strike.svg';
 import { ReactComponent as tag } from './tag.svg';
 import { ReactComponent as task } from './task.svg';
@@ -113,6 +114,7 @@ export const ICONS = {
   sidebar: sidebar,
   sortAZ: sortAZ,
   star: star,
+  statistic: statistic,
   strike: strike,
   tag: tag,
   task: task,

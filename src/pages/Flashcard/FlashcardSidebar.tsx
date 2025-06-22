@@ -1,0 +1,68 @@
+import React from 'react';
+import View from '../../components/common/View.component';
+import Icon from '../../components/common/Icon/Icon.component';
+import { IconName } from '../../assets/icons';
+import { useNavigate } from 'react-router-dom';
+
+interface FlashcardSidebarProps {
+  currentSelected: 'flashcard-deck' | 'flashcard-statistic';
+}
+
+const FlashcardSidebar: React.FC<FlashcardSidebarProps> = ({
+  currentSelected,
+}) => {
+  const navigate = useNavigate();
+  const menuItems = [
+    {
+      id: 'flashcard-deck',
+      label: 'Flashcard',
+      path: '/flashcard-deck',
+      icon: 'flashcard' as IconName,
+    },
+    {
+      id: 'flashcard-statistic',
+      label: 'Statistic',
+      path: '/flashcard-statistic',
+      icon: 'statistic' as IconName,
+    },
+  ];
+
+  return (
+    <View className="w-64 border-r border-gray-200 min-h-screen">
+      <div className="min-h-screen flex flex-col items-stretch">
+        {/* Header section */}
+        <div className="p-6 border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-800">Flashcard Menu</h2>
+          <p className="text-sm text-gray-500 mt-1">Flashcard Management</p>
+        </div>
+
+        {/* Navigation items */}
+        <div className="h-full flex flex-col pt-10 px-6 space-y-4">
+          {menuItems.map(menu => (
+            <button
+              key={menu.id}
+              onClick={() => navigate(menu.path)}
+              className={`
+                px-6 py-3 rounded-lg text-left cursor-pointer transition-all duration-200 flex items-center
+                ${
+                  currentSelected === menu.id
+                    ? 'bg-[#e7f6f7] text-[#21b4ca]'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }
+              `}
+            >
+              <Icon
+                name={menu.icon}
+                size={24}
+                className={`mr-3 ${currentSelected === menu.id ? 'text-[#21b4ca]' : 'text-gray-500'}`}
+              />
+              <span className="font-medium text-sm">{menu.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </View>
+  );
+};
+
+export default FlashcardSidebar;

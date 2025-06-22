@@ -38,9 +38,41 @@ export const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    label: 'Flash card',
+    label: 'Flashcard',
     path: '/flashcard-deck',
     icon: 'flashcard',
+    subsections: [
+      {
+        label: 'Flash card',
+        path: '/flashcard-deck',
+        icon: 'flashcard',
+        parentPath: '/flashcard-deck',
+      },
+      {
+        label: 'Flashcard list',
+        path: '/flashcard-deck/:deckId',
+        icon: 'flashcard',
+        parentPath: '/flashcard-deck',
+      },
+      {
+        label: 'Add flashcard',
+        path: '/flashcard-deck/:deckId/add',
+        icon: 'flashcard',
+        parentPath: '/flashcard-deck',
+      },
+      {
+        label: 'Learn flashcard',
+        path: '/flashcard-deck/:deckId/learn',
+        icon: 'flashcard',
+        parentPath: '/flashcard-deck',
+      },
+      {
+        label: 'Statistic',
+        path: '/flashcard-statistic',
+        icon: 'flashcard',
+        parentPath: '/flashcard-deck',
+      },
+    ],
   },
   // { label: 'Setting', path: '/settings', icon: 'setting' },
   { label: 'Friend', path: '/friends', icon: 'friend' },
@@ -74,6 +106,8 @@ const PATH_MAPPING: Record<string, string> = {
   '/statistics-timer': '/focus-timer',
   '/user-profile': '/user-profile',
   '/login-session': '/user-profile',
+  '/flashcard-statistic': '/flashcard-deck',
+  '/flashcard-deck': '/flashcard-deck',
 };
 
 export const getSectionKeyFromPath = (path: string): string => {
@@ -103,5 +137,13 @@ export const getSectionKeyFromPath = (path: string): string => {
 
 // Hàm mới để lấy path hiện tại cho sidebar chính
 export const getMainSidebarActiveSection = (path: string): string => {
-  return PATH_MAPPING[path] || path;
+  if (PATH_MAPPING[path]) return PATH_MAPPING[path];
+
+  const matchingPrefix = Object.keys(PATH_MAPPING).find(
+    key => path.startsWith(key + '/')
+  );
+
+  if (matchingPrefix) return PATH_MAPPING[matchingPrefix];
+
+  return path;
 };

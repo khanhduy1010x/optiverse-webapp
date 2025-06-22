@@ -4,8 +4,11 @@ import flashcardService from '../../services/flashcard.service';
 import { useAppTranslate } from '../useAppTranslate';
 import { SearchForm } from '../../types/flashcard/flashcard.types';
 import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
 
 export function useFlashcardDeckList() {
+  const navigate = useNavigate();
+
   const { t } = useAppTranslate();
   const { handleSubmit, control, watch, reset } = useForm<SearchForm>({
     values: {
