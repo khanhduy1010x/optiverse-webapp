@@ -13,6 +13,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ selectedMenu, handleNav
     const menuItems = [
         { id: 'profile', label: 'Profile', path: '/user-profile', icon: 'setting' as IconName },
         { id: 'login-sessions', label: 'Login Sessions', path: '/login-session', icon: 'devices' as IconName },
+        { id: 'achievements', label: 'Achievements', path: '/achievements', icon: 'trophy' as IconName },
     ];
 
     return (

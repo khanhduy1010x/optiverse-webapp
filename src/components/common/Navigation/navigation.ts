@@ -95,6 +95,12 @@ export const NAV_SECTIONS: NavSection[] = [
         icon: 'devices',
         parentPath: '/user-profile',
       },
+      {
+        label: 'Achievements',
+        path: '/achievements',
+        icon: 'trophy',
+        parentPath: '/user-profile',
+      },
     ],
   },
 ];
@@ -108,6 +114,7 @@ const PATH_MAPPING: Record<string, string> = {
   '/login-session': '/user-profile',
   '/flashcard-statistic': '/flashcard-deck',
   '/flashcard-deck': '/flashcard-deck',
+  '/achievements': '/user-profile',
 };
 
 export const getSectionKeyFromPath = (path: string): string => {
