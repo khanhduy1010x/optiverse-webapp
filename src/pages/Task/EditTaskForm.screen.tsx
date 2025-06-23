@@ -7,7 +7,15 @@ import Modal from 'react-modal';
 interface EditTaskFormProps {
   task: Task;
   onClose: () => void;
-  onSave: (updated: { title: string; description: string; status: string; priority: string; tags: Tag[] }) => Promise<void>;
+  onSave: (updated: { 
+    title: string; 
+    description: string; 
+    status: string; 
+    priority: string; 
+    start_time: string;
+    end_time: string;
+    tags: Tag[] 
+  }) => Promise<void>;
   selectedTags: Tag[];
   allTags: Tag[];
   handleTagSelect: (tag: Tag) => void;
@@ -29,12 +37,16 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
   const [localDescription, setLocalDescription] = React.useState(task.description || '');
   const [localStatus, setLocalStatus] = React.useState(task.status);
   const [localPriority, setLocalPriority] = React.useState(task.priority);
+  const [localStartTime, setLocalStartTime] = React.useState(task.start_time || '');
+  const [localEndTime, setLocalEndTime] = React.useState(task.end_time || '');
 
   React.useEffect(() => {
     setLocalTitle(task.title);
     setLocalDescription(task.description || '');
     setLocalStatus(task.status);
     setLocalPriority(task.priority);
+    setLocalStartTime(task.start_time || '');
+    setLocalEndTime(task.end_time || '');
   }, [task]);
 
   const handleSave = async () => {
@@ -43,6 +55,8 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
       description: localDescription,
       status: localStatus,
       priority: localPriority,
+      start_time: localStartTime,
+      end_time: localEndTime,
       tags: selectedTags
     });
   };
@@ -109,6 +123,38 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
                 <option value="medium">Medium (P2)</option>
                 <option value="high">High (P1)</option>
               </select>
+            </div>
+
+            {/* Start Time */}
+            <div className={GROUP_CLASSNAMES.flexItemsCenter + ' py-2'}>
+              <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div className="flex-grow">
+                <label className="text-sm text-gray-600 block mb-1">Start Time</label>
+                <input
+                  type="datetime-local"
+                  className="w-full border border-gray-200 rounded px-3 py-2 text-sm"
+                  value={localStartTime}
+                  onChange={(e) => setLocalStartTime(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {/* End Time */}
+            <div className={GROUP_CLASSNAMES.flexItemsCenter + ' py-2'}>
+              <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <div className="flex-grow">
+                <label className="text-sm text-gray-600 block mb-1">End Time</label>
+                <input
+                  type="datetime-local"
+                  className="w-full border border-gray-200 rounded px-3 py-2 text-sm"
+                  value={localEndTime}
+                  onChange={(e) => setLocalEndTime(e.target.value)}
+                />
+              </div>
             </div>
 
             {/* Tags */}

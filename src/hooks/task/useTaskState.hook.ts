@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Task } from '../../types/task/response/task.response';
 import { Tag } from '../../types/task/response/tag.response';
+import { format } from 'date-fns';
+import { formatTimeToAMPM } from '../../utils/date.utils';
 
 export function useTaskState() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -31,6 +33,8 @@ export function useTaskState() {
   const [description, setDescription] = useState('');
   const [status, setStatus] = useState<'pending' | 'completed' | 'overdue'>('pending');
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('low');
+  const [start_time, setStartTime] = useState('');
+  const [end_time, setEndTime] = useState('');
 
   // Log state changes
   const wrappedSetTitle = (value: string | ((prev: string) => string)) => {
@@ -51,6 +55,16 @@ export function useTaskState() {
   const wrappedSetPriority = (value: 'low' | 'medium' | 'high' | ((prev: 'low' | 'medium' | 'high') => 'low' | 'medium' | 'high')) => {
     console.log('useTaskState setPriority called with:', value);
     setPriority(value);
+  };
+
+  const wrappedSetStartTime = (value: string | ((prev: string) => string)) => {
+    console.log('useTaskState setStartTime called with:', value);
+    setStartTime(value);
+  };
+
+  const wrappedSetEndTime = (value: string | ((prev: string) => string)) => {
+    console.log('useTaskState setEndTime called with:', value);
+    setEndTime(value);
   };
 
   // Effect để đóng menu khi click ra ngoài
@@ -126,6 +140,8 @@ export function useTaskState() {
       setDescription('');
       setStatus('pending');
       setPriority('low');
+      setStartTime('');
+      setEndTime('');
       setSelectedTags([]);
       setShowNewTagForm(false);
       setNewTagName('');
@@ -141,6 +157,8 @@ export function useTaskState() {
       setDescription(selectedTask.description || '');
       setStatus(selectedTask.status);
       setPriority(selectedTask.priority);
+      setStartTime(selectedTask.start_time || '');
+      setEndTime(selectedTask.end_time || '');
     }
   }, [selectedTask]);
 
@@ -198,5 +216,9 @@ export function useTaskState() {
     setStatus: wrappedSetStatus,
     priority,
     setPriority: wrappedSetPriority,
+    start_time,
+    setStartTime: wrappedSetStartTime,
+    end_time,
+    setEndTime: wrappedSetEndTime,
   };
 }

@@ -22,6 +22,8 @@ export function useTaskForm(
   const [description, setDescription] = useState('');
   const [status, setStatus] = useState<'pending' | 'completed' | 'overdue'>('pending');
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('low');
+  const [start_time, setStartTime] = useState('');
+  const [end_time, setEndTime] = useState('');
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [showPopup, setShowPopup] = useState(false);
   const [showTaskDetail, setShowTaskDetailLocal] = useState(false);
@@ -53,6 +55,8 @@ export function useTaskForm(
     setDescription('');
     setStatus('pending');
     setPriority('low');
+    setStartTime('');
+    setEndTime('');
     setSelectedTask(null);
   };
 
@@ -97,6 +101,8 @@ export function useTaskForm(
     setDescription(task.description || '');
     setStatus(task.status);
     setPriority(task.priority);
+    setStartTime(task.start_time || '');
+    setEndTime(task.end_time || '');
 
     // Set selected tags if available
     if (taskTags[task._id]) {
@@ -124,6 +130,8 @@ export function useTaskForm(
     console.log('handleSaveTask in hook, description:', description);
     console.log('handleSaveTask in hook, status:', status);
     console.log('handleSaveTask in hook, priority:', priority);
+    console.log('handleSaveTask in hook, start_time:', start_time);
+    console.log('handleSaveTask in hook, end_time:', end_time);
     console.log('handleSaveTask in hook, selectedTask:', taskToUpdate);
 
     if (!titleToUse.trim()) {
@@ -147,6 +155,8 @@ export function useTaskForm(
           description: descriptionToUse,
           status: status || taskToUpdate.status,
           priority: priority || taskToUpdate.priority,
+          start_time: start_time || taskToUpdate.start_time,
+          end_time: end_time || taskToUpdate.end_time,
         };
 
         console.log('Sending update data:', updateData);
@@ -196,6 +206,8 @@ export function useTaskForm(
           description,
           status: 'pending',
           priority,
+          start_time,
+          end_time,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         });
@@ -204,6 +216,8 @@ export function useTaskForm(
           description,
           status: 'pending',
           priority,
+          start_time,
+          end_time,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         });
@@ -264,6 +278,10 @@ export function useTaskForm(
     setStatus,
     priority,
     setPriority,
+    start_time,
+    setStartTime,
+    end_time,
+    setEndTime,
     selectedTags,
     setSelectedTags,
     handleEditTask,

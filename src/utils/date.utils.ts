@@ -8,7 +8,7 @@ export const formatDateTime = (isoString: string): string => {
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
-    hour12: false,
+    hour12: true,
   });
   return formatter.format(date).replace(',', '');
 };
@@ -26,9 +26,25 @@ export const formatDateTimeFull = (isoString: string): string => {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
-    hour12: false,
+    hour12: true,
   });
 
+  return formatter.format(date);
+};
+
+/**
+ * Format time to AM/PM format
+ * Use this consistently across the app for all time formatting
+ */
+export const formatTimeToAMPM = (date: Date): string => {
+  if (!date) return '';
+  
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+  
   return formatter.format(date);
 };
 
