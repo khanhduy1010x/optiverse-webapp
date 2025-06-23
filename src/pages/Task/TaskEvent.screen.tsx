@@ -168,7 +168,7 @@ const TaskEvent: React.FC = () => {
   };
 
   const formatMonth = (date: Date) => {
-    return date.toLocaleString('default', { month: 'long', year: 'numeric' });
+    return date.toLocaleString('en-US', { month: 'long', year: 'numeric' });
   };
 
   const isToday = (date: Date) => {
@@ -262,7 +262,7 @@ const TaskEvent: React.FC = () => {
       <div className="bg-white rounded-lg shadow p-4 mb-4">
         <div className="flex justify-between items-center mb-2">
           <span className="font-medium">
-            {miniCalendarDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
+            {miniCalendarDate.toLocaleString('en-US', { month: 'long', year: 'numeric' })}
           </span>
           <div className="flex space-x-1">
             <button 
@@ -374,8 +374,8 @@ const TaskEvent: React.FC = () => {
                   >
                     <div className="text-xs font-medium">{event.title}</div>
                     <div className="text-xs text-gray-500">
-                      {new Date(event.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      {event.end && ` - ${new Date(event.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
+                      {new Date(event.start).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                      {event.end && ` - ${new Date(event.end).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`}
                     </div>
                     <button 
                       className="absolute top-1 right-1 text-red-500 text-xs hover:text-red-700"
@@ -460,8 +460,8 @@ const TaskEvent: React.FC = () => {
                       >
                         <div className="text-xs font-medium">{event.title}</div>
                         <div className="text-xs text-gray-500">
-                          {new Date(event.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          {event.end && ` - ${new Date(event.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
+                          {new Date(event.start).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                          {event.end && ` - ${new Date(event.end).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`}
                         </div>
                         <button 
                           className="absolute top-1 right-1 text-red-500 text-xs hover:text-red-700"
@@ -529,7 +529,7 @@ const TaskEvent: React.FC = () => {
                             handleEditEvent(getOriginalTaskEvent(event.id)!);
                           }}
                         >
-                          {new Date(event.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} {event.title}
+                          {new Date(event.start).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} {event.title}
                         </div>
                       ))}
                       
@@ -568,7 +568,7 @@ const TaskEvent: React.FC = () => {
   const getViewTitle = () => {
     switch (viewType) {
       case 'Day':
-        return currentDate.toLocaleDateString('default', { 
+        return currentDate.toLocaleDateString('en-US', { 
           weekday: 'long', 
           month: 'long', 
           day: 'numeric', 
@@ -580,14 +580,14 @@ const TaskEvent: React.FC = () => {
         weekEnd.setDate(weekStart.getDate() + 6);
         
         if (weekStart.getMonth() === weekEnd.getMonth()) {
-          return `${weekStart.toLocaleDateString('default', { month: 'long' })} ${weekStart.getDate()} - ${weekEnd.getDate()}, ${weekStart.getFullYear()}`;
+          return `${weekStart.toLocaleDateString('en-US', { month: 'long' })} ${weekStart.getDate()} - ${weekEnd.getDate()}, ${weekStart.getFullYear()}`;
         } else if (weekStart.getFullYear() === weekEnd.getFullYear()) {
-          return `${weekStart.toLocaleDateString('default', { month: 'short' })} ${weekStart.getDate()} - ${weekEnd.toLocaleDateString('default', { month: 'short' })} ${weekEnd.getDate()}, ${weekStart.getFullYear()}`;
+          return `${weekStart.toLocaleDateString('en-US', { month: 'short' })} ${weekStart.getDate()} - ${weekEnd.toLocaleDateString('en-US', { month: 'short' })} ${weekEnd.getDate()}, ${weekStart.getFullYear()}`;
         } else {
-          return `${weekStart.toLocaleDateString('default', { month: 'short', day: 'numeric', year: 'numeric' })} - ${weekEnd.toLocaleDateString('default', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+          return `${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
         }
       case 'Month':
-        return currentDate.toLocaleDateString('default', { month: 'long', year: 'numeric' });
+        return currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
       case 'Year':
         return currentDate.getFullYear().toString();
       default:

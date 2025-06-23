@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { TaskEvent, RepeatType, RepeatEndType } from '../../types/task-events/task-events.types';
 import { useTaskEventForm } from '../../hooks/task-events/useTaskEventForm.hook';
 import { useTaskEventOperations } from '../../hooks/task-events/useTaskEventOperations.hook';
-import { formatTimeToAMPM } from '../../utils/date.utils';
 
 interface TaskEventModalProps {
   isOpen: boolean;
@@ -174,15 +173,12 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
                 />
                 
                 {!formData.all_day && (
-                  <div className="flex items-center">
-                    <input
-                      type="time"
-                      value={formatTimeForInput(formData.start_time)}
-                      onChange={(e) => handleStartTimeChange(e.target.value)}
-                      className="p-2 bg-gray-100 rounded border border-gray-300"
-                    />
-                    <span className="ml-1 text-sm text-gray-500">({formatTimeToAMPM(formData.start_time)})</span>
-                  </div>
+                  <input
+                    type="time"
+                    value={formatTimeForInput(formData.start_time)}
+                    onChange={(e) => handleStartTimeChange(e.target.value)}
+                    className="p-2 bg-gray-100 rounded border border-gray-300"
+                  />
                 )}
                 
                 <span className="mx-2 text-gray-500">–</span>
@@ -197,15 +193,12 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
                         className="p-2 bg-gray-100 rounded border border-gray-300"
                       />
                     )}
-                    <div className="flex items-center">
-                      <input
-                        type="time"
-                        value={formatTimeForInput(formData.end_time)}
-                        onChange={(e) => handleEndTimeChange(e.target.value)}
-                        className="p-2 bg-gray-100 rounded border border-gray-300"
-                      />
-                      <span className="ml-1 text-sm text-gray-500">({formatTimeToAMPM(formData.end_time)})</span>
-                    </div>
+                    <input
+                      type="time"
+                      value={formatTimeForInput(formData.end_time)}
+                      onChange={(e) => handleEndTimeChange(e.target.value)}
+                      className="p-2 bg-gray-100 rounded border border-gray-300"
+                    />
                   </>
                 )}
               </div>

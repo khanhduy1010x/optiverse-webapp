@@ -55,7 +55,7 @@ const TaskList: React.FC<TaskListComponentProps> = ({
     const formatDateTime = (dateTimeString: string | undefined) => {
         if (!dateTimeString) return '';
         try {
-            return format(new Date(dateTimeString), 'MMM dd, yyyy h:mm a');
+            return format(new Date(dateTimeString), 'MMM dd, yyyy HH:mm');
         } catch (error) {
             console.error('Error formatting date:', error);
             return '';
