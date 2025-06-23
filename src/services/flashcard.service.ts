@@ -26,6 +26,19 @@ class FlashcardService {
     return [];
   }
 
+  public async getFlashcardStatistic(): Promise<any> {
+    try {
+      const response = await api.get<ApiResponse<any>>(
+        `${this.flashcardDeckPath}/statistics`
+      );
+      const data = response.data.data;
+      return data;
+    } catch (error) {
+      console.error('Lỗi khi fetch API:', error);
+    }
+    return [];
+  }
+
   public async createFlashcardDeck(title: string): Promise<any> {
     try {
       const response = await api.post<ApiResponse<any>>(
