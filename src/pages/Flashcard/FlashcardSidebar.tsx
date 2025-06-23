@@ -28,8 +28,8 @@ const FlashcardSidebar: React.FC<FlashcardSidebarProps> = ({
   ];
 
   return (
-    <View className="w-64 border-r border-gray-200 min-h-screen">
-      <div className="min-h-screen flex flex-col items-stretch">
+    <View className="w-64 border-r border-gray-200">
+      <div className="h-full flex flex-col">
         {/* Header section */}
         <div className="p-6 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-800">Flashcard Menu</h2>
@@ -37,7 +37,7 @@ const FlashcardSidebar: React.FC<FlashcardSidebarProps> = ({
         </div>
 
         {/* Navigation items */}
-        <div className="h-full flex flex-col pt-10 px-6 space-y-4">
+        <div className="flex-1 flex flex-col pt-10 px-6 space-y-4">
           {menuItems.map(menu => (
             <button
               key={menu.id}
@@ -59,6 +59,11 @@ const FlashcardSidebar: React.FC<FlashcardSidebarProps> = ({
               <span className="font-medium text-sm">{menu.label}</span>
             </button>
           ))}
+        </div>
+
+        {/* Footer section */}
+        <div className="p-6 border-t border-gray-200">
+          <div className="text-xs text-gray-500 text-center">Flashcard Settings</div>
         </div>
       </div>
     </View>

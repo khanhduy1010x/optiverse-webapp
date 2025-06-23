@@ -63,10 +63,10 @@ export interface FlashcardReviewProps {
 export interface ReviewStatistics {
   totalDeckCount: number;
   totalFlashcardCount: number;
-  totalReviewSessionCount: number;
+  reviewedCount: number,
   dueTodayCount: number;
-  averageEaseFactor: number;
-  averageQuality: number;
+  percentReviewed: number;
+  reviewsThisWeekCount: number;
 
   // Thêm cho pie chart
   newCount: number;
