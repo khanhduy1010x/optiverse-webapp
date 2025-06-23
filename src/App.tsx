@@ -31,6 +31,7 @@ import { AuthChecker } from './components/auth/AuthChecker';
 import FocusSessionList from './pages/FocusTimer/FocusTimerList.page';
 import { AuthViewType } from './types/auth/auth.types';
 import LoginSessions from './pages/Profile/LoginSession.page';
+import AchievementsPage from './pages/Profile/Achievements.page';
 import TaskPage from './pages/Task/Task.page';
 import TemplateComponent from './pages/Template/TemplateComponent.page';
 import FocusTimerLayout from './pages/FocusTimer/FocusTimerLayout.page';
@@ -232,6 +233,14 @@ const AppContent: React.FC = () => {
             element={
               <ProtectedRoute>
                 <LoginSessions />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/achievements"
+            element={
+              <ProtectedRoute>
+                <AchievementsPage />
               </ProtectedRoute>
             }
           />

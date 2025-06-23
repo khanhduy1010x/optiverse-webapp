@@ -2,6 +2,8 @@ import { useEffect } from 'react';
 import { Task } from '../../types/task/response/task.response';
 import { Tag } from '../../types/task/response/tag.response';
 import taskService from '../../services/task.service';
+import achievementService from '../../services/achievement.service';
+import { useSelector } from 'react-redux';
 
 export function useTaskOperations(
   tasks: Task[],
@@ -19,6 +21,9 @@ export function useTaskOperations(
   setTaskToDelete: React.Dispatch<React.SetStateAction<string | null>>,
   setShowDeleteConfirm: React.Dispatch<React.SetStateAction<boolean>>
 ) {
+  // Get current user from Redux store
+  const { currentUser } = useSelector((state: any) => state.auth);
+  
   // Helper function to sort tasks with completed tasks at the bottom
   const sortTasksWithCompletedAtBottom = (tasksToSort: Task[]) => {
     return [...tasksToSort].sort((a, b) => {
@@ -149,12 +154,25 @@ export function useTaskOperations(
     }
   };
 
+  // Check for achievements when a task is completed
+  const checkAchievements = async () => {
+    try {
+      console.log('Checking for new achievements...');
+      await achievementService.checkTaskAchievements();
+    } catch (error) {
+      console.error('Error checking achievements:', error);
+    }
+  };
+
   // Handle task update (optimistic update)
   const handleTaskUpdate = async (
     taskId: string,
     updatedFields: Partial<Task>
   ) => {
     try {
+      // Keep track if we're marking a task as completed
+      const isCompletingTask = updatedFields.status === 'completed';
+      
       // Create a temporary optimistic update for better UI responsiveness
       setTasks(prevTasks => {
         const updatedTasks = prevTasks.map(task =>
@@ -195,6 +213,11 @@ export function useTaskOperations(
       // If the update was successful, refresh the tasks
       if (response && response.data) {
         console.log('Task updated successfully:', response.data);
+        
+        // If we're completing a task, check for achievements
+        if (isCompletingTask) {
+          checkAchievements();
+        }
       } else {
         // If there was an issue with the response, revert back and fetch tasks
         fetchTasks();
@@ -238,5 +261,6 @@ export function useTaskOperations(
     handleTaskUpdate,
     handleTaskClick,
     handleDeleteTask,
+    checkAchievements,
   };
 }
