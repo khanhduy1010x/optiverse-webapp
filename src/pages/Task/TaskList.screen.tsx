@@ -52,6 +52,16 @@ const TaskList: React.FC<TaskListComponentProps> = ({
         );
     }
 
+    const formatDateTime = (dateTimeString: string | undefined) => {
+        if (!dateTimeString) return '';
+        try {
+            return format(new Date(dateTimeString), 'MMM dd, yyyy HH:mm');
+        } catch (error) {
+            console.error('Error formatting date:', error);
+            return '';
+        }
+    };
+
     return (
         <ul className="divide-y divide-gray-100 max-w-6x px-6  py-6">
             {filteredTasks.map((task) => (
@@ -102,6 +112,28 @@ const TaskList: React.FC<TaskListComponentProps> = ({
                                 <p className={GROUP_CLASSNAMES.taskDescription}>
                                     {task.description}
                                 </p>
+                            )}
+
+                            {/* Time information */}
+                            {(task.start_time || task.end_time) && (
+                                <div className="mt-1 mb-2 text-xs text-gray-500">
+                                    {task.start_time && (
+                                        <div className="flex items-center">
+                                            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            <span>Start: {formatDateTime(task.start_time)}</span>
+                                        </div>
+                                    )}
+                                    {task.end_time && (
+                                        <div className="flex items-center mt-0.5">
+                                            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            <span>Due: {formatDateTime(task.end_time)}</span>
+                                        </div>
+                                    )}
+                                </div>
                             )}
 
                             <div className={GROUP_CLASSNAMES.taskTagContainer}>

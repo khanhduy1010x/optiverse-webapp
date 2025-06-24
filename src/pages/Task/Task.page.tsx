@@ -18,6 +18,7 @@ import { useTaskOperations } from '../../hooks/task/useTaskOperations.hook';
 import { useTagOperations } from '../../hooks/task/useTagOperations.hook';
 import { useTaskForm } from '../../hooks/task/useTaskForm.hook';
 import { useSearchFilter } from '../../hooks/task/useSearchFilter.hook';
+import useTaskReminder from '../../hooks/task/useTaskReminder.hook';
 import { Tag } from '../../types/task/response/tag.response';
 import tagService from '../../services/tag.service';
 import type { Task } from '../../types/task/response/task.response';
@@ -76,6 +77,10 @@ const TaskPage: React.FC = () => {
     setStatus,
     priority,
     setPriority,
+    start_time,
+    setStartTime,
+    end_time,
+    setEndTime,
     tagToDelete,
     setTagToDelete,
     showDeleteTagConfirm,
@@ -194,6 +199,8 @@ const TaskPage: React.FC = () => {
     setDescription(task.description || '');
     setStatus(task.status);
     setPriority(task.priority);
+    setStartTime(task.start_time || '');
+    setEndTime(task.end_time || '');
 
     // Clear previous selected tags first
     setSelectedTags([]);
@@ -217,6 +224,9 @@ const TaskPage: React.FC = () => {
   );
 
   const { handleSearchChange: searchChangeHandler } = searchFilter;
+
+  // Sử dụng hook useTaskReminder để kiểm tra và gửi thông báo khi task quá hạn
+  useTaskReminder(tasks);
 
   // Custom search handler that wraps the hook's handler
   const handleSearchChange = (query: string) => {
@@ -267,6 +277,8 @@ const TaskPage: React.FC = () => {
       description: updatedTask.description ?? taskToEdit.description,
       status: updatedTask.status ?? taskToEdit.status,
       priority: updatedTask.priority ?? taskToEdit.priority,
+      start_time: updatedTask.start_time ?? taskToEdit.start_time,
+      end_time: updatedTask.end_time ?? taskToEdit.end_time,
     };
 
     try {
@@ -356,6 +368,10 @@ const TaskPage: React.FC = () => {
                   setDescription={setDescription}
                   priority={priority}
                   setPriority={setPriority}
+                  start_time={start_time}
+                  setStartTime={setStartTime}
+                  end_time={end_time}
+                  setEndTime={setEndTime}
                   setShowPopup={setShowCreateTaskForm}
                   selectedTags={selectedTags}
                   allTags={allTags}
@@ -372,7 +388,9 @@ const TaskPage: React.FC = () => {
                         title: title || '',
                         description,
                         priority,
-                        status: 'pending'
+                        status: 'pending',
+                        start_time: start_time instanceof Date ? start_time.toISOString() : start_time,
+                        end_time: end_time instanceof Date ? end_time.toISOString() : end_time
                       });
 
                       if (response) {
@@ -428,6 +446,8 @@ const TaskPage: React.FC = () => {
                         ...updated,
                         status: updated.status as "pending" | "completed" | "overdue",
                         priority: updated.priority as "low" | "medium" | "high",
+                        start_time: updated.start_time instanceof Date ? updated.start_time.toISOString() : updated.start_time,
+                        end_time: updated.end_time instanceof Date ? updated.end_time.toISOString() : updated.end_time
                       });
 
                       // Update task tags
