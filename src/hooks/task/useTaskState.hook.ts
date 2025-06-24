@@ -31,6 +31,8 @@ export function useTaskState() {
   const [description, setDescription] = useState('');
   const [status, setStatus] = useState<'pending' | 'completed' | 'overdue'>('pending');
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('low');
+  const [start_time, setStartTime] = useState<string | Date | undefined>('');
+  const [end_time, setEndTime] = useState<string | Date | undefined>('');
 
   // Log state changes
   const wrappedSetTitle = (value: string | ((prev: string) => string)) => {
@@ -51,6 +53,16 @@ export function useTaskState() {
   const wrappedSetPriority = (value: 'low' | 'medium' | 'high' | ((prev: 'low' | 'medium' | 'high') => 'low' | 'medium' | 'high')) => {
     console.log('useTaskState setPriority called with:', value);
     setPriority(value);
+  };
+
+  const wrappedSetStartTime = (value: string | Date | undefined | ((prev: string | Date | undefined) => string | Date | undefined)) => {
+    console.log('useTaskState setStartTime called with:', value);
+    setStartTime(value);
+  };
+
+  const wrappedSetEndTime = (value: string | Date | undefined | ((prev: string | Date | undefined) => string | Date | undefined)) => {
+    console.log('useTaskState setEndTime called with:', value);
+    setEndTime(value);
   };
 
   // Effect để đóng menu khi click ra ngoài
@@ -126,6 +138,8 @@ export function useTaskState() {
       setDescription('');
       setStatus('pending');
       setPriority('low');
+      setStartTime('');
+      setEndTime('');
       setSelectedTags([]);
       setShowNewTagForm(false);
       setNewTagName('');
@@ -141,6 +155,8 @@ export function useTaskState() {
       setDescription(selectedTask.description || '');
       setStatus(selectedTask.status);
       setPriority(selectedTask.priority);
+      setStartTime(selectedTask.start_time || '');
+      setEndTime(selectedTask.end_time || '');
     }
   }, [selectedTask]);
 
@@ -198,5 +214,9 @@ export function useTaskState() {
     setStatus: wrappedSetStatus,
     priority,
     setPriority: wrappedSetPriority,
+    start_time,
+    setStartTime: wrappedSetStartTime,
+    end_time,
+    setEndTime: wrappedSetEndTime,
   };
 }

@@ -11,6 +11,8 @@ export interface Task {
   user_id?: string;
   tags?: any[]; // Virtual field for tags
   taskTagId?: string; // ID of the task-tag relation (for deletion)
+  start_time?: string | Date; // Thời gian bắt đầu task
+  end_time?: string | Date; // Thời gian kết thúc task (deadline)
 }
 
 export interface TaskTag {

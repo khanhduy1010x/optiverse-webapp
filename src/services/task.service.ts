@@ -48,9 +48,16 @@ class TaskService {
   // Create a new task
   async createTask(taskData: Omit<Task, '_id'>): Promise<Task> {
     try {
+      // Chuyển đổi start_time và end_time sang định dạng ISO string nếu là Date
+      const formattedData = {
+        ...taskData,
+        start_time: taskData.start_time instanceof Date ? taskData.start_time.toISOString() : taskData.start_time,
+        end_time: taskData.end_time instanceof Date ? taskData.end_time.toISOString() : taskData.end_time
+      };
+
       const response = await api.post<ApiResponse<{ task: Task }>>(
         '/productivity/task',
-        taskData
+        formattedData
       );
       if (response.data && response.data.data && response.data.data.task) {
         const task = response.data.data.task;
@@ -70,10 +77,17 @@ class TaskService {
   // Update an existing task
   async updateTask(taskId: string, taskData: Partial<Task>) {
     try {
-      console.log('Updating task with data:', taskData);
+      // Chuyển đổi start_time và end_time sang định dạng ISO string nếu là Date
+      const formattedData = {
+        ...taskData,
+        start_time: taskData.start_time instanceof Date ? taskData.start_time.toISOString() : taskData.start_time,
+        end_time: taskData.end_time instanceof Date ? taskData.end_time.toISOString() : taskData.end_time
+      };
+
+      console.log('Updating task with data:', formattedData);
       const response = await api.put<ApiResponse<{ task: Task }>>(
         `/productivity/task/${taskId}`,
-        taskData
+        formattedData
       );
       console.log('Update response:', response.data);
       if (response.data && response.data.data) {

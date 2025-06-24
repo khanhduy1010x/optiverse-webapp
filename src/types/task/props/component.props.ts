@@ -68,6 +68,10 @@ export interface CreateTaskFormProps {
   setDescription: React.Dispatch<React.SetStateAction<string>>;
   priority: 'low' | 'medium' | 'high';
   setPriority: React.Dispatch<React.SetStateAction<'low' | 'medium' | 'high'>>;
+  start_time: Date | string | undefined;
+  setStartTime: React.Dispatch<React.SetStateAction<Date | string | undefined>>;
+  end_time: Date | string | undefined;
+  setEndTime: React.Dispatch<React.SetStateAction<Date | string | undefined>>;
   setShowPopup: React.Dispatch<React.SetStateAction<boolean>>;
   selectedTags: Tag[];
   allTags: Tag[];
@@ -86,6 +90,10 @@ export interface EditTaskFormProps {
   setStatus: React.Dispatch<React.SetStateAction<'pending' | 'completed' | 'overdue'>>;
   priority: 'low' | 'medium' | 'high';
   setPriority: React.Dispatch<React.SetStateAction<'low' | 'medium' | 'high'>>;
+  start_time: Date | string | undefined;
+  setStartTime: React.Dispatch<React.SetStateAction<Date | string | undefined>>;
+  end_time: Date | string | undefined;
+  setEndTime: React.Dispatch<React.SetStateAction<Date | string | undefined>>;
   selectedTask: Task;
   setShowPopup: React.Dispatch<React.SetStateAction<boolean>>;
   selectedTags: Tag[];

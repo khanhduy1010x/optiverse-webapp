@@ -18,6 +18,7 @@ import { useTaskOperations } from '../../hooks/task/useTaskOperations.hook';
 import { useTagOperations } from '../../hooks/task/useTagOperations.hook';
 import { useTaskForm } from '../../hooks/task/useTaskForm.hook';
 import { useSearchFilter } from '../../hooks/task/useSearchFilter.hook';
+import useTaskReminder from '../../hooks/task/useTaskReminder.hook';
 import { Tag } from '../../types/task/response/tag.response';
 import tagService from '../../services/tag.service';
 import type { Task } from '../../types/task/response/task.response';
@@ -80,6 +81,10 @@ const TaskPage: React.FC = () => {
     setTagToDelete,
     showDeleteTagConfirm,
     setShowDeleteTagConfirm,
+    start_time,
+    setStartTime,
+    end_time,
+    setEndTime,
   } = useTaskState();
 
   // Thêm state mới cho form
@@ -194,6 +199,8 @@ const TaskPage: React.FC = () => {
     setDescription(task.description || '');
     setStatus(task.status);
     setPriority(task.priority);
+    setStartTime(task.start_time);
+    setEndTime(task.end_time);
 
     // Clear previous selected tags first
     setSelectedTags([]);
@@ -217,6 +224,9 @@ const TaskPage: React.FC = () => {
   );
 
   const { handleSearchChange: searchChangeHandler } = searchFilter;
+
+  // Sử dụng hook useTaskReminder để kiểm tra và gửi thông báo khi task quá hạn
+  useTaskReminder(tasks);
 
   // Custom search handler that wraps the hook's handler
   const handleSearchChange = (query: string) => {
@@ -356,6 +366,10 @@ const TaskPage: React.FC = () => {
                   setDescription={setDescription}
                   priority={priority}
                   setPriority={setPriority}
+                  start_time={start_time}
+                  setStartTime={setStartTime}
+                  end_time={end_time}
+                  setEndTime={setEndTime}
                   setShowPopup={setShowCreateTaskForm}
                   selectedTags={selectedTags}
                   allTags={allTags}
@@ -372,7 +386,9 @@ const TaskPage: React.FC = () => {
                         title: title || '',
                         description,
                         priority,
-                        status: 'pending'
+                        status: 'pending',
+                        start_time,
+                        end_time
                       });
 
                       if (response) {
