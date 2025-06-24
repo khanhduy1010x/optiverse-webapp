@@ -12,15 +12,9 @@ interface EditTaskFormProps {
     description: string; 
     status: string; 
     priority: string; 
-<<<<<<< HEAD
     tags: Tag[];
     start_time?: string | Date;
     end_time?: string | Date;
-=======
-    start_time: string;
-    end_time: string;
-    tags: Tag[] 
->>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
   }) => Promise<void>;
   selectedTags: Tag[];
   allTags: Tag[];
@@ -43,26 +37,16 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
   const [localDescription, setLocalDescription] = React.useState(task.description || '');
   const [localStatus, setLocalStatus] = React.useState(task.status);
   const [localPriority, setLocalPriority] = React.useState(task.priority);
-<<<<<<< HEAD
   const [localStartTime, setLocalStartTime] = React.useState<string | Date | undefined>(task.start_time);
   const [localEndTime, setLocalEndTime] = React.useState<string | Date | undefined>(task.end_time);
-=======
-  const [localStartTime, setLocalStartTime] = React.useState(task.start_time || '');
-  const [localEndTime, setLocalEndTime] = React.useState(task.end_time || '');
->>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
 
   React.useEffect(() => {
     setLocalTitle(task.title);
     setLocalDescription(task.description || '');
     setLocalStatus(task.status);
     setLocalPriority(task.priority);
-<<<<<<< HEAD
     setLocalStartTime(task.start_time);
     setLocalEndTime(task.end_time);
-=======
-    setLocalStartTime(task.start_time || '');
-    setLocalEndTime(task.end_time || '');
->>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
   }, [task]);
 
   const handleSave = async () => {
@@ -71,15 +55,9 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
       description: localDescription,
       status: localStatus,
       priority: localPriority,
-<<<<<<< HEAD
       tags: selectedTags,
       start_time: localStartTime,
       end_time: localEndTime
-=======
-      start_time: localStartTime,
-      end_time: localEndTime,
-      tags: selectedTags
->>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
     });
   };
 
@@ -150,7 +128,6 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
             {/* Start Time */}
             <div className={GROUP_CLASSNAMES.flexItemsCenter + ' py-2'}>
               <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-<<<<<<< HEAD
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
               <div className="flex-grow">
@@ -175,32 +152,6 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
                   type="datetime-local"
                   className="w-full border border-gray-200 rounded px-2 py-1 text-sm"
                   value={localEndTime instanceof Date ? localEndTime.toISOString().slice(0, 16) : (typeof localEndTime === 'string' ? localEndTime.slice(0, 16) : '')}
-=======
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <div className="flex-grow">
-                <label className="text-sm text-gray-600 block mb-1">Start Time</label>
-                <input
-                  type="datetime-local"
-                  className="w-full border border-gray-200 rounded px-3 py-2 text-sm"
-                  value={localStartTime}
-                  onChange={(e) => setLocalStartTime(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {/* End Time */}
-            <div className={GROUP_CLASSNAMES.flexItemsCenter + ' py-2'}>
-              <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-              </svg>
-              <div className="flex-grow">
-                <label className="text-sm text-gray-600 block mb-1">End Time</label>
-                <input
-                  type="datetime-local"
-                  className="w-full border border-gray-200 rounded px-3 py-2 text-sm"
-                  value={localEndTime}
->>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
                   onChange={(e) => setLocalEndTime(e.target.value)}
                 />
               </div>
@@ -312,12 +263,10 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
           </button>
           <button
             type="button"
-            onClick={() => {
-              handleSave();
-            }}
+            onClick={handleSave}
             className={GROUP_CLASSNAMES.buttonPrimary + ' px-4 py-2 text-sm'}
           >
-            Save
+            Save Changes
           </button>
         </div>
       </div>

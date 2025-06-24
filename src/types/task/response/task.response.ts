@@ -4,8 +4,8 @@ export interface Task {
   description?: string;
   status: 'pending' | 'completed' | 'overdue';
   priority: 'low' | 'medium' | 'high';
-  start_time?: string;
-  end_time?: string;
+  start_time?: string | Date;
+  end_time?: string | Date;
   createdAt?: string;
   updatedAt?: string;
   created_at?: string;
@@ -13,8 +13,6 @@ export interface Task {
   user_id?: string;
   tags?: any[]; // Virtual field for tags
   taskTagId?: string; // ID of the task-tag relation (for deletion)
-  start_time?: string | Date; // Thời gian bắt đầu task
-  end_time?: string | Date; // Thời gian kết thúc task (deadline)
 }
 
 export interface TaskTag {

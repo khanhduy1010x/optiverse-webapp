@@ -389,8 +389,8 @@ const TaskPage: React.FC = () => {
                         description,
                         priority,
                         status: 'pending',
-                        start_time,
-                        end_time
+                        start_time: start_time instanceof Date ? start_time.toISOString() : start_time,
+                        end_time: end_time instanceof Date ? end_time.toISOString() : end_time
                       });
 
                       if (response) {
@@ -446,6 +446,8 @@ const TaskPage: React.FC = () => {
                         ...updated,
                         status: updated.status as "pending" | "completed" | "overdue",
                         priority: updated.priority as "low" | "medium" | "high",
+                        start_time: updated.start_time instanceof Date ? updated.start_time.toISOString() : updated.start_time,
+                        end_time: updated.end_time instanceof Date ? updated.end_time.toISOString() : updated.end_time
                       });
 
                       // Update task tags
