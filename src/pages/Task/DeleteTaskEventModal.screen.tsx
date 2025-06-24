@@ -13,6 +13,7 @@ export const DeleteTaskEventModal: React.FC<DeleteTaskEventModalProps> = ({
   isOpen,
   onClose,
   taskEvent,
+<<<<<<< HEAD
   onSuccess
 }) => {
   const { deleteTaskEvent, loading, error } = useTaskEventOperations();
@@ -29,10 +30,31 @@ export const DeleteTaskEventModal: React.FC<DeleteTaskEventModalProps> = ({
     } catch (error) {
       console.error('Error deleting task event:', error);
     }
+=======
+  onSuccess,
+}) => {
+  const { deleteTaskEvent, loading, error } = useTaskEventOperations();
+
+  const handleDelete = async () => {
+    if (!taskEvent) return;
+    
+    const success = await deleteTaskEvent(taskEvent._id);
+    if (success) {
+      onSuccess();
+      onClose();
+    }
+  };
+
+  if (!isOpen || !taskEvent) return null;
+
+  const formatDate = (date: Date | string) => {
+    return new Date(date).toLocaleString();
+>>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
   };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+<<<<<<< HEAD
       <div className="bg-white rounded-lg shadow-lg w-full max-w-md overflow-hidden">
         <div className="p-4 border-b">
           <h2 className="text-lg font-medium text-gray-800">Delete Event</h2>
@@ -55,6 +77,35 @@ export const DeleteTaskEventModal: React.FC<DeleteTaskEventModalProps> = ({
             onClick={handleDelete}
             className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
             disabled={loading}
+=======
+      <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        <h2 className="text-xl font-semibold mb-4">Delete Task Event</h2>
+        
+        <p className="mb-4">
+          Are you sure you want to delete this task event scheduled for{' '}
+          <span className="font-medium">{formatDate(taskEvent.start_time)}</span>?
+        </p>
+        
+        <p className="text-sm text-gray-600 mb-6">
+          This action cannot be undone.
+        </p>
+        
+        {error && <p className="text-red-500 mb-4">{error}</p>}
+        
+        <div className="flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 bg-gray-200 rounded"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={loading}
+            className="px-4 py-2 bg-red-500 text-white rounded disabled:bg-red-300"
+>>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
           >
             {loading ? 'Deleting...' : 'Delete'}
           </button>

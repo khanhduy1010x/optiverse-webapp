@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
+<<<<<<< HEAD
 import { TaskEvent, RepeatType } from '../../types/task-events/task-events.types';
+=======
+import { TaskEvent, RepeatType, RepeatEndType } from '../../types/task-events/task-events.types';
+>>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
 import { useTaskEventForm } from '../../hooks/task-events/useTaskEventForm.hook';
 import { useTaskEventOperations } from '../../hooks/task-events/useTaskEventOperations.hook';
 
@@ -21,6 +25,7 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
   const isEditMode = Boolean(taskEvent);
   const { formData, handleInputChange, resetForm, getCreatePayload, getUpdatePayload } = useTaskEventForm(taskEvent);
   const { createTaskEvent, updateTaskEvent, loading, error } = useTaskEventOperations();
+<<<<<<< HEAD
   const [formError, setFormError] = useState<string | null>(null);
 
   const validate = () => {
@@ -48,6 +53,25 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
       const result = await createTaskEvent(payload);
       success = !!result;
     }
+=======
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    let success = false;
+    
+    if (isEditMode && taskEvent) {
+      const payload = getUpdatePayload();
+      const result = await updateTaskEvent(taskEvent._id, payload);
+      success = !!result;
+    } else {
+      const payload = getCreatePayload();
+      payload.task_id = taskId;
+      const result = await createTaskEvent(payload);
+      success = !!result;
+    }
+    
+>>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
     if (success) {
       resetForm();
       onSuccess();
@@ -60,8 +84,18 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
     onClose();
   };
 
+<<<<<<< HEAD
   const formatDateForInput = (date: Date) => date.toISOString().slice(0, 10);
   const formatTimeForInput = (date: Date) => date.toTimeString().slice(0, 5);
+=======
+  const formatDateForInput = (date: Date) => {
+    return date.toISOString().slice(0, 10);
+  };
+
+  const formatTimeForInput = (date: Date) => {
+    return date.toTimeString().slice(0, 5);
+  };
+>>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
 
   const handleDateChange = (date: string) => {
     const newDate = new Date(formData.start_time);
@@ -138,12 +172,23 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
         {/* Header */}
         <div className="flex justify-between items-center p-4 border-b">
           <h2 className="text-lg font-medium text-gray-800">{isEditMode ? 'Edit event' : 'Add event'}</h2>
+<<<<<<< HEAD
           <button onClick={handleCancel} className="text-gray-500 hover:text-gray-700">
+=======
+          <button 
+            onClick={handleCancel}
+            className="text-gray-500 hover:text-gray-700"
+          >
+>>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
+<<<<<<< HEAD
+=======
+        
+>>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
         <form onSubmit={handleSubmit} className="p-4">
           {/* Title */}
           <div className="mb-6">
@@ -156,6 +201,10 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
               autoFocus
             />
           </div>
+<<<<<<< HEAD
+=======
+          
+>>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
           {/* Date and time */}
           <div className="mb-4 flex items-start">
             <div className="mr-3 mt-2">
@@ -171,6 +220,10 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
                   onChange={(e) => handleDateChange(e.target.value)}
                   className="p-2 bg-gray-100 rounded border border-gray-300"
                 />
+<<<<<<< HEAD
+=======
+                
+>>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
                 {!formData.all_day && (
                   <input
                     type="time"
@@ -179,10 +232,19 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
                     className="p-2 bg-gray-100 rounded border border-gray-300"
                   />
                 )}
+<<<<<<< HEAD
                 <span className="mx-2 text-gray-500">–</span>
                 {formData.end_time && !formData.all_day && (
                   <>
                     {formatDateForInput(formData.start_time) !== formatDateForInput(formData.end_time) && (
+=======
+                
+                <span className="mx-2 text-gray-500">–</span>
+                
+                {formData.end_time && !formData.all_day && (
+                  <>
+                    {formData.start_time.toDateString() !== formData.end_time.toDateString() && (
+>>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
                       <input
                         type="date"
                         value={formatDateForInput(formData.end_time)}
@@ -199,6 +261,10 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
                   </>
                 )}
               </div>
+<<<<<<< HEAD
+=======
+              
+>>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
               <div className="flex items-center">
                 <input
                   type="checkbox"
@@ -208,6 +274,10 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
                   className="mr-2"
                 />
                 <label htmlFor="all-day" className="text-sm text-gray-700">All day</label>
+<<<<<<< HEAD
+=======
+                
+>>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
                 <div className="ml-4">
                   <select
                     value={formData.repeat_type}
@@ -225,6 +295,10 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
               </div>
             </div>
           </div>
+<<<<<<< HEAD
+=======
+          
+>>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
           {/* Location */}
           <div className="mb-4 flex items-center">
             <div className="mr-3 mt-1">
@@ -241,6 +315,10 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
               className="w-full p-2 border-b border-gray-300 focus:outline-none focus:border-blue-500"
             />
           </div>
+<<<<<<< HEAD
+=======
+          
+>>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
           {/* Description */}
           <div className="mb-6 flex items-start">
             <div className="mr-3 mt-2">
@@ -252,6 +330,7 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
               placeholder="Add description"
               value={formData.description || ''}
               onChange={(e) => handleInputChange('description', e.target.value)}
+<<<<<<< HEAD
               className="w-full p-2 border-b border-gray-300 focus:outline-none focus:border-blue-500 min-h-[60px]"
             />
           </div>
@@ -262,6 +341,29 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
             <button type="button" onClick={handleCancel} className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Cancel</button>
             <button type="submit" disabled={loading} className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50">
               {loading ? 'Saving...' : isEditMode ? 'Update' : 'Create'}
+=======
+              className="w-full p-2 border-b border-gray-300 focus:outline-none focus:border-blue-500 min-h-[60px] resize-none"
+            />
+          </div>
+          
+          {error && <p className="text-red-500 mb-4 text-sm">{error}</p>}
+          
+          {/* Footer */}
+          <div className="flex justify-end border-t pt-4 mt-4">
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded mr-2"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-blue-300"
+            >
+              {loading ? 'Saving...' : 'Save'}
+>>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
             </button>
           </div>
         </form>

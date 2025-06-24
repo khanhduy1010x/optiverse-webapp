@@ -4,6 +4,8 @@ export interface Task {
   description?: string;
   status: 'pending' | 'completed' | 'overdue';
   priority: 'low' | 'medium' | 'high';
+  start_time?: string;
+  end_time?: string;
   createdAt?: string;
   updatedAt?: string;
   created_at?: string;

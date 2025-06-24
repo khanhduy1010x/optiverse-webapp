@@ -711,9 +711,7 @@ const TaskEvent: React.FC = () => {
 
         {/* Calendar View */}
         <div className="flex-1 overflow-auto bg-white">
-          <div className="p-4 text-center text-gray-500">
-            Calendar view is being implemented. Please check back soon!
-          </div>
+          {renderCalendarView()}
         </div>
       </div>
 
@@ -725,7 +723,6 @@ const TaskEvent: React.FC = () => {
         taskEvent={selectedEvent}
         onSuccess={refreshTaskEvents}
       />
-      
       <DeleteTaskEventModal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}

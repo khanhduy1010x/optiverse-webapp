@@ -77,14 +77,14 @@ const TaskPage: React.FC = () => {
     setStatus,
     priority,
     setPriority,
-    tagToDelete,
-    setTagToDelete,
-    showDeleteTagConfirm,
-    setShowDeleteTagConfirm,
     start_time,
     setStartTime,
     end_time,
     setEndTime,
+    tagToDelete,
+    setTagToDelete,
+    showDeleteTagConfirm,
+    setShowDeleteTagConfirm,
   } = useTaskState();
 
   // Thêm state mới cho form
@@ -199,8 +199,8 @@ const TaskPage: React.FC = () => {
     setDescription(task.description || '');
     setStatus(task.status);
     setPriority(task.priority);
-    setStartTime(task.start_time);
-    setEndTime(task.end_time);
+    setStartTime(task.start_time || '');
+    setEndTime(task.end_time || '');
 
     // Clear previous selected tags first
     setSelectedTags([]);
@@ -277,6 +277,8 @@ const TaskPage: React.FC = () => {
       description: updatedTask.description ?? taskToEdit.description,
       status: updatedTask.status ?? taskToEdit.status,
       priority: updatedTask.priority ?? taskToEdit.priority,
+      start_time: updatedTask.start_time ?? taskToEdit.start_time,
+      end_time: updatedTask.end_time ?? taskToEdit.end_time,
     };
 
     try {
