@@ -5,6 +5,7 @@ export interface TaskEvent {
   _id: string;
   task_id?: string;
   title: string;
+  description?: string;
   start_time: Date | string;
   end_time?: Date | string;
   all_day?: boolean;
@@ -15,7 +16,6 @@ export interface TaskEvent {
   repeat_end_date?: Date | string;
   repeat_occurrences?: number;
   location?: string;
-  description?: string;
   guests?: string[];
   createdAt?: Date;
   updatedAt?: Date;

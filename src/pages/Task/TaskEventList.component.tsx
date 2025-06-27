@@ -55,12 +55,12 @@ export const TaskEventList: React.FC<TaskEventListProps> = ({ taskId }) => {
   return (
     <div className="mt-4">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold">Task Events</h3>
+        <h3 className="text-lg font-semibold">Schedules</h3>
         <button
           onClick={handleAddEvent}
           className="px-3 py-1 bg-blue-500 text-white rounded text-sm"
         >
-          Add Event
+          Add Schedule
         </button>
       </div>
 

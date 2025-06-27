@@ -11,7 +11,7 @@ interface TaskSidebarProps {
 const TaskSidebar: React.FC<TaskSidebarProps> = ({ selectedMenu, handleNavigate }) => {
     const menuItems = [
         { id: 'task', label: 'Task', path: '/task', icon: 'task' as IconName },
-        { id: 'task-event', label: 'Task Event', path: '/task-event', icon: 'calendar' as IconName },
+        { id: 'task-event', label: 'Schedule', path: '/task-event', icon: 'calendar' as IconName },
     ];
 
     return (

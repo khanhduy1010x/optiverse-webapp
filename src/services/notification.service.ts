@@ -20,6 +20,25 @@ class NotificationService {
     }
   }
 
+  // Gửi thông báo nhắc nhở cho task event quá hạn
+  async sendTaskEventOverdueNotification(taskId: string, eventId: string, taskTitle: string, eventTitle: string) {
+    try {
+      const response = await api.post<ApiResponse<any>>('/notification', {
+        title: 'Event Overdue Reminder',
+        content: `Your event "${eventTitle}" for task "${taskTitle}" is overdue!`,
+        type: 'task_event_overdue',
+        metadata: {
+          taskId,
+          eventId
+        }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error sending task event overdue notification:', error);
+      throw error;
+    }
+  }
+
   // Lấy danh sách thông báo của người dùng hiện tại
   async getUserNotifications() {
     try {

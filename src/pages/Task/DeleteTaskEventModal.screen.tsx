@@ -1,39 +1,35 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { TaskEvent } from '../../types/task-events/task-events.types';
 import { useTaskEventOperations } from '../../hooks/task-events/useTaskEventOperations.hook';
+import Modal from 'react-modal';
+import { GROUP_CLASSNAMES } from '../../styles';
 
 interface DeleteTaskEventModalProps {
   isOpen: boolean;
   onClose: () => void;
   taskEvent: TaskEvent | null;
   onSuccess: () => void;
+  removeEvent?: (eventId: string) => void;
 }
 
 export const DeleteTaskEventModal: React.FC<DeleteTaskEventModalProps> = ({
   isOpen,
   onClose,
   taskEvent,
-<<<<<<< HEAD
-  onSuccess
-}) => {
-  const { deleteTaskEvent, loading, error } = useTaskEventOperations();
-
-  if (!isOpen || !taskEvent) return null;
-
-  const handleDelete = async () => {
-    try {
-      const result = await deleteTaskEvent(taskEvent._id);
-      if (result) {
-        onSuccess();
-        onClose();
-      }
-    } catch (error) {
-      console.error('Error deleting task event:', error);
-    }
-=======
   onSuccess,
+  removeEvent
 }) => {
-  const { deleteTaskEvent, loading, error } = useTaskEventOperations();
+  const { deleteTaskEvent, loading, error, setListOperations } = useTaskEventOperations();
+
+  useEffect(() => {
+    if (removeEvent) {
+      setListOperations(
+        () => {},
+        removeEvent,
+        () => {}
+      );
+    }
+  }, [removeEvent, setListOperations]);
 
   const handleDelete = async () => {
     if (!taskEvent) return;
@@ -49,54 +45,39 @@ export const DeleteTaskEventModal: React.FC<DeleteTaskEventModalProps> = ({
 
   const formatDate = (date: Date | string) => {
     return new Date(date).toLocaleString();
->>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-<<<<<<< HEAD
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-md overflow-hidden">
-        <div className="p-4 border-b">
-          <h2 className="text-lg font-medium text-gray-800">Delete Event</h2>
+    <Modal isOpen={isOpen}
+      className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[450px] max-w-[90vw] bg-white rounded-2xl shadow-2xl z-[2000] outline-none"
+      overlayClassName="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000]"
+      onRequestClose={onClose}
+    >
+      <div className={GROUP_CLASSNAMES.taskModalContent}>
+        <div className={GROUP_CLASSNAMES.taskDetailHeader}>
+          <h2 className="text-xl font-medium mb-2">Delete Event</h2>
         </div>
-        <div className="p-4">
-          <p className="text-gray-600">
-            Are you sure you want to delete this event? This action cannot be undone.
+        
+        <div className="mb-6">
+          <p className="text-gray-700 mb-4">
+            Are you sure you want to delete this event:
+            <span className="font-medium block mt-2 text-gray-900">{taskEvent.title}</span>
+            scheduled for{' '}
+            <span className="font-medium">{formatDate(taskEvent.start_time)}</span>?
           </p>
-          {error && <p className="text-red-500 mt-2">{error}</p>}
+          
+          <p className="text-sm text-gray-500">
+            This action cannot be undone.
+          </p>
+          
+          {error && <p className="text-red-500 mt-4">{error}</p>}
         </div>
-        <div className="flex justify-end space-x-2 p-4 border-t">
-          <button 
-            onClick={onClose}
-            className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
-            disabled={loading}
-          >
-            Cancel
-          </button>
-          <button 
-            onClick={handleDelete}
-            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-            disabled={loading}
-=======
-      <div className="bg-white rounded-lg p-6 w-full max-w-md">
-        <h2 className="text-xl font-semibold mb-4">Delete Task Event</h2>
         
-        <p className="mb-4">
-          Are you sure you want to delete this task event scheduled for{' '}
-          <span className="font-medium">{formatDate(taskEvent.start_time)}</span>?
-        </p>
-        
-        <p className="text-sm text-gray-600 mb-6">
-          This action cannot be undone.
-        </p>
-        
-        {error && <p className="text-red-500 mb-4">{error}</p>}
-        
-        <div className="flex justify-end gap-2">
+        <div className={GROUP_CLASSNAMES.taskModalFooter}>
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 bg-gray-200 rounded"
+            className={GROUP_CLASSNAMES.buttonSecondary + " px-4 py-2 text-sm"}
           >
             Cancel
           </button>
@@ -104,13 +85,12 @@ export const DeleteTaskEventModal: React.FC<DeleteTaskEventModalProps> = ({
             type="button"
             onClick={handleDelete}
             disabled={loading}
-            className="px-4 py-2 bg-red-500 text-white rounded disabled:bg-red-300"
->>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
+            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:bg-red-300 text-sm font-medium transition-colors"
           >
             {loading ? 'Deleting...' : 'Delete'}
           </button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }; 
