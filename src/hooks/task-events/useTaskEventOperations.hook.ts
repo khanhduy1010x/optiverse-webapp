@@ -1,87 +1,114 @@
 import { useState } from 'react';
-<<<<<<< HEAD
-import * as taskEventService from '../../services/task-event.service';
-import { TaskEvent } from '../../types/task-events/task-events.types';
-import { CreateTaskEventRequest } from '../../types/task-events/request/create-task-event.request';
-import { UpdateTaskEventRequest } from '../../types/task-events/request/update-task-event.request';
-
-export const useTaskEventOperations = () => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const create = async (data: CreateTaskEventRequest): Promise<TaskEvent | null> => {
-    setLoading(true);
-    setError(null);
-    try {
-      // For development, mock the creation
-      // In production, uncomment the line below
-      // return await taskEventService.createTaskEvent(data);
-      console.log('Creating task event:', data);
-      // Return a mock response
-      return {
-        _id: Math.random().toString(36).substring(2, 9),
-        title: data.title,
-        start_time: data.start_time,
-        end_time: data.end_time,
-        task_id: data.task_id,
-        repeat_type: data.repeat_type || 'none',
-        all_day: data.all_day || false,
-        location: data.location,
-        description: data.description
-      };
-    } catch (err: any) {
-      setError(err.message || 'Failed to create task event');
-=======
 import { taskEventService } from '../../services/task-event.service';
 import { CreateTaskEventRequest } from '../../types/task-events/request/create-task-event.request';
 import { UpdateTaskEventRequest } from '../../types/task-events/request/update-task-event.request';
-import { TaskEvent } from '../../types/task-events/task-events.types';
+import { TaskEvent, RepeatType, RepeatEndType } from '../../types/task-events/task-events.types';
+import { useTaskEventList } from './useTaskEventList.hook';
+import notificationService from '../../services/notification.service';
+import taskService from '../../services/task.service';
 
 export const useTaskEventOperations = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Để sử dụng các hàm từ useTaskEventList
+  let addEventToList: ((event: TaskEvent) => void) | null = null;
+  let removeEventFromList: ((eventId: string) => void) | null = null;
+  let updateEventInList: ((eventId: string, event: TaskEvent) => void) | null = null;
+  
+  // Hàm này được gọi bởi các component để set các hàm từ useTaskEventList
+  const setListOperations = (
+    add: (event: TaskEvent) => void,
+    remove: (eventId: string) => void,
+    update: (eventId: string, event: TaskEvent) => void
+  ) => {
+    addEventToList = add;
+    removeEventFromList = remove;
+    updateEventInList = update;
+  };
+
+  // Check if a task event is overdue and send notification if needed
+  const checkEventOverdue = async (event: TaskEvent): Promise<boolean> => {
+    if (!event.end_time) return false;
+    
+    const now = new Date();
+    const endTime = new Date(event.end_time);
+    
+    if (endTime < now) {
+      console.log(`Task Event "${event.title}" is overdue!`);
+      
+      try {
+        // If the event has a task_id, get the task and update its status
+        if (event.task_id) {
+          try {
+            const task = await taskService.fetchTaskById(event.task_id);
+            
+            if (task && task.status !== 'completed' && task.status !== 'overdue') {
+              // Update task status to overdue
+              await taskService.updateTask(event.task_id, { status: 'overdue' });
+              
+              // Send notification
+              await notificationService.sendTaskEventOverdueNotification(
+                event.task_id,
+                event._id,
+                task.title,
+                event.title || 'Untitled Event'
+              );
+            }
+          } catch (error) {
+            console.error(`Error fetching task for event ${event._id}:`, error);
+          }
+        }
+        
+        return true;
+      } catch (error) {
+        console.error(`Error handling overdue task event ${event._id}:`, error);
+        return false;
+      }
+    }
+    
+    return false;
+  };
 
   const createTaskEvent = async (data: CreateTaskEventRequest): Promise<TaskEvent | null> => {
     setLoading(true);
     setError(null);
     
     try {
+      console.log('Creating task event with data:', data);
+      
+      // Luôn gọi API thực tế, không sử dụng dữ liệu giả lập
       const response = await taskEventService.createTaskEvent(data);
-      return response.data.data;
+      console.log('API response:', response);
+      
+      const createdEvent = response.data.data;
+      
+      if (createdEvent) {
+        console.log('Event created successfully:', createdEvent);
+        
+        // Check if the event is already overdue
+        await checkEventOverdue(createdEvent);
+        
+        // Cập nhật state local nếu có
+        if (addEventToList) {
+          addEventToList(createdEvent);
+        }
+        
+        return createdEvent;
+      } else {
+        console.error('Failed to create event, invalid response:', response);
+        setError('Failed to create task event: Invalid response from server');
+        return null;
+      }
     } catch (err) {
       setError('Failed to create task event');
       console.error('Error creating task event:', err);
->>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
       return null;
     } finally {
       setLoading(false);
     }
   };
 
-<<<<<<< HEAD
-  const update = async (id: string, data: UpdateTaskEventRequest): Promise<TaskEvent | null> => {
-    setLoading(true);
-    setError(null);
-    try {
-      // For development, mock the update
-      // In production, uncomment the line below
-      // return await taskEventService.updateTaskEvent(id, data);
-      console.log('Updating task event:', id, data);
-      // Return a mock response
-      return {
-        _id: id,
-        title: data.title || '',
-        start_time: data.start_time || new Date(),
-        end_time: data.end_time,
-        task_id: data.task_id || '',
-        repeat_type: data.repeat_type || 'none',
-        all_day: data.all_day || false,
-        location: data.location,
-        description: data.description
-      };
-    } catch (err: any) {
-      setError(err.message || 'Failed to update task event');
-=======
   const updateTaskEvent = async (
     taskEventId: string, 
     data: UpdateTaskEventRequest
@@ -90,42 +117,60 @@ export const useTaskEventOperations = () => {
     setError(null);
     
     try {
+      console.log('Updating task event with data:', data);
+      
+      // Luôn gọi API thực tế, không sử dụng dữ liệu giả lập
       const response = await taskEventService.updateTaskEvent(taskEventId, data);
-      return response.data.data;
+      console.log('API response:', response);
+      
+      const updatedEvent = response.data.data;
+      
+      if (updatedEvent) {
+        console.log('Event updated successfully:', updatedEvent);
+        
+        // Check if the updated event is overdue
+        await checkEventOverdue(updatedEvent);
+        
+        // Cập nhật state local nếu có
+        if (updateEventInList) {
+          updateEventInList(taskEventId, updatedEvent);
+        }
+        
+        return updatedEvent;
+      } else {
+        console.error('Failed to update event, invalid response:', response);
+        setError('Failed to update task event: Invalid response from server');
+        return null;
+      }
     } catch (err) {
       setError('Failed to update task event');
       console.error('Error updating task event:', err);
->>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
       return null;
     } finally {
       setLoading(false);
     }
   };
 
-<<<<<<< HEAD
-  const remove = async (id: string): Promise<boolean> => {
-    setLoading(true);
-    setError(null);
-    try {
-      // For development, mock the deletion
-      // In production, uncomment the line below
-      // return await taskEventService.deleteTaskEvent(id);
-      console.log('Deleting task event:', id);
-      return true;
-    } catch (err: any) {
-      setError(err.message || 'Failed to delete task event');
-=======
   const deleteTaskEvent = async (taskEventId: string): Promise<boolean> => {
     setLoading(true);
     setError(null);
     
     try {
-      await taskEventService.deleteTaskEvent(taskEventId);
+      console.log('Deleting task event:', taskEventId);
+      
+      // Luôn gọi API thực tế, không sử dụng dữ liệu giả lập
+      const response = await taskEventService.deleteTaskEvent(taskEventId);
+      console.log('API response:', response);
+      
+      // Cập nhật state local nếu có
+      if (removeEventFromList) {
+        removeEventFromList(taskEventId);
+      }
+      
       return true;
     } catch (err) {
       setError('Failed to delete task event');
       console.error('Error deleting task event:', err);
->>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
       return false;
     } finally {
       setLoading(false);
@@ -133,18 +178,12 @@ export const useTaskEventOperations = () => {
   };
 
   return {
-<<<<<<< HEAD
-    createTaskEvent: create,
-    updateTaskEvent: update,
-    deleteTaskEvent: remove,
-    loading,
-    error,
-=======
     createTaskEvent,
     updateTaskEvent,
     deleteTaskEvent,
+    checkEventOverdue,
+    setListOperations,
     loading,
     error
->>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
   };
 }; 

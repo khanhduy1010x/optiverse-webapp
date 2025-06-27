@@ -1,68 +1,21 @@
-<<<<<<< HEAD
-import { useEffect, useState } from 'react';
-import { TaskEvent } from '../../types/task-events/task-events.types';
-import * as taskEventService from '../../services/task-event.service';
-
-export const useTaskEventList = (taskId: string) => {
-  const [taskEvents, setTaskEvents] = useState<TaskEvent[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchTaskEvents = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      // For development, use mock data
-      // In production, uncomment the line below
-      // const data = await taskEventService.getTaskEvents(taskId);
-      const data = taskEventService.getMockTaskEvents(taskId);
-      setTaskEvents(data);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch task events');
-=======
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { TaskEvent } from '../../types/task-events/task-events.types';
 import { taskEventService } from '../../services/task-event.service';
 
-// Mock data for development
-const mockEvents: TaskEvent[] = [
-  {
-    _id: '1',
-    task_id: 'mock-task-1',
-    start_time: new Date(new Date().setHours(10, 0, 0, 0)),
-    end_time: new Date(new Date().setHours(11, 0, 0, 0)),
-    repeat_type: 'none'
-  },
-  {
-    _id: '2',
-    task_id: 'mock-task-1',
-    start_time: new Date(new Date().setHours(14, 30, 0, 0)),
-    end_time: new Date(new Date().setHours(15, 30, 0, 0)),
-    repeat_type: 'daily',
-    repeat_interval: 1
-  },
-  {
-    _id: '3',
-    task_id: 'mock-task-1',
-    start_time: new Date(new Date().setDate(new Date().getDate() + 1)),
-    end_time: new Date(new Date().setDate(new Date().getDate() + 1)),
-    repeat_type: 'weekly',
-    repeat_interval: 1
-  }
-];
-
 export const useTaskEventList = (taskId: string) => {
   const [taskEvents, setTaskEvents] = useState<TaskEvent[]>([]);
-  const [loading, setLoading] = useState<boolean>(true); // Start with loading true
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState<number>(0);
 
-  const fetchTaskEvents = async () => {
-    // For demo/development, use mock data
-    if (!taskId || process.env.NODE_ENV === 'development') {
-      setTimeout(() => {
-        setTaskEvents(mockEvents);
-        setLoading(false);
-      }, 1000); // Simulate API delay
+  const fetchTaskEvents = useCallback(async () => {
+    console.log('Fetching task events for taskId:', taskId);
+    
+    // Nếu không có taskId, không làm gì cả
+    if (!taskId) {
+      console.log('No taskId provided, skipping fetch');
+      setTaskEvents([]);
+      setLoading(false);
       return;
     }
     
@@ -70,34 +23,75 @@ export const useTaskEventList = (taskId: string) => {
     setError(null);
     
     try {
+      // Luôn lấy dữ liệu từ API
+      console.log('Calling API for task events with taskId:', taskId);
       const response = await taskEventService.getTaskEventsByTaskId(taskId);
-      setTaskEvents(response.data.data || []);
+      console.log('API response:', response);
+      
+      if (response && response.data) {
+        // Chuyển đổi chuỗi thời gian thành đối tượng Date
+        const events = Array.isArray(response.data.data) ? response.data.data : [];
+        console.log('Parsed events:', events);
+        
+        const formattedEvents = events.map(event => ({
+          ...event,
+          start_time: event.start_time ? new Date(event.start_time) : new Date(),
+          end_time: event.end_time ? new Date(event.end_time) : undefined
+        }));
+        
+        setTaskEvents(formattedEvents);
+      } else {
+        console.log('No data in response or invalid response structure');
+        setTaskEvents([]);
+      }
     } catch (err) {
+      console.error('Error in useTaskEventList:', err);
       setError('Failed to fetch task events');
-      console.error('Error fetching task events:', err);
-      // Fallback to mock data on error
-      setTaskEvents(mockEvents);
->>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
+      setTaskEvents([]);
     } finally {
       setLoading(false);
     }
+  }, [taskId]);
+
+  // Hàm để trigger refresh từ bên ngoài
+  const refreshTaskEvents = useCallback(() => {
+    console.log('Manual refresh triggered');
+    setRefreshKey(prevKey => prevKey + 1);
+  }, []);
+
+  // Thêm hàm thêm sự kiện mới vào state local
+  const addEvent = (event: TaskEvent) => {
+    console.log('Adding event to local state:', event);
+    setTaskEvents(prev => [...prev, event]);
   };
 
-  useEffect(() => {
-    fetchTaskEvents();
-<<<<<<< HEAD
-    // eslint-disable-next-line
-  }, [taskId]);
+  // Thêm hàm xóa sự kiện khỏi state local
+  const removeEvent = (eventId: string) => {
+    console.log('Removing event from local state:', eventId);
+    setTaskEvents(prev => prev.filter(event => event._id !== eventId));
+  };
 
-  return { taskEvents, loading, error, refreshTaskEvents: fetchTaskEvents };
-=======
-  }, [taskId]);
+  // Thêm hàm cập nhật sự kiện trong state local
+  const updateEvent = (eventId: string, updatedEvent: TaskEvent) => {
+    console.log('Updating event in local state:', eventId, updatedEvent);
+    setTaskEvents(prev => 
+      prev.map(event => event._id === eventId ? updatedEvent : event)
+    );
+  };
+
+  // Fetch dữ liệu khi taskId hoặc refreshKey thay đổi
+  useEffect(() => {
+    console.log('TaskId or refreshKey changed, fetching events');
+    fetchTaskEvents();
+  }, [taskId, refreshKey, fetchTaskEvents]);
 
   return {
     taskEvents,
     loading,
     error,
-    refreshTaskEvents: fetchTaskEvents
+    refreshTaskEvents,
+    addEvent,
+    removeEvent,
+    updateEvent
   };
->>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
 }; 

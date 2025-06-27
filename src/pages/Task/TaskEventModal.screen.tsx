@@ -1,11 +1,9 @@
-import React, { useState } from 'react';
-<<<<<<< HEAD
-import { TaskEvent, RepeatType } from '../../types/task-events/task-events.types';
-=======
+import React, { useState, useEffect } from 'react';
 import { TaskEvent, RepeatType, RepeatEndType } from '../../types/task-events/task-events.types';
->>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
 import { useTaskEventForm } from '../../hooks/task-events/useTaskEventForm.hook';
 import { useTaskEventOperations } from '../../hooks/task-events/useTaskEventOperations.hook';
+import Modal from 'react-modal';
+import { GROUP_CLASSNAMES } from '../../styles';
 
 interface TaskEventModalProps {
   isOpen: boolean;
@@ -13,6 +11,8 @@ interface TaskEventModalProps {
   taskId: string;
   taskEvent?: TaskEvent;
   onSuccess: () => void;
+  addEvent?: (event: TaskEvent) => void;
+  updateEvent?: (eventId: string, event: TaskEvent) => void;
 }
 
 export const TaskEventModal: React.FC<TaskEventModalProps> = ({
@@ -21,39 +21,22 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
   taskId,
   taskEvent,
   onSuccess,
+  addEvent,
+  updateEvent
 }) => {
   const isEditMode = Boolean(taskEvent);
   const { formData, handleInputChange, resetForm, getCreatePayload, getUpdatePayload } = useTaskEventForm(taskEvent);
-  const { createTaskEvent, updateTaskEvent, loading, error } = useTaskEventOperations();
-<<<<<<< HEAD
-  const [formError, setFormError] = useState<string | null>(null);
+  const { createTaskEvent, updateTaskEvent, loading, error, setListOperations } = useTaskEventOperations();
 
-  const validate = () => {
-    if (!formData.title.trim()) return 'Title is required.';
-    if (!formData.start_time) return 'Start time is required.';
-    if (formData.end_time && new Date(formData.end_time) < new Date(formData.start_time)) return 'End time must be after start time.';
-    return null;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const err = validate();
-    if (err) {
-      setFormError(err);
-      return;
+  useEffect(() => {
+    if (addEvent && updateEvent) {
+      setListOperations(
+        addEvent,
+        () => {},
+        updateEvent
+      );
     }
-    setFormError(null);
-    let success = false;
-    if (isEditMode && taskEvent) {
-      const payload = { ...getUpdatePayload(), description: formData.description };
-      const result = await updateTaskEvent(taskEvent._id, payload);
-      success = !!result;
-    } else {
-      const payload = { ...getCreatePayload(), task_id: taskId, description: formData.description };
-      const result = await createTaskEvent(payload);
-      success = !!result;
-    }
-=======
+  }, [addEvent, updateEvent, setListOperations]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,7 +54,6 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
       success = !!result;
     }
     
->>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
     if (success) {
       resetForm();
       onSuccess();
@@ -84,10 +66,6 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
     onClose();
   };
 
-<<<<<<< HEAD
-  const formatDateForInput = (date: Date) => date.toISOString().slice(0, 10);
-  const formatTimeForInput = (date: Date) => date.toTimeString().slice(0, 5);
-=======
   const formatDateForInput = (date: Date) => {
     return date.toISOString().slice(0, 10);
   };
@@ -95,7 +73,10 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
   const formatTimeForInput = (date: Date) => {
     return date.toTimeString().slice(0, 5);
   };
->>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
+
+  const formatDateTimeForInput = (date: Date) => {
+    return date.toISOString().slice(0, 16);
+  };
 
   const handleDateChange = (date: string) => {
     const newDate = new Date(formData.start_time);
@@ -133,18 +114,13 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
     handleInputChange('end_time', newDate);
   };
 
-  const handleEndDateChange = (date: string) => {
-    if (!formData.end_time) {
-      const newEndDate = new Date(date);
-      const startTime = new Date(formData.start_time);
-      newEndDate.setHours(startTime.getHours() + 1, startTime.getMinutes());
-      handleInputChange('end_time', newEndDate);
-      return;
-    }
-    
-    const newDate = new Date(formData.end_time);
-    const [year, month, day] = date.split('-').map(Number);
-    newDate.setFullYear(year, month - 1, day);
+  const handleStartDateTimeChange = (dateTime: string) => {
+    const newDate = new Date(dateTime);
+    handleInputChange('start_time', newDate);
+  };
+
+  const handleEndDateTimeChange = (dateTime: string) => {
+    const newDate = new Date(dateTime);
     handleInputChange('end_time', newDate);
   };
 
@@ -164,210 +140,134 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
     }
   };
 
+  // Get day of week and formatted date for display
+  const getDayAndDate = () => {
+    const date = new Date(formData.start_time);
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}`;
+  };
+
+  // Format time for display
+  const formatDisplayTime = (date: Date) => {
+    return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  };
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-md overflow-hidden">
-        {/* Header */}
-        <div className="flex justify-between items-center p-4 border-b">
-          <h2 className="text-lg font-medium text-gray-800">{isEditMode ? 'Edit event' : 'Add event'}</h2>
-<<<<<<< HEAD
-          <button onClick={handleCancel} className="text-gray-500 hover:text-gray-700">
-=======
+    <Modal isOpen={isOpen}
+      className="fixed top-1/2 right-16 transform -translate-y-1/2 w-[360px] max-w-[90vw] bg-white rounded-xl shadow-2xl z-[2000] outline-none"
+      overlayClassName="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000]"
+      onRequestClose={handleCancel}
+    >
+      <div className="p-5">
+        <div className="flex justify-between items-center mb-5">
+          <h3 className="text-lg font-medium">Add Schedule</h3>
           <button 
-            onClick={handleCancel}
-            className="text-gray-500 hover:text-gray-700"
+            onClick={handleCancel} 
+            className="text-gray-400 hover:text-gray-600"
           >
->>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
             </svg>
           </button>
         </div>
-<<<<<<< HEAD
-=======
         
->>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
-        <form onSubmit={handleSubmit} className="p-4">
-          {/* Title */}
-          <div className="mb-6">
-            <input
-              type="text"
-              placeholder="Add title"
-              value={formData.title}
-              onChange={(e) => handleInputChange('title', e.target.value)}
-              className="w-full p-2 text-lg border-b border-gray-300 focus:outline-none focus:border-blue-500"
-              autoFocus
-            />
+        <input
+          type="text"
+          placeholder="New event title"
+          value={formData.title}
+          onChange={(e) => handleInputChange('title', e.target.value)}
+          className="w-full border-0 border-b border-gray-200 py-2 mb-4 focus:outline-none focus:ring-0 focus:border-gray-300 placeholder-gray-400"
+          autoFocus
+        />
+        
+        <div className="flex items-center text-sm text-gray-600 mb-3">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          {getDayAndDate()}
+        </div>
+        
+        <div className="flex items-center space-x-2 mb-4">
+          <input
+            type="time"
+            className="border border-gray-200 rounded-md p-1.5 text-sm"
+            value={formatTimeForInput(formData.start_time)}
+            onChange={(e) => handleStartTimeChange(e.target.value)}
+          />
+          <span className="text-gray-400">→</span>
+          <input
+            type="time"
+            className="border border-gray-200 rounded-md p-1.5 text-sm"
+            value={formData.end_time ? formatTimeForInput(formData.end_time) : ''}
+            onChange={(e) => handleEndTimeChange(e.target.value)}
+          />
+        </div>
+        
+        <div className="flex items-center mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+          </svg>
+          <input
+            type="text"
+            placeholder="Add Guest"
+            className="w-full border-0 py-1 focus:outline-none focus:ring-0 text-sm"
+          />
+        </div>
+        
+        <div className="flex items-center mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+          </svg>
+          <input
+            type="text"
+            placeholder="https://meet.google.com/abc"
+            value={formData.location || ''}
+            onChange={(e) => handleInputChange('location', e.target.value)}
+            className="w-full border-0 py-1 focus:outline-none focus:ring-0 text-sm"
+          />
+        </div>
+        
+        <div className="flex items-center mb-5">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+          </svg>
+          <input
+            type="text"
+            placeholder="Add description"
+            value={formData.description || ''}
+            onChange={(e) => handleInputChange('description', e.target.value)}
+            className="w-full border-0 py-1 focus:outline-none focus:ring-0 text-sm"
+          />
+        </div>
+        
+        <div className="flex justify-between items-center pt-4 border-t border-gray-100">
+          <div className="flex space-x-2">
+            <div className="w-6 h-6 rounded-full bg-blue-400"></div>
+            <div className="w-6 h-6 rounded-full bg-red-400"></div>
+            <div className="w-6 h-6 rounded-full bg-yellow-400"></div>
+            <div className="w-6 h-6 rounded-full bg-green-400"></div>
+            <div className="w-6 h-6 rounded-full bg-purple-400"></div>
           </div>
-<<<<<<< HEAD
-=======
-          
->>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
-          {/* Date and time */}
-          <div className="mb-4 flex items-start">
-            <div className="mr-3 mt-2">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div className="flex-1">
-              <div className="flex flex-wrap items-center gap-2 mb-3">
-                <input
-                  type="date"
-                  value={formatDateForInput(formData.start_time)}
-                  onChange={(e) => handleDateChange(e.target.value)}
-                  className="p-2 bg-gray-100 rounded border border-gray-300"
-                />
-<<<<<<< HEAD
-=======
-                
->>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
-                {!formData.all_day && (
-                  <input
-                    type="time"
-                    value={formatTimeForInput(formData.start_time)}
-                    onChange={(e) => handleStartTimeChange(e.target.value)}
-                    className="p-2 bg-gray-100 rounded border border-gray-300"
-                  />
-                )}
-<<<<<<< HEAD
-                <span className="mx-2 text-gray-500">–</span>
-                {formData.end_time && !formData.all_day && (
-                  <>
-                    {formatDateForInput(formData.start_time) !== formatDateForInput(formData.end_time) && (
-=======
-                
-                <span className="mx-2 text-gray-500">–</span>
-                
-                {formData.end_time && !formData.all_day && (
-                  <>
-                    {formData.start_time.toDateString() !== formData.end_time.toDateString() && (
->>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
-                      <input
-                        type="date"
-                        value={formatDateForInput(formData.end_time)}
-                        onChange={(e) => handleEndDateChange(e.target.value)}
-                        className="p-2 bg-gray-100 rounded border border-gray-300"
-                      />
-                    )}
-                    <input
-                      type="time"
-                      value={formatTimeForInput(formData.end_time)}
-                      onChange={(e) => handleEndTimeChange(e.target.value)}
-                      className="p-2 bg-gray-100 rounded border border-gray-300"
-                    />
-                  </>
-                )}
-              </div>
-<<<<<<< HEAD
-=======
-              
->>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="all-day"
-                  checked={formData.all_day}
-                  onChange={(e) => handleAllDayChange(e.target.checked)}
-                  className="mr-2"
-                />
-                <label htmlFor="all-day" className="text-sm text-gray-700">All day</label>
-<<<<<<< HEAD
-=======
-                
->>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
-                <div className="ml-4">
-                  <select
-                    value={formData.repeat_type}
-                    onChange={(e) => handleInputChange('repeat_type', e.target.value as RepeatType)}
-                    className="bg-gray-100 p-1 rounded border border-gray-300 text-sm text-gray-700"
-                  >
-                    <option value="none">Does not repeat</option>
-                    <option value="daily">Daily</option>
-                    <option value="weekly">Weekly</option>
-                    <option value="monthly">Monthly</option>
-                    <option value="yearly">Yearly</option>
-                    <option value="weekday">Weekdays</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
-<<<<<<< HEAD
-=======
-          
->>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
-          {/* Location */}
-          <div className="mb-4 flex items-center">
-            <div className="mr-3 mt-1">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </div>
-            <input
-              type="text"
-              placeholder="Add location"
-              value={formData.location || ''}
-              onChange={(e) => handleInputChange('location', e.target.value)}
-              className="w-full p-2 border-b border-gray-300 focus:outline-none focus:border-blue-500"
-            />
-          </div>
-<<<<<<< HEAD
-=======
-          
->>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
-          {/* Description */}
-          <div className="mb-6 flex items-start">
-            <div className="mr-3 mt-2">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
-              </svg>
-            </div>
-            <textarea
-              placeholder="Add description"
-              value={formData.description || ''}
-              onChange={(e) => handleInputChange('description', e.target.value)}
-<<<<<<< HEAD
-              className="w-full p-2 border-b border-gray-300 focus:outline-none focus:border-blue-500 min-h-[60px]"
-            />
-          </div>
-          {/* Error & Actions */}
-          {formError && <div className="text-red-500 mb-2 text-sm">{formError}</div>}
-          {error && <div className="text-red-500 mb-2 text-sm">{error}</div>}
-          <div className="flex justify-end space-x-2 mt-4">
-            <button type="button" onClick={handleCancel} className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Cancel</button>
-            <button type="submit" disabled={loading} className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50">
-              {loading ? 'Saving...' : isEditMode ? 'Update' : 'Create'}
-=======
-              className="w-full p-2 border-b border-gray-300 focus:outline-none focus:border-blue-500 min-h-[60px] resize-none"
-            />
-          </div>
-          
-          {error && <p className="text-red-500 mb-4 text-sm">{error}</p>}
-          
-          {/* Footer */}
-          <div className="flex justify-end border-t pt-4 mt-4">
-            <button
-              type="button"
+          <div className="flex space-x-2">
+            <button 
               onClick={handleCancel}
-              className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded mr-2"
+              className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm"
             >
               Cancel
             </button>
             <button
-              type="submit"
-              disabled={loading}
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-blue-300"
+              disabled={loading || !formData.title.trim()}
+              onClick={handleSubmit}
+              className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm"
             >
-              {loading ? 'Saving...' : 'Save'}
->>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
+              Save
             </button>
           </div>
-        </form>
+        </div>
       </div>
-    </div>
+    </Modal>
   );
 }; 

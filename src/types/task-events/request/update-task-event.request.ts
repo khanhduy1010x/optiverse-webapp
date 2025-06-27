@@ -1,18 +1,3 @@
-<<<<<<< HEAD
-import { RepeatType } from '../task-events.types';
-
-export interface UpdateTaskEventRequest {
-  title?: string;
-  description?: string;
-  start_time?: Date | string;
-  end_time?: Date | string;
-  task_id?: string;
-  repeat_type?: RepeatType;
-  all_day?: boolean;
-  location?: string;
-  repeat_interval?: number;
-  repeat_end_date?: Date | string;
-=======
 import { RepeatType, RepeatEndType } from '../task-events.types';
 
 export interface UpdateTaskEventRequest {
@@ -29,5 +14,4 @@ export interface UpdateTaskEventRequest {
   location?: string;
   description?: string;
   guests?: string[];
->>>>>>> aa93f60831703624ecd088c309bf01770d28c29b
 } 

@@ -11,6 +11,7 @@ import DeleteConfirmation from './DeleteConfirmation.screen';
 import TagManagement from './TagManagement.screen';
 import TaskSidebar from './TaskSidebar.component';
 import TaskEvent from './TaskEvent.screen';
+import { TaskOverdueNotifier } from '../../components/task-event/TaskOverdueNotifier.component';
 
 // Hooks
 import { useTaskState } from '../../hooks/task/useTaskState.hook';
@@ -310,6 +311,9 @@ const TaskPage: React.FC = () => {
 
   return (
     <div className="flex h-screen">
+      {/* Add the TaskOverdueNotifier component here */}
+      <TaskOverdueNotifier tasks={tasks} taskEvents={[]} />
+      
       {/* Sidebar */}
       <TaskSidebar selectedMenu={selectedMenu} handleNavigate={handleNavigate} />
       {/* Main content */}
