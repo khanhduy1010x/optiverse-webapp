@@ -35,7 +35,7 @@ export function useSearchFilter(
   const handleSearchChange = (
     query: string,
     setSearchQuery: React.Dispatch<React.SetStateAction<string>>,
-    filterTags: Tag[]
+    filterTags: string[]
   ) => {
     setSearchQuery(query);
 

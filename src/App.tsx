@@ -37,6 +37,8 @@ import TemplateComponent from './pages/Template/TemplateComponent.page';
 import FocusTimerLayout from './pages/FocusTimer/FocusTimerLayout.page';
 import ChatPage from './pages/chat/ChatPage';
 import { useNewMessageNotification } from './hooks/chat/useNewMessageNotification';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const AppContent: React.FC = () => {
   const location = useLocation();
@@ -257,6 +259,17 @@ const App: React.FC = () => {
         <AuthChecker>
           <AppContent />
         </AuthChecker>
+        <ToastContainer
+          position="top-right"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+        />
       </Router>
     </ThemeProvider>
   );

@@ -40,7 +40,7 @@ export const TaskEventDetail: React.FC<TaskEventDetailProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
       <div className="bg-white w-full max-w-md rounded-lg overflow-hidden shadow-xl">
         {/* Header with action buttons */}
         <div className="flex justify-end space-x-1 p-2 border-b">

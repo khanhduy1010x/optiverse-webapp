@@ -43,7 +43,8 @@ export const WeekView: React.FC<WeekViewProps> = ({
   // Format time to display
   const formatHourLabel = (hour: number) => {
     const period = hour >= 12 ? 'PM' : 'AM';
-    const displayHour = hour % 12 === 0 ? 12 : hour % 12;
+    // Use 0 instead of 12 for midnight and noon
+    const displayHour = hour % 12 === 0 ? 0 : hour % 12;
     return `${displayHour}${period.toLowerCase()}`;
   };
 

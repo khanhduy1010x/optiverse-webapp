@@ -42,15 +42,31 @@ const EVENT_COLORS = [
   }
 ];
 
+// Map of color values to tailwind classes
+const COLOR_MAP: Record<string, { bg: string, text: string }> = {
+  '#3B82F6': { bg: 'bg-blue-100', text: 'text-blue-800' },   // Blue
+  '#F87171': { bg: 'bg-red-100', text: 'text-red-800' },     // Red
+  '#FBBF24': { bg: 'bg-yellow-100', text: 'text-yellow-800' }, // Yellow
+  '#10B981': { bg: 'bg-green-100', text: 'text-green-800' },  // Green
+  '#A78BFA': { bg: 'bg-purple-100', text: 'text-purple-800' }, // Purple
+};
+
 export const CalendarEvent: React.FC<CalendarEventProps> = ({
   event,
   onClick,
   style,
   className
 }) => {
-  // Chọn màu dựa trên ID của sự kiện để đảm bảo màu nhất quán
-  const colorIndex = event._id ? Math.abs(event._id.charCodeAt(0) % EVENT_COLORS.length) : 0;
-  const colorSet = EVENT_COLORS[colorIndex];
+  // Use the event's color if available, otherwise use a color based on the event ID
+  let colorSet;
+  
+  if (event.color && COLOR_MAP[event.color]) {
+    colorSet = COLOR_MAP[event.color];
+  } else {
+    // Fallback to the old method if no color is specified
+    const colorIndex = event._id ? Math.abs(event._id.charCodeAt(0) % EVENT_COLORS.length) : 0;
+    colorSet = EVENT_COLORS[colorIndex];
+  }
   
   const formatEventTime = (date: Date | string) => {
     return new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });

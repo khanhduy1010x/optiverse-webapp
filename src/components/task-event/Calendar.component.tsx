@@ -9,6 +9,8 @@ import { CreateTaskEventModal } from './CreateTaskEventModal.component';
 import { DeleteTaskEventModal } from '../../components/task-event/DeleteTaskEventModal.component';
 import { TaskOverdueNotifier } from './TaskOverdueNotifier.component';
 import { TaskEventDetail } from './TaskEventDetail.component';
+import { TimePickerDropdown } from './TimePickerDropdown.component';
+import { EndTimePickerDropdown } from './EndTimePickerDropdown.component';
 import taskService from '../../services/task.service';
 import { useTaskEventOperations } from '../../hooks/task-events/useTaskEventOperations.hook';
 import { MiniCalendar } from './MiniCalendar.component';
@@ -48,10 +50,10 @@ export const Calendar: React.FC<CalendarProps> = ({
   const [task, setTask] = useState<any>(null);
   const [isAddScheduleOpen, setIsAddScheduleOpen] = useState(false);
   const [newEventTitle, setNewEventTitle] = useState('');
-  const [newEventStartTime, setNewEventStartTime] = useState('12:00am');
-  const [newEventEndTime, setNewEventEndTime] = useState('1:00am');
-  const [startTimeInput, setStartTimeInput] = useState('12:00am');
-  const [endTimeInput, setEndTimeInput] = useState('1:00am');
+  const [newEventStartTime, setNewEventStartTime] = useState('00:00am');
+  const [newEventEndTime, setNewEventEndTime] = useState('01:00am');
+  const [startTimeInput, setStartTimeInput] = useState('00:00am');
+  const [endTimeInput, setEndTimeInput] = useState('01:00am');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
@@ -77,28 +79,28 @@ export const Calendar: React.FC<CalendarProps> = ({
   
   // Generate time options for dropdown
   const timeOptions = [
-    '12:00am', '12:15am', '12:30am', '12:45am',
-    '1:00am', '1:15am', '1:30am', '1:45am',
-    '2:00am', '2:15am', '2:30am', '2:45am',
-    '3:00am', '3:15am', '3:30am', '3:45am',
-    '4:00am', '4:15am', '4:30am', '4:45am',
-    '5:00am', '5:15am', '5:30am', '5:45am',
-    '6:00am', '6:15am', '6:30am', '6:45am',
-    '7:00am', '7:15am', '7:30am', '7:45am',
-    '8:00am', '8:15am', '8:30am', '8:45am',
-    '9:00am', '9:15am', '9:30am', '9:45am',
+    '00:00am', '00:15am', '00:30am', '00:45am',
+    '01:00am', '01:15am', '01:30am', '01:45am',
+    '02:00am', '02:15am', '02:30am', '02:45am',
+    '03:00am', '03:15am', '03:30am', '03:45am',
+    '04:00am', '04:15am', '04:30am', '04:45am',
+    '05:00am', '05:15am', '05:30am', '05:45am',
+    '06:00am', '06:15am', '06:30am', '06:45am',
+    '07:00am', '07:15am', '07:30am', '07:45am',
+    '08:00am', '08:15am', '08:30am', '08:45am',
+    '09:00am', '09:15am', '09:30am', '09:45am',
     '10:00am', '10:15am', '10:30am', '10:45am',
     '11:00am', '11:15am', '11:30am', '11:45am',
-    '12:00pm', '12:15pm', '12:30pm', '12:45pm',
-    '1:00pm', '1:15pm', '1:30pm', '1:45pm',
-    '2:00pm', '2:15pm', '2:30pm', '2:45pm',
-    '3:00pm', '3:15pm', '3:30pm', '3:45pm',
-    '4:00pm', '4:15pm', '4:30pm', '4:45pm',
-    '5:00pm', '5:15pm', '5:30pm', '5:45pm',
-    '6:00pm', '6:15pm', '6:30pm', '6:45pm',
-    '7:00pm', '7:15pm', '7:30pm', '7:45pm',
-    '8:00pm', '8:15pm', '8:30pm', '8:45pm',
-    '9:00pm', '9:15pm', '9:30pm', '9:45pm',
+    '00:00pm', '00:15pm', '00:30pm', '00:45pm',
+    '01:00pm', '01:15pm', '01:30pm', '01:45pm',
+    '02:00pm', '02:15pm', '02:30pm', '02:45pm',
+    '03:00pm', '03:15pm', '03:30pm', '03:45pm',
+    '04:00pm', '04:15pm', '04:30pm', '04:45pm',
+    '05:00pm', '05:15pm', '05:30pm', '05:45pm',
+    '06:00pm', '06:15pm', '06:30pm', '06:45pm',
+    '07:00pm', '07:15pm', '07:30pm', '07:45pm',
+    '08:00pm', '08:15pm', '08:30pm', '08:45pm',
+    '09:00pm', '09:15pm', '09:30pm', '09:45pm',
     '10:00pm', '10:15pm', '10:30pm', '10:45pm',
     '11:00pm', '11:15pm', '11:30pm', '11:45pm',
   ];
@@ -229,8 +231,14 @@ export const Calendar: React.FC<CalendarProps> = ({
     let hours = parseInt(timeParts[0], 10);
     const minutes = parseInt(timeParts[1], 10);
     
-    if (isPM && hours < 12) hours += 12;
-    if (!isPM && hours === 12) hours = 0;
+    // Special handling for 0:XX format (midnight and noon)
+    if (hours === 0) {
+      hours = isPM ? 12 : 0;
+    } else if (isPM && hours < 12) {
+      hours += 12;
+    } else if (!isPM && hours === 12) {
+      hours = 0;
+    }
     
     return [hours, minutes];
   };
@@ -274,7 +282,7 @@ export const Calendar: React.FC<CalendarProps> = ({
     setRepeatOccurrences(10);
     
     // Sử dụng thời gian mặc định
-    setNewEventStartTime('9:00am');
+    setNewEventStartTime('09:00am');
     setNewEventTitle('');
     
     // End time sẽ được tự động cập nhật thông qua useEffect
@@ -408,11 +416,39 @@ export const Calendar: React.FC<CalendarProps> = ({
     setRepeatType(type);
     setShowRepeatOptions(false);
     
-    // Thiết lập ngày lặp lại dựa trên loại lặp lại
-    if (type === 'weekly') {
+    // Reset repeat-related settings when changing type
+    if (type === 'none') {
+      setCustomRepeatDays([]);
+      setRepeatEndType('never');
+      setRepeatEndDate(null);
+      setRepeatOccurrences(10);
+      setCustomRepeatFrequency(1);
+      setCustomRepeatUnit('week');
+    } 
+    // Set default values based on the selected repeat type
+    else if (type === 'weekly') {
+      // For weekly, set the current day of week
       setCustomRepeatDays([selectedDate.getDay()]);
-    } else if (type === 'weekday') {
-      setCustomRepeatDays([1, 2, 3, 4, 5]); // Monday to Friday
+      // Set default end type to never
+      setRepeatEndType('never');
+      setRepeatOccurrences(10);
+    } 
+    else if (type === 'daily' || type === 'monthly' || type === 'yearly') {
+      // For other types, clear repeat days
+      setCustomRepeatDays([]);
+      // Set default end type to never
+      setRepeatEndType('never');
+      setRepeatOccurrences(10);
+    }
+    else if (type === 'custom') {
+      // Nếu người dùng chọn Custom, mở modal tùy chỉnh
+      setShowCustomRepeatModal(true);
+      // Thiết lập giá trị mặc định cho custom repeat
+      setCustomRepeatFrequency(1);
+      setCustomRepeatUnit('week');
+      setCustomRepeatDays([selectedDate.getDay()]);
+      setRepeatEndType('never');
+      setRepeatOccurrences(10);
     }
   };
 
@@ -457,8 +493,6 @@ export const Calendar: React.FC<CalendarProps> = ({
         }
       case 'yearly':
         return `Annually on ${formatDate(selectedDate, { month: 'long', day: 'numeric' })}`;
-      case 'weekday':
-        return 'Every weekday (Monday to Friday)';
       case 'custom':
         let text = '';
         if (customRepeatFrequency && customRepeatUnit) {
@@ -495,8 +529,44 @@ export const Calendar: React.FC<CalendarProps> = ({
 
   // Hàm xử lý khi lưu tùy chỉnh lặp lại
   const handleSaveCustomRepeat = () => {
+    // Thiết lập repeat_type là 'custom'
     setRepeatType('custom');
+    
+    // Đảm bảo có repeat_days nếu đang chọn tùy chỉnh theo tuần
+    if (customRepeatUnit === 'week' && customRepeatDays.length === 0) {
+      // Nếu chưa chọn ngày nào, mặc định chọn ngày hiện tại trong tuần
+      setCustomRepeatDays([selectedDate.getDay()]);
+    }
+    
+    // Đảm bảo có repeat_end_type
+    if (!repeatEndType || repeatEndType === 'never') {
+      setRepeatEndType('never');
+    } else if (repeatEndType === 'on' && !repeatEndDate) {
+      // Nếu chọn kết thúc vào một ngày cụ thể nhưng chưa chọn ngày
+      // Thiết lập ngày kết thúc mặc định là 3 tháng sau ngày hiện tại
+      const defaultEndDate = new Date(selectedDate);
+      defaultEndDate.setMonth(defaultEndDate.getMonth() + 3);
+      setRepeatEndDate(defaultEndDate);
+    } else if (repeatEndType === 'after' && (!repeatOccurrences || repeatOccurrences < 1)) {
+      // Nếu chọn kết thúc sau một số lần lặp lại nhưng chưa thiết lập số lần
+      setRepeatOccurrences(10); // Mặc định 10 lần
+    }
+    
+    // Log thông tin để debug
+    console.log('Custom repeat settings:', {
+      repeatType: 'custom',
+      customRepeatFrequency,
+      customRepeatUnit,
+      customRepeatDays,
+      repeatEndType,
+      repeatEndDate,
+      repeatOccurrences
+    });
+    
+    // Đóng modal tùy chỉnh
     setShowCustomRepeatModal(false);
+    // Đóng dropdown repeat options
+    setShowRepeatOptions(false);
   };
 
   // Hàm xử lý khi tăng/giảm giá trị số
@@ -557,10 +627,14 @@ export const Calendar: React.FC<CalendarProps> = ({
             all_day: isAllDay,
             repeat_type: repeatType,
             repeat_interval: repeatType === 'custom' ? customRepeatFrequency : 1,
-            repeat_days: customRepeatDays.length > 0 ? customRepeatDays : undefined,
+            repeat_days: (repeatType === 'weekly' || repeatType === 'custom') ? 
+              (customRepeatDays.length > 0 ? customRepeatDays : [selectedDate.getDay()]) : 
+              undefined,
             repeat_end_type: repeatEndType,
             repeat_end_date: repeatEndType === 'on' && repeatEndDate ? repeatEndDate : undefined,
-            repeat_occurrences: repeatEndType === 'after' ? repeatOccurrences : undefined
+            repeat_occurrences: repeatEndType === 'after' ? repeatOccurrences : undefined,
+            location: '', // Thêm location trống để tương thích với backend
+            guests: [] // Thêm guests trống để tương thích với backend
           };
           
           console.log('Creating all-day task event for date:', date.toDateString(), newEventData);
@@ -587,8 +661,10 @@ export const Calendar: React.FC<CalendarProps> = ({
                 addEvent(formattedEvent);
               }
             }
-          } catch (err) {
+          } catch (err: any) {
             console.error('Error creating event for date', date.toDateString(), ':', err);
+            // Hiển thị thông báo lỗi cho người dùng
+            alert(`Không thể tạo sự kiện: ${err?.message || 'Lỗi không xác định'}`);
           }
         }
         
@@ -598,7 +674,7 @@ export const Calendar: React.FC<CalendarProps> = ({
           refreshTaskEvents();
         }, 500);
       } else {
-        // Xử lý tạo event đơn lẻ như trước
+        // Xử lý tạo event đơn lẻ
         // Parse time strings like "9:30am" to hours and minutes
         const [startHours, startMinutes] = parseTimeString(newEventStartTime);
         const [endHours, endMinutes] = parseTimeString(newEventEndTime);
@@ -610,7 +686,8 @@ export const Calendar: React.FC<CalendarProps> = ({
         const endTime = new Date(selectedDate);
         endTime.setHours(endHours, endMinutes);
         
-        const newEventData = {
+        // Chuẩn bị dữ liệu cho API với đầy đủ các trường
+        const newEventData: any = {
           task_id: taskId,
           title: savedTitle,
           description: '',
@@ -619,11 +696,31 @@ export const Calendar: React.FC<CalendarProps> = ({
           all_day: isAllDay,
           repeat_type: repeatType,
           repeat_interval: repeatType === 'custom' ? customRepeatFrequency : 1,
-          repeat_days: customRepeatDays.length > 0 ? customRepeatDays : undefined,
+          repeat_days: (repeatType === 'weekly' || repeatType === 'custom') ? 
+            (customRepeatDays.length > 0 ? customRepeatDays : [selectedDate.getDay()]) : 
+            [],
           repeat_end_type: repeatEndType,
           repeat_end_date: repeatEndType === 'on' && repeatEndDate ? repeatEndDate : undefined,
-          repeat_occurrences: repeatEndType === 'after' ? repeatOccurrences : undefined
+          repeat_occurrences: repeatEndType === 'after' ? repeatOccurrences : undefined,
+          location: '', // Thêm location trống để tương thích với backend
+          guests: [] // Thêm guests trống để tương thích với backend
         };
+        
+        // Thêm thông tin chi tiết nếu là custom repeat
+        if (repeatType === 'custom') {
+          console.log('Creating custom recurring event with:');
+          console.log('- Frequency:', customRepeatFrequency);
+          console.log('- Unit:', customRepeatUnit);
+          console.log('- Days:', customRepeatDays);
+          console.log('- End type:', repeatEndType);
+          console.log('- End date:', repeatEndDate);
+          console.log('- Occurrences:', repeatOccurrences);
+          
+          // Đảm bảo có repeat_days nếu là custom với đơn vị tuần
+          if (customRepeatUnit === 'week' && (!newEventData.repeat_days || newEventData.repeat_days.length === 0)) {
+            newEventData.repeat_days = [selectedDate.getDay()];
+          }
+        }
         
         console.log('Creating single task event:', newEventData);
         
@@ -656,13 +753,19 @@ export const Calendar: React.FC<CalendarProps> = ({
             }, 500);
           } else {
             console.error('Failed to create event, invalid response:', response);
+            // Hiển thị thông báo lỗi cho người dùng
+            alert('Không thể tạo sự kiện: Phản hồi từ máy chủ không hợp lệ');
           }
-        } catch (err) {
+        } catch (err: any) {
           console.error('Error creating single event:', err);
+          // Hiển thị thông báo lỗi cho người dùng
+          alert(`Không thể tạo sự kiện: ${err?.message || 'Lỗi không xác định'}`);
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating task event:', error);
+      // Hiển thị thông báo lỗi cho người dùng
+      alert(`Đã xảy ra lỗi: ${error?.message || 'Lỗi không xác định'}`);
     }
   };
   
@@ -716,7 +819,9 @@ export const Calendar: React.FC<CalendarProps> = ({
       
       // Xác định am/pm và chuyển sang định dạng 12h
       const isPM = hours >= 12;
-      hours = hours % 12 || 12; // Chuyển 0 thành 12
+      
+      // Use 0 instead of 12 for midnight and noon
+      hours = hours % 12;
       
       return `${hours}:${minutes}${isPM ? 'pm' : 'am'}`;
     }
@@ -801,8 +906,6 @@ export const Calendar: React.FC<CalendarProps> = ({
         return `Monthly on the ${getOrdinalNumber(Math.ceil(selectedDate.getDate() / 7))} ${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][selectedDate.getDay()]}`;
       case 'yearly':
         return `Annually on ${selectedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}`;
-      case 'weekday':
-        return 'Every weekday (Monday to Friday)';
       case 'custom':
         let text = '';
         if (customRepeatFrequency && customRepeatUnit) {
@@ -825,6 +928,53 @@ export const Calendar: React.FC<CalendarProps> = ({
       default:
         return 'Does not repeat';
     }
+  };
+
+  // Add these new functions to handle dropdown toggling:
+
+  // Function to toggle date picker dropdown and close other dropdowns
+  const toggleDatePicker = () => {
+    setShowEndDatePicker(false);
+    setShowStartTimePicker(false);
+    setShowEndTimePicker(false);
+    setShowRepeatOptions(false);
+    setShowDatePicker(!showDatePicker);
+  };
+
+  // Function to toggle end date picker dropdown and close other dropdowns
+  const toggleEndDatePicker = () => {
+    setShowDatePicker(false);
+    setShowStartTimePicker(false);
+    setShowEndTimePicker(false);
+    setShowRepeatOptions(false);
+    setShowEndDatePicker(!showEndDatePicker);
+  };
+
+  // Function to toggle start time picker dropdown and close other dropdowns
+  const toggleStartTimePicker = () => {
+    setShowDatePicker(false);
+    setShowEndDatePicker(false);
+    setShowEndTimePicker(false);
+    setShowRepeatOptions(false);
+    setShowStartTimePicker(!showStartTimePicker);
+  };
+
+  // Function to toggle end time picker dropdown and close other dropdowns
+  const toggleEndTimePicker = () => {
+    setShowDatePicker(false);
+    setShowEndDatePicker(false);
+    setShowStartTimePicker(false);
+    setShowRepeatOptions(false);
+    setShowEndTimePicker(!showEndTimePicker);
+  };
+
+  // Function to toggle repeat options dropdown and close other dropdowns
+  const toggleRepeatOptions = () => {
+    setShowDatePicker(false);
+    setShowEndDatePicker(false);
+    setShowStartTimePicker(false);
+    setShowEndTimePicker(false);
+    setShowRepeatOptions(!showRepeatOptions);
   };
 
   return (
@@ -907,7 +1057,7 @@ export const Calendar: React.FC<CalendarProps> = ({
                 <div className="flex items-center w-full">
                   <div className="flex-1 relative">
                     <button 
-                      onClick={() => setShowDatePicker(!showDatePicker)}
+                      onClick={() => toggleDatePicker()}
                       className="px-2 py-1.5 bg-gray-100 w-full text-left text-sm rounded-md hover:bg-gray-200 transition-colors"
                     >
                       {formatSelectedDate()}
@@ -931,7 +1081,7 @@ export const Calendar: React.FC<CalendarProps> = ({
                   
                   <div className="flex-1 relative">
                     <button 
-                      onClick={() => setShowEndDatePicker(!showEndDatePicker)}
+                      onClick={() => toggleEndDatePicker()}
                       className="px-2 py-1.5 bg-gray-100 w-full text-left text-sm rounded-md hover:bg-gray-200 transition-colors"
                     >
                       {endDate ? formatEndDate() : formatSelectedDate()}
@@ -960,7 +1110,7 @@ export const Calendar: React.FC<CalendarProps> = ({
                 <div className="relative">
                   <div 
                     className="border border-gray-200 rounded-md p-1.5 text-sm w-24 cursor-pointer bg-blue-500 text-white flex items-center justify-between"
-                    onClick={() => setShowStartTimePicker(!showStartTimePicker)}
+                    onClick={() => toggleStartTimePicker()}
                   >
                     <input
                       type="text"
@@ -975,28 +1125,20 @@ export const Calendar: React.FC<CalendarProps> = ({
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </div>
-                  {showStartTimePicker && (
-                    <div className="absolute z-50 mt-1 w-36 max-h-48 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg">
-                      {timeOptions.map((time) => (
-                        <div 
-                          key={`start-${time}`} 
-                          className={`p-2 text-sm hover:bg-gray-100 cursor-pointer ${newEventStartTime === time ? 'bg-blue-100' : ''}`}
-                          onClick={() => {
-                            setNewEventStartTime(time);
-                            setShowStartTimePicker(false);
-                          }}
-                        >
-                          {time}
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  <TimePickerDropdown
+                    isOpen={showStartTimePicker}
+                    selectedTime={newEventStartTime}
+                    onTimeSelected={(time) => {
+                      setNewEventStartTime(time);
+                      setShowStartTimePicker(false);
+                    }}
+                  />
                 </div>
                 <span className="text-gray-400">–</span>
                 <div className="relative">
                   <div 
                     className="border border-gray-200 rounded-md p-1.5 text-sm w-24 cursor-pointer flex items-center justify-between"
-                    onClick={() => setShowEndTimePicker(!showEndTimePicker)}
+                    onClick={() => toggleEndTimePicker()}
                   >
                     <input
                       type="text"
@@ -1011,27 +1153,15 @@ export const Calendar: React.FC<CalendarProps> = ({
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </div>
-                  {showEndTimePicker && (
-                    <div className="absolute z-50 mt-1 w-56 max-h-64 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg">
-                      {getEndTimeOptions().slice(0, 20).map((option) => {
-                        const isOneHour = option.label.includes('1 hr') && !option.label.includes('1.5') && !option.label.includes('11');
-                        return (
-                          <div 
-                            key={`end-${option.time}`} 
-                            className={`p-2.5 text-sm hover:bg-gray-100 cursor-pointer
-                              ${newEventEndTime === option.time ? 'bg-blue-100' : ''}
-                              ${isOneHour ? 'bg-blue-50' : ''}`}
-                            onClick={() => {
-                              setNewEventEndTime(option.time);
-                              setShowEndTimePicker(false);
-                            }}
-                          >
-                            {option.label}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                  <EndTimePickerDropdown
+                    isOpen={showEndTimePicker}
+                    selectedTime={newEventEndTime}
+                    startTime={newEventStartTime}
+                    onTimeSelected={(time) => {
+                      setNewEventEndTime(time);
+                      setShowEndTimePicker(false);
+                    }}
+                  />
                 </div>
               </div>
             )}
@@ -1041,7 +1171,7 @@ export const Calendar: React.FC<CalendarProps> = ({
               <div className="relative">
                 <button 
                   className="w-full text-left px-3 py-2 bg-gray-100 rounded-md text-sm flex justify-between items-center hover:bg-gray-200"
-                  onClick={() => setShowRepeatOptions(!showRepeatOptions)}
+                  onClick={() => toggleRepeatOptions()}
                 >
                   <div className="flex flex-col">
                     <span className="font-medium">{getFormattedRepeatDisplay()}</span>
@@ -1064,47 +1194,82 @@ export const Calendar: React.FC<CalendarProps> = ({
                 {showRepeatOptions && (
                   <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
                     <div 
-                      className="p-3 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
+                      className={`p-3 hover:bg-gray-100 cursor-pointer ${repeatType === 'none' ? 'bg-blue-50' : ''}`}
                       onClick={() => handleRepeatTypeChange('none')}
                     >
-                      <span>Does not repeat</span>
-                      <span className="text-gray-500 text-xs">Không lặp lại</span>
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium">Does not repeat</span>
+                        {repeatType === 'none' && (
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </div>
                     </div>
                     <div 
-                      className="p-3 hover:bg-gray-100 cursor-pointer"
+                      className={`p-3 hover:bg-gray-100 cursor-pointer ${repeatType === 'daily' ? 'bg-blue-50' : ''}`}
                       onClick={() => handleRepeatTypeChange('daily')}
                     >
-                      Daily
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium">Daily</span>
+                        {repeatType === 'daily' && (
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </div>
                     </div>
                     <div 
-                      className="p-3 hover:bg-gray-100 cursor-pointer"
+                      className={`p-3 hover:bg-gray-100 cursor-pointer ${repeatType === 'weekly' ? 'bg-blue-50' : ''}`}
                       onClick={() => handleRepeatTypeChange('weekly')}
                     >
-                      Weekly on {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][selectedDate.getDay()]}
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium">Weekly on {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][selectedDate.getDay()]}</span>
+                        {repeatType === 'weekly' && (
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </div>
                     </div>
                     <div 
-                      className="p-3 hover:bg-gray-100 cursor-pointer"
+                      className={`p-3 hover:bg-gray-100 cursor-pointer ${repeatType === 'monthly' ? 'bg-blue-50' : ''}`}
                       onClick={() => handleRepeatTypeChange('monthly')}
                     >
-                      Monthly on the {getOrdinalNumber(Math.ceil(selectedDate.getDate() / 7))} {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][selectedDate.getDay()]}
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium">Monthly on the {getOrdinalNumber(Math.ceil(selectedDate.getDate() / 7))} {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][selectedDate.getDay()]}</span>
+                        {repeatType === 'monthly' && (
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </div>
                     </div>
                     <div 
-                      className="p-3 hover:bg-gray-100 cursor-pointer"
+                      className={`p-3 hover:bg-gray-100 cursor-pointer ${repeatType === 'yearly' ? 'bg-blue-50' : ''}`}
                       onClick={() => handleRepeatTypeChange('yearly')}
                     >
-                      Annually on {selectedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium">Annually on {selectedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}</span>
+                        {repeatType === 'yearly' && (
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </div>
                     </div>
                     <div 
-                      className="p-3 hover:bg-gray-100 cursor-pointer"
-                      onClick={() => handleRepeatTypeChange('weekday')}
-                    >
-                      Every weekday (Monday to Friday)
-                    </div>
-                    <div 
-                      className="p-3 hover:bg-gray-100 cursor-pointer"
+                      className={`p-3 hover:bg-gray-100 cursor-pointer ${repeatType === 'custom' ? 'bg-blue-50' : ''}`}
                       onClick={() => setShowCustomRepeatModal(true)}
                     >
-                      Custom...
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium">Custom...</span>
+                        {repeatType === 'custom' && (
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -1161,11 +1326,12 @@ export const Calendar: React.FC<CalendarProps> = ({
             {showCustomRepeatModal && (
               <div className="fixed inset-0 z-[3000] flex items-center justify-center bg-black bg-opacity-50">
                 <div className="bg-white rounded-lg p-6 w-[400px] max-w-[90vw]">
-                  <h3 className="text-lg font-medium mb-4">Custom recurrence</h3>
+                  <h3 className="text-lg font-medium mb-6">Custom recurrence</h3>
                   
-                  <div className="mb-4 flex items-center">
-                    <span className="mr-2">Repeat every</span>
-                    <div className="flex items-center border rounded w-16">
+                  {/* Repeat every section */}
+                  <div className="mb-6 flex items-center">
+                    <span className="mr-2 text-sm">Repeat every</span>
+                    <div className="flex items-center border rounded w-16 relative">
                       <input 
                         type="number" 
                         min="1" 
@@ -1174,18 +1340,22 @@ export const Calendar: React.FC<CalendarProps> = ({
                         onChange={(e) => handleNumberChange(setCustomRepeatFrequency, parseInt(e.target.value), 1, 99)}
                         className="w-full px-2 py-1 focus:outline-none text-center"
                       />
-                      <div className="flex flex-col border-l">
+                      <div className="absolute right-0 inset-y-0 flex flex-col border-l">
                         <button 
-                          className="px-1 hover:bg-gray-100" 
+                          className="h-1/2 px-2 hover:bg-gray-100 flex items-center justify-center" 
                           onClick={() => handleNumberChange(setCustomRepeatFrequency, customRepeatFrequency + 1, 1, 99)}
                         >
-                          ▲
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
+                          </svg>
                         </button>
                         <button 
-                          className="px-1 hover:bg-gray-100 border-t" 
+                          className="h-1/2 px-2 hover:bg-gray-100 border-t flex items-center justify-center" 
                           onClick={() => handleNumberChange(setCustomRepeatFrequency, customRepeatFrequency - 1, 1, 99)}
                         >
-                          ▼
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                          </svg>
                         </button>
                       </div>
                     </div>
@@ -1193,7 +1363,14 @@ export const Calendar: React.FC<CalendarProps> = ({
                     <select 
                       value={customRepeatUnit}
                       onChange={(e) => setCustomRepeatUnit(e.target.value as any)}
-                      className="ml-2 border rounded p-1"
+                      className="ml-2 border rounded p-1 px-3 appearance-none bg-white"
+                      style={{ 
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23666'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'right 0.5rem center',
+                        backgroundSize: '1rem',
+                        paddingRight: '2rem'
+                      }}
                     >
                       <option value="day">day</option>
                       <option value="week">week</option>
@@ -1202,17 +1379,18 @@ export const Calendar: React.FC<CalendarProps> = ({
                     </select>
                   </div>
                   
+                  {/* Repeat on section - only for weekly recurrence */}
                   {customRepeatUnit === 'week' && (
-                    <div className="mb-4">
-                      <p className="mb-2">Repeat on</p>
-                      <div className="flex space-x-2">
+                    <div className="mb-6">
+                      <p className="mb-3 text-sm">Repeat on</p>
+                      <div className="flex space-x-3 justify-between">
                         {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
                           <button
                             key={index}
-                            className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                            className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
                               customRepeatDays.includes(index)
                                 ? 'bg-blue-500 text-white'
-                                : 'bg-gray-100 hover:bg-gray-200'
+                                : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                             }`}
                             onClick={() => handleRepeatDayToggle(index)}
                           >
@@ -1223,93 +1401,111 @@ export const Calendar: React.FC<CalendarProps> = ({
                     </div>
                   )}
                   
-                  <div className="mb-4">
-                    <p className="mb-2">Ends</p>
-                    <div className="space-y-2">
-                      <label className="flex items-center">
+                  {/* Ends section */}
+                  <div className="mb-6">
+                    <p className="mb-3 text-sm">Ends</p>
+                    <div className="space-y-4">
+                      {/* Never option */}
+                      <div className="flex items-center">
                         <input
+                          id="repeat-never"
                           type="radio"
                           checked={repeatEndType === 'never'}
                           onChange={() => setRepeatEndType('never')}
-                          className="mr-2"
+                          className="w-4 h-4 text-blue-500 border-gray-300 focus:ring-blue-500"
                         />
-                        Never
-                      </label>
+                        <label htmlFor="repeat-never" className="ml-2 text-sm text-gray-700">
+                          Never
+                        </label>
+                      </div>
                       
-                      <label className="flex items-center">
+                      {/* On date option */}
+                      <div className="flex items-center">
                         <input
+                          id="repeat-on"
                           type="radio"
                           checked={repeatEndType === 'on'}
                           onChange={() => setRepeatEndType('on')}
-                          className="mr-2"
+                          className="w-4 h-4 text-blue-500 border-gray-300 focus:ring-blue-500"
                         />
-                        On
-                        <button 
-                          className={`ml-2 px-3 py-1 rounded ${
-                            repeatEndType === 'on' ? 'bg-gray-100 hover:bg-gray-200' : 'bg-gray-50 text-gray-400'
-                          }`}
-                          onClick={() => {
-                            if (repeatEndType === 'on') {
-                              // Show date picker
-                            }
-                          }}
-                          disabled={repeatEndType !== 'on'}
-                        >
-                          {repeatEndDate 
-                            ? repeatEndDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })
-                            : 'Select date'}
-                        </button>
-                      </label>
+                        <label htmlFor="repeat-on" className="ml-2 text-sm text-gray-700 flex items-center">
+                          On
+                          <button 
+                            className={`ml-3 px-3 py-1 rounded text-sm ${
+                              repeatEndType === 'on' ? 'bg-gray-100 hover:bg-gray-200 text-gray-700' : 'bg-gray-50 text-gray-400 cursor-not-allowed'
+                            }`}
+                            onClick={() => {
+                              if (repeatEndType === 'on') {
+                                // Show date picker
+                              }
+                            }}
+                            disabled={repeatEndType !== 'on'}
+                          >
+                            {repeatEndDate 
+                              ? repeatEndDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })
+                              : 'Select date'}
+                          </button>
+                        </label>
+                      </div>
                       
-                      <label className="flex items-center">
+                      {/* After X occurrences option */}
+                      <div className="flex items-center">
                         <input
+                          id="repeat-after"
                           type="radio"
                           checked={repeatEndType === 'after'}
                           onChange={() => setRepeatEndType('after')}
-                          className="mr-2"
+                          className="w-4 h-4 text-blue-500 border-gray-300 focus:ring-blue-500"
                         />
-                        After
-                        <div className={`ml-2 flex items-center border rounded w-16 ${repeatEndType !== 'after' ? 'opacity-50' : ''}`}>
-                          <input 
-                            type="number" 
-                            min="1" 
-                            max="999"
-                            value={repeatOccurrences}
-                            onChange={(e) => handleNumberChange(setRepeatOccurrences, parseInt(e.target.value), 1, 999)}
-                            className="w-full px-2 py-1 focus:outline-none text-center"
-                            disabled={repeatEndType !== 'after'}
-                          />
-                          <div className="flex flex-col border-l">
-                            <button 
-                              className="px-1 hover:bg-gray-100" 
-                              onClick={() => handleNumberChange(setRepeatOccurrences, repeatOccurrences + 1, 1, 999)}
+                        <label htmlFor="repeat-after" className="ml-2 text-sm text-gray-700 flex items-center">
+                          After
+                          <div className={`ml-3 flex items-center border rounded w-16 relative ${repeatEndType !== 'after' ? 'opacity-50' : ''}`}>
+                            <input 
+                              type="number" 
+                              min="1" 
+                              max="999"
+                              value={repeatOccurrences}
+                              onChange={(e) => handleNumberChange(setRepeatOccurrences, parseInt(e.target.value), 1, 999)}
+                              className="w-full px-2 py-1 focus:outline-none text-center"
                               disabled={repeatEndType !== 'after'}
-                            >
-                              ▲
-                            </button>
-                            <button 
-                              className="px-1 hover:bg-gray-100 border-t" 
-                              onClick={() => handleNumberChange(setRepeatOccurrences, repeatOccurrences - 1, 1, 999)}
-                              disabled={repeatEndType !== 'after'}
-                            >
-                              ▼
-                            </button>
+                            />
+                            <div className="absolute right-0 inset-y-0 flex flex-col border-l">
+                              <button 
+                                className="h-1/2 px-2 hover:bg-gray-100 flex items-center justify-center" 
+                                onClick={() => handleNumberChange(setRepeatOccurrences, repeatOccurrences + 1, 1, 999)}
+                                disabled={repeatEndType !== 'after'}
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
+                                </svg>
+                              </button>
+                              <button 
+                                className="h-1/2 px-2 hover:bg-gray-100 border-t flex items-center justify-center" 
+                                onClick={() => handleNumberChange(setRepeatOccurrences, repeatOccurrences - 1, 1, 999)}
+                                disabled={repeatEndType !== 'after'}
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                                </svg>
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                        <span className="ml-2">occurrences</span>
-                      </label>
+                          <span className="ml-2 text-sm">occurrences</span>
+                        </label>
+                      </div>
                     </div>
                   </div>
                   
-                  <div className="flex justify-end space-x-2 mt-6">
+                  {/* Action buttons */}
+                  <div className="flex justify-end space-x-2">
                     <button 
-                      className="px-4 py-2 text-blue-500 hover:bg-gray-100 rounded"
+                      className="px-6 py-2 text-blue-500 hover:bg-gray-100 rounded"
                       onClick={() => setShowCustomRepeatModal(false)}
                     >
                       Cancel
                     </button>
                     <button 
-                      className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                      className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                       onClick={handleSaveCustomRepeat}
                     >
                       Done

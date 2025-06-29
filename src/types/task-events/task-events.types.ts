@@ -17,6 +17,8 @@ export interface TaskEvent {
   repeat_occurrences?: number;
   location?: string;
   guests?: string[];
+  color?: string; // Event color (hex code)
   createdAt?: Date;
   updatedAt?: Date;
+  isRecurrence?: boolean; // Flag to identify generated recurring events
 } 
