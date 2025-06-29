@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../store';
 import FriendService from '../../services/friend.service';
+import achievementService from '../../services/achievement.service';
 import {
   setFriends,
   setSentRequests,
@@ -166,6 +167,9 @@ export function useFriendList() {
         // Sau khi chấp nhận, cập nhật dữ liệu mới từ backend
         await fetchPendingRequests();
         dispatch(setError(null));
+        
+        // Kiểm tra thành tựu bạn bè sau khi chấp nhận lời mời
+        await achievementService.checkFriendAchievements();
       }
       setActiveTab('friends');
       await fetchData(); // Tải lại tất cả dữ liệu

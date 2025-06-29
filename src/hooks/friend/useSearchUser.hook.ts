@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SearchUsersProps } from '../../types/friend/props/component.props';
 import FriendService from '../../services/friend.service';
+import achievementService from '../../services/achievement.service';
 
 export const EMAIL_DOMAINS = [
   { value: '@gmail.com', label: '@gmail.com' },
@@ -35,11 +36,16 @@ export const useSearchUser = (props: SearchUsersProps) => {
     try {
       // Khi gọi refreshFriendData, làm mới toàn bộ dữ liệu
       FriendService.clearCache();
-      await Promise.all([
+      const [friendsList, sentList, pendingList] = await Promise.all([
         FriendService.viewAllFriends(),
         FriendService.viewAllSent(),
         FriendService.viewAllPending()
       ]);
+      
+      // Check for friend achievements if we have friends
+      if (friendsList && friendsList.length > 0) {
+        await achievementService.checkFriendAchievements();
+      }
       
       // Trigger lại hàm kiểm tra trạng thái với key mới
       setRefreshKey(prev => prev + 1);
