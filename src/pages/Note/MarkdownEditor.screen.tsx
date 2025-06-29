@@ -7,8 +7,34 @@ import { formatDateTimeFull } from '../../utils/date.utils';
 import ToolBarNote from './ToolbarNote.screen';
 import Icon from '../../components/common/Icon/Icon.component';
 import { useMarkdownEditor } from '../../hooks/note/useMarkdownEditor.hook';
+import { useTranslation } from 'react-i18next';
+import ShareService from '../../services/share.service';
+import { toast } from 'react-toastify';
+import { useDispatch } from 'react-redux';
+import { fetchItems } from '../../store/slices/items.slice';
+import { MarkdownEditorProps } from '../../types/note/props/component.props';
 
-const MarkdownEditor: React.FC = () => {
+const quillModules = {
+  toolbar: false // Tắt toolbar mặc định của Quill
+};
+
+const quillFormats = [
+  'header',
+  'bold', 'italic', 'underline', 'strike',
+  'list', 'bullet',
+  'script',
+  'indent',
+  'direction',
+  'size',
+  'color', 'background',
+  'font',
+  'align',
+  'blockquote', 'code-block',
+  'link', 'image', 'video',
+  'highlight'
+];
+
+const MarkdownEditor: React.FC<MarkdownEditorProps> = () => {
   const {
     quillRef,
     currentNote,
@@ -21,16 +47,17 @@ const MarkdownEditor: React.FC = () => {
     isNoteDeleted,
     handleChange,
     handleAction,
-    handleFormatAI,
     handleAccept,
     handleReject,
     dispatch
   } = useMarkdownEditor();
 
-  // Theo dõi trạng thái của ignoreValuePropUpdate
+  const { t } = useTranslation();
+
   const [shouldIgnoreValue, setShouldIgnoreValue] = useState(false);
 
-  // Cập nhật state shouldIgnoreValue khi ignoreValuePropUpdate.current thay đổi
+  const hasEditPermission = !currentNote?.permission || currentNote?.permission === 'edit';
+
   useEffect(() => {
     const checkIgnoreProp = () => {
       if (quillRef.current && 'ignoreValuePropUpdate' in quillRef.current) {
@@ -39,10 +66,8 @@ const MarkdownEditor: React.FC = () => {
       }
     };
 
-    // Kiểm tra ban đầu
     checkIgnoreProp();
 
-    // Kiểm tra định kỳ
     const interval = setInterval(checkIgnoreProp, 100);
 
     return () => clearInterval(interval);
@@ -74,8 +99,8 @@ const MarkdownEditor: React.FC = () => {
               </>
             ) : (
               <>
-                <div className="bg-blue-100 rounded-full p-4 mx-auto mb-4 w-16 h-16 flex items-center justify-center">
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-500">
+                <div className="bg-[#21b4ca] rounded-full p-4 mx-auto mb-4 w-16 h-16 flex items-center justify-center">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="#e6f7f9" stroke="currentColor" strokeWidth="2" className="text-[#e6f7f9]">
                     <path d="M16 18l2-2m0 0l-2-2m2 2l-2 2m2-2l2 2M4 6h16M4 12h9" />
                   </svg>
                 </div>
@@ -91,6 +116,8 @@ const MarkdownEditor: React.FC = () => {
     );
   }
 
+  const isReadOnly = currentNote.permission === 'view' || isNoteDeleted;
+
   return (
     <div className="flex w-full flex-col h-full relative">
       <div className="flex items-center justify-between p-4 bg-gray-100 border-b">
@@ -102,22 +129,21 @@ const MarkdownEditor: React.FC = () => {
             {currentNote?.updatedAt && (
               <span>Last saved: {formatDateTimeFull(currentNote.updatedAt)}</span>
             )}
+            {!hasEditPermission && (
+              <span className="ml-3 px-2 py-1 bg-yellow-100 text-yellow-800 rounded-md text-xs font-medium">
+                View only
+              </span>
+            )}
+
             {typingUsers.size > 0 && (
-              <span className="ml-3 text-blue-500 animate-pulse">
+              <span className="ml-3 text-[#21b4ca] animate-pulse">
                 {typingUsers.size === 1 ? 'Someone is typing...' : `${typingUsers.size} people are typing...`}
               </span>
             )}
           </div>
         </div>
         <div className="flex gap-2 items-center">
-          {/* <button
-            className="px-4 py-2 bg-blue-600 cursor-pointer disabled:cursor-not-allowed flex items-center justify-between gap-1 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:text-gray-400 transition-all duration-150"
-            onClick={handleFormatAI}
-            disabled={isFormatting || showAcceptReject || !currentNote?.content.trim()}
-          >
-            AI Formatter <Icon name='blinkAI' />
-          </button> */}
-          {showAcceptReject && (
+          {showAcceptReject && hasEditPermission && (
             <>
               <button
                 className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700"
@@ -133,15 +159,20 @@ const MarkdownEditor: React.FC = () => {
               </button>
             </>
           )}
+
         </div>
       </div>
       {isFormatting && (
         <div className="absolute inset-0 bg-black/30 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-8 flex flex-col items-center shadow-xl">
-            <div className="animate-spin rounded-full h-8 w-8 border-4 border-blue-600 border-t-transparent mb-4"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-4 border-[#21b4ca] border-t-transparent mb-4"></div>
             <span className="text-lg font-semibold text-gray-700">Formatting with AI...</span>
           </div>
         </div>
+      )}
+
+      {hasEditPermission && (
+        <ToolBarNote onAction={handleAction} formatState={formatState} />
       )}
 
       <div className="quill-wrapper">
@@ -152,26 +183,23 @@ const MarkdownEditor: React.FC = () => {
             onChange={handleChange}
             className="flex-1 markdown-editor"
             theme="snow"
-            modules={{
-              history: {
-                delay: 1000,
-                maxStack: 100,
-                userOnly: false,
-              },
-              toolbar: false,
-            }}
-            readOnly={isFormatting}
-            formats={[
-              'header', 'bold', 'italic', 'underline', 'strike', 'blockquote',
-              'list', 'bullet', 'indent', 'link', 'image', 'color', 'background',
-              'align', 'code-block', 'script'
-            ]}
+            modules={quillModules}
+            formats={quillFormats}
+            readOnly={isReadOnly}
             scrollingContainer=".quill-wrapper"
           />
+          {!hasEditPermission && (
+            <div className="absolute bottom-4 left-4 right-4 bg-yellow-50 border border-yellow-200 p-3 rounded-lg shadow-md">
+              <div className="flex items-center">
+                <svg className="w-5 h-5 text-yellow-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-sm text-yellow-700">You only have view permission for this note. Contact the person who shared it to request edit access.</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
-
-      <ToolBarNote onAction={handleAction} formatState={formatState} />
 
       {showWarningModal && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
@@ -182,7 +210,7 @@ const MarkdownEditor: React.FC = () => {
             </p>
             <div className="flex justify-end gap-3">
               <button
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
+                className="px-4 py-2 bg-[#21b4ca] text-white rounded-lg font-medium hover:bg-[#1a8fa3]"
                 onClick={() => dispatch(setShowWarningModal(false))}
               >
                 OK

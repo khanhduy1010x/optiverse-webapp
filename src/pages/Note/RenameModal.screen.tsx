@@ -2,8 +2,6 @@ import React from 'react';
 import Modal from 'react-modal';
 import { RenameModalProps } from '../../types/note/props/component.props';
 
-
-
 const RenameModal: React.FC<RenameModalProps> = ({
   isOpen,
   onClose,
@@ -28,6 +26,14 @@ const RenameModal: React.FC<RenameModalProps> = ({
 
   const isButtonLoading = loading || localLoading;
   const remainingChars = 30 - renameInput.length;
+  const isMaxLength = remainingChars <= -1;
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value.length <= 30) {
+      setRenameInput(value);
+    }
+  };
 
   return (
     <Modal
@@ -61,26 +67,25 @@ const RenameModal: React.FC<RenameModalProps> = ({
           <label
             htmlFor="rename-input"
             className={`absolute select-none outline-none pointer-events-none duration-400 left-3 text-xs z-10 block transition-all bg-white px-1
-              ${errorMessage ? 'text-red-500 -top-2' : (isFocused || renameInput ? 'text-blue-600 -top-2' : 'text-gray-500 top-1/2 text-[16px] bg-transparent px-0')}
+              ${errorMessage ? 'text-red-500 -top-2' : (isFocused || renameInput ? 'text-[#21b4ca] -top-2' : 'text-gray-500 top-[38%] text-[16px] bg-transparent px-0')}
               ${isFocused || renameInput || errorMessage ? '' : '-translate-y-1/2'}`}
           >
             New Name
           </label>
 
-          <div className={`relative w-full h-14 border-2 rounded-xl transition-colors duration-200 ${errorMessage ? 'border-red-500' : 'border-gray-200 focus-within:border-blue-600'}`}>
+          <div className={`relative w-full h-14 border-2 rounded-xl transition-colors duration-200 ${errorMessage ? 'border-red-500' : isMaxLength ? 'border-red-500' : 'border-gray-200 focus-within:border-[#21b4ca]'}`}>
             <input
               id="rename-input"
               type="text"
               value={renameInput}
-              onChange={e => setRenameInput(e.target.value)}
-              maxLength={30}
-              className="w-full h-full  bg-transparent px-3 pt-4 pb-4 outline-none text-gray-900"
+              onChange={handleInputChange}
+              className="w-full h-full bg-transparent px-3 pt-4 pb-4 outline-none text-gray-900"
               autoFocus
               disabled={isButtonLoading}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
               onKeyPress={e => {
-                if (e.key === 'Enter' && renameInput.trim() && !isButtonLoading) {
+                if (e.key === 'Enter' && renameInput.trim() && !isButtonLoading && !isMaxLength) {
                   handleRename();
                 }
               }}
@@ -88,7 +93,7 @@ const RenameModal: React.FC<RenameModalProps> = ({
 
             {isButtonLoading && (
               <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent"></div>
+                <div className="animate-spin rounded-full h-5 w-5 border-2 border-[#21b4ca] border-t-transparent"></div>
               </div>
             )}
           </div>
@@ -97,7 +102,7 @@ const RenameModal: React.FC<RenameModalProps> = ({
             {errorMessage && (
               <p className="text-sm text-red-500 animate-in slide-in-from-top-1 duration-200">{errorMessage}</p>
             )}
-            <div className={`text-xs ${remainingChars < 0 ? 'text-red-500' : remainingChars <= 5 ? 'text-yellow-500' : 'text-gray-400'}`}>
+            <div className={`text-xs ${remainingChars <= 0 ? 'text-red-500 font-medium' : remainingChars <= 5 ? 'text-yellow-500' : 'text-gray-400'}`}>
               {remainingChars} characters left
             </div>
           </div>
@@ -113,8 +118,8 @@ const RenameModal: React.FC<RenameModalProps> = ({
           </button>
           <button
             onClick={handleRename}
-            disabled={!renameInput.trim() || isButtonLoading}
-            className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:text-gray-400 transition-all duration-150 flex items-center justify-center gap-2"
+            disabled={!renameInput.trim() || isButtonLoading || isMaxLength}
+            className="flex-1 px-4 py-3 bg-[#21b4ca] hover:bg-[#1a8fa3] text-white rounded-xl font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:text-gray-400 transition-all duration-150 flex items-center justify-center gap-2"
           >
             {isButtonLoading ? (
               <>

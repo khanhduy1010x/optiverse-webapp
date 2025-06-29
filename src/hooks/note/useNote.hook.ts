@@ -1,12 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { debounce } from 'lodash';
 import { RootState, AppDispatch } from '../../store';
-import { saveNote, setFolderStack } from '../../store/slices/items.slice';
+import { setFolderStack, fetchItems } from '../../store/slices/items.slice';
 import SocketService from '../../services/socket.service';
-import { toast } from 'react-toastify';
-import { fetchItems } from '../../store/slices/items.slice';
-import noteFolderService from '../../services/noteFolder.service';
 
 export function useNote() {
   const dispatch = useDispatch<AppDispatch>();
@@ -14,23 +10,6 @@ export function useNote() {
     (state: RootState) => state.items
   );
   const pendingStackIdsRef = useRef<string[]>([]);
-
-  function normalizeItems(items: any[]): any[] {
-    return items.map(item => {
-      if (item.type === 'folder' || (item.subfolders && item.files)) {
-        return {
-          ...item,
-          type: 'folder',
-          subfolders: item.subfolders ? normalizeItems(item.subfolders) : [],
-          files: item.files
-            ? item.files.map((f: any) => ({ ...f, type: 'file' }))
-            : [],
-        };
-      } else {
-        return { ...item, type: 'file' };
-      }
-    });
-  }
 
   const syncFolderItemAfterFetch = (
     newItems: any[],
@@ -55,8 +34,12 @@ export function useNote() {
     return updatedStack;
   };
 
-  const handleFolderStructureChanged = async () => {
-    console.log('Folder structure was changed, fetching updated items');
+  const handleFolderStructureChanged = async (data: {
+    isSharedView?: boolean;
+  }) => {
+    if (data.isSharedView) {
+      return;
+    }
 
     const stackIds = folderStack.map(folder => folder._id);
 
@@ -64,9 +47,7 @@ export function useNote() {
       pendingStackIdsRef.current = stackIds;
     }
 
-    dispatch(fetchItems());
-
-    toast.info('Folder structure has been updated');
+    dispatch(fetchItems() as any);
   };
 
   useEffect(() => {
@@ -81,6 +62,10 @@ export function useNote() {
       pendingStackIdsRef.current = [];
     }
   }, [items, loading, dispatch]);
+
+  useEffect(() => {
+    dispatch(fetchItems() as any);
+  }, [dispatch]);
 
   useEffect(() => {
     SocketService.connect();
