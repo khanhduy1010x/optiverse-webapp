@@ -17,6 +17,7 @@ import {
   removeFriend,
 } from '../../store/slices/friend.slice';
 import FriendService from '../../services/friend.service';
+import achievementService from '../../services/achievement.service';
 
 export const useAllFriend = ({
   friends,
@@ -29,9 +30,15 @@ export const useAllFriend = ({
     const fetchFriends = async () => {
       const friends = await FriendService.viewAllFriends();
       dispatch(setFriends(friends));
+      
+      // Check for friend achievements when the friends list loads
+      if (friends && friends.length > 0) {
+        await achievementService.checkFriendAchievements();
+      }
     };
     fetchFriends();
   }, []);
+  
   const getColorFromString = (str: string) => {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {

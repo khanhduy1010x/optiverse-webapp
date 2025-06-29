@@ -176,6 +176,27 @@ const achievementService = {
   },
 
   /**
+   * Check and unlock all friend-related achievements for a user
+   * @returns Array of newly unlocked achievements
+   */
+  checkFriendAchievements: async () => {
+    try {
+      const response = await api.post(`/productivity/achievement/check-friend-achievements`);
+      const newAchievements = response.data.data || [];
+
+      // Hiển thị thông báo nếu có thành tựu mới
+      if (newAchievements.length > 0) {
+        achievementService.showAchievementNotifications(newAchievements);
+      }
+
+      return response.data;
+    } catch (error) {
+      console.error('Error checking friend achievements:', error);
+      return { data: [] };
+    }
+  },
+
+  /**
    * Hiển thị thông báo cho các thành tựu mới
    */
   showAchievementNotifications: (achievements: Achievement[]) => {
