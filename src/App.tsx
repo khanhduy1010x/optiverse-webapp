@@ -39,6 +39,7 @@ import ChatPage from './pages/chat/ChatPage';
 import { useNewMessageNotification } from './hooks/chat/useNewMessageNotification';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { typingAnimationStyles } from './styles/global.style';
 
 const AppContent: React.FC = () => {
   const location = useLocation();
@@ -48,6 +49,19 @@ const AppContent: React.FC = () => {
 
   // Sử dụng hook để lắng nghe tin nhắn mới
   useNewMessageNotification();
+
+  // Thêm CSS cho hiệu ứng đang nhập
+  React.useEffect(() => {
+    // Tạo style element
+    const styleElement = document.createElement('style');
+    styleElement.textContent = typingAnimationStyles;
+    document.head.appendChild(styleElement);
+
+    // Cleanup khi unmount
+    return () => {
+      document.head.removeChild(styleElement);
+    };
+  }, []);
 
   const showSidebar =
     location.pathname !== '/' &&

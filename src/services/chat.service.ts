@@ -112,6 +112,121 @@ class ChatService {
       return null;
     }
   }
+
+  /**
+   * Tải lên hình ảnh cho tin nhắn
+   * @param file File hình ảnh cần tải lên
+   * @returns URL của hình ảnh sau khi tải lên
+   */
+  async uploadMessageImage(file: File): Promise<string> {
+    try {
+      const userId = localStorage.getItem('user_id');
+      if (!userId) throw new Error('User not logged in');
+
+      // Tạo FormData để gửi file
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // Sử dụng cùng endpoint với theme nhưng có thể thay đổi sau này nếu cần
+      const response = await api.post<ApiResponse<string>>(
+        '/core/profile/chat/theme',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
+      // Lấy URL của hình ảnh từ response
+      const downloadURL = response.data.data;
+      return downloadURL;
+    } catch (error) {
+      console.error('Error uploading message image:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Tải lên nhiều hình ảnh cho tin nhắn
+   * @param files Danh sách file hình ảnh cần tải lên
+   * @returns Danh sách URL của các hình ảnh sau khi tải lên
+   */
+  async uploadMessageImages(files: File[]): Promise<string[]> {
+    try {
+      const uploadPromises = files.map(file => this.uploadMessageImage(file));
+      return await Promise.all(uploadPromises);
+    } catch (error) {
+      console.error('Error uploading multiple message images:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Tải lên file âm thanh cho tin nhắn thoại
+   * @param file File âm thanh cần tải lên
+   * @returns URL của file âm thanh sau khi tải lên và thời lượng
+   */
+  async uploadAudioMessage(
+    file: File
+  ): Promise<{ url: string; duration: number }> {
+    try {
+      const userId = localStorage.getItem('user_id');
+      if (!userId) throw new Error('User not logged in');
+
+      // Tạo FormData để gửi file
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // Sử dụng cùng endpoint với theme
+      const response = await api.post<ApiResponse<string>>(
+        '/core/profile/chat/theme',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
+      // Lấy URL của file âm thanh từ response
+      const downloadURL = response.data.data;
+
+      // Lấy thời lượng của file âm thanh
+      const duration = await this.getAudioDuration(file);
+
+      return {
+        url: downloadURL,
+        duration,
+      };
+    } catch (error) {
+      console.error('Error uploading audio message:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Lấy thời lượng của file âm thanh
+   * @param file File âm thanh
+   * @returns Thời lượng tính bằng giây
+   */
+  private getAudioDuration(file: File): Promise<number> {
+    return new Promise((resolve, reject) => {
+      const audio = new Audio();
+      audio.src = URL.createObjectURL(file);
+
+      audio.addEventListener('loadedmetadata', () => {
+        // Giải phóng URL object
+        URL.revokeObjectURL(audio.src);
+        resolve(audio.duration);
+      });
+
+      audio.addEventListener('error', err => {
+        URL.revokeObjectURL(audio.src);
+        reject(err);
+      });
+    });
+  }
 }
 
 export default new ChatService();
