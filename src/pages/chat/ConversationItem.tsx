@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { ConversationType } from '../../types/chat/ConversationType';
 import { UserResponse } from '../../types/auth/auth.types';
 import { useUnreadCount } from '../../hooks/chat/useUnreadCount';
@@ -6,128 +6,124 @@ import { useUnreadCount } from '../../hooks/chat/useUnreadCount';
 interface ConversationItemProps {
     conversation: ConversationType;
     users: Record<string, UserResponse>;
-    activeConversationId: string | null;
-    onSelectConversation: (conversationId: string) => void;
+    isActive: boolean;
+    isPinned: boolean;
+    pinOrder: number;
+    onSelect: (id: string) => void;
 }
 
 const ConversationItem: React.FC<ConversationItemProps> = ({
     conversation,
     users,
-    activeConversationId,
-    onSelectConversation
+    isActive,
+    isPinned,
+    pinOrder,
+    onSelect,
 }) => {
-    // Sử dụng hook ở đây (đúng chuẩn React)
+    // Sử dụng hook để đếm tin nhắn chưa đọc
     const { unreadCount } = useUnreadCount(conversation.id);
+    const [displayCount, setDisplayCount] = useState(0);
+
+    // Cập nhật số tin nhắn chưa đọc khi unreadCount thay đổi
+    useEffect(() => {
+        setDisplayCount(unreadCount);
+    }, [unreadCount]);
+
     const currentUserId = localStorage.getItem('user_id');
+    if (!currentUserId) return null;
 
-    // Helper function to get other user in conversation
-    const getOtherUser = (): UserResponse | undefined => {
-        if (!currentUserId) return undefined;
+    // Lấy ID của người dùng khác trong hội thoại
+    const otherUserId = Object.keys(conversation.members).find(
+        (id) => id !== currentUserId
+    );
 
-        const otherUserId = Object.keys(conversation.members).find(id => id !== currentUserId);
-        if (!otherUserId) return undefined;
+    if (!otherUserId) return null;
 
-        return users[otherUserId];
-    };
+    // Lấy thông tin người dùng từ danh sách users
+    const otherUser = users[otherUserId];
 
-    // Function to format timestamp
-    const formatTime = (timestamp: number): string => {
+    // Tên hiển thị
+    const displayName = otherUser?.full_name || otherUser?.email || 'Unknown User';
+
+    // Lấy chữ cái đầu tiên của tên để hiển thị khi không có avatar
+    const initial = displayName.charAt(0).toUpperCase();
+
+    // Format thời gian tin nhắn cuối cùng
+    const formatLastMessageTime = (timestamp?: number): string => {
+        if (!timestamp) return '';
+
         const date = new Date(timestamp);
         const now = new Date();
 
-        // If today, show time
+        // Nếu cùng ngày, chỉ hiển thị giờ
         if (date.toDateString() === now.toDateString()) {
             return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         }
 
-        // If this week, show day name
+        // Nếu trong vòng 7 ngày, hiển thị tên ngày
         const weekAgo = new Date();
         weekAgo.setDate(now.getDate() - 7);
         if (date > weekAgo) {
             return date.toLocaleDateString([], { weekday: 'short' });
         }
 
-        // Otherwise show date
-        return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+        // Còn lại hiển thị ngày/tháng
+        return date.toLocaleDateString([], { day: '2-digit', month: '2-digit' });
     };
-
-    // Get initials from name or email
-    const getInitials = (name?: string, email?: string): string => {
-        if (name && name.length > 0) {
-            return name.charAt(0).toUpperCase();
-        }
-        if (email && email.length > 0) {
-            return email.charAt(0).toUpperCase();
-        }
-        return '?';
-    };
-
-    // Render last message preview
-    const renderLastMessagePreview = () => {
-        if (!conversation.lastMessage) {
-            return (
-                <p className="text-sm text-gray-400 italic">
-                    Start new conversation
-                </p>
-            );
-        }
-
-        const isCurrentUserMessage = conversation.lastMessage.senderId === currentUserId;
-        return (
-            <p className="text-sm text-gray-500 truncate max-w-[180px]">
-                {isCurrentUserMessage
-                    ? `You: ${conversation.lastMessage.text}`
-                    : conversation.lastMessage.text
-                }
-            </p>
-        );
-    };
-
-    const otherUser = getOtherUser();
 
     return (
         <div
-            onClick={() => onSelectConversation(conversation.id)}
-            className={`flex items-center p-2 rounded-md cursor-pointer transition-colors ${activeConversationId === conversation.id
-                ? 'bg-blue-50'
-                : 'hover:bg-gray-50'
+            className={`flex items-center p-2 rounded-lg mb-1 cursor-pointer relative ${isActive ? 'bg-[#e6f7f9]' : 'hover:bg-gray-50'
                 }`}
+            onClick={() => onSelect(conversation.id)}
         >
-            {/* Avatar */}
-            {otherUser?.avatar_url ? (
-                <img
-                    src={otherUser.avatar_url}
-                    alt={otherUser.full_name || otherUser.email || 'User'}
-                    className="w-10 h-10 rounded-full object-cover mr-3"
-                />
-            ) : (
-                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 mr-3">
-                    {getInitials(otherUser?.full_name, otherUser?.email)}
+            {/* Pin indicator */}
+            {isPinned && (
+                <div className="absolute top-0 right-0 w-4 h-4 flex items-center justify-center bg-[#21b4ca] text-white rounded-full text-[8px] font-bold">
+                    {pinOrder}
                 </div>
             )}
 
-            {/* Conversation info */}
-            <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between">
-                    <h4 className="font-medium text-gray-900 truncate">
-                        {otherUser?.full_name || otherUser?.email || 'Unknown User'}
-                    </h4>
-                    {conversation.lastMessage && (
-                        <span className="text-xs text-gray-500">
-                            {formatTime(conversation.lastMessage.createdAt)}
-                        </span>
-                    )}
+            {/* Avatar */}
+            <div className="relative">
+                {otherUser?.avatar_url ? (
+                    <img
+                        src={otherUser.avatar_url}
+                        alt={displayName}
+                        className="w-10 h-10 rounded-full object-cover"
+                    />
+                ) : (
+                    <div className="w-10 h-10 rounded-full bg-[#21b4ca] text-white flex items-center justify-center font-medium">
+                        {initial}
+                    </div>
+                )}
+
+                {/* Online status indicator - Tạm thời comment lại vì chưa có trạng thái online */}
+                {/* {conversation.members[otherUserId]?.isOnline && (
+                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                )} */}
+            </div>
+
+            {/* Conversation details */}
+            <div className="ml-3 flex-1 overflow-hidden">
+                <div className="flex justify-between items-center">
+                    <h3 className="font-medium truncate">{displayName}</h3>
+                    <span className="text-xs text-gray-500">
+                        {formatLastMessageTime(conversation.lastMessage?.createdAt)}
+                    </span>
                 </div>
 
-                <div className="flex items-center justify-between">
+                <div className="flex justify-between items-center">
                     {/* Last message preview */}
-                    {renderLastMessagePreview()}
+                    <p className="text-sm text-gray-500 truncate">
+                        {conversation.lastMessage?.text || 'Start chatting...'}
+                    </p>
 
-                    {/* Unread badge */}
-                    {unreadCount > 0 && (
-                        <span className="inline-block bg-blue-600 text-white text-xs rounded-full h-5 min-w-[20px] flex items-center justify-center px-1">
-                            {unreadCount}
-                        </span>
+                    {/* Unread indicator */}
+                    {displayCount > 0 && (
+                        <div className="bg-[#21b4ca] text-white text-xs rounded-full min-w-5 h-5 flex items-center justify-center ml-1 px-1">
+                            {displayCount > 99 ? '99+' : displayCount}
+                        </div>
                     )}
                 </div>
             </div>

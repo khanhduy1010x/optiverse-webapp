@@ -1,7 +1,16 @@
-import { useEffect, useState } from "react";
-import { ref, onChildAdded, query, orderByChild, limitToLast, DataSnapshot } from "firebase/database";
-import { db } from "../../firebase";
-import { MessageType } from "../../types/chat/MessageType";
+import { useEffect, useState } from 'react';
+import {
+  ref,
+  onChildAdded,
+  onChildChanged,
+  onChildRemoved,
+  query,
+  orderByChild,
+  limitToLast,
+  DataSnapshot,
+} from 'firebase/database';
+import { db } from '../../firebase';
+import { MessageType } from '../../types/chat/MessageType';
 
 /**
  * Hook để lấy tin nhắn theo thời gian thực từ một hội thoại
@@ -24,26 +33,47 @@ export function useMessages(conversationId: string, limit: number = 50) {
     // Tạo query để lấy tin nhắn, sắp xếp theo thời gian tạo và giới hạn số lượng
     const messagesRef = query(
       ref(db, `messages/${conversationId}`),
-      orderByChild("createdAt"),
+      orderByChild('createdAt'),
       limitToLast(limit)
     );
 
-    // Đăng ký lắng nghe sự kiện thêm tin nhắn mới
-    const unsubscribe = onChildAdded(messagesRef, (snapshot: DataSnapshot) => {
-      const message = {
-        id: snapshot.key!,
-        ...snapshot.val()
-      } as MessageType;
-      
-      setMessages((prevMessages) => [...prevMessages, message]);
-      setLoading(false);
-    });
+    // Thêm mới
+    const unsubscribeAdded = onChildAdded(
+      messagesRef,
+      (snapshot: DataSnapshot) => {
+        const message = { id: snapshot.key!, ...snapshot.val() } as MessageType;
+        setMessages(prev => {
+          if (prev.find(m => m.id === message.id)) return prev;
+          return [...prev, message];
+        });
+        setLoading(false);
+      }
+    );
+
+    // Sửa đổi
+    const unsubscribeChanged = onChildChanged(
+      messagesRef,
+      (snapshot: DataSnapshot) => {
+        const message = { id: snapshot.key!, ...snapshot.val() } as MessageType;
+        setMessages(prev => prev.map(m => (m.id === message.id ? message : m)));
+      }
+    );
+
+    // Xóa
+    const unsubscribeRemoved = onChildRemoved(
+      messagesRef,
+      (snapshot: DataSnapshot) => {
+        setMessages(prev => prev.filter(m => m.id !== snapshot.key));
+      }
+    );
 
     // Clean up khi component unmount hoặc conversationId thay đổi
     return () => {
-      unsubscribe();
+      unsubscribeAdded();
+      unsubscribeChanged();
+      unsubscribeRemoved();
     };
   }, [conversationId, limit]);
 
   return { messages, loading };
-} 
+}

@@ -12,7 +12,7 @@ import {
 
 const api: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_URL_BASE,
-  timeout: 10000,
+  timeout: 50000,
   headers: {
     'Content-Type': 'application/json',
   },

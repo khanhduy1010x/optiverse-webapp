@@ -18,6 +18,7 @@ export function useConversationTheme(conversationId: string) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Lắng nghe thay đổi theme của hội thoại
   useEffect(() => {
@@ -58,6 +59,16 @@ export function useConversationTheme(conversationId: string) {
 
     try {
       setLoading(true);
+
+      // Áp dụng theme tạm thời ở front-end trước
+      setTheme(prev => ({
+        ...prev,
+        ...newTheme,
+        updatedAt: Date.now(),
+        updatedBy: localStorage.getItem('user_id') || '',
+      }));
+
+      // Gửi cập nhật lên back-end
       await chatService.updateConversationTheme(conversationId, newTheme);
 
       // Nếu xóa backgroundUrl, cũng xóa preview
@@ -80,16 +91,27 @@ export function useConversationTheme(conversationId: string) {
     if (!conversationId) return null;
 
     try {
-      setLoading(true);
+      setIsUploading(true);
 
       // Tạo URL xem trước cho người dùng
       const previewUrl = URL.createObjectURL(file);
       setPreviewImage(previewUrl);
 
+      // Áp dụng theme tạm thời ở front-end trước
+      setTheme(prev => ({
+        ...prev,
+        backgroundUrl: previewUrl,
+        updatedAt: Date.now(),
+        updatedBy: localStorage.getItem('user_id') || '',
+      }));
+
       // Tải lên hình ảnh mới thông qua API
       const imageUrl = await chatService.uploadThemeImage(conversationId, file);
 
       // Sau khi tải lên thành công, xóa URL xem trước
+      if (previewImage) {
+        URL.revokeObjectURL(previewImage);
+      }
       setPreviewImage(null);
 
       return imageUrl;
@@ -105,7 +127,34 @@ export function useConversationTheme(conversationId: string) {
 
       return null;
     } finally {
-      setLoading(false);
+      setIsUploading(false);
+    }
+  };
+
+  // Hàm xem trước hình ảnh (chỉ ở front-end)
+  const previewThemeImage = (file: File) => {
+    try {
+      // Xóa preview cũ nếu có
+      if (previewImage) {
+        URL.revokeObjectURL(previewImage);
+      }
+
+      // Tạo URL xem trước mới
+      const previewUrl = URL.createObjectURL(file);
+      setPreviewImage(previewUrl);
+
+      return previewUrl;
+    } catch (err) {
+      console.error('Error creating preview:', err);
+      return null;
+    }
+  };
+
+  // Hàm hủy xem trước
+  const cancelPreview = () => {
+    if (previewImage) {
+      URL.revokeObjectURL(previewImage);
+      setPreviewImage(null);
     }
   };
 
@@ -122,7 +171,10 @@ export function useConversationTheme(conversationId: string) {
         setPreviewImage(null);
       }
 
-      // Cập nhật theme về null
+      // Áp dụng theme mặc định tạm thời ở front-end
+      setTheme(null);
+
+      // Cập nhật theme về null trên back-end
       await chatService.updateConversationTheme(conversationId, {});
       return true;
     } catch (err) {
@@ -143,8 +195,11 @@ export function useConversationTheme(conversationId: string) {
     theme: displayTheme,
     loading,
     error,
+    isUploading,
     updateTheme,
     uploadThemeImage,
+    previewThemeImage,
+    cancelPreview,
     resetTheme,
     hasPreview: !!previewImage,
   };

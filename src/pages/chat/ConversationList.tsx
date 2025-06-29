@@ -2,6 +2,7 @@ import React from 'react';
 import { ConversationType } from '../../types/chat/ConversationType';
 import { UserResponse } from '../../types/auth/auth.types';
 import ConversationItem from './ConversationItem';
+import { usePinConversation } from '../../hooks/chat/usePinConversation';
 
 interface ConversationListProps {
   conversations: ConversationType[];
@@ -18,8 +19,21 @@ const ConversationList: React.FC<ConversationListProps> = ({
   activeConversationId,
   onSelectConversation
 }) => {
-  // Sort conversations by the latest message
+  // Sử dụng hook để quản lý hội thoại được ghim
+  const { pinnedConversations, isConversationPinned, getPinOrder } = usePinConversation();
+
+  // Sort conversations by pin status first, then by the latest message
   const sortedConversations = [...conversations].sort((a, b) => {
+    // Nếu cả hai đều được ghim, sắp xếp theo thứ tự ghim
+    if (isConversationPinned(a.id) && isConversationPinned(b.id)) {
+      return getPinOrder(a.id) - getPinOrder(b.id);
+    }
+
+    // Nếu chỉ một trong hai được ghim, ưu tiên hội thoại được ghim
+    if (isConversationPinned(a.id)) return -1;
+    if (isConversationPinned(b.id)) return 1;
+
+    // Nếu không được ghim, sắp xếp theo thời gian tin nhắn cuối cùng
     const aLastMessage = a.lastMessage?.createdAt || a.createdAt || 0;
     const bLastMessage = b.lastMessage?.createdAt || b.createdAt || 0;
     return bLastMessage - aLastMessage;
@@ -64,8 +78,10 @@ const ConversationList: React.FC<ConversationListProps> = ({
             key={conversation.id}
             conversation={conversation}
             users={users}
-            activeConversationId={activeConversationId}
-            onSelectConversation={onSelectConversation}
+            isActive={activeConversationId === conversation.id}
+            isPinned={isConversationPinned(conversation.id)}
+            pinOrder={getPinOrder(conversation.id)}
+            onSelect={onSelectConversation}
           />
         ))}
       </div>

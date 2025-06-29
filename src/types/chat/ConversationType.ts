@@ -17,4 +17,8 @@ export interface ConversationType {
     updatedAt?: number;
     updatedBy?: string;
   };
+  // Thứ tự ghim, từ 1-5, 1 là ưu tiên nhất
+  pinnedBy?: {
+    [userId: string]: number;
+  };
 }
