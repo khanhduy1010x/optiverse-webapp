@@ -2,8 +2,6 @@ import React from 'react';
 import { RadioButtonProps, SelectTypeFilterProps } from '../../types/note/props/component.props';
 import { FilterType } from '../../types/note/note.types';
 
-
-
 const RadioButton: React.FC<RadioButtonProps> = ({ selected }) => {
   return (
     <div
@@ -13,7 +11,6 @@ const RadioButton: React.FC<RadioButtonProps> = ({ selected }) => {
     </div>
   );
 };
-
 
 const SelectTypeFilter: React.FC<SelectTypeFilterProps> = ({ filterType, setFilterType }) => {
   const listType = Object.values(FilterType);

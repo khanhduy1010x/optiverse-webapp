@@ -44,3 +44,19 @@ body {
   background-color: #f1f1f1;
   border-radius: 4px;
 }
+
+.custom-scrollbar-4::-webkit-scrollbar {
+  width: 6px;
+  height: 5%;
+  background-color: #225058;
+}
+.custom-scrollbar-4::-webkit-scrollbar-thumb {
+  background: #225058;
+  border-radius: 4px;
+}
+.custom-scrollbar-4:hover::-webkit-scrollbar-thumb {
+  background: #225058;
+}
+.custom-scrollbar-4::-webkit-scrollbar-track {
+  background-color: #f1f1f1;
+}

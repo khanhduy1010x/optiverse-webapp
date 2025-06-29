@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '../../store';
 import {
@@ -11,6 +11,7 @@ import {
   renameItem,
   setFolderStack,
   setCurrentNote,
+  setItems,
 } from '../../store/slices/items.slice';
 import {
   setFilterType,
@@ -20,8 +21,11 @@ import {
 import { FilterType, RootItem } from '../../types/note/note.types';
 import { NoteItem } from '../../types/note/response/note.response';
 import { FolderItem } from '../../types/note/response/folder.response';
-import { toast } from 'react-toastify';
+
 import SocketService from '../../services/socket.service';
+import ShareService from '../../services/share.service';
+import { toast } from 'react-toastify';
+import { useTranslation } from 'react-i18next';
 
 export const useFolderNote = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -41,6 +45,12 @@ export const useFolderNote = () => {
   const [createLoading, setCreateLoading] = useState(false);
   const [renameLoading, setRenameLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [leaveLoading, setLeaveLoading] = useState(false);
+  const [isLeaveModalVisible, setIsLeaveModalVisible] = useState(false);
+  const [itemToLeave, setItemToLeave] = useState<{
+    item: RootItem;
+    isSharedView: boolean;
+  } | null>(null);
 
   const [contextMenu, setContextMenu] = useState<{
     x: number;
@@ -54,60 +64,39 @@ export const useFolderNote = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [createErrorMessage, setCreateErrorMessage] = useState('');
 
+  const { t } = useTranslation();
+
   useEffect(() => {
     dispatch(fetchItems());
   }, [dispatch]);
 
-  // Xử lý khi folder hiện tại bị xóa
   const handleFolderDeleted = (data: any) => {
-    // Kiểm tra xem có đang ở trong folder bị xóa không
     const currentFolder =
       folderStack.length > 0 ? folderStack[folderStack.length - 1] : null;
 
-    // Trường hợp 1: Thư mục hiện tại bị xóa
     if (currentFolder && currentFolder._id === data.folderId) {
-      console.log('Current folder was deleted by another user');
-
-      // Chuyển hướng về thư mục cha
       if (folderStack.length > 1) {
-        // Nếu có thư mục cha, trở về thư mục cha (bỏ thư mục hiện tại khỏi stack)
         const parentStack = folderStack.slice(0, -1);
         dispatch(setFolderStack(parentStack));
-        toast.warning(
-          'This folder has been deleted by another user. Redirecting to parent folder.'
-        );
       } else {
-        // Nếu đang ở thư mục gốc bị xóa, trở về root
         dispatch(setFolderStack([]));
-        toast.warning(
-          'This folder has been deleted by another user. Redirecting to root.'
-        );
       }
       return;
     }
 
-    // Trường hợp 2: Một thư mục cha trong đường dẫn hiện tại bị xóa
     const folderIndex = folderStack.findIndex(
       folder => folder._id === data.folderId
     );
     if (folderIndex !== -1) {
-      console.log('A parent folder in the current path was deleted');
-
-      // Trở về thư mục cha của thư mục bị xóa
       const newStack = folderStack.slice(0, folderIndex);
       dispatch(setFolderStack(newStack));
-      toast.warning(
-        'A parent folder has been deleted by another user. Redirecting to available parent folder.'
-      );
     }
   };
 
   useEffect(() => {
-    // Đăng ký lắng nghe sự kiện folder_deleted
     SocketService.on('folder_deleted', handleFolderDeleted);
 
     return () => {
-      // Hủy đăng ký khi component unmount
       SocketService.off('folder_deleted', handleFolderDeleted);
     };
   }, [folderStack, dispatch]);
@@ -226,16 +215,13 @@ export const useFolderNote = () => {
     return countAllItems(items);
   }, [items]);
 
-  // Regex kiểm tra tên hợp lệ theo chuẩn Windows
   const isValidWindowsName = (name: string) => {
-    // Không cho phép các ký tự: \/:*?"<>| và không cho phép tên chỉ là dấu chấm hoặc rỗng
     const invalidPattern = /[\\/:*?"<>|]/;
     if (!name.trim()) return false;
     if (name === '.' || name === '..') return false;
     return !invalidPattern.test(name);
   };
 
-  // Kiểm tra độ dài tên (tối đa 30 ký tự)
   const isValidNameLength = (name: string) => {
     return name.trim().length <= 30;
   };
@@ -281,11 +267,9 @@ export const useFolderNote = () => {
 
       if (createType === 'folder') {
         await dispatch(createFolder({ parentId, name: itemName })).unwrap();
-        toast.success('Folder created successfully');
         SocketService.emitFolderStructureChanged();
       } else {
         await dispatch(createNote({ parentId, title: itemName })).unwrap();
-        toast.success('Note created successfully');
         SocketService.emitFolderStructureChanged();
       }
 
@@ -295,7 +279,6 @@ export const useFolderNote = () => {
       setIsModalInputName(false);
     } catch (error: any) {
       console.error('Cannot create item:', error.message);
-      toast.error('Failed to create item');
     } finally {
       setCreateLoading(false);
     }
@@ -310,10 +293,8 @@ export const useFolderNote = () => {
   }, [items, pendingSync, dispatch]);
 
   const handleOpenFolder = (folder: RootItem) => {
-    // Kiểm tra xem có đang trong chế độ format AI không
     if (isAiFormatting) {
-      dispatch(setShowWarningModal(true));
-      return; // Không cho phép chuyển folder
+      return;
     }
 
     if (folder.type === 'folder') {
@@ -322,10 +303,8 @@ export const useFolderNote = () => {
   };
 
   const handleGoBack = () => {
-    // Kiểm tra xem có đang trong chế độ format AI không
     if (isAiFormatting) {
-      dispatch(setShowWarningModal(true));
-      return; // Không cho phép quay lại folder
+      return;
     }
 
     dispatch(popFolderStack());
@@ -354,44 +333,39 @@ export const useFolderNote = () => {
     if (note.type === 'file') {
       if (!note._id) {
         console.error('Note does not have _id:', note);
-        toast.error('Invalid note selected');
         return;
       }
       if (isAiFormatting) {
-        dispatch(setShowWarningModal(true));
         return;
       }
 
-      // Nếu đang chọn chính note hiện tại thì không làm gì
       if (currentNote && currentNote._id === note._id) {
         return;
       }
 
       try {
-        // Chỉ gửi các thông tin cơ bản của note mà không bao gồm nội dung
-        // Nội dung sẽ được lấy thông qua socket khi kết nối
         dispatch(
           setCurrentNote({
             _id: note._id,
             title: note.title,
             type: 'file',
-            content: '', // Để trống nội dung
+            content: '',
             folder_id: note.folder_id,
             user_id: note.user_id,
             createdAt: note.createdAt,
             updatedAt: note.updatedAt,
+            permission: note.permission,
+            isShared: note.isShared,
+            sharedBy: note.sharedBy,
+            owner_info: note.owner_info,
           })
         );
-
-        // Socket sẽ tự động lấy nội dung đầy đủ khi kết nối tới note
       } catch (error) {
         console.error('Error selecting note:', error);
-        toast.error('Failed to load note');
       }
     }
   };
 
-  // Hàm đệ quy build path từ root đến folder cha chứa file
   const buildPathToFileFromRoot = (
     items: RootItem[],
     fileId: string,
@@ -412,7 +386,6 @@ export const useFolderNote = () => {
     return null;
   };
 
-  // Hàm tìm đường dẫn đến folder (dùng cho click folder khi search)
   const findPathToItem = (
     items: RootItem[],
     targetId: string,
@@ -434,17 +407,26 @@ export const useFolderNote = () => {
   };
 
   const handleClickItem = (item: RootItem) => {
-    if (searchTerm.trim() !== '' && item.type === 'file') {
-      const path = buildPathToFileFromRoot(items, item._id) || [];
-      dispatch(setFolderStack(path));
-      setSearchTerm('');
-    } else if (searchTerm.trim() !== '' && item.type === 'folder') {
-      const path = findPathToItem(items, item._id) || [];
-      dispatch(setFolderStack(path.concat(item as FolderItem)));
-      setSearchTerm('');
-    } else if (item.type === 'file') {
+    if (searchTerm.trim() !== '') {
+      if (item.type === 'file') {
+        const path = buildPathToFileFromRoot(items, item._id) || [];
+        dispatch(setFolderStack(path));
+        setSearchTerm('');
+        handleSelectNote(item);
+      } else if (item.type === 'folder') {
+        const path = findPathToItem(items, item._id) || [];
+        dispatch(setFolderStack(path.concat(item as FolderItem)));
+        setSearchTerm('');
+      }
+      return;
+    }
+
+    if (item.type === 'file') {
       handleSelectNote(item);
-    } else {
+      return;
+    }
+
+    if (item.type === 'folder') {
       handleOpenFolder(item);
     }
   };
@@ -461,10 +443,8 @@ export const useFolderNote = () => {
       setIsActionModalVisible(false);
       setIsDeleteConfirmVisible(false);
       dispatch(setSelectedItem(null));
-      toast.success('Item deleted successfully');
     } catch (error: any) {
       console.error('Cannot delete item:', error.message);
-      toast.error('Failed to delete item');
     } finally {
       setDeleteLoading(false);
     }
@@ -518,10 +498,8 @@ export const useFolderNote = () => {
       setIsActionModalVisible(false);
       dispatch(setSelectedItem(null));
       setRenameInput('');
-      toast.success('Item renamed successfully');
     } catch (error: any) {
       console.error('Cannot rename item:', error.message);
-      toast.error('Failed to rename item');
     } finally {
       setRenameLoading(false);
     }
@@ -623,8 +601,58 @@ export const useFolderNote = () => {
     if (!isModalInputName) setCreateErrorMessage('');
   }, [isModalInputName]);
 
+  const showLeaveModal = (item: RootItem, isSharedView: boolean) => {
+    setItemToLeave({ item, isSharedView });
+    setIsLeaveModalVisible(true);
+  };
+
+  const handleLeaveFolder = async (folder: RootItem, isSharedView: boolean) => {
+    showLeaveModal(folder, isSharedView);
+  };
+
+  const handleLeaveNote = async (note: RootItem, isSharedView: boolean) => {
+    showLeaveModal(note, isSharedView);
+  };
+
+  const confirmLeave = async () => {
+    if (!itemToLeave) return;
+
+    const { item, isSharedView } = itemToLeave;
+    setLeaveLoading(true);
+
+    try {
+      const resourceType = item.type === 'folder' ? 'folder' : 'note';
+      await ShareService.leaveSharedResource(resourceType, item._id);
+
+      // Cập nhật lại danh sách folder sau khi rời
+      if (item.type === 'folder' && folderStack.length > 0) {
+        // Nếu đang ở trong folder con, quay về root
+        dispatch(setFolderStack([]));
+      }
+
+      // Gọi API lấy danh sách shared items thay vì fetchItems
+      if (isSharedView) {
+        const items = await ShareService.getSharedWithMe();
+        dispatch(setItems(items));
+      } else {
+        dispatch(fetchItems());
+      }
+
+      setIsLeaveModalVisible(false);
+      setItemToLeave(null);
+    } catch (error) {
+      console.error(`Failed to leave ${item.type}:`, error);
+    } finally {
+      setLeaveLoading(false);
+    }
+  };
+
+  const cancelLeave = () => {
+    setIsLeaveModalVisible(false);
+    setItemToLeave(null);
+  };
+
   return {
-    // State
     items,
     folderStack,
     loading,
@@ -652,8 +680,10 @@ export const useFolderNote = () => {
     createLoading,
     renameLoading,
     deleteLoading,
+    leaveLoading,
+    isLeaveModalVisible,
+    itemToLeave,
 
-    // State setters
     setIsModalInputName,
     setIsActionModalVisible,
     setIsDeleteConfirmVisible,
@@ -667,8 +697,8 @@ export const useFolderNote = () => {
     setIsFilterDropdownOpen,
     setSearchTerm,
     setCreateErrorMessage,
+    setIsLeaveModalVisible,
 
-    // Functions
     handleCreateItem,
     handleOpenFolder,
     handleGoBack,
@@ -680,5 +710,9 @@ export const useFolderNote = () => {
     handleContextMenu,
     getFilterDisplayText,
     checkNameExistsInCurrentFolder,
+    handleLeaveFolder,
+    handleLeaveNote,
+    confirmLeave,
+    cancelLeave,
   };
 };

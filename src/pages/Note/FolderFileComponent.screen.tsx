@@ -1,34 +1,141 @@
 import React from 'react';
 import { FolderFileComponentProps } from '../../types/note/props/component.props';
+import { truncateText } from '../../utils/string.utils';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
 
+const FolderFileComponent: React.FC<FolderFileComponentProps> = ({
+  isSharedView,
+  type,
+  title,
+  updatedAt,
+  noteCount,
+  isShared,
+  permission,
+  ownerInfo,
+  isActive,
+  onContextMenu,
+  onLeave,
+}) => {
+  const { folderStack } = useSelector((state: RootState) => state.items);
 
-const FolderFileComponent: React.FC<FolderFileComponentProps> = ({ type, title, updatedAt, noteCount }) => {
+  const handleLeaveClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onLeave) {
+      onLeave();
+    }
+  };
+
+  const showLeaveButton = folderStack.length === 0;
+
   return (
-    <div className="flex items-center py-3 border-b border-gray-200">
-      <div className="pr-5">
-        {type === 'folder' ? (
-          <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-            <path
-              d="M5.33332 26.6666C4.59999 26.6666 3.97221 26.4055 3.44999 25.8833C2.92777 25.3611 2.66666 24.7333 2.66666 24V7.99998C2.66666 7.26665 2.92777 6.63887 3.44999 6.11665C3.97221 5.59442 4.59999 5.33331 5.33332 5.33331H13.3333L16 7.99998H26.6667C27.4 7.99998 28.0278 8.26109 28.55 8.78331C29.0722 9.30554 29.3333 9.93331 29.3333 10.6666V24C29.3333 24.7333 29.0722 25.3611 28.55 25.8833C28.0278 26.4055 27.4 26.6666 26.6667 26.6666H5.33332ZM5.33332 24H26.6667V10.6666H14.9L12.2333 7.99998H5.33332V24Z"
-              fill="#000"
-            />
-          </svg>
-        ) : (
-          <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-            <path
-              d="M9.5 25.6H22.5V22.4H9.5V25.6ZM9.5 19.2H22.5V16H9.5V19.2ZM6.25 32C5.35625 32 4.59115 31.6867 3.95469 31.06C3.31823 30.4333 3 29.68 3 28.8V3.2C3 2.32 3.31823 1.56667 3.95469 0.94C4.59115 0.313333 5.35625 0 6.25 0H19.25L29 9.6V28.8C29 29.68 28.6818 30.4333 28.0453 31.06C27.4089 31.6867 26.6437 32 25.75 32H6.25ZM17.625 11.2V3.2H6.25V28.8H25.75V11.2H17.625Z"
-              fill="#000"
-            />
-          </svg>
+    <div className={`flex items-center py-3 px-4 border-b border-gray-100 ${isActive ? 'bg-[#e6f7f9]' : 'hover:bg-gray-50'}   cursor-pointer relative`}>
+      <div className='absolute top-1/2 -translate-y-1/2 right-6 z-10 justify-center items-center flex flex-col'>
+        {isSharedView && isShared && type === 'folder' && (
+          <div className="">
+            <span className="text-xs bg-[#e6f7f9] text-[#21b4ca] px-1.5 py-0.5 rounded shadow-sm">
+              {permission === 'edit' ? 'Edit' : 'View'}
+            </span>
+          </div>
+        )}
+
+        {isSharedView && isShared && type === 'file' && (
+          <span className="text-xs bg-[#e6f7f9] text-[#21b4ca] px-1.5 py-0.5 rounded shadow-sm ">
+            {permission === 'edit' ? 'Edit' : 'View'}
+          </span>
+        )}
+        {isSharedView && isShared && onLeave && showLeaveButton && (
+          <div>
+            <button
+              onClick={handleLeaveClick}
+              className="text-xs text-red-600 cursor-pointer hover:text-red-800 px-2 py-1 rounded hover:bg-red-50 mr-1 mt-2"
+              title="Leave"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" />
+              </svg>
+            </button>
+          </div>
         )}
       </div>
-      <div className="flex-1 flex justify-between items-center">
-        <div>
-          <p className="text-base font-bold">{title}</p>
-          <p className="text-sm text-gray-500">{updatedAt}</p>
+
+      <div className="mr-3 flex-shrink-0">
+        {type === 'folder' ? (
+          <div className='flex flex-col justify-center items-center'>
+            <div>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M10 4H4C2.89543 4 2 4.89543 2 6V18C2 19.1046 2.89543 20 4 20H20C21.1046 20 22 19.1046 22 18V8C22 6.89543 21.1046 6 20 6H12L10 4Z"
+                  fill="#FFB800"
+                />
+              </svg>
+            </div>
+            {type === 'folder' && noteCount !== undefined && (
+              <div className="text-[10px] text-gray-500  leading-[24px]">
+                {noteCount} items
+              </div>
+            )}
+          </div>
+
+
+        ) : (
+          <div className='flex flex-col justify-center items-center'>
+            <div>
+
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className='text-[#21b4ca]'>
+                <path
+                  d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z"
+                  fill="#21b4ca"
+                />
+                <path
+                  d="M14 2V8H20"
+                  fill="#FFFFFF"
+                />
+              </svg>
+            </div>
+          </div>
+        )}
+      </div>
+      <div className="flex-1 min-w-0 ">
+        <div className="font-medium text-gray-900 flex items-center justify-between">
+          <div className='flex items-center justify-between'>
+            <div className="truncate" title={title}>
+              <span className='leading-[24px] flex items-center h-[24px]'>
+                {truncateText(title)}
+              </span>
+            </div>
+
+          </div>
+
+
         </div>
-        {type === 'folder' && noteCount !== undefined && (
-          <p className="text-sm text-gray-500">{noteCount} items</p>
+        <div className="text-sm text-gray-500">
+          <div className="truncate">
+            {updatedAt}
+          </div>
+          {isSharedView && isShared && ownerInfo && (
+            <div className="text-xs text-gray-500 truncate">
+              Shared by: {ownerInfo.name || ownerInfo.id}
+            </div>
+          )}
+        </div>
+      </div>
+
+
+
+      <div className='flex items-center flex-col relative'>
+
+        {onContextMenu && (
+          <div
+            onClick={onContextMenu}
+            className="px-2 py-1 hover:bg-gray-200 rounded cursor-pointer ml-2 flex-shrink-0 transition-colors duration-150"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="5" cy="12" r="2" />
+              <circle cx="12" cy="12" r="2" />
+              <circle cx="19" cy="12" r="2" />
+            </svg>
+          </div>
         )}
       </div>
     </div>

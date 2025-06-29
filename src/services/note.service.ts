@@ -16,7 +16,17 @@ class NoteService {
           folder_id: note.folder_id,
         }
       );
-      const savedNote = { ...response.data.data.note, type: 'file' as const };
+
+      const savedNote = {
+        ...response.data.data.note,
+        type: 'file' as const,
+        permission: response.data.data.note.permission || note.permission,
+        isShared: response.data.data.note.isShared || note.isShared,
+        sharedBy: response.data.data.note.sharedBy || note.sharedBy,
+        owner_info: response.data.data.note.owner_info || note.owner_info,
+      };
+
+      console.log('Saved note with sharing info:', savedNote);
       return savedNote;
     } catch (error: any) {
       console.error(

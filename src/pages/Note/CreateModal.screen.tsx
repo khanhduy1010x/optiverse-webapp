@@ -3,7 +3,6 @@ import Modal from 'react-modal';
 import { CreateModalProps } from '../../types/note/props/component.props';
 import { GROUP_CLASSNAMES } from '../../styles';
 
-
 const CreateModal: React.FC<CreateModalProps> = ({
   isOpen,
   onClose,
@@ -29,6 +28,15 @@ const CreateModal: React.FC<CreateModalProps> = ({
   const isButtonLoading = loading || localLoading;
   const remainingChars = 30 - itemName.length;
 
+  const isMaxLength = remainingChars <= -1;
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value.length <= 30) {
+      setItemName(value);
+    }
+  };
+
   return (
     <Modal
       isOpen={isOpen}
@@ -43,7 +51,7 @@ const CreateModal: React.FC<CreateModalProps> = ({
           </h3>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 p-1 rounded-lg"
+            className="text-gray-500 cursor-pointer hover:text-gray-700 p-1 rounded-lg"
             disabled={isButtonLoading}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -58,30 +66,28 @@ const CreateModal: React.FC<CreateModalProps> = ({
         </div>
 
         <div className="mb-4 relative">
-          {/* Floating label nằm bên ngoài, phía trên input */}
           <label
             htmlFor="create-input"
             className={`absolute select-none outline-none pointer-events-none duration-300 left-3 text-xs z-10 block transition-all bg-white px-1
-              ${errorMessage ? 'text-red-500 -top-2' : (isFocused || itemName ? 'text-blue-600 -top-2' : 'text-gray-500 top-1/2 text-[16px] bg-transparent px-0')}
+              ${errorMessage ? 'text-red-500 -top-2' : (isFocused || itemName ? 'text-[#21b4ca] -top-2' : 'text-gray-500 top-[38%] text-[16px] bg-transparent px-0')}
               ${isFocused || itemName || errorMessage ? '' : '-translate-y-1/2'}`}
           >
             {createType === 'folder' ? 'Folder' : 'Note'} Name
           </label>
 
-          <div className={`relative w-full h-14 border-2 rounded-xl transition-colors duration-200 ${errorMessage ? 'border-red-500' : 'border-gray-200 focus-within:border-blue-600'}`}>
+          <div className={`relative w-full h-14 border-2 rounded-xl transition-colors duration-200 ${errorMessage ? 'border-red-500' : isMaxLength ? 'border-red-500' : 'border-gray-200 focus-within:border-[#21b4ca]'}`}>
             <input
               id="create-input"
               type="text"
               value={itemName}
-              onChange={e => setItemName(e.target.value)}
-              maxLength={30}
+              onChange={handleInputChange}
               className={GROUP_CLASSNAMES.inputTransparent}
               autoFocus
               disabled={isButtonLoading}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
               onKeyPress={e => {
-                if (e.key === 'Enter' && itemName.trim() && !isButtonLoading) {
+                if (e.key === 'Enter' && itemName.trim() && !isButtonLoading && !isMaxLength) {
                   handleCreate();
                 }
               }}
@@ -94,12 +100,11 @@ const CreateModal: React.FC<CreateModalProps> = ({
             )}
           </div>
 
-          {/* Hiển thị số ký tự còn lại */}
           <div className="flex justify-between items-center mt-1">
             {errorMessage && (
               <p className="text-sm text-red-500 animate-in slide-in-from-top-1 duration-200">{errorMessage}</p>
             )}
-            <div className={`text-xs ${remainingChars < 0 ? 'text-red-500' : remainingChars <= 5 ? 'text-yellow-500' : 'text-gray-400'}`}>
+            <div className={`text-xs ${remainingChars <= 0 ? 'text-red-500 font-medium' : remainingChars <= 5 ? 'text-yellow-500' : 'text-gray-400'}`}>
               {remainingChars} characters left
             </div>
           </div>
@@ -108,15 +113,15 @@ const CreateModal: React.FC<CreateModalProps> = ({
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className={GROUP_CLASSNAMES.buttonSecondary + " flex-1"}
+            className={GROUP_CLASSNAMES.buttonSecondary + " flex-1 cursor-pointer"}
             disabled={isButtonLoading}
           >
             Cancel
           </button>
           <button
             onClick={handleCreate}
-            disabled={!itemName.trim() || isButtonLoading}
-            className={GROUP_CLASSNAMES.buttonPrimary + " flex-1 flex items-center justify-center gap-2"}
+            disabled={!itemName.trim() || isButtonLoading || isMaxLength}
+            className={GROUP_CLASSNAMES.buttonPrimary + " flex-1 bg-[#21b4ca] flex items-center justify-center gap-2 cursor-pointer"}
           >
             {isButtonLoading ? (
               <>

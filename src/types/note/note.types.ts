@@ -8,6 +8,19 @@ export interface BaseItem {
   updatedAt: string;
   __v?: number;
 }
+
+export interface SharedItemInfo {
+  isShared?: boolean;
+  sharedBy?: string;
+  permission?: 'view' | 'edit';
+  owner_info?: {
+    id: string;
+    name?: string;
+    email?: string;
+    avatar_url?: string;
+  };
+}
+
 export enum FilterType {
   ALL = 'ALL',
   FILES = 'FILES',
