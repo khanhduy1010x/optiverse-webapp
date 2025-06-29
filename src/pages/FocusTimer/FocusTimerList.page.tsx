@@ -1,6 +1,6 @@
 import React from 'react';
 import { Trash2 as TrashIcon } from 'lucide-react';
-import DeleteFocusSessionModal from './ConfirmDeleteModal.screen';
+import DeleteFocusSessionModal from './ConfirmDeleteModal';
 import { useFocusSessionList } from '../../hooks/focus-timer/useFocusTimerList.hook';
 
 const FocusTimerList: React.FC = () => {
