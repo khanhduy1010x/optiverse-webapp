@@ -1,11 +1,10 @@
 import React from 'react';
-import { format } from 'date-fns';
 import { Task } from '../../types/task/response/task.response';
 import { Tag } from '../../types/task/response/tag.response';
 import { GROUP_CLASSNAMES } from '../../styles';
 import { TaskDetailProps } from '../../types/task/props/component.props';
 import Modal from 'react-modal';
-
+import { formatConsistentDateTime } from '../../utils/date.utils';
 
 const TaskDetail: React.FC<TaskDetailProps> = ({
     selectedTask,
@@ -65,13 +64,39 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
                             </span>
                         </div>
 
+                        {/* Start Time */}
+                        {selectedTask.start_time && (
+                            <div className="flex items-center py-2">
+                                <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                <div className="text-sm text-gray-700">Start:</div>
+                                <span className="ml-auto text-sm text-gray-600">
+                                    {formatConsistentDateTime(selectedTask.start_time)}
+                                </span>
+                            </div>
+                        )}
+
+                        {/* End Time */}
+                        {selectedTask.end_time && (
+                            <div className="flex items-center py-2">
+                                <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <div className="text-sm text-gray-700">Due:</div>
+                                <span className="ml-auto text-sm text-gray-600">
+                                    {formatConsistentDateTime(selectedTask.end_time)}
+                                </span>
+                            </div>
+                        )}
+
                         <div className="flex items-center py-2">
                             <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
                             <div className="text-sm text-gray-700">Created:</div>
                             <span className="ml-auto text-sm text-gray-600">
-                                {selectedTask.createdAt ? format(new Date(selectedTask.createdAt), 'MMM dd, yyyy') : 'Unknown date'}
+                                {selectedTask.createdAt ? formatConsistentDateTime(selectedTask.createdAt) : 'Unknown date'}
                             </span>
                         </div>
 

@@ -43,21 +43,77 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
     
     let success = false;
     
-    if (isEditMode && taskEvent) {
-      const payload = getUpdatePayload();
-      const result = await updateTaskEvent(taskEvent._id, payload);
-      success = !!result;
-    } else {
-      const payload = getCreatePayload();
-      payload.task_id = taskId;
-      const result = await createTaskEvent(payload);
-      success = !!result;
-    }
-    
-    if (success) {
-      resetForm();
-      onSuccess();
-      onClose();
+    try {
+      if (isEditMode && taskEvent) {
+        // Lấy payload từ hook và đảm bảo đầy đủ các trường
+        const payload = getUpdatePayload();
+        
+        // Đảm bảo có repeat_days nếu là weekly hoặc custom
+        if ((payload.repeat_type === 'weekly' || payload.repeat_type === 'custom') && 
+            (!payload.repeat_days || payload.repeat_days.length === 0)) {
+          payload.repeat_days = [new Date(formData.start_time).getDay()];
+        }
+        
+        // Đảm bảo có các trường mới được thêm vào backend
+        if (payload.location === undefined) payload.location = '';
+        if (payload.guests === undefined) payload.guests = [];
+        if (payload.repeat_end_type === undefined) payload.repeat_end_type = 'never';
+        if (payload.repeat_interval === undefined) payload.repeat_interval = 1;
+        
+        // Thêm các trường dựa trên repeat_end_type
+        if (payload.repeat_end_type === 'on' && !payload.repeat_end_date) {
+          const defaultEndDate = new Date(formData.start_time);
+          defaultEndDate.setMonth(defaultEndDate.getMonth() + 3);
+          payload.repeat_end_date = defaultEndDate;
+        } else if (payload.repeat_end_type === 'after' && !payload.repeat_occurrences) {
+          payload.repeat_occurrences = 10;
+        }
+        
+        console.log('Updating task event with payload:', payload);
+        const result = await updateTaskEvent(taskEvent._id, payload);
+        success = !!result;
+      } else {
+        // Lấy payload từ hook và đảm bảo đầy đủ các trường
+        const payload = getCreatePayload();
+        payload.task_id = taskId;
+        
+        // Đảm bảo có repeat_days nếu là weekly hoặc custom
+        if ((payload.repeat_type === 'weekly' || payload.repeat_type === 'custom') && 
+            (!payload.repeat_days || payload.repeat_days.length === 0)) {
+          payload.repeat_days = [new Date(formData.start_time).getDay()];
+        }
+        
+        // Đảm bảo có các trường mới được thêm vào backend
+        if (payload.location === undefined) payload.location = '';
+        if (payload.guests === undefined) payload.guests = [];
+        if (payload.repeat_end_type === undefined) payload.repeat_end_type = 'never';
+        if (payload.repeat_interval === undefined) payload.repeat_interval = 1;
+        
+        // Thêm các trường dựa trên repeat_end_type
+        if (payload.repeat_end_type === 'on' && !payload.repeat_end_date) {
+          const defaultEndDate = new Date(formData.start_time);
+          defaultEndDate.setMonth(defaultEndDate.getMonth() + 3);
+          payload.repeat_end_date = defaultEndDate;
+        } else if (payload.repeat_end_type === 'after' && !payload.repeat_occurrences) {
+          payload.repeat_occurrences = 10;
+        }
+        
+        console.log('Creating task event with payload:', payload);
+        const result = await createTaskEvent(payload);
+        success = !!result;
+      }
+      
+      if (success) {
+        resetForm();
+        onSuccess();
+        onClose();
+      } else {
+        console.error('Operation failed but no error was thrown');
+        alert('Không thể lưu sự kiện. Vui lòng thử lại sau.');
+      }
+    } catch (err: any) {
+      console.error('Error in handleSubmit:', err);
+      alert(`Lỗi: ${err?.message || 'Không thể lưu sự kiện'}`);
     }
   };
 
@@ -158,13 +214,16 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
   return (
     <Modal isOpen={isOpen}
       className="fixed top-1/2 right-16 transform -translate-y-1/2 w-[360px] max-w-[90vw] bg-white rounded-xl shadow-2xl z-[2000] outline-none"
-      overlayClassName="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000]"
+      overlayClassName="fixed inset-0 bg-black/30 backdrop-blur-sm z-[2000]"
       onRequestClose={handleCancel}
+      shouldCloseOnOverlayClick={false}
+      ariaHideApp={false}
     >
-      <div className="p-5">
+      <form onSubmit={handleSubmit} className="p-5">
         <div className="flex justify-between items-center mb-5">
           <h3 className="text-lg font-medium">Add Schedule</h3>
           <button 
+            type="button"
             onClick={handleCancel} 
             className="text-gray-400 hover:text-gray-600"
           >
@@ -253,21 +312,22 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
           </div>
           <div className="flex space-x-2">
             <button 
+              type="button"
               onClick={handleCancel}
               className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm"
             >
               Cancel
             </button>
             <button
+              type="submit"
               disabled={loading || !formData.title.trim()}
-              onClick={handleSubmit}
-              className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm"
+              className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm disabled:bg-green-300"
             >
               Save
             </button>
           </div>
         </div>
-      </div>
+      </form>
     </Modal>
   );
 }; 

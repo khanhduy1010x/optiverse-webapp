@@ -2,6 +2,7 @@ import React from 'react';
 import { GROUP_CLASSNAMES } from '../../styles';
 import Modal from 'react-modal';
 import { CreateTaskFormProps } from '../../types/task/props/component.props';
+import { isoToLocalDateTime } from '../../utils/date.utils';
 
 const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
     title,
@@ -81,7 +82,7 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                                 <input
                                     type="datetime-local"
                                     className="w-full border border-gray-200 rounded px-2 py-1 text-sm"
-                                    value={start_time instanceof Date ? start_time.toISOString().slice(0, 16) : (typeof start_time === 'string' ? start_time.slice(0, 16) : '')}
+                                    value={isoToLocalDateTime(start_time || '')}
                                     onChange={(e) => setStartTime(e.target.value)}
                                 />
                             </div>
@@ -97,7 +98,7 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                                 <input
                                     type="datetime-local"
                                     className="w-full border border-gray-200 rounded px-2 py-1 text-sm"
-                                    value={end_time instanceof Date ? end_time.toISOString().slice(0, 16) : (typeof end_time === 'string' ? end_time.slice(0, 16) : '')}
+                                    value={isoToLocalDateTime(end_time || '')}
                                     onChange={(e) => setEndTime(e.target.value)}
                                 />
                             </div>

@@ -11,8 +11,8 @@ export function useTagOperations(
   setAllTags: React.Dispatch<React.SetStateAction<Tag[]>>,
   selectedTags: Tag[],
   setSelectedTags: React.Dispatch<React.SetStateAction<Tag[]>>,
-  filterTags: Tag[],
-  setFilterTags: React.Dispatch<React.SetStateAction<Tag[]>>,
+  filterTags: string[],
+  setFilterTags: React.Dispatch<React.SetStateAction<string[]>>,
   taskTags: { [taskId: string]: Tag[] },
   setTaskTags: React.Dispatch<
     React.SetStateAction<{ [taskId: string]: Tag[] }>
@@ -135,28 +135,28 @@ export function useTagOperations(
   };
 
   // Handle filter by tags
-  const handleFilterByTags = async (tags: Tag[]) => {
+  const handleFilterByTags = async (tagIds: string[]) => {
     console.log(
-      `Filtering by ${tags.length} tags:`,
-      tags.map(tag => tag.name)
+      `Filtering by ${tagIds.length} tag IDs:`,
+      tagIds
     );
 
     // Update filter tags state
-    setFilterTags(tags);
+    setFilterTags(tagIds);
 
     // Thực hiện filter trực tiếp từ data sẵn có
-    if (tags.length === 0) {
+    if (tagIds.length === 0) {
       console.log('No tags selected, showing all tasks');
       setFilteredTasks(sortTasksWithCompletedAtBottom([...tasks]));
     } else {
-      console.log('Filtering tasks locally by tags:', tags);
+      console.log('Filtering tasks locally by tag IDs:', tagIds);
 
       // Filter tasks that have ALL selected tags
       const filteredResult = tasks.filter(task => {
         const taskTagsList = taskTags[task._id] || [];
         // Kiểm tra task có chứa tất cả tags được chọn không
-        return tags.every(filterTag =>
-          taskTagsList.some(taskTag => taskTag._id === filterTag._id)
+        return tagIds.every(tagId =>
+          taskTagsList.some(taskTag => taskTag._id === tagId)
         );
       });
 
@@ -205,9 +205,9 @@ export function useTagOperations(
       );
 
       // If this was the filtered tag, reset the filter
-      if (filterTags.some(t => t._id === tagToDelete._id)) {
+      if (filterTags.some(t => t === tagToDelete._id)) {
         // Lọc bỏ tag khỏi danh sách filter
-        const remainingTags = filterTags.filter(t => t._id !== tagToDelete._id);
+        const remainingTags = filterTags.filter(t => t !== tagToDelete._id);
         setFilterTags(remainingTags);
 
         // Nếu không còn tag nào để filter, hiển thị tất cả task
@@ -218,7 +218,7 @@ export function useTagOperations(
           const filteredResult = tasks.filter(task => {
             const taskTagsList = taskTags[task._id] || [];
             return remainingTags.every(filterTag =>
-              taskTagsList.some(taskTag => taskTag._id === filterTag._id)
+              taskTagsList.some(taskTag => taskTag._id === filterTag)
             );
           });
           setFilteredTasks(sortTasksWithCompletedAtBottom(filteredResult));

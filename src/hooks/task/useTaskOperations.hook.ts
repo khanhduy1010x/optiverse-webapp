@@ -17,7 +17,7 @@ export function useTaskOperations(
   selectedTask: Task | null,
   setSelectedTask: React.Dispatch<React.SetStateAction<Task | null>>,
   setShowTaskDetail: React.Dispatch<React.SetStateAction<boolean>>,
-  sortOrder: 'newest' | 'oldest',
+  sortOrder: 'newest' | 'oldest' | 'deadline',
   setTaskToDelete: React.Dispatch<React.SetStateAction<string | null>>,
   setShowDeleteConfirm: React.Dispatch<React.SetStateAction<boolean>>
 ) {
@@ -31,11 +31,34 @@ export function useTaskOperations(
       if (a.status === 'completed' && b.status !== 'completed') return 1;
       if (a.status !== 'completed' && b.status === 'completed') return -1;
 
-      // Then sort by creation date (newest first) within each group
-      const dateA = new Date(a.createdAt || '').getTime();
-      const dateB = new Date(b.createdAt || '').getTime();
-      return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+      // Then sort based on the selected sort order
+      if (sortOrder === 'deadline') {
+        // Sort by deadline (end_time)
+        if (!a.end_time && !b.end_time) return 0;
+        if (!a.end_time) return 1; // Tasks without deadline go to the bottom
+        if (!b.end_time) return -1; // Tasks without deadline go to the bottom
+        
+        const dateA = new Date(a.end_time).getTime();
+        const dateB = new Date(b.end_time).getTime();
+        return dateA - dateB; // Earlier deadlines first
+      } else {
+        // Sort by creation date (newest or oldest first)
+        const dateA = new Date(a.createdAt || '').getTime();
+        const dateB = new Date(b.createdAt || '').getTime();
+        return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+      }
     });
+  };
+
+  // Filter tasks by status
+  const filterTasksByStatus = (tasksToFilter: Task[], statusFilters: ('pending' | 'completed' | 'overdue')[]) => {
+    // If no status filters are selected, return all tasks
+    if (!statusFilters.length) {
+      return tasksToFilter;
+    }
+    
+    // Filter tasks by selected statuses
+    return tasksToFilter.filter(task => statusFilters.includes(task.status));
   };
 
   // Fetch tasks from API
@@ -154,6 +177,38 @@ export function useTaskOperations(
     }
   };
 
+  // Apply combined filters (tags and status)
+  const applyFilters = (statusFilters: ('pending' | 'completed' | 'overdue')[], tagFilters: Tag[]) => {
+    setLoading(true);
+    try {
+      let filteredResult = [...tasks];
+      
+      // Apply status filters if any
+      if (statusFilters.length > 0) {
+        filteredResult = filterTasksByStatus(filteredResult, statusFilters);
+      }
+      
+      // Apply tag filters if any
+      if (tagFilters.length > 0) {
+        filteredResult = filteredResult.filter(task => {
+          // Get the tags for this task
+          const taskTagsList = taskTags[task._id] || [];
+          
+          // Check if the task has ALL the selected tags
+          return tagFilters.every(filterTag =>
+            taskTagsList.some(taskTag => taskTag._id === filterTag._id)
+          );
+        });
+      }
+      
+      // Apply sorting
+      const sortedTasks = sortTasksWithCompletedAtBottom(filteredResult);
+      setFilteredTasks(sortedTasks);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Check for achievements when a task is completed
   const checkAchievements = async () => {
     try {
@@ -254,13 +309,14 @@ export function useTaskOperations(
   };
 
   return {
-    sortTasksWithCompletedAtBottom,
     fetchTasks,
     fetchTaskTags,
     filterTasksByTagsLocal,
+    filterTasksByStatus,
+    applyFilters,
     handleTaskUpdate,
     handleTaskClick,
     handleDeleteTask,
-    checkAchievements,
+    sortTasksWithCompletedAtBottom
   };
 }

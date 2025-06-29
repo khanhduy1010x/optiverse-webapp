@@ -14,7 +14,7 @@ export function useTaskForm(
   selectedTask: Task | null,
   setSelectedTask: React.Dispatch<React.SetStateAction<Task | null>>,
   setShowTaskDetail: React.Dispatch<React.SetStateAction<boolean>>,
-  sortOrder: 'newest' | 'oldest',
+  sortOrder: 'newest' | 'oldest' | 'deadline',
   setTaskToDelete: React.Dispatch<React.SetStateAction<string | null>>,
   setShowDeleteConfirm: React.Dispatch<React.SetStateAction<boolean>>
 ) {
@@ -22,8 +22,8 @@ export function useTaskForm(
   const [description, setDescription] = useState('');
   const [status, setStatus] = useState<'pending' | 'completed' | 'overdue'>('pending');
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('low');
-  const [start_time, setStartTime] = useState('');
-  const [end_time, setEndTime] = useState('');
+  const [start_time, setStartTime] = useState<string | Date>('');
+  const [end_time, setEndTime] = useState<string | Date>('');
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [showPopup, setShowPopup] = useState(false);
   const [showTaskDetail, setShowTaskDetailLocal] = useState(false);
@@ -248,28 +248,19 @@ export function useTaskForm(
       setShowPopup(false);
       resetForm();
       setSelectedTags([]);
-
-      // Refresh task list
+      
+      // Refresh tasks list to include the new task with tags
       fetchTasks();
 
       return true;
     } catch (error) {
-      console.error(
-        taskToUpdate ? 'Update task failed:' : 'Create task failed:',
-        error
-      );
-      alert('There was an error creating/updating the task. Please try again.');
+      console.error('Error saving task:', error);
+      alert('Failed to save task. Please try again.');
       return false;
     }
   };
 
   return {
-    selectedTask,
-    setSelectedTask,
-    showPopup,
-    setShowPopup,
-    showTaskDetail,
-    setShowTaskDetail: setShowTaskDetailLocal,
     title,
     setTitle,
     description,
@@ -286,6 +277,7 @@ export function useTaskForm(
     setSelectedTags,
     handleEditTask,
     handleSaveTask,
-    resetForm
+    resetForm,
+    updateTaskTags,
   };
 }

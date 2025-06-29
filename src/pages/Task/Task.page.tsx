@@ -11,7 +11,7 @@ import DeleteConfirmation from './DeleteConfirmation.screen';
 import TagManagement from './TagManagement.screen';
 import TaskSidebar from './TaskSidebar.component';
 import TaskEvent from './TaskEvent.screen';
-import { TaskOverdueNotifier } from '../../components/task-event/TaskOverdueNotifier.component';
+import { TaskOverdueNotifier, setForceCheckFunction, forceCheckForOverdueTasks } from '../../components/task-event/TaskOverdueNotifier.component';
 
 // Hooks
 import { useTaskState } from '../../hooks/task/useTaskState.hook';
@@ -24,6 +24,7 @@ import { Tag } from '../../types/task/response/tag.response';
 import tagService from '../../services/tag.service';
 import type { Task } from '../../types/task/response/task.response';
 import taskService from '../../services/task.service';
+import { localDateTimeToISO } from '../../utils/date.utils';
 
 const TaskPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -62,12 +63,16 @@ const TaskPage: React.FC = () => {
     setSearchQuery,
     filterTags,
     setFilterTags,
+    filterStatus,
+    setFilterStatus,
     sortOrder,
     setSortOrder,
     showFilterMenu,
     setShowFilterMenu,
     showSortMenu,
     setShowSortMenu,
+    showStatusFilterMenu,
+    setShowStatusFilterMenu,
     showTagManagement,
     setShowTagManagement,
     title,
@@ -96,18 +101,6 @@ const TaskPage: React.FC = () => {
   // State cho sidebar
   const [selectedMenu, setSelectedMenu] = useState<'task' | 'task-event'>('task');
 
-  // Define utility function for sorting tasks
-  const sortTasksWithCompletedAtBottom = (tasksToSort: any[]) => {
-    return [...tasksToSort].sort((a, b) => {
-      if (a.status === 'completed' && b.status !== 'completed') return 1;
-      if (a.status !== 'completed' && b.status === 'completed') return -1;
-
-      const dateA = new Date(a.createdAt || '').getTime();
-      const dateB = new Date(b.createdAt || '').getTime();
-      return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
-    });
-  };
-
   // Task operations
   const taskOperations = useTaskOperations(
     tasks,
@@ -124,7 +117,15 @@ const TaskPage: React.FC = () => {
     setShowDeleteConfirm
   );
 
-  const { fetchTasks, handleTaskClick, handleTaskUpdate, handleDeleteTask } = taskOperations;
+  const { 
+    fetchTasks, 
+    handleTaskClick, 
+    handleTaskUpdate, 
+    handleDeleteTask,
+    filterTasksByStatus,
+    applyFilters,
+    sortTasksWithCompletedAtBottom
+  } = taskOperations;
 
   // Create a function to confirm delete task
   const confirmDeleteTask = (taskId: string) => {
@@ -171,6 +172,23 @@ const TaskPage: React.FC = () => {
   );
 
   const { handleEditTask, handleSaveTask, resetForm } = taskForm;
+
+  // Custom fetch tasks function that also triggers overdue check
+  const fetchTasksAndCheckOverdue = async () => {
+    try {
+      setLoading(true);
+      console.log('Fetching tasks and checking for overdue tasks');
+      await fetchTasks();
+      
+      // Force check for overdue tasks after fetching
+      setTimeout(() => {
+        console.log('Triggering force check for overdue tasks after fetch');
+        forceCheckForOverdueTasks();
+      }, 1000); // Small delay to ensure tasks are properly loaded
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Sửa hàm mở form tạo task
   const openCreateTaskForm = () => {
@@ -234,9 +252,17 @@ const TaskPage: React.FC = () => {
     searchChangeHandler(query, setSearchQuery, filterTags);
   };
 
+  // Set up the force check function
+  useEffect(() => {
+    setForceCheckFunction(() => {
+      console.log('Force check function called from TaskPage');
+      return forceCheckForOverdueTasks();
+    });
+  }, []);
+
   // Load data
   useEffect(() => {
-    fetchTasks();
+    fetchTasksAndCheckOverdue();
     fetchUserTags();
   }, []);
 
@@ -253,7 +279,7 @@ const TaskPage: React.FC = () => {
   }, [id, tasks]);
 
   // Custom handlers for sort change
-  const handleSortChangeWrapper = (order: 'newest' | 'oldest') => {
+  const handleSortChangeWrapper = (order: 'newest' | 'oldest' | 'deadline') => {
     setSortOrder(order);
     setShowSortMenu(false);
     setFilteredTasks(prev => sortTasksWithCompletedAtBottom([...prev]));
@@ -267,6 +293,18 @@ const TaskPage: React.FC = () => {
     } else {
       setSelectedTags(prev => [...prev, tag]);
     }
+  };
+
+  // Handler for status filtering
+  const handleFilterByStatus = (statuses: ('pending' | 'completed' | 'overdue')[]) => {
+    setFilterStatus(statuses);
+    applyFilters(statuses, allTags.filter(tag => filterTags.includes(tag._id)));
+  };
+
+  // Enhanced handler for tag filtering
+  const handleFilterByTagsWrapper = (tagIds: string[]) => {
+    setFilterTags(tagIds);
+    applyFilters(filterStatus, allTags.filter(tag => tagIds.includes(tag._id)));
   };
 
   const handleUpdateTask = async (updatedTask: Partial<Task>) => {
@@ -292,9 +330,9 @@ const TaskPage: React.FC = () => {
 
       const response = await taskService.updateTask(taskToEdit._id, dataToUpdate);
       if (response && response.data && response.data.task) {
-        fetchTasks();
+        await fetchTasksAndCheckOverdue();
       } else {
-        fetchTasks();
+        await fetchTasksAndCheckOverdue();
         throw new Error('Failed to update task');
       }
     } catch (error) {
@@ -307,6 +345,12 @@ const TaskPage: React.FC = () => {
     setSelectedMenu(menu as 'task' | 'task-event');
     // Nếu muốn điều hướng route thực sự, có thể dùng useNavigate ở đây
     // navigate(path);
+  };
+
+  // Function to manually check for overdue tasks
+  const checkForOverdueTasks = () => {
+    console.log('Manually checking for overdue tasks');
+    forceCheckForOverdueTasks();
   };
 
   return (
@@ -330,13 +374,18 @@ const TaskPage: React.FC = () => {
                 setShowFilterMenu={setShowFilterMenu}
                 showSortMenu={showSortMenu}
                 setShowSortMenu={setShowSortMenu}
+                showStatusFilterMenu={showStatusFilterMenu}
+                setShowStatusFilterMenu={setShowStatusFilterMenu}
                 filterTags={filterTags}
+                filterStatus={filterStatus}
                 allTags={allTags}
                 sortOrder={sortOrder}
-                handleFilterByTags={handleFilterByTags}
+                handleFilterByTags={handleFilterByTagsWrapper}
+                handleFilterByStatus={handleFilterByStatus}
                 handleSortChange={handleSortChangeWrapper}
                 handleSearchChange={handleSearchChange}
                 setShowTagManagement={setShowTagManagement}
+                onCheckOverdue={checkForOverdueTasks}
               />
 
               {/* Task List */}
@@ -393,8 +442,8 @@ const TaskPage: React.FC = () => {
                         description,
                         priority,
                         status: 'pending',
-                        start_time: start_time instanceof Date ? start_time.toISOString() : start_time,
-                        end_time: end_time instanceof Date ? end_time.toISOString() : end_time
+                        start_time: start_time instanceof Date ? start_time.toISOString() : localDateTimeToISO(start_time as string),
+                        end_time: end_time instanceof Date ? end_time.toISOString() : localDateTimeToISO(end_time as string)
                       });
 
                       if (response) {
@@ -418,7 +467,7 @@ const TaskPage: React.FC = () => {
                         }
 
                         // Refresh tasks list to include the new task with tags
-                        fetchTasks();
+                        await fetchTasksAndCheckOverdue();
                         setShowCreateTaskForm(false);
                         // Clear selected tags
                         setSelectedTags([]);
@@ -450,8 +499,8 @@ const TaskPage: React.FC = () => {
                         ...updated,
                         status: updated.status as "pending" | "completed" | "overdue",
                         priority: updated.priority as "low" | "medium" | "high",
-                        start_time: updated.start_time instanceof Date ? updated.start_time.toISOString() : updated.start_time,
-                        end_time: updated.end_time instanceof Date ? updated.end_time.toISOString() : updated.end_time
+                        start_time: updated.start_time instanceof Date ? updated.start_time.toISOString() : localDateTimeToISO(updated.start_time as string),
+                        end_time: updated.end_time instanceof Date ? updated.end_time.toISOString() : localDateTimeToISO(updated.end_time as string)
                       });
 
                       // Update task tags
@@ -472,7 +521,7 @@ const TaskPage: React.FC = () => {
                       setTaskToEdit(null);
                       setSelectedTags([]);
                       // Refresh task list to get latest data
-                      fetchTasks();
+                      await fetchTasksAndCheckOverdue();
                     }
                   }}
                   selectedTags={selectedTags}
@@ -525,7 +574,13 @@ const TaskPage: React.FC = () => {
                     setShowDeleteTagConfirm(false);
                     setTagToDelete(null);
                   }}
-                  onConfirm={() => handleDeleteTag(tagToDelete, setShowDeleteTagConfirm, setTagToDelete)}
+                  onConfirm={() => {
+                    if (filterTags.some(t => t === tagToDelete._id)) {
+                      const remainingTags = filterTags.filter(t => t !== tagToDelete._id);
+                      setFilterTags(remainingTags);
+                    }
+                    handleDeleteTag(tagToDelete, setShowDeleteTagConfirm, setTagToDelete);
+                  }}
                 />
               )}
             </>

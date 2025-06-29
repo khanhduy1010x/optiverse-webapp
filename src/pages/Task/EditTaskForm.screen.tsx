@@ -3,6 +3,7 @@ import { GROUP_CLASSNAMES } from '../../styles';
 import { Task } from '../../types/task/response/task.response';
 import { Tag } from '../../types/task/response/tag.response';
 import Modal from 'react-modal';
+import { isoToLocalDateTime } from '../../utils/date.utils';
 
 interface EditTaskFormProps {
   task: Task;
@@ -135,7 +136,7 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
                 <input
                   type="datetime-local"
                   className="w-full border border-gray-200 rounded px-2 py-1 text-sm"
-                  value={localStartTime instanceof Date ? localStartTime.toISOString().slice(0, 16) : (typeof localStartTime === 'string' ? localStartTime.slice(0, 16) : '')}
+                  value={isoToLocalDateTime(localStartTime || '')}
                   onChange={(e) => setLocalStartTime(e.target.value)}
                 />
               </div>
@@ -151,7 +152,7 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
                 <input
                   type="datetime-local"
                   className="w-full border border-gray-200 rounded px-2 py-1 text-sm"
-                  value={localEndTime instanceof Date ? localEndTime.toISOString().slice(0, 16) : (typeof localEndTime === 'string' ? localEndTime.slice(0, 16) : '')}
+                  value={isoToLocalDateTime(localEndTime || '')}
                   onChange={(e) => setLocalEndTime(e.target.value)}
                 />
               </div>

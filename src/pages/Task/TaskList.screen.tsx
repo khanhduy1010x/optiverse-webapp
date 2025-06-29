@@ -1,11 +1,9 @@
 import React from 'react';
-import { format } from 'date-fns';
 import { Task } from '../../types/task/response/task.response';
 import { Tag } from '../../types/task/response/tag.response';
 import { GROUP_CLASSNAMES } from '../../styles';
 import { TaskListProps as TaskListComponentProps } from '../../types/task/props/component.props';
-
-
+import { formatConsistentDateTime } from '../../utils/date.utils';
 
 const TaskList: React.FC<TaskListComponentProps> = ({
     filteredTasks,
@@ -51,16 +49,6 @@ const TaskList: React.FC<TaskListComponentProps> = ({
             </div>
         );
     }
-
-    const formatDateTime = (dateTimeString: string | undefined) => {
-        if (!dateTimeString) return '';
-        try {
-            return format(new Date(dateTimeString), 'MMM dd, yyyy HH:mm');
-        } catch (error) {
-            console.error('Error formatting date:', error);
-            return '';
-        }
-    };
 
     return (
         <ul className="divide-y divide-gray-100 max-w-6x px-6  py-6">
@@ -122,7 +110,7 @@ const TaskList: React.FC<TaskListComponentProps> = ({
                                             <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                             </svg>
-                                            <span>Start: {formatDateTime(task.start_time)}</span>
+                                            <span>Start: {formatConsistentDateTime(task.start_time)}</span>
                                         </div>
                                     )}
                                     {task.end_time && (
@@ -130,7 +118,7 @@ const TaskList: React.FC<TaskListComponentProps> = ({
                                             <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                                             </svg>
-                                            <span>Due: {formatDateTime(task.end_time)}</span>
+                                            <span>Due: {formatConsistentDateTime(task.end_time)}</span>
                                         </div>
                                     )}
                                 </div>
@@ -156,7 +144,7 @@ const TaskList: React.FC<TaskListComponentProps> = ({
                                     )}
                                 </div>
                                 <span className="ml-auto text-xs text-gray-500">
-                                    {task.createdAt ? format(new Date(task.createdAt), 'MMM dd') : ''}
+                                    {task.createdAt ? formatConsistentDateTime(task.createdAt).split(',')[0] : ''}
                                 </span>
                             </div>
                         </div>

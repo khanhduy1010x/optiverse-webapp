@@ -158,14 +158,23 @@ export const useTaskEventOperations = () => {
     try {
       console.log('Deleting task event:', taskEventId);
       
-      // Luôn gọi API thực tế, không sử dụng dữ liệu giả lập
-      const response = await taskEventService.deleteTaskEvent(taskEventId);
-      console.log('API response:', response);
+      // Check if this is a recurring event instance
+      const isRecurrenceInstance = taskEventId.includes('-recurrence-');
       
-      // Cập nhật state local nếu có
-      if (removeEventFromList) {
-        removeEventFromList(taskEventId);
+      // If it's a recurring instance, we need to extract the original ID
+      const originalId = isRecurrenceInstance 
+        ? taskEventId.split('-recurrence-')[0] 
+        : taskEventId;
+      
+      // For recurring instances, we don't call the API since they only exist on the frontend
+      if (isRecurrenceInstance) {
+        console.log('This is a recurring instance, no need to call API');
+        return true;
       }
+      
+      // For real events, call the API
+      const response = await taskEventService.deleteTaskEvent(originalId);
+      console.log('API response:', response);
       
       return true;
     } catch (err) {

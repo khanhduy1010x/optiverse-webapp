@@ -112,13 +112,14 @@ export interface TaskHeaderProps {
   setShowFilterMenu: React.Dispatch<React.SetStateAction<boolean>>;
   showSortMenu: boolean;
   setShowSortMenu: React.Dispatch<React.SetStateAction<boolean>>;
-  filterTags: Tag[];
+  filterTags: string[];
   allTags: Tag[];
   sortOrder: 'newest' | 'oldest';
-  handleFilterByTags: (tags: Tag[]) => Promise<void>;
+  handleFilterByTags: (tags: string[]) => void;
   handleSortChange: (order: 'newest' | 'oldest') => void;
   handleSearchChange: (query: string) => void;
   setShowTagManagement: React.Dispatch<React.SetStateAction<boolean>>;
+  onCheckOverdue?: () => void;
 }
 export interface TaskListProps {
   filteredTasks: Task[];
@@ -133,5 +134,5 @@ export interface TaskListProps {
   loading: boolean;
   setShowPopup: React.Dispatch<React.SetStateAction<boolean>>;
   searchQuery: string;
-  filterTags: Tag[];
+  filterTags: string[];
 }

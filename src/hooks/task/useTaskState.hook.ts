@@ -18,10 +18,12 @@ export function useTaskState() {
   const [newTagName, setNewTagName] = useState('');
   const [newTagColor, setNewTagColor] = useState('#3B82F6');
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterTags, setFilterTags] = useState<Tag[]>([]);
-  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
+  const [filterTags, setFilterTags] = useState<string[]>([]);
+  const [filterStatus, setFilterStatus] = useState<('pending' | 'completed' | 'overdue')[]>([]);
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'deadline'>('newest');
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   const [showSortMenu, setShowSortMenu] = useState(false);
+  const [showStatusFilterMenu, setShowStatusFilterMenu] = useState(false);
   const [showTagManagement, setShowTagManagement] = useState(false);
   const [tagToDelete, setTagToDelete] = useState<Tag | null>(null);
   const [showDeleteTagConfirm, setShowDeleteTagConfirm] = useState(false);
@@ -93,6 +95,19 @@ export function useTaskState() {
       ) {
         setShowSortMenu(false);
       }
+
+      // Kiểm tra xem click có phải là bên ngoài menu status filter hay không
+      const statusFilterMenuElement = document.getElementById('status-filter-menu');
+      const statusFilterButtonElement = document.getElementById('status-filter-button');
+      if (
+        showStatusFilterMenu &&
+        statusFilterMenuElement &&
+        !statusFilterMenuElement.contains(event.target as Node) &&
+        statusFilterButtonElement &&
+        !statusFilterButtonElement.contains(event.target as Node)
+      ) {
+        setShowStatusFilterMenu(false);
+      }
     };
 
     // Thêm event listener
@@ -102,7 +117,7 @@ export function useTaskState() {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showFilterMenu, showSortMenu]);
+  }, [showFilterMenu, showSortMenu, showStatusFilterMenu]);
 
   // CSS for animations
   const animationStyles = `
@@ -194,12 +209,16 @@ export function useTaskState() {
     setSearchQuery,
     filterTags,
     setFilterTags,
+    filterStatus,
+    setFilterStatus,
     sortOrder,
     setSortOrder,
     showFilterMenu,
     setShowFilterMenu,
     showSortMenu,
     setShowSortMenu,
+    showStatusFilterMenu,
+    setShowStatusFilterMenu,
     showTagManagement,
     setShowTagManagement,
     tagToDelete,
