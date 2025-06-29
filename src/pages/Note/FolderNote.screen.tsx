@@ -1,21 +1,33 @@
-import React from 'react';
-import { useDispatch } from 'react-redux';
+import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { formatDateTime } from '../../utils/date.utils';
+import { formatDateTimeShort } from '../../utils/date.utils';
 import { FilterType, RootItem } from '../../types/note/note.types';
 import ToolBarFolder from './ToolBarFolder.screen';
 import CreateModal from './CreateModal.screen';
 import RenameModal from './RenameModal.screen';
 import DeleteModal from './DeleteModal.screen';
+import ShareModal from './ShareModal.screen';
+import LeaveModal from './LeaveModal.screen';
 import { ContextMenu } from './ContextMenu.screen';
+import FolderFileComponent from './FolderFileComponent.screen';
 import { useFolderNote } from '../../hooks/note/useFolderNote.hook';
+import { useSharedItems } from '../../hooks/note/useSharedItems.hook';
 import { setSelectedItem } from '../../store/slices/ui.slice';
-import { setFolderStack } from '../../store/slices/items.slice';
+import { setFolderStack, fetchItems } from '../../store/slices/items.slice';
+import { truncateText } from '../../utils/string.utils';
 
 const FolderNote: React.FC = () => {
   const dispatch = useDispatch();
+  const [shareModalVisible, setShareModalVisible] = useState(false);
+
   const {
-    // State
-    items,
+    isSharedView,
+    loadingShared,
+    handleToggleSharedView
+  } = useSharedItems();
+
+  const {
     folderStack,
     loading,
     error,
@@ -40,24 +52,21 @@ const FolderNote: React.FC = () => {
     renameLoading,
     createLoading,
     deleteLoading,
+    leaveLoading,
+    isLeaveModalVisible,
+    itemToLeave,
 
-    // State setters
     setIsModalInputName,
     setIsActionModalVisible,
     setIsDeleteConfirmVisible,
     setRenameModalVisible,
     setItemName,
-    setRenameErrorMessage,
     setContextMenu,
     setRenameInput,
     setCreateType,
     setIsFilterDropdownOpen,
     setSearchTerm,
-    setCreateErrorMessage,
-
-    // Functions
     handleCreateItem,
-    handleOpenFolder,
     handleGoBack,
     handleClickItem,
     handleDeleteItem,
@@ -65,91 +74,138 @@ const FolderNote: React.FC = () => {
     handleFilterChange,
     handleContextMenu,
     getFilterDisplayText,
+    handleLeaveFolder,
+    handleLeaveNote,
+    confirmLeave,
+    cancelLeave,
   } = useFolderNote();
 
-  // Hàm truncate tên để hiển thị
-  const truncateName = (name: string, maxLength: number = 15) => {
-    if (name.length <= maxLength) return name;
-    return name.substring(0, maxLength) + '...';
+  useEffect(() => {
+    if (!isSharedView && folderStack.length === 0) {
+      console.log('Initial loading of items in normal view');
+      setTimeout(() => {
+        dispatch(fetchItems() as any);
+      }, 0);
+    }
+  }, [dispatch, folderStack.length]);
+
+
+
+  const handleShareItem = async (userIds: string[], permission: 'view' | 'edit') => {
+    if (!selectedItem) return;
+    setShareModalVisible(false);
   };
 
-  const renderItemRow = (item: RootItem) => (
-    <div
-      key={item._id}
-      onClick={() => handleClickItem(item)}
-      onContextMenu={(e) => handleContextMenu(e, item)}
-      className={`flex items-center py-3 px-4 cursor-pointer border-b border-gray-100 ${item.type === 'file' && currentNote?._id === item._id
-        ? 'bg-blue-100'
-        : 'hover:bg-gray-50'
-        }`}
-    >
-      <div className="mr-3">
-        {item.type === 'folder' ? (
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M10 4H4C2.89543 4 2 4.89543 2 6V18C2 19.1046 2.89543 20 4 20H20C21.1046 20 22 19.1046 22 18V8C22 6.89543 21.1046 6 20 6H12L10 4Z"
-              fill="#FFB800"
-            />
-          </svg>
-        ) : (
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z"
-              fill="#4A90E2"
-            />
-            <path
-              d="M14 2V8H20"
-              fill="#FFFFFF"
-            />
-          </svg>
-        )}
-      </div>
-      <div className="flex-1">
-        <div className="font-medium text-gray-900" title={item.type === 'folder' ? item.name : item.title}>
-          {item.type === 'folder' ? truncateName(item.name) : truncateName(item.title)}
-        </div>
-        <div className="text-sm text-gray-500">
-          {formatDateTime(item.updatedAt).replace(' ', ' ')}
-        </div>
-      </div>
-      {item.type === 'folder' && (
-        <div className="text-sm text-gray-500">
-          {((item.subfolders?.length || 0) + (item.files?.length || 0))} items
-        </div>
-      )}
+
+
+
+  const renderItemRow = (item: RootItem) => {
+    const formatDateTime = (dateString: string) => {
+      return formatDateTimeShort(dateString);
+    };
+
+    const handleItemContextMenu = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setContextMenu({
+        x: e.clientX - 110,
+        y: e.clientY + 5,
+        item,
+      });
+    };
+
+    const handleItemLeave = () => {
+      if (item.type === 'folder') {
+        handleLeaveFolder(item, isSharedView);
+      } else {
+        handleLeaveNote(item, isSharedView);
+      }
+    };
+
+    return (
       <div
-        onClick={(e) => {
-          e.stopPropagation();
-          setContextMenu({
-            x: e.clientX - 110,
-            y: e.clientY + 5,
-            item,
-          });
+        key={item._id}
+        onClick={() => handleClickItem(item)}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          if (!isSharedView) {
+            handleContextMenu(e, item);
+          }
         }}
-        className="px-2 py-1 hover:bg-gray-200 rounded cursor-pointer"
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-          <circle cx="5" cy="12" r="2" />
-          <circle cx="12" cy="12" r="2" />
-          <circle cx="19" cy="12" r="2" />
-        </svg>
+        <FolderFileComponent
+          type={item.type}
+          title={item.type === 'folder' ? item.name : item.title}
+          updatedAt={formatDateTime(item.updatedAt).replace(' ', ' ')}
+          noteCount={item.type === 'folder' ? ((item.subfolders?.length || 0) + (item.files?.length || 0)) : undefined}
+          isShared={item.isShared}
+          permission={item.permission}
+          ownerInfo={item.owner_info}
+          isActive={item.type === 'file' && currentNote?._id === item._id}
+          onContextMenu={!isSharedView ? handleItemContextMenu : undefined}
+          isSharedView={isSharedView}
+          onLeave={isSharedView && item.isShared ? handleItemLeave : undefined}
+        />
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="w-[320px] bg-white flex flex-col h-full">
       <div className="px-4 py-4 border-b border-gray-200">
         <div className="flex items-center justify-between mb-2">
-          <h2 className="text-lg font-semibold text-gray-900">User</h2>
+          <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+            {isSharedView ? (
+              <>
+                <svg className="mr-2 text-[#21b4ca]" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z" />
+                </svg>
+                Shared with me
+              </>
+            ) : (
+              <>
+                <svg className="mr-2 text-gray-700" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" />
+                </svg>
+                My Notes
+              </>
+            )}
+          </h2>
+          {isSharedView && (
+            <button
+              onClick={handleToggleSharedView}
+              className="text-sm  cursor-pointer text-[#21b4ca] hover:text-[#1a8fa3] flex items-center"
+            >
+              <svg className="mr-1 text-[#21b4ca]" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
+              </svg>
+              Back
+            </button>
+          )}
+
         </div>
-        <p className="text-sm text-gray-500 mb-4">
-          {itemCount.fileCount} files, {itemCount.folderCount} folders
-        </p>
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-sm text-gray-500">
+            {itemCount.fileCount} files, {itemCount.folderCount} folders
+            {isSharedView && <span className="ml-1">(shared)</span>}
+          </p>
+          {!isSharedView && (
+            <div className="flex items-center text-xs text-[#21b4ca]">
+              <button
+                onClick={handleToggleSharedView}
+                className="flex items-center cursor-pointer  hover:text-[#1a8fa3]"
+              >
+                <svg className="mr-1" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z" />
+                </svg>
+                View shared
+              </button>
+            </div>
+          )}
+        </div>
         <div className="relative mb-3">
           <button
             onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
-            className="w-full bg-gray-800 text-white px-4 py-3 rounded-lg text-sm font-medium flex items-center justify-between hover:bg-gray-900 transition-colors"
+            className="w-full bg-gray-800 text-white px-4 py-3 cursor-pointer rounded-lg text-sm font-medium flex items-center justify-between hover:bg-gray-900 transition-colors"
           >
             <span>{getFilterDisplayText()}</span>
             <svg
@@ -171,7 +227,7 @@ const FolderNote: React.FC = () => {
               <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-20 overflow-hidden">
                 <button
                   onClick={() => handleFilterChange(FilterType.ALL)}
-                  className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors ${filterType === FilterType.ALL ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700'
+                  className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-50 cursor-pointer transition-colors ${filterType === FilterType.ALL ? 'bg-[#e6f7f9] text-[#21b4ca] font-medium' : 'text-gray-700'
                     }`}
                 >
                   <div className="flex items-center justify-between">
@@ -185,7 +241,7 @@ const FolderNote: React.FC = () => {
                 </button>
                 <button
                   onClick={() => handleFilterChange(FilterType.FILES)}
-                  className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 ${filterType === FilterType.FILES ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700'
+                  className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-50 cursor-pointer transition-colors border-t border-gray-100 ${filterType === FilterType.FILES ? 'bg-[#e6f7f9] text-[#21b4ca] font-medium' : 'text-gray-700'
                     }`}
                 >
                   <div className="flex items-center justify-between">
@@ -193,7 +249,7 @@ const FolderNote: React.FC = () => {
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="mr-2">
                         <path
                           d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z"
-                          fill="#4A90E2"
+                          fill="#21b4ca"
                         />
                         <path d="M14 2V8H20" fill="#FFFFFF" />
                       </svg>
@@ -208,7 +264,7 @@ const FolderNote: React.FC = () => {
                 </button>
                 <button
                   onClick={() => handleFilterChange(FilterType.FOLDERS)}
-                  className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors border-t border-gray-100 ${filterType === FilterType.FOLDERS ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700'
+                  className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors cursor-pointer border-t border-gray-100 ${filterType === FilterType.FOLDERS ? 'bg-[#e6f7f9] text-[#21b4ca] font-medium' : 'text-gray-700'
                     }`}
                 >
                   <div className="flex items-center justify-between">
@@ -235,60 +291,84 @@ const FolderNote: React.FC = () => {
         <div className="mb-3">
           <input
             type="text"
-            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#21b4ca]"
             placeholder="Search file or folder..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
           />
         </div>
         {searchTerm.trim() === '' && folderStack.length > 0 && (
-          <div className="flex items-center px-4 py-2">
-            <button onClick={handleGoBack} className="mr-2 hover:bg-gray-100 rounded p-1">
+          <div className="flex items-center overflow-x-auto custom-scrollbar-2 bg-gray-50 rounded-lg px-2 py-2 relative">
+            <button onClick={handleGoBack} className="mr-2 hover:bg-gray-200 cursor-pointer rounded-full p-1 flex-shrink-0">
               <svg height="20" viewBox="0 -960 960 960" width="20" fill="#000">
                 <path d="M560-280 360-480l200-200v400Z" />
               </svg>
             </button>
-            <div className="flex items-center overflow-x-auto custom-scrollbar-2">
+            <div className="flex items-center overflow-x-auto custom-scrollbar-2 whitespace-nowrap">
               <button
                 onClick={() => dispatch(setFolderStack([]))}
-                className="text-sm font-medium text-gray-700 hover:text-blue-600 cursor-pointer"
+                className="text-sm font-medium text-gray-700 hover:text-[#21b4ca] cursor-pointer flex-shrink-0"
               >
-                Root
+                {isSharedView ? 'Shared' : 'Root'}
               </button>
               {folderStack.length <= 2 ? (
                 folderStack.map((folder, index) => (
-                  <span key={folder._id} className="flex items-center">
+                  <span key={folder._id} className="flex items-center flex-shrink-0">
                     <span className="mx-1 text-gray-400">/</span>
-                    <button
-                      onClick={() => dispatch(setFolderStack(folderStack.slice(0, index + 1)))}
-                      className="text-sm font-medium text-gray-700 hover:text-blue-600 cursor-pointer"
-                    >
-                      {folder.name}
-                    </button>
+                    <div className="relative">
+                      <button
+                        onClick={() => dispatch(setFolderStack(folderStack.slice(0, index + 1)))}
+                        className="text-sm font-medium text-gray-700 hover:text-blue-600 cursor-pointer flex items-center"
+                      >
+                        <span className="truncate max-w-[100px]" title={folder.name}>
+                          {truncateText(folder.name, 17)}
+                        </span>
+                      </button>
+                      {folder.isShared && index === 0 && (
+                        <div className="absolute -top-5 right-0">
+                          {/* <span className="text-xs bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded shadow-sm">
+                            {folder.permission === 'edit' ? 'Edit' : 'View'}
+                          </span> */}
+                        </div>
+                      )}
+                    </div>
                   </span>
                 ))
               ) : (
                 <>
-                  <span className="flex items-center">
+                  <span className="flex items-center flex-shrink-0">
                     <span className="mx-1 text-gray-400">/</span>
-                    <button
-                      onClick={() => dispatch(setFolderStack([folderStack[0]]))}
-                      className="text-sm font-medium text-gray-700 hover:text-blue-600 cursor-pointer"
-                    >
-                      {folderStack[0].name}
-                    </button>
+                    <div className="relative">
+                      <button
+                        onClick={() => dispatch(setFolderStack([folderStack[0]]))}
+                        className="text-sm font-medium text-gray-700 hover:text-blue-600 cursor-pointer flex items-center"
+                      >
+                        <span className="truncate max-w-[100px]" title={folderStack[0].name}>
+                          {truncateText(folderStack[0].name, 17)}
+                        </span>
+                      </button>
+                      {folderStack[0].isShared && (
+                        <div className="absolute -top-5 right-0">
+                          <span className="text-xs bg-[#e6f7f9] text-[#21b4ca] px-1.5 py-0.5 rounded shadow-sm">
+                            {folderStack[0].permission === 'edit' ? 'Edit' : 'View'}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </span>
-                  <span className="flex items-center">
+                  <span className="flex items-center flex-shrink-0">
                     <span className="mx-1 text-gray-400">/</span>
                     <span className="text-sm text-gray-500">...</span>
                   </span>
-                  <span className="flex items-center">
+                  <span className="flex items-center flex-shrink-0">
                     <span className="mx-1 text-gray-400">/</span>
                     <button
                       onClick={() => dispatch(setFolderStack(folderStack))}
-                      className="text-sm font-medium text-gray-700 hover:text-blue-600 cursor-pointer"
+                      className="text-sm font-medium text-gray-700 hover:text-[#21b4ca] cursor-pointer"
                     >
-                      {folderStack[folderStack.length - 1].name}
+                      <span className="truncate max-w-[100px]" title={folderStack[folderStack.length - 1].name}>
+                        {truncateText(folderStack[folderStack.length - 1].name, 17)}
+                      </span>
                     </button>
                   </span>
                 </>
@@ -297,9 +377,10 @@ const FolderNote: React.FC = () => {
           </div>
         )}
       </div>
-      {loading ? (
+      {loading || loadingShared ? (
         <div className="flex justify-center items-center flex-1">
-          <p>Loading...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-4 border-[#21b4ca] border-t-transparent"></div>
+          <p className="ml-2">Loading...</p>
         </div>
       ) : error ? (
         <p className="text-center mt-10 text-red-500">{error}</p>
@@ -312,7 +393,7 @@ const FolderNote: React.FC = () => {
             <>
               {groupedItems.lastEdited.length > 0 && (
                 <div>
-                  <div className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-50 border-b border-gray-200">
+                  <div className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
                     Last Edited
                   </div>
                   {groupedItems.lastEdited.map(renderItemRow)}
@@ -320,7 +401,7 @@ const FolderNote: React.FC = () => {
               )}
               {groupedItems.others.length > 0 && (
                 <div>
-                  <div className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-50 border-b border-gray-200">
+                  <div className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
                     Other Files
                   </div>
                   {groupedItems.others.map(renderItemRow)}
@@ -331,17 +412,38 @@ const FolderNote: React.FC = () => {
             filteredItems.map(renderItemRow)
           )}
           {filteredItems.length === 0 && (
-            <p className="text-center mt-10 text-gray-500">No files or folders found.</p>
+            <div className="flex flex-col items-center justify-center py-10">
+              <div className="bg-gray-100 rounded-full p-4 mb-4">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="#9CA3AF">
+                  <path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z" />
+                </svg>
+              </div>
+              <p className="text-center text-gray-500">
+                {isSharedView ? 'No shared items found.' : 'No files or folders found.'}
+              </p>
+              <p className="text-center text-gray-400 text-sm mt-2">
+                {isSharedView ?
+                  'Items shared with you will appear here.' :
+                  'Create a new file or folder to get started.'}
+              </p>
+            </div>
           )}
         </div>
       )}
       {contextMenu && contextMenu.item && (
         <ContextMenu
+          isSharedView={isSharedView}
           x={contextMenu.x}
           y={contextMenu.y}
+          item={contextMenu.item}
           onRename={() => {
             dispatch(setSelectedItem(contextMenu.item));
             setRenameModalVisible(true);
+            setContextMenu(null);
+          }}
+          onShare={() => {
+            dispatch(setSelectedItem(contextMenu.item));
+            setShareModalVisible(true);
             setContextMenu(null);
           }}
           onDelete={() => {
@@ -357,6 +459,8 @@ const FolderNote: React.FC = () => {
       <ToolBarFolder
         setIsModalInputName={setIsModalInputName}
         setCreateType={setCreateType}
+        onToggleSharedView={handleToggleSharedView}
+        isSharedView={isSharedView}
       />
       <CreateModal
         isOpen={isModalInputName}
@@ -385,19 +489,27 @@ const FolderNote: React.FC = () => {
         loading={renameLoading}
       />
       <DeleteModal
-        isOpen={isActionModalVisible && isDeleteConfirmVisible}
-        onClose={() => {
-          setIsActionModalVisible(false);
-          setIsDeleteConfirmVisible(false);
-          dispatch(setSelectedItem(null));
-        }}
+        isOpen={isDeleteConfirmVisible}
+        onClose={() => setIsDeleteConfirmVisible(false)}
         selectedItem={selectedItem}
         onDelete={handleDeleteItem}
-        onOpenActionModal={() => {
-          setIsDeleteConfirmVisible(false);
-          setIsActionModalVisible(true);
-        }}
+        onOpenActionModal={() => setIsActionModalVisible(true)}
         loading={deleteLoading}
+      />
+      <LeaveModal
+        isOpen={isLeaveModalVisible}
+        onClose={cancelLeave}
+        itemToLeave={itemToLeave}
+        onConfirm={confirmLeave}
+        loading={leaveLoading}
+      />
+      <ShareModal
+        isOpen={shareModalVisible}
+        onClose={() => setShareModalVisible(false)}
+        onShare={handleShareItem}
+        selectedItem={selectedItem}
+        loading={false}
+        errorMessage={null}
       />
     </div>
   );

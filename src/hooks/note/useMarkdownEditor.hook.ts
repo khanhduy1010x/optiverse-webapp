@@ -11,8 +11,41 @@ import { setShowWarningModal } from '../../store/slices/ui.slice';
 import noteService from '../../services/note.service';
 import SocketService from '../../services/socket.service';
 import ReactQuill, { Quill } from 'react-quill';
-import { toast } from 'react-toastify';
+
 const Delta = Quill.import('delta');
+
+// Đăng ký các định dạng tùy chỉnh
+const Parchment = Quill.import('parchment');
+const Inline = Quill.import('blots/inline');
+const Block = Quill.import('blots/block');
+
+// Định dạng Highlight (đánh dấu văn bản)
+class HighlightBlot extends Inline {
+  static create(value: string): HTMLElement {
+    let node = super.create();
+    node.setAttribute('style', `background-color: ${value}`);
+    return node;
+  }
+
+  static value(node: HTMLElement): string {
+    return node.getAttribute('style')?.split('background-color: ')[1] || '';
+  }
+}
+HighlightBlot.blotName = 'highlight';
+HighlightBlot.tagName = 'mark';
+Quill.register('formats/highlight', HighlightBlot);
+
+// Định dạng Alignment (căn lề)
+const AlignClass = Quill.import('attributors/class/align');
+Quill.register(AlignClass, true);
+
+// Định dạng Font
+const FontClass = Quill.import('attributors/class/font');
+Quill.register(FontClass, true);
+
+// Định dạng Size
+const SizeClass = Quill.import('attributors/class/size');
+Quill.register(SizeClass, true);
 
 const cleanGeminiHtml = (raw: string) => {
   let cleaned = raw.replace(
@@ -35,6 +68,20 @@ export const useMarkdownEditor = () => {
     italic: false,
     header: false,
     strike: false,
+    underline: false,
+    list: '',
+    script: '',
+    indent: 0,
+    direction: '',
+    size: '',
+    color: '',
+    background: '',
+    font: '',
+    align: '',
+    blockquote: false,
+    codeBlock: false,
+    highlight: false,
+    link: false,
   });
   const [typingUsers] = useState<Set<string>>(new Set());
   const [isFormatting, setIsFormatting] = useState(false);
@@ -96,12 +143,6 @@ export const useMarkdownEditor = () => {
     }
   };
 
-  const handleNoteError = (data: any) => {
-    if (currentNote && data.noteId === currentNote._id) {
-      console.error('Note error:', data.error);
-    }
-  };
-
   const handleTyping = (data: any) => {
     if (
       currentNote &&
@@ -124,12 +165,6 @@ export const useMarkdownEditor = () => {
     if (currentNote && data.noteId === currentNote._id) {
       setIsNoteDeleted(true);
 
-      toast.error('The current note has been deleted by another user', {
-        autoClose: false,
-        closeOnClick: false,
-        position: 'top-center',
-      });
-
       dispatch(setCurrentNote(null));
     }
   };
@@ -142,10 +177,6 @@ export const useMarkdownEditor = () => {
           title: data.newTitle,
         })
       );
-
-      toast.info(
-        `The note has been renamed to "${data.newTitle}" by another user`
-      );
     }
   };
 
@@ -153,40 +184,41 @@ export const useMarkdownEditor = () => {
     if (currentNote && currentNote.folder_id === data.folderId) {
       setIsNoteDeleted(true);
 
-      toast.error(
-        'The folder containing this note has been deleted by another user',
-        {
-          autoClose: false,
-          closeOnClick: false,
-          position: 'top-center',
-        }
-      );
-
       dispatch(setCurrentNote(null));
     }
   };
 
   const handleFolderStructureChanged = () => {
-    console.log('Folder structure was changed, fetching updated items');
-
     dispatch(fetchItems());
+  };
 
-    toast.info('Folder structure has been updated');
+  const handlePermissionChanged = (data: {
+    resourceId: string;
+    permission: string;
+    shouldRefreshShared?: boolean;
+  }) => {
+    if (currentNote && currentNote._id === data.resourceId) {
+      const updatedNote = {
+        ...currentNote,
+        permission: data.permission as 'view' | 'edit',
+      };
+
+      dispatch(setCurrentNote(updatedNote));
+    }
   };
 
   useEffect(() => {
     SocketService.on('note_update', handleNoteUpdate);
-    SocketService.on('note_error', handleNoteError);
     SocketService.on('typing', handleTyping);
     SocketService.on('stop_typing', handleStopTyping);
     SocketService.on('note_deleted', handleNoteDeleted);
     SocketService.on('note_renamed', handleNoteRenamed);
     SocketService.on('folder_deleted', handleFolderDeleted);
     SocketService.on('folder_structure_changed', handleFolderStructureChanged);
+    SocketService.on('permission_changed', handlePermissionChanged);
 
     return () => {
       SocketService.off('note_update', handleNoteUpdate);
-      SocketService.off('note_error', handleNoteError);
       SocketService.off('typing', handleTyping);
       SocketService.off('stop_typing', handleStopTyping);
       SocketService.off('note_deleted', handleNoteDeleted);
@@ -196,8 +228,9 @@ export const useMarkdownEditor = () => {
         'folder_structure_changed',
         handleFolderStructureChanged
       );
+      SocketService.off('permission_changed', handlePermissionChanged);
     };
-  }, [currentNote, formatState, showAcceptReject]);
+  }, [currentNote, dispatch, formatState, typingUsers, showAcceptReject]);
 
   const preserveTrailingSpaces = (content: string): string => {
     if (
@@ -221,9 +254,6 @@ export const useMarkdownEditor = () => {
 
   const handleChange = (content: string, delta: any, source: string) => {
     if (isNoteDeleted) {
-      toast.error('Không thể chỉnh sửa: ghi chú này đã bị xóa', {
-        position: 'top-center',
-      });
       return;
     }
 
@@ -241,11 +271,8 @@ export const useMarkdownEditor = () => {
     SocketService.updateNoteImmediate(processedContent);
   };
 
-  const handleAction = (action: string) => {
+  const handleAction = (action: string, value?: any) => {
     if (isNoteDeleted) {
-      toast.error('Không thể chỉnh sửa: ghi chú này đã bị xóa', {
-        position: 'top-center',
-      });
       return;
     }
 
@@ -255,13 +282,10 @@ export const useMarkdownEditor = () => {
     const range = quill.getSelection();
     if (!range) return;
 
-    // Lưu vị trí hiện tại của con trỏ
     const currentRange = { ...range };
 
-    // Tạm thời vô hiệu hóa việc cập nhật formatState từ selection-change
     isUpdatingRef.current = true;
 
-    // Thực hiện định dạng
     let newFormatState = { ...formatState };
 
     switch (action) {
@@ -281,6 +305,79 @@ export const useMarkdownEditor = () => {
         quill.format('strike', !formatState.strike);
         newFormatState.strike = !formatState.strike;
         break;
+      case 'underline':
+        quill.format('underline', !formatState.underline);
+        newFormatState.underline = !formatState.underline;
+        break;
+      case 'blockquote':
+        quill.format('blockquote', !formatState.blockquote);
+        newFormatState.blockquote = !formatState.blockquote;
+        break;
+      case 'code-block':
+        quill.format('code-block', !formatState.codeBlock);
+        newFormatState.codeBlock = !formatState.codeBlock;
+        break;
+      case 'highlight':
+        const highlightColor = value || '#FFFF00';
+        quill.format(
+          'highlight',
+          formatState.highlight ? false : highlightColor
+        );
+        newFormatState.highlight = !formatState.highlight;
+        break;
+      case 'align':
+        quill.format('align', value);
+        newFormatState.align = value;
+        break;
+      case 'direction':
+        quill.format('direction', value);
+        newFormatState.direction = value;
+        break;
+      case 'indent':
+        if (value === '+1') {
+          quill.format('indent', (formatState.indent || 0) + 1);
+          newFormatState.indent = (formatState.indent || 0) + 1;
+        } else if (value === '-1') {
+          quill.format('indent', Math.max((formatState.indent || 0) - 1, 0));
+          newFormatState.indent = Math.max((formatState.indent || 0) - 1, 0);
+        }
+        break;
+      case 'script':
+        if (formatState.script === value) {
+          quill.format('script', false);
+          newFormatState.script = '';
+        } else {
+          quill.format('script', value);
+          newFormatState.script = value;
+        }
+        break;
+      case 'font':
+        quill.format('font', value);
+        newFormatState.font = value;
+        break;
+      case 'size':
+        quill.format('size', value);
+        newFormatState.size = value;
+        break;
+      case 'color':
+        quill.format('color', value);
+        newFormatState.color = value;
+        break;
+      case 'background':
+        quill.format('background', value);
+        newFormatState.background = value;
+        break;
+      case 'link':
+        if (range.length === 0) return;
+        const url = value || prompt('Nhập URL liên kết:');
+        if (url) {
+          quill.format('link', url);
+          newFormatState.link = true;
+        } else {
+          quill.format('link', false);
+          newFormatState.link = false;
+        }
+        break;
       case 'clear-format':
         quill.removeFormat(range.index, range.length);
         newFormatState = {
@@ -288,6 +385,20 @@ export const useMarkdownEditor = () => {
           italic: false,
           header: false,
           strike: false,
+          underline: false,
+          list: '',
+          script: '',
+          indent: 0,
+          direction: '',
+          size: '',
+          color: '',
+          background: '',
+          font: '',
+          align: '',
+          blockquote: false,
+          codeBlock: false,
+          highlight: false,
+          link: false,
         };
         break;
       case 'list-dot':
@@ -295,12 +406,16 @@ export const useMarkdownEditor = () => {
           'list',
           quill.getFormat().list === 'bullet' ? false : 'bullet'
         );
+        newFormatState.list =
+          quill.getFormat().list === 'bullet' ? '' : 'bullet';
         break;
       case 'list-number':
         quill.format(
           'list',
           quill.getFormat().list === 'ordered' ? false : 'ordered'
         );
+        newFormatState.list =
+          quill.getFormat().list === 'ordered' ? '' : 'ordered';
         break;
       case 'undo':
         quill.history.undo();
@@ -312,10 +427,8 @@ export const useMarkdownEditor = () => {
         break;
     }
 
-    // Cập nhật formatState
     setFormatState(newFormatState);
 
-    // Cập nhật nội dung
     if (currentNote) {
       const content = quill.root.innerHTML;
       const processedContent = preserveTrailingSpaces(content);
@@ -323,7 +436,6 @@ export const useMarkdownEditor = () => {
       SocketService.updateNoteImmediate(processedContent);
     }
 
-    // Khôi phục vị trí con trỏ và cho phép cập nhật formatState từ selection-change
     requestAnimationFrame(() => {
       quill.setSelection(currentRange.index, currentRange.length);
       setTimeout(() => {
@@ -334,9 +446,6 @@ export const useMarkdownEditor = () => {
 
   const handleFormatAI = async () => {
     if (isNoteDeleted) {
-      toast.error('Không thể định dạng: ghi chú này đã bị xóa', {
-        position: 'top-center',
-      });
       return;
     }
 
@@ -365,8 +474,7 @@ export const useMarkdownEditor = () => {
 
         quill.updateContents(updateDelta, 'api');
       }
-    } catch (e) {
-      toast.error('AI Formatting failed!');
+    } catch (error) {
     } finally {
       setIsFormatting(false);
     }
@@ -402,16 +510,13 @@ export const useMarkdownEditor = () => {
     setOldContent(null);
   };
 
-  // Biến để kiểm tra trạng thái cập nhật
   const isUpdatingRef = useRef(false);
 
-  // Cập nhật trạng thái định dạng khi vùng chọn thay đổi
   useEffect(() => {
     if (!quillRef.current) return;
 
     const quill = quillRef.current.getEditor();
 
-    // Hàm cập nhật trạng thái định dạng hiện tại
     const updateFormatState = () => {
       if (!quill || isUpdatingRef.current) return;
 
@@ -427,19 +532,30 @@ export const useMarkdownEditor = () => {
           italic: !!format.italic,
           header: !!format.header,
           strike: !!format.strike,
+          underline: !!format.underline,
+          list: format.list || '',
+          script: format.script || '',
+          indent: format.indent || 0,
+          direction: format.direction || '',
+          size: format.size || '',
+          color: format.color || '',
+          background: format.background || '',
+          font: format.font || '',
+          align: format.align || '',
+          blockquote: !!format.blockquote,
+          codeBlock: !!format['code-block'],
+          highlight: !!format.highlight,
+          link: !!format.link,
         });
       } finally {
-        // Đảm bảo reset cờ ngay cả khi có lỗi xảy ra
         setTimeout(() => {
           isUpdatingRef.current = false;
         }, 0);
       }
     };
 
-    // Chỉ lắng nghe sự kiện thay đổi vùng chọn
     quill.on('selection-change', updateFormatState);
 
-    // Cập nhật trạng thái ban đầu sau một khoảng thời gian nhỏ
     setTimeout(updateFormatState, 50);
 
     return () => {

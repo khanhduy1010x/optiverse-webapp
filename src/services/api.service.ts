@@ -111,13 +111,12 @@ api.interceptors.response.use(
     }
 
     const shouldAttemptRefresh = () => {
-      if (error.code === 'ERR_NETWORK') return true;
+      // Check for auth error header
+      const hasAuthError = error.response?.headers?.['x-auth-error'] === 'true';
 
-      if (
-        error.response?.status &&
-        error.response.status !== 400 &&
-        error.response.status !== 404
-      ) {
+      // If we have a specific auth error header, we should attempt refresh
+      if (hasAuthError) {
+        console.log('Auth error detected from headers, attempting refresh');
         return true;
       }
 

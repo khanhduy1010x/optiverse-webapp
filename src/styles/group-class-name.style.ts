@@ -70,7 +70,7 @@ export const GROUP_CLASSNAMES = {
 
   // Button styles
   buttonPrimary:
-    'px-4 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:text-gray-400 transition-colors',
+    'px-4 py-3  text-white rounded-xl font-medium hover:bg-[#1a8fa3] disabled:bg-gray-300 disabled:text-gray-400 transition-colors',
   buttonSecondary:
     'px-4 py-3 bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 disabled:bg-gray-300 disabled:text-gray-400 transition-colors',
   buttonSuccess:

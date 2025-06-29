@@ -2,8 +2,6 @@ import React from 'react';
 import Modal from 'react-modal';
 import { DeleteModalProps } from '../../types/note/props/component.props';
 
-
-
 const DeleteModal: React.FC<DeleteModalProps> = ({
   isOpen,
   onClose,

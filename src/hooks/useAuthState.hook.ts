@@ -4,6 +4,7 @@ import profileService from '../services/profile.service';
 import api from '../services/api.service';
 import { decodeToken } from '../utils/jwt-decode';
 import { useNavigate } from 'react-router-dom';
+import SocketService from '../services/socket.service';
 
 export function useAuthState() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
@@ -35,12 +36,19 @@ export function useAuthState() {
           setUser(userData);
           setIsAuthenticated(true);
 
+          // Lưu user_id vào localStorage
+          if (userData && userData.user_id) {
+            localStorage.setItem('user_id', userData.user_id);
+            // Thiết lập currentUserId cho SocketService
+            SocketService.setCurrentUserId(userData.user_id);
+          }
+
           // Get active session based on the current token
           const decodedToken = decodeToken(token);
           if (decodedToken && decodedToken.session_id) {
             const activeSessions = await profileService.getActiveSessions();
             const currentSession = activeSessions.find(
-              session => session._id === decodedToken.session_id
+              (session: any) => session._id === decodedToken.session_id
             );
             setActiveSession(currentSession);
           }
@@ -53,6 +61,13 @@ export function useAuthState() {
             const userData = await profileService.getProfile();
             setUser(userData);
             setIsAuthenticated(true);
+
+            // Lưu user_id vào localStorage sau khi refresh token
+            if (userData && userData.user_id) {
+              localStorage.setItem('user_id', userData.user_id);
+              // Thiết lập currentUserId cho SocketService
+              SocketService.setCurrentUserId(userData.user_id);
+            }
           } catch (refreshError) {
             console.error('Token refresh failed:', refreshError);
             handleLogout();
@@ -114,6 +129,8 @@ export function useAuthState() {
 
   const handleLogout = () => {
     authService.logout();
+    // Xóa user_id khi đăng xuất
+    localStorage.removeItem('user_id');
     setIsAuthenticated(false);
     setUser(null);
     setActiveSession(null);
@@ -131,6 +148,13 @@ export function useAuthState() {
       setUser(userData);
       setIsAuthenticated(true);
 
+      // Lưu user_id vào localStorage khi đăng nhập
+      if (userData && userData.user_id) {
+        localStorage.setItem('user_id', userData.user_id);
+        // Thiết lập currentUserId cho SocketService
+        SocketService.setCurrentUserId(userData.user_id);
+      }
+
       // Get active session
       const token = localStorage.getItem('accessToken');
       if (token) {
@@ -138,7 +162,7 @@ export function useAuthState() {
         if (decodedToken && decodedToken.session_id) {
           const activeSessions = await profileService.getActiveSessions();
           const currentSession = activeSessions.find(
-            session => session._id === decodedToken.session_id
+            (session: any) => session._id === decodedToken.session_id
           );
           setActiveSession(currentSession);
         }
@@ -160,7 +184,7 @@ export function useAuthState() {
       if (decodedToken && decodedToken.session_id) {
         const activeSessions = await profileService.getActiveSessions();
         const currentSession = activeSessions.find(
-          session => session._id === decodedToken.session_id
+          (session: any) => session._id === decodedToken.session_id
         );
         setActiveSession(currentSession);
       }

@@ -1,1 +1,12 @@
-{}
+{
+  "folder": {
+    "leaveConfirm": "Bạn có chắc chắn muốn rời khỏi thư mục này? Bạn sẽ mất quyền truy cập vào thư mục và tất cả nội dung bên trong.",
+    "leaveSuccess": "Đã rời khỏi thư mục thành công",
+    "leaveError": "Không thể rời khỏi thư mục"
+  },
+  "note": {
+    "leaveConfirm": "Bạn có chắc chắn muốn rời khỏi ghi chú này? Bạn sẽ mất quyền truy cập vào nó.",
+    "leaveSuccess": "Đã rời khỏi ghi chú thành công",
+    "leaveError": "Không thể rời khỏi ghi chú"
+  }
+}

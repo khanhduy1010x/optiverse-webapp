@@ -1,1 +1,12 @@
-{}
+{
+  "folder": {
+    "leaveConfirm": "Are you sure you want to leave this folder? You will lose access to it and all its contents.",
+    "leaveSuccess": "Successfully left the folder",
+    "leaveError": "Failed to leave the folder"
+  },
+  "note": {
+    "leaveConfirm": "Are you sure you want to leave this note? You will lose access to it.",
+    "leaveSuccess": "Successfully left the note",
+    "leaveError": "Failed to leave the note"
+  }
+}

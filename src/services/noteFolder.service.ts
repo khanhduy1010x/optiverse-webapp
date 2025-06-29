@@ -74,14 +74,18 @@ class NoteFolderService {
     }
   }
 
-  async handleRenameFolder(name: string, id: string): Promise<void> {
+  async handleRenameFolder(name: string, folderId: string): Promise<void> {
     try {
-      await api.patch(`${URLBASE}/${id}`, { name });
+      await api.patch(`${URLBASE}/${folderId}`, {
+        name,
+      });
 
-      // Phát ra sự kiện thông báo cấu trúc thư mục đã thay đổi
-      SocketService.emitFolderStructureChanged();
-    } catch (error) {
-      console.error(`Failed to rename folder ${id}:`, error);
+      SocketService.emitFolderRenamed(folderId, name);
+    } catch (error: any) {
+      console.error(`Failed to rename folder ${folderId}:`, {
+        error: error.message,
+        response: error.response?.data,
+      });
       throw new Error(`Could not rename folder to ${name}`);
     }
   }
