@@ -9,6 +9,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
   onRename,
   onDelete,
   onShare,
+  onSendToChat,
   onClose,
   item,
 }) => {
@@ -50,6 +51,21 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
         </button>
         <hr className="border-gray-100" />
       </>
+
+      {item?.type === 'file' && (
+        <>
+          <button
+            onClick={onSendToChat}
+            className="w-full text-left px-3 py-2 cursor-pointer hover:bg-[#e6f7f9] text-sm text-[#21b4ca] transition-colors duration-150 flex items-center gap-2"
+          >
+            <svg className='text-[#21b4ca]' width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z" />
+            </svg>
+            <span>Send to Chat</span>
+          </button>
+          <hr className="border-gray-100" />
+        </>
+      )}
 
 
       <>

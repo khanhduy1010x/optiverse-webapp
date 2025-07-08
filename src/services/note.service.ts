@@ -160,4 +160,11 @@ ${content}
   }
 }
 
-export default new NoteService();
+const noteService = {
+  async fetchNoteById(noteId: string) {
+    const res = await api.get(`/productivity/note/${noteId}`);
+    return res.data.data;
+  },
+};
+
+export default noteService;

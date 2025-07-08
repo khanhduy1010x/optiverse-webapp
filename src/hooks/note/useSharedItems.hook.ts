@@ -11,6 +11,7 @@ import {
   fetchItems,
 } from '../../store/slices/items.slice';
 import SocketService from '../../services/socket.service';
+import { useNoteManager } from './useNoteManager.hook';
 
 interface ApiResponse {
   data?: RootItem[];
@@ -21,6 +22,7 @@ export const useSharedItems = () => {
   const dispatch = useDispatch();
   const [isSharedView, setIsSharedView] = useState(false);
   const [loadingShared, setLoadingShared] = useState(false);
+  const { setCurrentViewType } = useNoteManager();
 
   const normalizeSharedItems = (items: any[]): RootItem[] => {
     return items.map(item => {
@@ -85,48 +87,115 @@ export const useSharedItems = () => {
     }
   };
 
-  const handleNoteDeleted = (data: { noteId: string }) => {
+  const handleNoteDeleted = (data: {
+    noteId: string;
+    eventType?: 'my_note' | 'shared_note';
+  }) => {
+    if (data?.eventType === 'my_note') {
+      return;
+    }
+
     if (!isSharedView) return;
 
     refreshSharedItems();
-
     dispatch(setCurrentNote(undefined));
   };
 
-  const handleNoteRenamed = (data: { noteId: string; newTitle: string }) => {
+  const handleNoteRenamed = (data: {
+    noteId: string;
+    newTitle: string;
+    eventType?: 'my_note' | 'shared_note';
+  }) => {
+    if (data?.eventType === 'my_note') {
+      return;
+    }
+
     if (!isSharedView) return;
 
     refreshSharedItems();
   };
 
-  const handleFolderDeleted = (data: { folderId: string }) => {
+  const handleFolderDeleted = (data: {
+    folderId: string;
+    eventType?: 'my_note' | 'shared_note';
+  }) => {
+    if (data?.eventType === 'my_note') {
+      return;
+    }
+
     if (!isSharedView) return;
 
     refreshSharedItems();
-
     dispatch(setFolderStack([]));
   };
 
-  const handleFolderRenamed = (data: { folderId: string; newName: string }) => {
+  const handleFolderRenamed = (data: {
+    folderId: string;
+    newName: string;
+    eventType?: 'my_note' | 'shared_note';
+  }) => {
+    if (data?.eventType === 'my_note') {
+      return;
+    }
+
     if (!isSharedView) return;
 
     refreshSharedItems();
   };
 
-  const handleFolderStructureChanged = (data: { isSharedView?: boolean }) => {
-    if (!isSharedView && !data.isSharedView) return;
+  const handleFolderStructureChanged = async (data: {
+    eventType?: 'my_note' | 'shared_note';
+    isSharedView?: boolean;
+    removedFromShare?: boolean;
+  }) => {
+    if (data?.eventType === 'my_note') {
+      return;
+    }
 
-    refreshSharedItems();
+    if (data?.removedFromShare === true) {
+      await refreshSharedItems();
+      return;
+    }
+
+    // Nếu đang ở shared view hoặc có eventType shared_note, refresh shared items
+    if (
+      isSharedView ||
+      data?.eventType === 'shared_note' ||
+      data?.isSharedView === true
+    ) {
+      console.log(
+        'Getting data from ShareService.getSharedWithMe() based on shared view or event flag'
+      );
+      await refreshSharedItems();
+      return;
+    }
+
+    // Nếu không ở shared view và không có eventType shared_note, bỏ qua
+    console.log(
+      'Skipping folder_structure_changed in useSharedItems hook - not in shared view and no shared_note event'
+    );
   };
 
   const handlePermissionChanged = (data: {
     resourceId: string;
     permission: string;
     shouldRefreshShared?: boolean;
+    eventType?: 'my_note' | 'shared_note';
   }) => {
+    // Chỉ xử lý sự kiện shared_note
+    if (data?.eventType === 'my_note') {
+      console.log(
+        'Skipping permission_changed in useSharedItems hook because eventType=my_note'
+      );
+      return;
+    }
+
     if (!isSharedView) return;
 
     if (data.shouldRefreshShared) {
+      console.log(
+        `Dòng 78 File useSharedItems.hook.ts - Đã cập nhật data shared notes (permission_changed: ${data.resourceId} -> ${data.permission})`
+      );
       refreshSharedItems();
     }
   };
@@ -167,6 +236,9 @@ export const useSharedItems = () => {
       const newIsSharedView = !isSharedView;
       setIsSharedView(newIsSharedView);
 
+      // Cập nhật view type trong NoteManager
+      setCurrentViewType(newIsSharedView ? 'shared_note' : 'my_note');
+
       SocketService.setViewingSharedItems(newIsSharedView);
 
       if (newIsSharedView) {
@@ -183,9 +255,15 @@ export const useSharedItems = () => {
 
         const normalizedItems = normalizeSharedItems(sharedData);
 
+        console.log(
+          `Dòng 115 File useSharedItems.hook.ts - Đã cập nhật data shared notes (toggle to shared view)`
+        );
         dispatch(setItems(normalizedItems));
         dispatch(setFolderStack([]));
       } else {
+        console.log(
+          `Dòng 120 File useSharedItems.hook.ts - Đã cập nhật data my notes (toggle to my view)`
+        );
         dispatch(fetchItems() as any);
         dispatch(setFolderStack([]));
       }

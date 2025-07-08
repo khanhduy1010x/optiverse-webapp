@@ -10,6 +10,7 @@ interface ConversationListProps {
   loading: boolean;
   activeConversationId: string | null;
   onSelectConversation: (conversationId: string) => void;
+  onDeleteConversation?: (conversationId: string) => void;
 }
 
 const ConversationList: React.FC<ConversationListProps> = ({
@@ -17,7 +18,8 @@ const ConversationList: React.FC<ConversationListProps> = ({
   users,
   loading,
   activeConversationId,
-  onSelectConversation
+  onSelectConversation,
+  onDeleteConversation
 }) => {
   // Sử dụng hook để quản lý hội thoại được ghim
   const { pinnedConversations, isConversationPinned, getPinOrder } = usePinConversation();
@@ -82,6 +84,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
             isPinned={isConversationPinned(conversation.id)}
             pinOrder={getPinOrder(conversation.id)}
             onSelect={onSelectConversation}
+            onDeleteConversation={onDeleteConversation}
           />
         ))}
       </div>

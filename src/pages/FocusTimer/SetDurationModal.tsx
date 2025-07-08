@@ -89,11 +89,10 @@ export default function DurationPickerModal({ onClose, onSetDuration }: Props) {
           <button
             onClick={handleSubmit}
             disabled={hours * 3600 + minutes * 60 + seconds === 0}
-            className={`px-4 py-2 rounded text-white ${
-              hours * 3600 + minutes * 60 + seconds > 0
+            className={`px-4 py-2 rounded text-white ${hours * 3600 + minutes * 60 + seconds > 0
                 ? 'bg-blue-600 hover:bg-blue-700'
                 : 'bg-gray-300 cursor-not-allowed'
-            }`}
+              }`}
           >
             OK
           </button>

@@ -26,6 +26,7 @@ import SocketService from '../../services/socket.service';
 import ShareService from '../../services/share.service';
 import { toast } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
+import { useSharedItems } from './useSharedItems.hook';
 
 export const useFolderNote = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -66,9 +67,7 @@ export const useFolderNote = () => {
 
   const { t } = useTranslation();
 
-  useEffect(() => {
-    dispatch(fetchItems());
-  }, [dispatch]);
+  const { isSharedView } = useSharedItems();
 
   const handleFolderDeleted = (data: any) => {
     const currentFolder =

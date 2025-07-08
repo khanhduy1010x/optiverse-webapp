@@ -27,6 +27,7 @@ export interface ContextMenuProps {
   onRename: () => void;
   onDelete: () => void;
   onShare: () => void;
+  onSendToChat: () => void;
   onClose: () => void;
   item?: RootItem;
 }

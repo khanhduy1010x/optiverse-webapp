@@ -188,7 +188,28 @@ export const useMarkdownEditor = () => {
     }
   };
 
-  const handleFolderStructureChanged = () => {
+  const handleFolderStructureChanged = (data: {
+    eventType?: 'my_note' | 'shared_note';
+    isSharedView?: boolean;
+  }) => {
+    // Chỉ xử lý sự kiện my_note vì editor chỉ hoạt động với my notes
+    if (data?.eventType === 'shared_note') {
+      console.log(
+        'Skipping folder_structure_changed in useMarkdownEditor hook because eventType=shared_note'
+      );
+      return;
+    }
+
+    if (data?.isSharedView === true) {
+      console.log(
+        'Skipping folder_structure_changed in useMarkdownEditor hook because isSharedView=true'
+      );
+      return;
+    }
+
+    console.log(
+      'Handling folder_structure_changed in useMarkdownEditor hook for my notes'
+    );
     dispatch(fetchItems());
   };
 

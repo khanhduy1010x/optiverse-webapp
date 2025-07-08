@@ -33,6 +33,7 @@ export interface ItemsState {
   currentNote?: NoteItem;
   loading: boolean;
   error: string | null;
+  currentViewType: 'my_note' | 'shared_note';
 }
 export interface UIState {
   filterType: FilterType;

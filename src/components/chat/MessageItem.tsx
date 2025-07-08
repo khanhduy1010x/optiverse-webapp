@@ -18,7 +18,9 @@ import { styled } from '@mui/material/styles';
 import { toast } from 'react-toastify';
 import AudioMessage from './AudioMessage';
 import ReplyMessage from './ReplyMessage';
+import NoteMessage from './NoteMessage.component';
 import { UserResponse } from '../../types/auth/auth.types';
+import './MessageItem.css';
 
 interface MessageItemProps {
     message: MessageType;
@@ -27,6 +29,9 @@ interface MessageItemProps {
     onPin?: (messageId: string) => void;
     onReply?: (message: MessageType) => void;
     users?: Record<string, UserResponse>;
+    messageRef?: React.Ref<HTMLDivElement>;
+    highlight?: boolean;
+    textColor?: string;
 }
 
 const StyledReactionButton = styled(Box)(({ theme }) => ({
@@ -102,7 +107,10 @@ const MessageItem: React.FC<MessageItemProps> = ({
     isCurrentUser,
     onPin,
     onReply,
-    users = {}
+    users = {},
+    messageRef,
+    highlight,
+    textColor
 }) => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [showReactionPicker, setShowReactionPicker] = useState(false);
@@ -249,6 +257,21 @@ const MessageItem: React.FC<MessageItemProps> = ({
         handleMenuClose();
     };
 
+    // Hàm để detect và parse note message
+    const parseNoteMessage = (text: string) => {
+        const notePattern = /📝 \*\*(.*?)\*\*\n\n([\s\S]*)/;
+        const match = text.match(notePattern);
+        if (match) {
+            return {
+                title: match[1],
+                content: match[2]
+            };
+        }
+        return null;
+    };
+
+    const noteData = message.text ? parseNoteMessage(message.text) : null;
+
     // Định dạng thời gian
     const formattedTime = useMemo(() => {
         if (!message.createdAt) return { time: '', date: '' };
@@ -261,12 +284,16 @@ const MessageItem: React.FC<MessageItemProps> = ({
         return { time: timeStr, date: dateStr };
     }, [message.createdAt]);
 
-    // Đếm số lượng reaction cho mỗi loại
+    // Tính toán reactionCounts mới:
     const reactionCounts = useMemo(() => {
-        const counts: Record<string, number> = {};
+        const counts: Record<string, { count: number, users: string[] }> = {};
         if (message.reactions) {
-            Object.values(message.reactions).forEach(reaction => {
-                counts[reaction] = (counts[reaction] || 0) + 1;
+            Object.entries(message.reactions).forEach(([userId, userReacts]) => {
+                Object.entries(userReacts as Record<string, number>).forEach(([emoji, num]) => {
+                    if (!counts[emoji]) counts[emoji] = { count: 0, users: [] };
+                    counts[emoji].count += num;
+                    if (!counts[emoji].users.includes(userId)) counts[emoji].users.push(userId);
+                });
             });
         }
         return counts;
@@ -548,41 +575,71 @@ const MessageItem: React.FC<MessageItemProps> = ({
         );
     };
 
-    // Nếu tin nhắn bị xóa hoặc ẩn, hiển thị phù hợp
-    if (isDeleted) {
+    // Nếu tin nhắn bị xóa hoặc ẩn, vẫn render bubble giữ layout đúng phía người gửi
+    if (isDeleted || isHidden) {
         return (
             <Box
                 sx={{
                     display: 'flex',
-                    justifyContent: isCurrentUser ? 'flex-end' : 'flex-start',
+                    flexDirection: 'column',
+                    alignItems: isCurrentUser ? 'flex-end' : 'flex-start',
                     mb: 1,
                     mx: 2,
+                    position: 'relative',
+                    maxWidth: '100%',
                 }}
+                ref={messageRef}
             >
-                <Typography variant="body2" sx={{ fontStyle: 'italic', color: 'text.disabled' }}>
-                    Tin nhắn đã bị xóa
-                </Typography>
-            </Box>
-        );
-    }
-
-    if (isHidden) {
-        return (
-            <Box
-                sx={{
-                    display: 'flex',
-                    justifyContent: isCurrentUser ? 'flex-end' : 'flex-start',
-                    mb: 1,
-                    mx: 2,
-                }}
-            >
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Typography variant="body2" sx={{ fontStyle: 'italic', color: 'text.disabled' }}>
-                        Tin nhắn đã bị ẩn
-                    </Typography>
-                    <IconButton size="small" onClick={handleToggleVisibility}>
-                        <VisibilityIcon fontSize="small" />
-                    </IconButton>
+                <Box
+                    sx={{
+                        display: 'flex',
+                        flexDirection: isCurrentUser ? 'row-reverse' : 'row',
+                        alignItems: 'flex-end',
+                        maxWidth: '100%',
+                    }}
+                >
+                    {!isCurrentUser && (
+                        <Avatar
+                            sx={{ width: 32, height: 32, mr: 1, flexShrink: 0 }}
+                            alt={users[message.senderId]?.full_name || 'User Avatar'}
+                            src={users[message.senderId]?.avatar_url || '/static/images/avatar/1.jpg'}
+                        />
+                    )}
+                    <Box
+                        sx={{
+                            minWidth: { xs: '120px', sm: '180px' },
+                            width: 'auto',
+                            bgcolor: isCurrentUser ? 'primary.main' : 'grey.100',
+                            color: isCurrentUser ? 'white' : textColor || 'text.primary',
+                            borderRadius: 2,
+                            p: 1.5,
+                            opacity: 0.7,
+                            display: 'flex',
+                            alignItems: 'center',
+                            ...(highlight ? { boxShadow: '0 0 0 2px #facc15' } : {}),
+                        }}
+                        className={highlight ? 'highlight-animate' : ''}
+                    >
+                        <Typography variant="body2" sx={{ fontStyle: 'italic', color: isCurrentUser ? 'white' : textColor || 'text.disabled', mr: isHidden && isCurrentUser ? 1 : 0 }}>
+                            {isDeleted ? 'Message deleted' : 'Message hidden'}
+                        </Typography>
+                        {/* Nếu là tin nhắn bị ẩn và là người nhận (không phải người gửi), hiển thị icon để hiện lại */}
+                        {isHidden && !isCurrentUser && (
+                            <Tooltip title="Unhide message">
+                                <IconButton size="small" onClick={handleToggleVisibility} sx={{ color: textColor || 'text.primary', p: 0.5 }}>
+                                    <VisibilityIcon fontSize="small" />
+                                </IconButton>
+                            </Tooltip>
+                        )}
+                        {/* Nếu là tin nhắn bị ẩn và là người gửi, vẫn giữ icon như cũ */}
+                        {isHidden && isCurrentUser && (
+                            <Tooltip title="Unhide message">
+                                <IconButton size="small" onClick={handleToggleVisibility} sx={{ color: 'white', p: 0.5 }}>
+                                    <VisibilityIcon fontSize="small" />
+                                </IconButton>
+                            </Tooltip>
+                        )}
+                    </Box>
                 </Box>
             </Box>
         );
@@ -599,6 +656,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
                 position: 'relative',
                 maxWidth: '100%',
             }}
+            ref={messageRef}
         >
             <Box
                 sx={{
@@ -611,8 +669,8 @@ const MessageItem: React.FC<MessageItemProps> = ({
                 {!isCurrentUser && (
                     <Avatar
                         sx={{ width: 32, height: 32, mr: 1, flexShrink: 0 }}
-                        alt="User Avatar"
-                        src="/static/images/avatar/1.jpg"
+                        alt={users[message.senderId]?.full_name || 'User Avatar'}
+                        src={users[message.senderId]?.avatar_url || '/static/images/avatar/1.jpg'}
                     />
                 )}
                 <Box
@@ -622,21 +680,27 @@ const MessageItem: React.FC<MessageItemProps> = ({
                         minWidth: { xs: '120px', sm: '180px' },
                         width: 'auto',
                         bgcolor: isCurrentUser ? 'primary.main' : 'grey.100',
-                        color: isCurrentUser ? 'white' : 'text.primary',
+                        color: isCurrentUser ? 'white' : textColor || 'text.primary',
                         borderRadius: 2,
                         p: 1.5,
                         '&:hover .message-actions': {
                             opacity: 1,
                         },
+                        ...(highlight ? { boxShadow: '0 0 0 2px #facc15' } : {}),
                     }}
+                    className={highlight ? 'highlight-animate' : ''}
                 >
                     {/* Hiển thị tin nhắn trả lời */}
                     {renderReply()}
 
                     {message.text && (
-                        <Typography variant="body1" sx={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
-                            {message.text}
-                        </Typography>
+                        noteData ? (
+                            <NoteMessage title={noteData.title} content={noteData.content} />
+                        ) : (
+                            <Typography variant="body1" sx={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+                                {message.text}
+                            </Typography>
+                        )
                     )}
 
                     {/* Hiển thị hình ảnh */}
@@ -658,7 +722,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
                         <Typography
                             variant="caption"
                             sx={{
-                                color: isCurrentUser ? 'rgba(255,255,255,0.7)' : 'text.secondary',
+                                color: isCurrentUser ? 'rgba(255,255,255,0.7)' : textColor || 'text.secondary',
                                 whiteSpace: 'nowrap',
                                 fontSize: '0.7rem',
                             }}
@@ -668,7 +732,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
                         <Typography
                             variant="caption"
                             sx={{
-                                color: isCurrentUser ? 'rgba(255,255,255,0.6)' : 'text.disabled',
+                                color: isCurrentUser ? 'rgba(255,255,255,0.6)' : textColor || 'text.disabled',
                                 mx: '2px',
                                 fontSize: '0.7rem',
                             }}
@@ -678,7 +742,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
                         <Typography
                             variant="caption"
                             sx={{
-                                color: isCurrentUser ? 'rgba(255,255,255,0.7)' : 'text.secondary',
+                                color: isCurrentUser ? 'rgba(255,255,255,0.7)' : textColor || 'text.secondary',
                                 whiteSpace: 'nowrap',
                                 fontSize: '0.7rem',
                             }}
@@ -696,17 +760,17 @@ const MessageItem: React.FC<MessageItemProps> = ({
                             left: isCurrentUser ? '0' : 'auto',
                         }}
                     >
-                        <Tooltip title="Trả lời">
+                        <Tooltip title="Reply">
                             <IconButton size="small" onClick={handleReplyMessage}>
                                 <ReplyIcon fontSize="small" />
                             </IconButton>
                         </Tooltip>
-                        <Tooltip title="Thêm biểu cảm">
+                        <Tooltip title="Add reaction">
                             <IconButton size="small" onClick={handleReactionPickerOpen}>
                                 😊
                             </IconButton>
                         </Tooltip>
-                        <Tooltip title="Tùy chọn">
+                        <Tooltip title="More options">
                             <IconButton size="small" onClick={handleMenuOpen}>
                                 <MoreVertIcon fontSize="small" />
                             </IconButton>
@@ -746,31 +810,31 @@ const MessageItem: React.FC<MessageItemProps> = ({
             </Box>
 
             {/* Hiển thị reactions */}
-            {Object.keys(reactionCounts).length > 0 && (
+            {Object.entries(reactionCounts).length > 0 && (
                 <ReactionButtonsContainer
-                    sx={{
-                        justifyContent: isCurrentUser ? 'flex-end' : 'flex-start',
-                    }}
+                    sx={{ justifyContent: isCurrentUser ? 'flex-end' : 'flex-start' }}
                 >
-                    {Object.entries(reactionCounts).map(([reaction, count]) => (
-                        <StyledReactionButton
-                            key={reaction}
-                            onClick={
-                                currentUserReaction === reaction
-                                    ? handleRemoveReaction
-                                    : () => handleAddReaction(reaction as ReactionType)
-                            }
-                            sx={{
-                                bgcolor:
-                                    currentUserReaction === reaction ? 'primary.light' : 'grey.100',
-                            }}
-                        >
-                            <Typography variant="body2" sx={{ mr: 0.5 }}>
-                                {reaction}
-                            </Typography>
-                            <Typography variant="caption">{count}</Typography>
+                    {Object.entries(reactionCounts).map(([reaction, info]) => {
+                        const isMine = message.reactions?.[currentUserId]?.[reaction];
+                        return (
+                            <StyledReactionButton key={reaction}>
+                                <span style={{ fontSize: 18 }}>{reaction}</span>
+                                <Typography variant="caption" sx={{ ml: 0.5 }}>{info.count}</Typography>
+                                {isMine && (
+                                    <IconButton size="small" onClick={() => removeReaction(message.id, reaction as ReactionType)} sx={{ ml: 0.5, p: 0.2 }}>
+                                        <span style={{ fontSize: 12 }}>✕</span>
+                                    </IconButton>
+                                )}
+                            </StyledReactionButton>
+                        );
+                    })}
+                    {/* Nút clear tất cả reaction của mình */}
+                    {message.reactions?.[currentUserId] && (
+                        <StyledReactionButton onClick={() => removeReaction(message.id)}>
+                            <span style={{ fontSize: 14 }}>🧹</span>
+                            <Typography variant="caption" sx={{ ml: 0.5 }}>Clear</Typography>
                         </StyledReactionButton>
-                    ))}
+                    )}
                 </ReactionButtonsContainer>
             )}
 
@@ -790,28 +854,28 @@ const MessageItem: React.FC<MessageItemProps> = ({
             >
                 <MenuItem onClick={handleReplyMessage}>
                     <ReplyIcon fontSize="small" sx={{ mr: 1 }} />
-                    Trả lời tin nhắn
+                    Reply to message
                 </MenuItem>
                 <MenuItem onClick={handlePinMessage}>
                     <PinIcon fontSize="small" sx={{ mr: 1 }} />
-                    Ghim tin nhắn
+                    Pin message
                 </MenuItem>
                 <MenuItem onClick={handleToggleVisibility}>
                     {isHidden ? (
                         <>
                             <VisibilityIcon fontSize="small" sx={{ mr: 1 }} />
-                            Hiện tin nhắn
+                            Show message
                         </>
                     ) : (
                         <>
                             <VisibilityOffIcon fontSize="small" sx={{ mr: 1 }} />
-                            Ẩn tin nhắn
+                            Hide message
                         </>
                     )}
                 </MenuItem>
                 <MenuItem onClick={handleDeleteMessage}>
                     <DeleteIcon fontSize="small" sx={{ mr: 1 }} />
-                    Xóa tin nhắn
+                    Delete message
                 </MenuItem>
             </Menu>
         </Box>
