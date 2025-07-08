@@ -10,6 +10,8 @@ interface ConversationItemProps {
     isPinned: boolean;
     pinOrder: number;
     onSelect: (id: string) => void;
+    onUnhideLastMessage?: () => void;
+    onDeleteConversation?: (id: string) => void;
 }
 
 const ConversationItem: React.FC<ConversationItemProps> = ({
@@ -19,6 +21,8 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
     isPinned,
     pinOrder,
     onSelect,
+    onUnhideLastMessage,
+    onDeleteConversation,
 }) => {
     // Sử dụng hook để đếm tin nhắn chưa đọc
     const { unreadCount } = useUnreadCount(conversation.id);
@@ -73,9 +77,9 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
 
     return (
         <div
-            className={`flex items-center p-2 rounded-lg mb-1 cursor-pointer relative ${isActive ? 'bg-[#e6f7f9]' : 'hover:bg-gray-50'
-                }`}
+            className={`flex items-center p-2 rounded-lg mb-1 cursor-pointer relative ${isActive ? 'bg-[#e6f7f9]' : 'hover:bg-gray-50'}`}
             onClick={() => onSelect(conversation.id)}
+            style={{ paddingRight: 40 }}
         >
             {/* Pin indicator */}
             {isPinned && (
@@ -116,7 +120,28 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
                 <div className="flex justify-between items-center">
                     {/* Last message preview */}
                     <p className="text-sm text-gray-500 truncate">
-                        {conversation.lastMessage?.text || 'Start chatting...'}
+                        {(() => {
+                            const lastMsg: any = conversation.lastMessage;
+                            if (lastMsg?.deleted) return 'Tin nhắn đã bị xóa';
+                            if (lastMsg?.hiddenBy && Array.isArray(lastMsg.hiddenBy) && lastMsg.hiddenBy.includes(currentUserId)) {
+                                return (
+                                    <>
+                                        <span style={{ verticalAlign: 'middle' }}>
+                                            <svg style={{ display: 'inline', verticalAlign: 'middle', cursor: 'pointer' }} xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" onClick={onUnhideLastMessage}>
+                                                <path d="M1 12C2.73 7.61 7.61 4 12 4s9.27 3.61 11 8c-1.73 4.39-6.61 8-11 8S2.73 16.39 1 12z" stroke="#21b4ca" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                <circle cx="12" cy="12" r="3" stroke="#21b4ca" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                            </svg>
+                                        </span>
+                                        <span style={{ marginLeft: 4 }}>Message hidden</span>
+                                    </>
+                                );
+                            }
+                            if (lastMsg?.images && lastMsg.images.length > 0) {
+                                // Thêm emoji ảnh phía trước
+                                return `🖼️ ${lastMsg.images.length > 1 ? lastMsg.images.length + ' ảnh' : '1 ảnh'}${lastMsg.text ? ' - ' + lastMsg.text : ''}`;
+                            }
+                            return conversation.lastMessage?.text || '';
+                        })() || 'Start chatting...'}
                     </p>
 
                     {/* Unread indicator */}
@@ -127,6 +152,20 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
                     )}
                 </div>
             </div>
+
+            {/* Delete icon */}
+            {onDeleteConversation && (
+                <button
+                    onClick={e => { e.stopPropagation(); onDeleteConversation(conversation.id); }}
+                    className="p-1 rounded-full hover:bg-red-100 text-gray-400 hover:text-red-600 absolute right-2 top-[70%] -translate-y-1/2"
+                    title="Delete conversation"
+                    style={{ zIndex: 2 }}
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            )}
         </div>
     );
 };

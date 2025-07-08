@@ -21,34 +21,25 @@ export function useMessageActions(conversationId: string) {
   const addReaction = useCallback(
     async (messageId: string, reactionType: ReactionType) => {
       if (!conversationId || !messageId || !currentUserId) return false;
-
       try {
         setLoading(true);
-
-        // Lấy tin nhắn hiện tại
         const messageRef = ref(db, `messages/${conversationId}/${messageId}`);
         const snapshot = await get(messageRef);
-
         if (!snapshot.exists()) {
           setError('Không tìm thấy tin nhắn');
           return false;
         }
-
         const message = snapshot.val() as MessageType;
-
-        // Cập nhật reactions
-        const reactions = message.reactions || {};
-        reactions[currentUserId] = reactionType;
-
-        // Đảm bảo trạng thái tin nhắn được định nghĩa
+        const reactions: Record<
+          string,
+          Record<string, number>
+        > = migrateReactions(message.reactions) || {};
+        if (!reactions[currentUserId]) reactions[currentUserId] = {};
+        if (!reactions[currentUserId][reactionType as string])
+          reactions[currentUserId][reactionType as string] = 0;
+        reactions[currentUserId][reactionType as string] += 1;
         const status = message.status || MessageStatus.VISIBLE;
-
-        // Cập nhật tin nhắn
-        await update(messageRef, {
-          reactions,
-          status,
-        });
-
+        await update(messageRef, { reactions, status });
         return true;
       } catch (err) {
         console.error('Error adding reaction:', err);
@@ -63,36 +54,40 @@ export function useMessageActions(conversationId: string) {
 
   // Xóa reaction khỏi tin nhắn
   const removeReaction = useCallback(
-    async (messageId: string) => {
+    async (messageId: string, reactionType?: ReactionType) => {
       if (!conversationId || !messageId || !currentUserId) return false;
-
       try {
         setLoading(true);
-
-        // Lấy tin nhắn hiện tại
         const messageRef = ref(db, `messages/${conversationId}/${messageId}`);
         const snapshot = await get(messageRef);
-
         if (!snapshot.exists()) {
           setError('Không tìm thấy tin nhắn');
           return false;
         }
-
         const message = snapshot.val() as MessageType;
-
-        // Cập nhật reactions
-        const reactions = message.reactions || {};
-        delete reactions[currentUserId];
-
-        // Đảm bảo trạng thái tin nhắn được định nghĩa
+        const reactions: Record<
+          string,
+          Record<string, number>
+        > = migrateReactions(message.reactions) || {};
+        if (reactionType) {
+          if (
+            reactions[currentUserId] &&
+            reactions[currentUserId][reactionType as string]
+          ) {
+            reactions[currentUserId][reactionType as string] -= 1;
+            if (reactions[currentUserId][reactionType as string] <= 0) {
+              delete reactions[currentUserId][reactionType as string];
+            }
+            if (Object.keys(reactions[currentUserId]).length === 0) {
+              delete reactions[currentUserId];
+            }
+          }
+        } else {
+          // Xóa toàn bộ reaction của user
+          delete reactions[currentUserId];
+        }
         const status = message.status || MessageStatus.VISIBLE;
-
-        // Cập nhật tin nhắn
-        await update(messageRef, {
-          reactions,
-          status,
-        });
-
+        await update(messageRef, { reactions, status });
         return true;
       } catch (err) {
         console.error('Error removing reaction:', err);
@@ -233,6 +228,25 @@ export function useMessageActions(conversationId: string) {
           status,
         });
 
+        // Sau khi update message trong deleteMessage:
+        const conversationRef = ref(db, `conversations/${conversationId}`);
+        const conversationSnap = await get(conversationRef);
+        if (conversationSnap.exists()) {
+          const conversation = conversationSnap.val();
+          if (conversation.lastMessageId === messageId) {
+            // Cập nhật lastMessage là trạng thái đã xóa
+            await update(conversationRef, {
+              lastMessage: {
+                text: '',
+                senderId: message.senderId,
+                createdAt: message.createdAt,
+                deleted: true,
+              },
+              lastMessageId: messageId,
+            });
+          }
+        }
+
         return true;
       } catch (err) {
         console.error('Error deleting message:', err);
@@ -282,6 +296,30 @@ export function useMessageActions(conversationId: string) {
           status,
         });
 
+        // Sau khi update message trong hideMessage:
+        const conversationRef2 = ref(db, `conversations/${conversationId}`);
+        const conversationSnap2 = await get(conversationRef2);
+        if (conversationSnap2.exists()) {
+          const conversation = conversationSnap2.val();
+          if (conversation.lastMessageId === messageId) {
+            // Cập nhật lastMessage: chỉ thêm hiddenBy, không set hidden:true toàn cục
+            await update(conversationRef2, {
+              lastMessage: {
+                text: message.text,
+                senderId: message.senderId,
+                createdAt: message.createdAt,
+                images: message.images || [],
+                hasAudio: !!message.audio,
+                isReply: !!message.replyTo,
+                hiddenBy: message.hiddenBy
+                  ? Array.from(new Set([...message.hiddenBy, currentUserId]))
+                  : [currentUserId],
+              },
+              lastMessageId: messageId,
+            });
+          }
+        }
+
         return true;
       } catch (err) {
         console.error('Error hiding message:', err);
@@ -328,6 +366,34 @@ export function useMessageActions(conversationId: string) {
           hiddenBy,
           status,
         });
+
+        // Sau khi update message trong unhideMessage:
+        const conversationRef3 = ref(db, `conversations/${conversationId}`);
+        const conversationSnap3 = await get(conversationRef3);
+        if (conversationSnap3.exists()) {
+          const conversation = conversationSnap3.val();
+          if (conversation.lastMessageId === messageId) {
+            // Cập nhật lastMessage: xóa currentUserId khỏi hiddenBy
+            let newHiddenBy = Array.isArray(message.hiddenBy)
+              ? message.hiddenBy.filter((id: string) => id !== currentUserId)
+              : [];
+            const lastMessageUpdate: any = {
+              text: message.text,
+              senderId: message.senderId,
+              createdAt: message.createdAt,
+              images: message.images || [],
+              hasAudio: !!message.audio,
+              isReply: !!message.replyTo,
+            };
+            if (newHiddenBy.length > 0) {
+              lastMessageUpdate.hiddenBy = newHiddenBy;
+            }
+            await update(conversationRef3, {
+              lastMessage: lastMessageUpdate,
+              lastMessageId: messageId,
+            });
+          }
+        }
 
         return true;
       } catch (err) {
@@ -377,6 +443,21 @@ export function useMessageActions(conversationId: string) {
     },
     [currentUserId]
   );
+
+  // Thêm hàm migrateReactions để chuyển đổi reactions kiểu cũ sang kiểu mới
+  function migrateReactions(raw: any): Record<string, Record<string, number>> {
+    if (!raw) return {};
+    const migrated: Record<string, Record<string, number>> = {};
+    Object.entries(raw).forEach(([userId, reacts]) => {
+      if (typeof reacts === 'string') {
+        // Kiểu cũ: userId: emoji string
+        migrated[userId] = { [reacts]: 1 };
+      } else if (typeof reacts === 'object' && reacts !== null) {
+        migrated[userId] = { ...reacts };
+      }
+    });
+    return migrated;
+  }
 
   return {
     addReaction,

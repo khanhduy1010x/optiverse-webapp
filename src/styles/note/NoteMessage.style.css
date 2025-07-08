@@ -1,0 +1,87 @@
+.note-message-quill {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.note-message-quill .ql-editor {
+  padding: 0;
+  border: none;
+  background: transparent;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.note-message-quill .ql-editor p {
+  margin: 0 0 8px 0;
+}
+
+.note-message-quill .ql-editor p:last-child {
+  margin-bottom: 0;
+}
+
+.note-message-quill .ql-editor h1,
+.note-message-quill .ql-editor h2,
+.note-message-quill .ql-editor h3,
+.note-message-quill .ql-editor h4,
+.note-message-quill .ql-editor h5,
+.note-message-quill .ql-editor h6 {
+  margin: 8px 0 4px 0;
+  font-weight: 600;
+}
+
+.note-message-quill .ql-editor ul,
+.note-message-quill .ql-editor ol {
+  margin: 4px 0;
+  padding-left: 20px;
+}
+
+.note-message-quill .ql-editor li {
+  margin: 2px 0;
+}
+
+.note-message-quill .ql-editor blockquote {
+  margin: 8px 0;
+  padding-left: 12px;
+  border-left: 3px solid #e5e7eb;
+  color: #6b7280;
+}
+
+.note-message-quill .ql-editor code {
+  background-color: #f3f4f6;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+}
+
+.note-message-quill .ql-editor pre {
+  background-color: #f3f4f6;
+  padding: 8px;
+  border-radius: 4px;
+  margin: 8px 0;
+  overflow-x: auto;
+}
+
+.note-message-quill .ql-editor a {
+  color: #21b4ca;
+  text-decoration: underline;
+}
+
+.note-message-quill .ql-editor img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin: 4px 0;
+}
+
+.note-content-preview {
+  background: transparent;
+}
+
+.note-content-preview .ql-container {
+  border: none;
+}
+
+.note-content-preview .ql-toolbar {
+  display: none;
+}

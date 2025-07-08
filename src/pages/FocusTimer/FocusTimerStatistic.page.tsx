@@ -36,7 +36,7 @@ export default function FocusTimerStatisticPage() {
               className="w-10 h-10 flex items-center justify-center text-xs rounded shadow cursor-pointer"
               style={{ backgroundColor: getColor(seconds) }}
               onClick={() => setSelectedDate(iso)}
-              title={`${Math.floor(seconds / 60)} phút`}
+              title={`${Math.floor(seconds / 60)} minutes`}
             >
               {idx + 1}
             </div>
@@ -49,16 +49,16 @@ export default function FocusTimerStatisticPage() {
   return (
     <div className="p-6 space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <SummaryCard title="Tổng phiên" value={summary.totalSessions} />
-        <SummaryCard title="Tổng thời gian" value={`${Math.floor(summary.totalSeconds / 60)} phút`} />
-        <SummaryCard title="Phiên tuần này" value={summary.weekSessions} />
-        <SummaryCard title="Thời gian tuần này" value={`${Math.floor(summary.weekSeconds / 60)} phút`} />
+        <SummaryCard title="Total sessions" value={summary.totalSessions} />
+        <SummaryCard title="Total time" value={`${Math.floor(summary.totalSeconds / 60)} minutes`} />
+        <SummaryCard title="This week's session" value={summary.weekSessions} />
+        <SummaryCard title="This week's time" value={`${Math.floor(summary.weekSeconds / 60)} minutes`} />
       </div>
 
       <div className="flex gap-4 items-center">
         <select value={month} onChange={(e) => setMonth(Number(e.target.value))} className="p-2 border rounded">
           {Array.from({ length: 12 }).map((_, i) => (
-            <option key={i} value={i}>{`Tháng ${i + 1}`}</option>
+            <option key={i} value={i}>{`Month ${i + 1}`}</option>
           ))}
         </select>
         <select value={year} onChange={(e) => setYear(Number(e.target.value))} className="p-2 border rounded">
@@ -75,7 +75,7 @@ export default function FocusTimerStatisticPage() {
         {selectedDate && (
           <>
             <h2 className="text-lg font-semibold mb-2">
-              Phiên tập trung ngày {format(new Date(selectedDate), 'dd/MM/yyyy')}
+              Session on {format(new Date(selectedDate), 'dd/MM/yyyy')}
             </h2>
             <ul className="space-y-2">
               {sessions
@@ -88,7 +88,7 @@ export default function FocusTimerStatisticPage() {
                   );
                   return (
                     <li key={s._id} className="border-b pb-1">
-                      🕒 {start} - {end} ({duration} phút)
+                      🕒 {start} - {end} ({duration} minutes)
                     </li>
                   );
                 })}

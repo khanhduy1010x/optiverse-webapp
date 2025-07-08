@@ -18,19 +18,19 @@ const AchievementsPage: React.FC = () => {
     selectedMenu,
     handleNavigate
   } = useAchievements();
-  
-  const hasAchievements = 
-    (unlockedAchievements && unlockedAchievements.length > 0) || 
+
+  const hasAchievements =
+    (unlockedAchievements && unlockedAchievements.length > 0) ||
     (lockedAchievements && lockedAchievements.length > 0);
 
   return (
     <View className="flex w-full min-h-screen bg-gray-50">
       {/* Using the shared ProfileSidebar component */}
       <ProfileSidebar selectedMenu={selectedMenu} handleNavigate={handleNavigate} />
-      
+
       <View className="flex-1 p-4 md:p-6">
-        <h1 className="text-3xl font-normal text-gray-800 border-b border-gray-200 pb-2 mb-8">Thành tựu của tôi</h1>
-        
+        <h1 className="text-3xl font-normal text-gray-800 border-b border-gray-200 pb-2 mb-8">My Achievements</h1>
+
         <div className="bg-white rounded-xl shadow-sm p-5 mb-8">
           {loading ? (
             <Loader />
@@ -38,14 +38,14 @@ const AchievementsPage: React.FC = () => {
             <ErrorDisplay error={error} />
           ) : hasAchievements ? (
             <View>
-              <AchievementList 
-                title="Đã đạt được"
+              <AchievementList
+                title="Unlocked"
                 achievements={unlockedAchievements}
                 unlocked={true}
               />
-              
-              <AchievementList 
-                title="Chưa đạt được"
+
+              <AchievementList
+                title="Locked"
                 achievements={lockedAchievements}
                 unlocked={false}
               />

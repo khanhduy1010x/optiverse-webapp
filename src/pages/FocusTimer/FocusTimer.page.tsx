@@ -48,18 +48,16 @@ export default function FocusTimerPage() {
       <div className="flex gap-2">
         <button
           disabled={isRunning}
-          className={`px-4 py-2 rounded ${
-            mode === 'countup' ? 'bg-blue-600 text-white' : 'bg-white border'
-          } ${isRunning ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={`px-4 py-2 rounded ${mode === 'countup' ? 'bg-blue-600 text-white' : 'bg-white border'
+            } ${isRunning ? 'opacity-50 cursor-not-allowed' : ''}`}
           onClick={() => setMode('countup')}
         >
           Count Up
         </button>
         <button
           disabled={isRunning}
-          className={`px-4 py-2 rounded ${
-            mode === 'countdown' ? 'bg-blue-600 text-white' : 'bg-white border'
-          } ${isRunning ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={`px-4 py-2 rounded ${mode === 'countdown' ? 'bg-blue-600 text-white' : 'bg-white border'
+            } ${isRunning ? 'opacity-50 cursor-not-allowed' : ''}`}
           onClick={() => setMode('countdown')}
         >
           Count Down
@@ -128,8 +126,8 @@ export default function FocusTimerPage() {
         <ConfirmModal
           message={
             pendingAction === 'stop'
-              ? 'Bạn có chắc muốn dừng và lưu phiên tập trung không?'
-              : 'Bạn có chắc muốn đặt lại đồng hồ không?'
+              ? 'Are you sure you want to stop and save this focus session?'
+              : 'Are you sure you want to reset the timer?'
           }
           onConfirm={confirmAction}
           onCancel={cancelAction}

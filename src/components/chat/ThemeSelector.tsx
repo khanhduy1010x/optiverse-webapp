@@ -22,7 +22,6 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ conversationId, onClose, 
     } = useConversationTheme(conversationId);
 
     const [selectedColor, setSelectedColor] = useState<string>(theme?.backgroundColor || '#ffffff');
-    const [selectedTextColor, setSelectedTextColor] = useState<string>(theme?.textColor || '#000000');
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -36,31 +35,14 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ conversationId, onClose, 
         '#ffd7ba', '#fec89a', '#e8e8e4', '#d8d8d8'
     ];
 
-    // Danh sách màu chữ có sẵn
-    const textColors = [
-        '#000000', '#212529', '#343a40', '#495057',
-        '#6c757d', '#495057', '#343a40', '#212529'
-    ];
-
     // Xử lý khi chọn màu nền
     const handleColorSelect = async (color: string) => {
         setSelectedColor(color);
         try {
-            await updateTheme({ backgroundColor: color, textColor: selectedTextColor });
-            toast.success('Đã cập nhật màu nền');
+            await updateTheme({ backgroundColor: color });
+            toast.success('Background color updated');
         } catch (error) {
-            toast.error('Không thể cập nhật màu nền');
-        }
-    };
-
-    // Xử lý khi chọn màu chữ
-    const handleTextColorSelect = async (color: string) => {
-        setSelectedTextColor(color);
-        try {
-            await updateTheme({ backgroundColor: selectedColor, textColor: color });
-            toast.success('Đã cập nhật màu chữ');
-        } catch (error) {
-            toast.error('Không thể cập nhật màu chữ');
+            toast.error('Failed to update background color');
         }
     };
 
@@ -71,13 +53,13 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ conversationId, onClose, 
 
         // Kiểm tra loại file
         if (!file.type.startsWith('image/')) {
-            toast.error('Vui lòng chọn file hình ảnh');
+            toast.error('Please select an image file');
             return;
         }
 
         // Kiểm tra kích thước file (tối đa 5MB)
         if (file.size > 5 * 1024 * 1024) {
-            toast.error('Kích thước file không được vượt quá 5MB');
+            toast.error('File size must not exceed 5MB');
             return;
         }
 
@@ -98,12 +80,12 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ conversationId, onClose, 
         try {
             // Tải lên hình ảnh và cập nhật theme
             await uploadThemeImage(selectedFile);
-            toast.success('Đã tải lên hình ảnh thành công');
+            toast.success('Image uploaded successfully');
 
             // Xóa file đã chọn
             setSelectedFile(null);
         } catch (error) {
-            toast.error('Không thể tải lên hình ảnh');
+            toast.error('Failed to upload image');
         }
     };
 
@@ -118,11 +100,10 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ conversationId, onClose, 
         try {
             await resetTheme();
             setSelectedColor('#ffffff');
-            setSelectedTextColor('#000000');
             setSelectedFile(null);
-            toast.success('Đã xóa theme');
+            toast.success('Theme reset to default');
         } catch (error) {
-            toast.error('Không thể xóa theme');
+            toast.error('Failed to reset theme');
         }
     };
 
@@ -132,7 +113,7 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ conversationId, onClose, 
     return (
         <div className="h-full bg-white border-l border-gray-200 shadow-lg w-80 flex flex-col min-h-0 overflow-hidden">
             <div className="flex justify-between items-center p-4 border-b border-gray-200 flex-shrink-0">
-                <h3 className="text-lg font-medium">Tùy chỉnh theme</h3>
+                <h3 className="text-lg font-medium">Customize theme</h3>
                 <button
                     onClick={onClose}
                     className="text-gray-500 hover:text-gray-700"
@@ -152,15 +133,14 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ conversationId, onClose, 
                         backgroundImage: theme?.backgroundUrl ? `url(${theme.backgroundUrl})` : 'none',
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
-                        color: theme?.textColor || '#000000'
                     }}
                 >
-                    <span style={{ color: theme?.textColor || '#000000' }}>Xem trước theme</span>
+                    <span>Xem trước theme</span>
                 </div>
 
                 {/* Tải lên hình ảnh */}
                 <div className="mb-4">
-                    <p className="text-sm font-medium mb-2">Hình nền</p>
+                    <p className="text-sm font-medium mb-2">Background image</p>
                     <div className="flex items-center flex-wrap gap-2">
                         {!hasPreview ? (
                             <button
@@ -168,7 +148,7 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ conversationId, onClose, 
                                 className="px-3 py-1 bg-blue-600 text-white rounded-lg text-sm disabled:opacity-50"
                                 disabled={isUploading || loading}
                             >
-                                {isUploading ? 'Đang tải...' : 'Chọn hình ảnh'}
+                                {isUploading ? 'Uploading...' : 'Choose image'}
                             </button>
                         ) : (
                             <>
@@ -177,14 +157,14 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ conversationId, onClose, 
                                     className="px-3 py-1 bg-green-600 text-white rounded-lg text-sm disabled:opacity-50"
                                     disabled={isUploading}
                                 >
-                                    {isUploading ? 'Đang tải...' : 'Xác nhận'}
+                                    {isUploading ? 'Uploading...' : 'Confirm'}
                                 </button>
                                 <button
                                     onClick={handleCancelPreview}
                                     className="px-3 py-1 bg-gray-500 text-white rounded-lg text-sm"
                                     disabled={isUploading}
                                 >
-                                    Hủy
+                                    Cancel
                                 </button>
                             </>
                         )}
@@ -200,7 +180,7 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ conversationId, onClose, 
 
                 {/* Chọn màu nền */}
                 <div className="mb-4">
-                    <p className="text-sm font-medium mb-2">Màu nền</p>
+                    <p className="text-sm font-medium mb-2">Background color</p>
                     <div className="grid grid-cols-6 gap-2">
                         {backgroundColors.map((color) => (
                             <div
@@ -209,22 +189,6 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ conversationId, onClose, 
                                     }`}
                                 style={{ backgroundColor: color }}
                                 onClick={() => handleColorSelect(color)}
-                            />
-                        ))}
-                    </div>
-                </div>
-
-                {/* Chọn màu chữ */}
-                <div className="mb-4">
-                    <p className="text-sm font-medium mb-2">Màu chữ</p>
-                    <div className="grid grid-cols-6 gap-2">
-                        {textColors.map((color) => (
-                            <div
-                                key={color}
-                                className={`w-8 h-8 rounded-full cursor-pointer border-2 ${selectedTextColor === color ? 'border-blue-500' : 'border-transparent'
-                                    }`}
-                                style={{ backgroundColor: color }}
-                                onClick={() => handleTextColorSelect(color)}
                             />
                         ))}
                     </div>
@@ -239,7 +203,7 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ conversationId, onClose, 
                     className="w-full px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
                     disabled={loading || isUploading}
                 >
-                    Khôi phục mặc định
+                    Reset to default
                 </button>
             </div>
         </div>

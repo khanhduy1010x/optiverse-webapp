@@ -199,6 +199,12 @@ export const useShareNote = (
         currentlySharedWith.filter(user => user.user_id !== userId)
       );
 
+      if (resourceType === 'note') {
+        SocketService.emitNoteUserRemoved(resourceId, userId);
+      } else {
+        SocketService.emitFolderUserRemoved(resourceId, userId);
+      }
+
       SocketService.emitFolderStructureChanged();
     } catch (err) {
       setShareError(

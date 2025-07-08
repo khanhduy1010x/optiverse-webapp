@@ -41,7 +41,7 @@ export function useSendMessage(conversationId: string) {
             text: message.text,
             senderId: message.senderId,
             createdAt: timestamp,
-            hasImages: !!message.images?.length,
+            images: message.images || [],
             hasAudio: !!message.audio,
             isReply: !!message.replyTo,
           },

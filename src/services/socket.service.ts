@@ -64,10 +64,14 @@ class SocketService {
       this.notifyListeners('folder_deleted', data);
     });
 
-    this.socket.on('folder_structure_changed', () => {
+    this.socket.on('folder_renamed', data => {
+      this.notifyListeners('folder_renamed', data);
+    });
+
+    this.socket.on('folder_structure_changed', data => {
       this.notifyListenersWithContext(
         'folder_structure_changed',
-        {},
+        data,
         this.isViewingSharedItems
       );
     });
@@ -76,7 +80,7 @@ class SocketService {
       this.notifyListeners('permission_changed', data);
       this.notifyListenersWithContext(
         'folder_structure_changed',
-        {},
+        data,
         this.isViewingSharedItems
       );
     });
@@ -84,22 +88,12 @@ class SocketService {
     this.socket.on('note_shared_with_user', data => {
       const currentId = this.getCurrentUserId();
       if (data.userId === currentId) {
-        this.notifyListenersWithContext(
-          'folder_structure_changed',
-          {},
-          this.isViewingSharedItems
-        );
       }
     });
 
     this.socket.on('folder_shared_with_user', data => {
       const currentId = this.getCurrentUserId();
       if (data.userId === currentId) {
-        this.notifyListenersWithContext(
-          'folder_structure_changed',
-          {},
-          this.isViewingSharedItems
-        );
       }
     });
   }
@@ -220,6 +214,9 @@ class SocketService {
     const userId = this.getCurrentUserId();
     if (!userId) return;
 
+    console.log(
+      `Dòng 200 File socket.service.ts - Đã emit sự kiện note_deleted (noteId: ${noteId})`
+    );
     this.socket.emit('note_deleted', {
       noteId,
       userId,
@@ -232,6 +229,9 @@ class SocketService {
     const userId = this.getCurrentUserId();
     if (!userId) return;
 
+    console.log(
+      `Dòng 212 File socket.service.ts - Đã emit sự kiện note_renamed (noteId: ${noteId}, newTitle: ${newTitle})`
+    );
     this.socket.emit('note_renamed', {
       noteId,
       newTitle,
@@ -245,6 +245,9 @@ class SocketService {
     const userId = this.getCurrentUserId();
     if (!userId) return;
 
+    console.log(
+      `Dòng 225 File socket.service.ts - Đã emit sự kiện folder_structure_changed`
+    );
     this.socket.emit('folder_structure_changed', {
       userId,
     });
@@ -258,6 +261,9 @@ class SocketService {
     const userId = this.getCurrentUserId();
     if (!userId || !this.socket) return;
 
+    console.log(
+      `Dòng 238 File socket.service.ts - Đã emit sự kiện folder_deleted (folderId: ${folderId})`
+    );
     this.socket.emit('folder_deleted', {
       folderId,
       userId,
@@ -272,6 +278,9 @@ class SocketService {
     const userId = this.getCurrentUserId();
     if (!userId || !this.socket) return;
 
+    console.log(
+      `Dòng 251 File socket.service.ts - Đã emit sự kiện folder_renamed (folderId: ${folderId}, newName: ${newName})`
+    );
     this.socket.emit('folder_renamed', {
       folderId,
       newName,
@@ -381,6 +390,28 @@ class SocketService {
         callback({ ...data, isSharedView });
       });
     }
+  }
+
+  public emitNoteUserRemoved(noteId: string, removedUserId: string): void {
+    if (!this.socket) return;
+    const userId = this.getCurrentUserId();
+    if (!userId) return;
+    this.socket.emit('note_user_removed', {
+      noteId,
+      removedUserId,
+      userId,
+    });
+  }
+
+  public emitFolderUserRemoved(folderId: string, removedUserId: string): void {
+    if (!this.socket) return;
+    const userId = this.getCurrentUserId();
+    if (!userId) return;
+    this.socket.emit('folder_user_removed', {
+      folderId,
+      removedUserId,
+      userId,
+    });
   }
 }
 

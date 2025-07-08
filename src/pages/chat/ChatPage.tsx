@@ -17,7 +17,7 @@ import { UserResponse } from '../../types/auth/auth.types';
 import friendService from '../../services/friend.service';
 import chatService from '../../services/chat.service';
 import { Friend } from '../../types/friend/response/friend.response';
-import { ref, update, get, child } from 'firebase/database';
+import { ref, update, get, child, remove } from 'firebase/database';
 import { db } from '../../firebase';
 import EmojiPicker from 'emoji-picker-react';
 import { MessageType } from '../../types/chat/MessageType';
@@ -30,6 +30,7 @@ import {
   Done as DoneIcon,
   DoneAll as DoneAllIcon
 } from '@mui/icons-material';
+import DeleteModal from '../Note/DeleteModal.screen';
 
 // CSS cho hiệu ứng đang nhập
 const typingAnimationCSS = `
@@ -179,6 +180,10 @@ const ChatPage: React.FC = () => {
 
   // State for reply
   const [replyToMessage, setReplyToMessage] = useState<MessageType | null>(null);
+
+  // Thêm state và ref cho highlight message
+  const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
+  const messageRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   // Get other user info in chat from friends list instead of users
   const getOtherUserInChat = useCallback((): UserResponse | undefined => {
@@ -391,13 +396,13 @@ const ChatPage: React.FC = () => {
     Array.from(files).forEach(file => {
       // Check if file is an image
       if (!file.type.startsWith('image/')) {
-        toast.error(`${file.name} không phải là file hình ảnh.`);
+        toast.error(`${file.name} is not an image.`);
         return;
       }
 
       // Check file size
       if (file.size > maxSize) {
-        toast.error(`${file.name} vượt quá kích thước tối đa (5MB).`);
+        toast.error(`${file.name} exceeds the maximum size (5MB).`);
         return;
       }
 
@@ -472,7 +477,7 @@ const ChatPage: React.FC = () => {
           })
           .catch(error => {
             console.error('Error sending reply with images:', error);
-            toast.error('Đã xảy ra lỗi khi gửi tin nhắn trả lời.');
+            toast.error('An error occurred while sending reply message.');
           });
       } else {
         // Gửi tin nhắn trả lời văn bản
@@ -490,7 +495,7 @@ const ChatPage: React.FC = () => {
           })
           .catch(error => {
             console.error('Error sending reply message:', error);
-            toast.error('Đã xảy ra lỗi khi gửi tin nhắn trả lời.');
+            toast.error('An error occurred while sending reply message.');
           });
       }
     } else {
@@ -510,7 +515,7 @@ const ChatPage: React.FC = () => {
           })
           .catch(error => {
             console.error('Error sending message with images:', error);
-            toast.error('Đã xảy ra lỗi khi gửi tin nhắn.');
+            toast.error('An error occurred while sending message.');
           });
       } else {
         // Gửi tin nhắn văn bản thông thường
@@ -530,7 +535,7 @@ const ChatPage: React.FC = () => {
           })
           .catch(error => {
             console.error('Error sending message:', error);
-            toast.error('Đã xảy ra lỗi khi gửi tin nhắn.');
+            toast.error('An error occurred while sending message.');
           });
       }
     }
@@ -616,14 +621,14 @@ const ChatPage: React.FC = () => {
 
     // If same day, show "Hôm nay"
     if (date.toDateString() === now.toDateString()) {
-      dateStr = 'Hôm nay';
+      dateStr = 'Today';
     }
     // If yesterday, show "Hôm qua"
     else {
       const yesterday = new Date();
       yesterday.setDate(now.getDate() - 1);
       if (date.toDateString() === yesterday.toDateString()) {
-        dateStr = 'Hôm qua';
+        dateStr = 'Yesterday';
       }
       // If within 7 days, show day name
       else {
@@ -631,7 +636,7 @@ const ChatPage: React.FC = () => {
         weekAgo.setDate(now.getDate() - 7);
         if (date > weekAgo) {
           // Chỉ hiển thị tên ngày trong tuần
-          const days = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+          const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
           dateStr = days[date.getDay()];
         }
         // Otherwise show short date
@@ -721,17 +726,27 @@ const ChatPage: React.FC = () => {
     setGlobalSearchQuery('');
   };
 
+  // Khi click vào search result, scroll tới message và highlight
+  const handleSearchResultClick = (messageId: string) => {
+    setHighlightedMessageId(messageId);
+    const ref = messageRefs.current[messageId];
+    if (ref && ref.scrollIntoView) {
+      ref.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    setTimeout(() => setHighlightedMessageId(null), 2000);
+  };
+
   // Render messages
   const renderMessages = () => {
     if (messagesLoading) {
-      return <div className="flex justify-center items-center h-full">Đang tải tin nhắn...</div>;
+      return <div className="flex justify-center items-center h-full">Loading messages...</div>;
     }
 
     if (messages.length === 0) {
       return (
         <div className="flex flex-col justify-center items-center h-full text-gray-500">
-          <p>Chưa có tin nhắn nào</p>
-          <p className="text-sm mt-2">Hãy bắt đầu cuộc trò chuyện!</p>
+          <p>Start the conversation!</p>
+          <p className="text-sm mt-2">Type a message...</p>
         </div>
       );
     }
@@ -748,6 +763,8 @@ const ChatPage: React.FC = () => {
         onPin={handleTogglePinMessage}
         onReply={handleReplyToMessage}
         users={users}
+        messageRef={el => { messageRefs.current[message.id] = el; }}
+        highlight={highlightedMessageId === message.id}
       />
     ));
   };
@@ -758,14 +775,14 @@ const ChatPage: React.FC = () => {
 
     const isCurrentUser = replyToMessage.senderId === localStorage.getItem('user_id');
     const senderName = isCurrentUser
-      ? 'Bạn'
-      : users[replyToMessage.senderId]?.full_name || 'Người dùng';
+      ? 'You'
+      : users[replyToMessage.senderId]?.full_name || 'User';
 
     return (
       <div className="reply-preview flex items-center bg-gray-100 p-2 rounded-t-lg">
         <div className="flex-1 overflow-hidden">
           <div className="text-xs font-medium text-blue-500 mb-1">
-            Đang trả lời {senderName}
+            Replying to {senderName}
           </div>
           <div className="text-sm truncate text-gray-600">
             {replyToMessage.text}
@@ -786,6 +803,35 @@ const ChatPage: React.FC = () => {
     if (messageContainerRef.current) {
       messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
       setIsScrolledUp(false);
+    }
+  };
+
+  // Thêm biến textColor lấy từ theme
+  const textColor = theme?.textColor || '#000';
+
+  // Thêm hàm xóa conversation
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedConversation, setSelectedConversation] = useState<any>(null);
+
+  const handleDeleteConversation = (conversationId: string) => {
+    const conversation = conversations.find(c => c.id === conversationId);
+    setSelectedConversation(conversation);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteConversation = async () => {
+    if (!selectedConversation) return;
+    try {
+      await remove(ref(db, `conversations/${selectedConversation.id}`));
+      if (activeConversationId === selectedConversation.id) {
+        setActiveConversationId(null);
+      }
+      toast.success('Conversation deleted.');
+    } catch (error) {
+      toast.error('Failed to delete conversation.');
+    } finally {
+      setShowDeleteModal(false);
+      setSelectedConversation(null);
     }
   };
 
@@ -890,7 +936,7 @@ const ChatPage: React.FC = () => {
               type="text"
               value={globalSearchQuery}
               onChange={(e) => setGlobalSearchQuery(e.target.value)}
-              placeholder="Tìm kiếm trong tất cả hội thoại..."
+              placeholder="Search in all conversations..."
               className="flex-1 border border-gray-300 rounded-l-lg px-3 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-[#21b4ca]"
             />
             <button
@@ -898,7 +944,7 @@ const ChatPage: React.FC = () => {
               className="bg-[#21b4ca] text-white px-3 py-1 rounded-r-lg text-sm"
               disabled={isGlobalSearching}
             >
-              {isGlobalSearching ? 'Đang tìm...' : 'Tìm'}
+              {isGlobalSearching ? 'Searching...' : 'Search'}
             </button>
           </form>
         </div>
@@ -907,12 +953,12 @@ const ChatPage: React.FC = () => {
         {globalSearchResults.length > 0 && (
           <div className="mb-4 border border-gray-200 rounded-lg p-2 bg-[#e6f7f9]">
             <div className="flex justify-between items-center mb-2">
-              <p className="text-sm font-medium">Kết quả tìm kiếm ({globalSearchResults.length})</p>
+              <p className="text-sm font-medium">Search results ({globalSearchResults.length})</p>
               <button
                 onClick={clearGlobalSearch}
                 className="text-xs text-[#21b4ca] hover:underline"
               >
-                Đóng
+                Close
               </button>
             </div>
             <div className="max-h-40 overflow-y-auto custom-scrollbar-3">
@@ -934,6 +980,14 @@ const ChatPage: React.FC = () => {
                     className="p-2 hover:bg-white rounded cursor-pointer mb-1"
                     onClick={() => {
                       handleSelectConversation(message.conversationId || '');
+                      setTimeout(() => {
+                        setHighlightedMessageId(message.id);
+                        const ref = messageRefs.current[message.id];
+                        if (ref && ref.scrollIntoView) {
+                          ref.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                        setTimeout(() => setHighlightedMessageId(null), 2000);
+                      }, 300); // Đợi chuyển conversation xong mới scroll
                       clearGlobalSearch();
                     }}
                   >
@@ -942,7 +996,7 @@ const ChatPage: React.FC = () => {
                         {otherUser?.full_name?.charAt(0) || '?'}
                       </div>
                       <div>
-                        <p className="text-xs font-medium">{otherUser?.full_name || otherUser?.email || 'Người dùng'}</p>
+                        <p className="text-xs font-medium">{otherUser?.full_name || otherUser?.email || 'User'}</p>
                         <p className="text-xs text-gray-500 truncate">{message.text}</p>
                       </div>
                     </div>
@@ -1049,15 +1103,16 @@ const ChatPage: React.FC = () => {
           loading={loading}
           activeConversationId={activeConversationId}
           onSelectConversation={handleSelectConversation}
+          onDeleteConversation={handleDeleteConversation}
         />
       </div>
 
       {/* Main chat area */}
-      <div className="flex-1 flex flex-col h-full">
+      <div className="flex-1 flex flex-col h-full" style={{ color: textColor }}>
         {activeConversationId ? (
           <>
             {/* Header */}
-            <div className="p-4 border-b border-gray-200 bg-white">
+            <div className="p-4 border-b border-gray-200 bg-white" style={{ color: textColor }}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   {(() => {
@@ -1093,7 +1148,7 @@ const ChatPage: React.FC = () => {
                   <button
                     onClick={() => handleTogglePinConversation(activeConversationId)}
                     className={`p-2 rounded-full hover:bg-gray-100 ${isConversationPinned(activeConversationId) ? 'text-[#21b4ca]' : 'text-gray-500'}`}
-                    title={isConversationPinned(activeConversationId) ? "Bỏ ghim hội thoại" : "Ghim hội thoại"}
+                    title={isConversationPinned(activeConversationId) ? "Unpin conversation" : "Pin conversation"}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clipRule="evenodd" />
@@ -1104,7 +1159,7 @@ const ChatPage: React.FC = () => {
                   <button
                     onClick={() => setShowMessageSearch(!showMessageSearch)}
                     className={`p-2 rounded-full hover:bg-gray-100 ${showMessageSearch ? 'text-[#21b4ca]' : 'text-gray-500'}`}
-                    title="Tìm kiếm tin nhắn"
+                    title="Search messages"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
@@ -1229,7 +1284,7 @@ const ChatPage: React.FC = () => {
                     backgroundImage: theme?.backgroundUrl ? `url(${theme.backgroundUrl})` : 'none',
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
-                    color: theme?.textColor || 'inherit',
+                    color: textColor,
                     maxHeight: 'calc(100vh - 200px)',
                     minHeight: '300px'
                   }}
@@ -1255,7 +1310,8 @@ const ChatPage: React.FC = () => {
                         return (
                           <div
                             key={message.id}
-                            className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
+                            className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'} items-center`}
+                            style={{ cursor: 'pointer' }}
                           >
                             <div
                               className={`max-w-xs rounded-lg px-4 py-2 ${isCurrentUser
@@ -1274,6 +1330,22 @@ const ChatPage: React.FC = () => {
                                 <span className={`text-xs ${isCurrentUser ? 'text-white opacity-70' : 'text-gray-500'}`}>
                                   {formatMessageTime(message.createdAt).date}
                                 </span>
+                                {/* Icon kính lúp để đi đến tin nhắn gốc */}
+                                <button
+                                  onClick={() => {
+                                    clearSearch();
+                                    setTimeout(() => {
+                                      handleSearchResultClick(message.id);
+                                    }, 100);
+                                  }}
+                                  className="ml-2 p-1 rounded-full hover:bg-blue-100"
+                                  title="Đi đến tin nhắn gốc"
+                                  type="button"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" />
+                                  </svg>
+                                </button>
                               </div>
                             </div>
                           </div>
@@ -1413,6 +1485,18 @@ const ChatPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Delete Modal */}
+      <DeleteModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        selectedItem={selectedConversation ? {
+          type: 'file',
+          title: 'This conversion',
+          content: '',
+        } : null}
+        onDelete={confirmDeleteConversation}
+      />
     </div>
   );
 };

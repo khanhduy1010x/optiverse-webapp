@@ -11,11 +11,20 @@ const initialState: ItemsState = {
   currentNote: undefined,
   loading: false,
   error: null,
+  currentViewType: 'my_note',
 };
 
 export const fetchItems = createAsyncThunk('items/fetchItems', async () => {
   return await noteFolderService.getAllRootItems();
 });
+
+export const fetchSharedItems = createAsyncThunk(
+  'items/fetchSharedItems',
+  async () => {
+    const ShareService = (await import('../../services/share.service')).default;
+    return await ShareService.getSharedWithMe();
+  }
+);
 
 export const createFolder = createAsyncThunk(
   'items/createFolder',
@@ -73,8 +82,6 @@ export const saveNote = createAsyncThunk(
     note: NoteItem;
     shouldSetCurrent: boolean;
   }) => {
-    // Lưu ý: Chức năng này không còn được sử dụng cho realtime sync
-    // Nhưng vẫn giữ lại cho các trường hợp lưu thủ công hoặc các chức năng khác
     const response = await noteService.saveNote(note);
     return { response, shouldSetCurrent };
   }
@@ -85,26 +92,50 @@ const itemsSlice = createSlice({
   initialState,
   reducers: {
     setItems: (state, action) => {
+      console.log(
+        `Dòng 85 File items.slice.ts - Đã cập nhật data note (setItems)`
+      );
       state.items = action.payload;
     },
     setFolderStack: (state, action) => {
+      console.log(
+        `Dòng 89 File items.slice.ts - Đã cập nhật folder stack (setFolderStack)`
+      );
       state.folderStack = action.payload;
     },
     pushFolderStack: (state, action) => {
       if (action.payload.type === 'folder') {
+        console.log(
+          `Dòng 93 File items.slice.ts - Đã thêm folder vào stack (pushFolderStack: ${action.payload._id})`
+        );
         state.folderStack.push(action.payload);
       }
     },
     popFolderStack: state => {
+      console.log(
+        `Dòng 98 File items.slice.ts - Đã xóa folder khỏi stack (popFolderStack)`
+      );
       state.folderStack.pop();
     },
     setCurrentNote: (state, action) => {
+      console.log(
+        `Dòng 102 File items.slice.ts - Đã cập nhật current note (setCurrentNote: ${action.payload?._id || 'undefined'})`
+      );
       state.currentNote = action.payload;
     },
     updateCurrentNoteContent: (state, action) => {
       if (state.currentNote) {
+        console.log(
+          `Dòng 106 File items.slice.ts - Đã cập nhật content của current note (updateCurrentNoteContent: ${state.currentNote._id})`
+        );
         state.currentNote.content = action.payload;
       }
+    },
+    setCurrentViewType: (state, action) => {
+      console.log(
+        `Dòng 111 File items.slice.ts - Đã cập nhật view type (setCurrentViewType: ${action.payload})`
+      );
+      state.currentViewType = action.payload;
     },
   },
   extraReducers: builder => {
@@ -114,15 +145,38 @@ const itemsSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchItems.fulfilled, (state, action) => {
+        console.log(
+          `Dòng 125 File items.slice.ts - Đã cập nhật data my notes (fetchItems.fulfilled)`
+        );
         state.items = normalizeItems(action.payload);
         state.loading = false;
+        state.currentViewType = 'my_note';
       })
       .addCase(fetchItems.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || 'Failed to fetch items';
       })
+      .addCase(fetchSharedItems.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchSharedItems.fulfilled, (state, action) => {
+        console.log(
+          `Dòng 135 File items.slice.ts - Đã cập nhật data shared notes (fetchSharedItems.fulfilled)`
+        );
+        state.items = normalizeSharedItems(action.payload);
+        state.loading = false;
+        state.currentViewType = 'shared_note';
+      })
+      .addCase(fetchSharedItems.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || 'Failed to fetch shared items';
+      })
       .addCase(createFolder.fulfilled, (state, action) => {
         const { folder, parentId } = action.payload;
+        console.log(
+          `Dòng 145 File items.slice.ts - Đã cập nhật data note (createFolder: ${folder._id})`
+        );
         if (!parentId) {
           state.items.push(folder);
         } else {
@@ -135,6 +189,9 @@ const itemsSlice = createSlice({
       })
       .addCase(createNote.fulfilled, (state, action) => {
         const { note, parentId } = action.payload;
+        console.log(
+          `Dòng 157 File items.slice.ts - Đã cập nhật data note (createNote: ${note._id})`
+        );
         if (!parentId) {
           state.items.push(note);
         } else {
@@ -147,6 +204,9 @@ const itemsSlice = createSlice({
       })
       .addCase(deleteItem.fulfilled, (state, action) => {
         const { _id, parentId } = action.payload;
+        console.log(
+          `Dòng 169 File items.slice.ts - Đã cập nhật data note (deleteItem: ${_id})`
+        );
         if (!parentId) {
           state.items = state.items.filter(item => item._id !== _id);
         } else {
@@ -167,6 +227,9 @@ const itemsSlice = createSlice({
       .addCase(deleteItem.rejected, (state, action) => {})
       .addCase(renameItem.fulfilled, (state, action) => {
         const { _id, name, parentId } = action.payload;
+        console.log(
+          `Dòng 187 File items.slice.ts - Đã cập nhật data note (renameItem: ${_id} -> ${name})`
+        );
         if (!parentId) {
           const item = state.items.find(item => item._id === _id);
           if (item) {
@@ -201,6 +264,9 @@ const itemsSlice = createSlice({
       .addCase(renameItem.rejected, (state, action) => {})
       .addCase(saveNote.fulfilled, (state, action) => {
         const { response, shouldSetCurrent } = action.payload;
+        console.log(
+          `Dòng 215 File items.slice.ts - Đã cập nhật data note (saveNote: ${response._id})`
+        );
         updateNoteInState(state, response);
         if (shouldSetCurrent && state.currentNote?._id === response._id) {
           state.currentNote = response;
@@ -247,6 +313,9 @@ const findFolderByFolderId = (
 const updateNoteInState = (state: ItemsState, note: NoteItem) => {
   const index = state.items.findIndex(item => item._id === note._id);
   if (index !== -1) {
+    console.log(
+      `Dòng 271 File items.slice.ts - Đã cập nhật note trong root items (updateNoteInState: ${note._id})`
+    );
     state.items[index] = note;
     return;
   }
@@ -255,10 +324,16 @@ const updateNoteInState = (state: ItemsState, note: NoteItem) => {
     if (parent) {
       const fileIndex = parent.files.findIndex(file => file._id === note._id);
       if (fileIndex !== -1) {
+        console.log(
+          `Dòng 279 File items.slice.ts - Đã cập nhật note trong folder (updateNoteInState: ${note._id} trong folder ${parent._id})`
+        );
         parent.files[fileIndex] = note;
         updateFolderStack(state, parent._id, parent);
         return;
       }
+      console.log(
+        `Dòng 284 File items.slice.ts - Đã thêm note mới vào folder (updateNoteInState: ${note._id} vào folder ${parent._id})`
+      );
       parent.files.push(note);
       updateFolderStack(state, parent._id, parent);
       return;
@@ -279,6 +354,9 @@ const updateFolderStack = (
     folder => folder._id === folderId
   );
   if (stackIndex !== -1) {
+    console.log(
+      `Dòng 297 File items.slice.ts - Đã cập nhật folder trong stack (updateFolderStack: ${folderId})`
+    );
     state.folderStack[stackIndex] = updatedFolder;
   }
 };
@@ -290,14 +368,13 @@ export const {
   popFolderStack,
   setCurrentNote,
   updateCurrentNoteContent,
+  setCurrentViewType,
 } = itemsSlice.actions;
 export default itemsSlice.reducer;
 
-// Hàm chuẩn hóa dữ liệu, đảm bảo mọi file/folder đều có type
 function normalizeItems(items: any[]): RootItem[] {
   return items.map(item => {
     if (item.type === 'folder' || (item.subfolders && item.files)) {
-      // Đảm bảo các thuộc tính chia sẻ được giữ nguyên
       const folder = {
         ...item,
         type: 'folder',
@@ -306,7 +383,6 @@ function normalizeItems(items: any[]): RootItem[] {
           ? item.files.map((f: any) => ({
               ...f,
               type: 'file',
-              // Truyền các thuộc tính chia sẻ từ thư mục cha xuống file con nếu cần
               isShared: f.isShared !== undefined ? f.isShared : item.isShared,
               sharedBy: f.sharedBy || item.sharedBy,
               permission: f.permission || item.permission,
@@ -319,6 +395,38 @@ function normalizeItems(items: any[]): RootItem[] {
       return {
         ...item,
         type: 'file',
+      };
+    }
+  });
+}
+
+function normalizeSharedItems(items: any[]): RootItem[] {
+  return items.map(item => {
+    if (item.type === 'folder' || (item.subfolders && item.files)) {
+      const folder = {
+        ...item,
+        type: 'folder',
+        isShared: true,
+        subfolders: item.subfolders
+          ? normalizeSharedItems(item.subfolders)
+          : [],
+        files: item.files
+          ? item.files.map((f: any) => ({
+              ...f,
+              type: 'file',
+              isShared: true,
+              sharedBy: f.sharedBy || item.sharedBy,
+              permission: f.permission || item.permission,
+              owner_info: f.owner_info || item.owner_info,
+            }))
+          : [],
+      };
+      return folder;
+    } else {
+      return {
+        ...item,
+        type: 'file',
+        isShared: true,
       };
     }
   });

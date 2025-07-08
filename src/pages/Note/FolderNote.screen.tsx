@@ -9,6 +9,7 @@ import RenameModal from './RenameModal.screen';
 import DeleteModal from './DeleteModal.screen';
 import ShareModal from './ShareModal.screen';
 import LeaveModal from './LeaveModal.screen';
+import SendToChatModal from './SendToChatModal.screen';
 import { ContextMenu } from './ContextMenu.screen';
 import FolderFileComponent from './FolderFileComponent.screen';
 import { useFolderNote } from '../../hooks/note/useFolderNote.hook';
@@ -16,10 +17,17 @@ import { useSharedItems } from '../../hooks/note/useSharedItems.hook';
 import { setSelectedItem } from '../../store/slices/ui.slice';
 import { setFolderStack, fetchItems } from '../../store/slices/items.slice';
 import { truncateText } from '../../utils/string.utils';
+import { toast } from 'react-toastify';
+import noteService from '../../services/note.service';
 
 const FolderNote: React.FC = () => {
   const dispatch = useDispatch();
   const [shareModalVisible, setShareModalVisible] = useState(false);
+  const [sendToChatModalVisible, setSendToChatModalVisible] = useState(false);
+  const [noteContent, setNoteContent] = useState('');
+  const [noteTitle, setNoteTitle] = useState('');
+  const [sendToChatLoading, setSendToChatLoading] = useState(false);
+  const [sendToChatItem, setSendToChatItem] = useState<RootItem | null>(null);
 
   const {
     isSharedView,
@@ -80,24 +88,20 @@ const FolderNote: React.FC = () => {
     cancelLeave,
   } = useFolderNote();
 
-  useEffect(() => {
-    if (!isSharedView && folderStack.length === 0) {
-      console.log('Initial loading of items in normal view');
-      setTimeout(() => {
-        dispatch(fetchItems() as any);
-      }, 0);
-    }
-  }, [dispatch, folderStack.length]);
-
-
-
   const handleShareItem = async (userIds: string[], permission: 'view' | 'edit') => {
     if (!selectedItem) return;
     setShareModalVisible(false);
   };
 
-
-
+  const handleSendToChat = (item: RootItem) => {
+    if (!item || item.type !== 'file') {
+      toast.error('Chỉ gửi được note dạng file');
+      return;
+    }
+    setSendToChatItem(item);
+    setSendToChatModalVisible(true);
+    setContextMenu(null);
+  };
 
   const renderItemRow = (item: RootItem) => {
     const formatDateTime = (dateString: string) => {
@@ -452,6 +456,11 @@ const FolderNote: React.FC = () => {
             setIsDeleteConfirmVisible(true);
             setContextMenu(null);
           }}
+          onSendToChat={async () => {
+            if (contextMenu.item) {
+              await handleSendToChat(contextMenu.item);
+            }
+          }}
           onClose={() => setContextMenu(null)}
         />
       )}
@@ -510,6 +519,13 @@ const FolderNote: React.FC = () => {
         selectedItem={selectedItem}
         loading={false}
         errorMessage={null}
+      />
+      <SendToChatModal
+        isOpen={sendToChatModalVisible}
+        onClose={() => setSendToChatModalVisible(false)}
+        selectedItem={sendToChatItem}
+        noteContent={noteContent}
+        noteTitle={noteTitle}
       />
     </div>
   );

@@ -3,15 +3,14 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '../../store';
 import { setFolderStack, fetchItems } from '../../store/slices/items.slice';
 import SocketService from '../../services/socket.service';
-import { useNoteManager } from './useNoteManager.hook';
 
-export function useNote() {
+export function useNoteManager() {
   const dispatch = useDispatch<AppDispatch>();
   const { folderStack, items, loading } = useSelector(
     (state: RootState) => state.items
   );
   const pendingStackIdsRef = useRef<string[]>([]);
-  const { setCurrentViewType } = useNoteManager();
+  const currentViewTypeRef = useRef<'my_note' | 'shared_note'>('my_note');
 
   const syncFolderItemAfterFetch = (
     newItems: any[],
@@ -39,12 +38,16 @@ export function useNote() {
   const handleFolderStructureChanged = async (data: {
     eventType?: 'my_note' | 'shared_note';
     isSharedView?: boolean;
+    removedFromShare?: boolean;
   }) => {
-    if (data?.eventType === 'shared_note') {
+    const eventType =
+      data?.eventType || (data?.isSharedView ? 'shared_note' : 'my_note');
+
+    if (eventType !== currentViewTypeRef.current) {
       return;
     }
 
-    if (data?.isSharedView === true) {
+    if (data?.removedFromShare === true && eventType === 'shared_note') {
       return;
     }
 
@@ -54,18 +57,22 @@ export function useNote() {
       pendingStackIdsRef.current = stackIds;
     }
 
-    dispatch(fetchItems() as any);
+    if (eventType === 'my_note') {
+      dispatch(fetchItems() as any);
+    }
   };
 
   const handleNoteDeleted = (data: {
     noteId: string;
     eventType?: 'my_note' | 'shared_note';
   }) => {
-    if (data?.eventType === 'shared_note') {
+    const eventType = data?.eventType || 'my_note';
+
+    if (eventType !== currentViewTypeRef.current) {
       return;
     }
 
-    handleFolderStructureChanged({ eventType: 'my_note' });
+    handleFolderStructureChanged({ eventType });
   };
 
   const handleNoteRenamed = (data: {
@@ -73,22 +80,26 @@ export function useNote() {
     newTitle: string;
     eventType?: 'my_note' | 'shared_note';
   }) => {
-    if (data?.eventType === 'shared_note') {
+    const eventType = data?.eventType || 'my_note';
+
+    if (eventType !== currentViewTypeRef.current) {
       return;
     }
 
-    handleFolderStructureChanged({ eventType: 'my_note' });
+    handleFolderStructureChanged({ eventType });
   };
 
   const handleFolderDeleted = (data: {
     folderId: string;
     eventType?: 'my_note' | 'shared_note';
   }) => {
-    if (data?.eventType === 'shared_note') {
+    const eventType = data?.eventType || 'my_note';
+
+    if (eventType !== currentViewTypeRef.current) {
       return;
     }
 
-    handleFolderStructureChanged({ eventType: 'my_note' });
+    handleFolderStructureChanged({ eventType });
   };
 
   const handleFolderRenamed = (data: {
@@ -96,11 +107,17 @@ export function useNote() {
     newName: string;
     eventType?: 'my_note' | 'shared_note';
   }) => {
-    if (data?.eventType === 'shared_note') {
+    const eventType = data?.eventType || 'my_note';
+
+    if (eventType !== currentViewTypeRef.current) {
       return;
     }
 
-    handleFolderStructureChanged({ eventType: 'my_note' });
+    handleFolderStructureChanged({ eventType });
+  };
+
+  const setCurrentViewType = (viewType: 'my_note' | 'shared_note') => {
+    currentViewTypeRef.current = viewType;
   };
 
   useEffect(() => {
@@ -115,10 +132,6 @@ export function useNote() {
       pendingStackIdsRef.current = [];
     }
   }, [items, loading, dispatch]);
-
-  useEffect(() => {
-    setCurrentViewType('my_note');
-  }, [setCurrentViewType]);
 
   useEffect(() => {
     SocketService.connect();
@@ -139,5 +152,10 @@ export function useNote() {
       SocketService.off('folder_deleted', handleFolderDeleted);
       SocketService.off('folder_renamed', handleFolderRenamed);
     };
-  }, [dispatch]);
+  }, [dispatch, folderStack]);
+
+  return {
+    setCurrentViewType,
+    currentViewType: currentViewTypeRef.current,
+  };
 }
