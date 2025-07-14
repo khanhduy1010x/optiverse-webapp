@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { TaskEvent, RepeatType } from '../../types/task-events/task-events.types';
 import { CalendarHeader } from './CalendarHeader.component';
 import { CalendarSidebar } from './CalendarSidebar.component';
@@ -15,6 +15,7 @@ import taskService from '../../services/task.service';
 import { useTaskEventOperations } from '../../hooks/task-events/useTaskEventOperations.hook';
 import { MiniCalendar } from './MiniCalendar.component';
 import { taskEventService } from '../../services/task-event.service';
+import { useCalendarEventLayout } from '../../hooks/task-events/useCalendarEventLayout.hook';
 
 type ViewType = 'Day' | 'Week' | 'Month' | 'Year';
 
@@ -60,15 +61,15 @@ export const Calendar: React.FC<CalendarProps> = ({
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [eventDetail, setEventDetail] = useState<TaskEvent | null>(null);
+  const [showRepeatOptions, setShowRepeatOptions] = useState(false);
   
   // Thêm state cho chức năng All day
   const [isAllDay, setIsAllDay] = useState(false);
-  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [eventEndDate, setEventEndDate] = useState<Date | null>(null);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   
   // Thêm mới các state để quản lý chức năng lặp lại sự kiện
   const [repeatType, setRepeatType] = useState<RepeatType>('none');
-  const [showRepeatOptions, setShowRepeatOptions] = useState(false);
   const [customRepeatFrequency, setCustomRepeatFrequency] = useState(1);
   const [customRepeatUnit, setCustomRepeatUnit] = useState<'day' | 'week' | 'month' | 'year'>('week');
   const [customRepeatDays, setCustomRepeatDays] = useState<number[]>([]);
@@ -76,6 +77,73 @@ export const Calendar: React.FC<CalendarProps> = ({
   const [repeatEndDate, setRepeatEndDate] = useState<Date | null>(null);
   const [repeatOccurrences, setRepeatOccurrences] = useState(10);
   const [showCustomRepeatModal, setShowCustomRepeatModal] = useState(false);
+  
+  // Tính toán khoảng thời gian hiển thị dựa trên loại view và ngày hiện tại
+  const dateRange = useMemo(() => {
+    try {
+      const startDate = new Date(currentDate);
+      const endDate = new Date(currentDate);
+      
+      if (viewType === 'Day') {
+        // Hiển thị một ngày
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(23, 59, 59, 999);
+      } else if (viewType === 'Week') {
+        // Hiển thị một tuần, bắt đầu từ Chủ nhật
+        const day = currentDate.getDay(); // 0 = Chủ nhật, 6 = Thứ 7
+        startDate.setDate(currentDate.getDate() - day);
+        startDate.setHours(0, 0, 0, 0);
+        
+        endDate.setDate(startDate.getDate() + 6);
+        endDate.setHours(23, 59, 59, 999);
+      } else if (viewType === 'Month') {
+        // Hiển thị một tháng
+        startDate.setDate(1);
+        startDate.setHours(0, 0, 0, 0);
+        
+        endDate.setMonth(currentDate.getMonth() + 1);
+        endDate.setDate(0); // Ngày cuối cùng của tháng hiện tại
+        endDate.setHours(23, 59, 59, 999);
+      } else if (viewType === 'Year') {
+        // Hiển thị một năm
+        const year = currentDate.getFullYear();
+        startDate.setFullYear(year, 0, 1);
+        startDate.setHours(0, 0, 0, 0);
+        
+        endDate.setFullYear(year, 11, 31);
+        endDate.setHours(23, 59, 59, 999);
+      }
+      
+      return { startDate, endDate };
+    } catch (error) {
+      console.error('Error in dateRange calculation:', error);
+      // Trả về giá trị mặc định nếu có lỗi
+      const today = new Date();
+      const startDate = new Date(today);
+      startDate.setHours(0, 0, 0, 0);
+      const endDate = new Date(today);
+      endDate.setHours(23, 59, 59, 999);
+      return { startDate, endDate };
+    }
+  }, [currentDate, viewType]);
+  
+  // Sử dụng hook useCalendarEventLayout ở cấp cao nhất của component
+  const layoutResult = useCalendarEventLayout({
+    events: taskEvents || [],
+        startDate: dateRange.startDate,
+        endDate: dateRange.endDate,
+        viewType: viewType === 'Year' ? 'Month' : viewType // Sử dụng Month view cho Year view
+      });
+  
+  // Sử dụng kết quả từ hook trong useMemo
+  const eventsWithLayout = useMemo(() => {
+    try {
+      return layoutResult;
+    } catch (error) {
+      console.error('Error in eventsWithLayout calculation:', error);
+      return [];
+    }
+  }, [layoutResult]);
   
   // Generate time options for dropdown
   const timeOptions = [
@@ -133,35 +201,47 @@ export const Calendar: React.FC<CalendarProps> = ({
   }, []);
 
   const handlePrevious = () => {
-    const newDate = new Date(currentDate);
-    if (viewType === 'Day') {
-      newDate.setDate(currentDate.getDate() - 1);
-    } else if (viewType === 'Week') {
-      newDate.setDate(currentDate.getDate() - 7);
-    } else if (viewType === 'Month') {
-      newDate.setMonth(currentDate.getMonth() - 1);
-    } else if (viewType === 'Year') {
-      newDate.setFullYear(currentDate.getFullYear() - 1);
+    try {
+      const newDate = new Date(currentDate);
+      if (viewType === 'Day') {
+        newDate.setDate(currentDate.getDate() - 1);
+      } else if (viewType === 'Week') {
+        newDate.setDate(currentDate.getDate() - 7);
+      } else if (viewType === 'Month') {
+        newDate.setMonth(currentDate.getMonth() - 1);
+      } else if (viewType === 'Year') {
+        newDate.setFullYear(currentDate.getFullYear() - 1);
+      }
+      setCurrentDate(newDate);
+    } catch (error) {
+      console.error('Error in handlePrevious:', error);
     }
-    setCurrentDate(newDate);
   };
 
   const handleNext = () => {
-    const newDate = new Date(currentDate);
-    if (viewType === 'Day') {
-      newDate.setDate(currentDate.getDate() + 1);
-    } else if (viewType === 'Week') {
-      newDate.setDate(currentDate.getDate() + 7);
-    } else if (viewType === 'Month') {
-      newDate.setMonth(currentDate.getMonth() + 1);
-    } else if (viewType === 'Year') {
-      newDate.setFullYear(currentDate.getFullYear() + 1);
+    try {
+      const newDate = new Date(currentDate);
+      if (viewType === 'Day') {
+        newDate.setDate(currentDate.getDate() + 1);
+      } else if (viewType === 'Week') {
+        newDate.setDate(currentDate.getDate() + 7);
+      } else if (viewType === 'Month') {
+        newDate.setMonth(currentDate.getMonth() + 1);
+      } else if (viewType === 'Year') {
+        newDate.setFullYear(currentDate.getFullYear() + 1);
+      }
+      setCurrentDate(newDate);
+    } catch (error) {
+      console.error('Error in handleNext:', error);
     }
-    setCurrentDate(newDate);
   };
 
   const handleToday = () => {
-    setCurrentDate(new Date());
+    try {
+      setCurrentDate(new Date());
+    } catch (error) {
+      console.error('Error in handleToday:', error);
+    }
   };
 
   // Tính toán danh sách end time dựa trên start time đã chọn
@@ -266,7 +346,7 @@ export const Calendar: React.FC<CalendarProps> = ({
     setSelectedDate(new Date());
     
     // Reset endDate khi mở modal mới
-    setEndDate(null);
+    setEventEndDate(null);
     
     // Reset chế độ All day
     setIsAllDay(false);
@@ -299,6 +379,59 @@ export const Calendar: React.FC<CalendarProps> = ({
       setSelectedEvent(tempEvent as TaskEvent);
   };
 
+  // Hàm mở modal thêm mới event khi nhấp vào một ô trong lịch
+  const handleAddSchedule = (date?: Date, hour?: number) => {
+    setSelectedEvent(undefined);
+    setIsAddScheduleOpen(true);
+    
+    // Sử dụng ngày được chọn hoặc ngày hiện tại
+    const selectedDateTime = date ? new Date(date) : new Date();
+    
+    // Nếu có giờ được chỉ định, cập nhật giờ cho ngày được chọn
+    if (hour !== undefined) {
+      selectedDateTime.setHours(hour, 0, 0, 0);
+    }
+    
+    setSelectedDate(selectedDateTime);
+    
+    // Reset endDate khi mở modal mới
+    setEventEndDate(null);
+    
+    // Reset chế độ All day
+    setIsAllDay(false);
+    
+    // Reset các trạng thái lặp lại
+    setRepeatType('none');
+    setShowRepeatOptions(false);
+    setCustomRepeatFrequency(1);
+    setCustomRepeatUnit('week');
+    setCustomRepeatDays([]);
+    setRepeatEndType('never');
+    setRepeatEndDate(null);
+    setRepeatOccurrences(10);
+    
+    // Định dạng thời gian bắt đầu dựa trên giờ được chọn
+    const hours = selectedDateTime.getHours();
+    const isPM = hours >= 12;
+    const hour12 = hours % 12 || 12;
+    const formattedHour = hour12.toString().padStart(2, '0');
+    const formattedStartTime = `${formattedHour}:00${isPM ? 'pm' : 'am'}`;
+    
+    setNewEventStartTime(formattedStartTime);
+    setNewEventTitle('');
+    
+    // Tạo đối tượng event tạm thời với các giá trị mặc định
+    const tempEvent: Partial<TaskEvent> = {
+      task_id: taskId,
+      title: '',
+      start_time: selectedDateTime,
+      end_time: new Date(selectedDateTime.getTime() + 60 * 60 * 1000), // Mặc định kéo dài 1 giờ
+      repeat_type: 'none'
+    };
+    
+    setSelectedEvent(tempEvent as TaskEvent);
+  };
+
   const handleEditEvent = (event: TaskEvent) => {
     // Đóng chi tiết sự kiện nếu đang mở
     setIsDetailOpen(false);
@@ -324,35 +457,45 @@ export const Calendar: React.FC<CalendarProps> = ({
   };
 
   const getViewTitle = () => {
-    const options: Intl.DateTimeFormatOptions = { 
-      month: 'long',
-      year: 'numeric',
-    };
-    
-    if (viewType === 'Day') {
-      options.day = 'numeric';
-      return currentDate.toLocaleDateString('en-US', options);
-    } else if (viewType === 'Week') {
-      const startOfWeek = new Date(currentDate);
-      startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
+    try {
+      const options: Intl.DateTimeFormatOptions = {
+        month: 'long',
+        year: 'numeric'
+      };
       
-      const endOfWeek = new Date(startOfWeek);
-      endOfWeek.setDate(startOfWeek.getDate() + 6);
-      
-      if (startOfWeek.getMonth() === endOfWeek.getMonth()) {
-        return `${startOfWeek.toLocaleDateString('en-US', { month: 'long' })} ${startOfWeek.getFullYear()}`;
-      } else if (startOfWeek.getFullYear() === endOfWeek.getFullYear()) {
-        return `${startOfWeek.toLocaleDateString('en-US', { month: 'short' })} ${startOfWeek.getDate()} - ${endOfWeek.toLocaleDateString('en-US', { month: 'short' })} ${endOfWeek.getDate()}, ${startOfWeek.getFullYear()}`;
-      } else {
-        return `${startOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} - ${endOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+      if (viewType === 'Day') {
+        options.day = 'numeric';
+        return currentDate.toLocaleDateString('en-US', options);
+      } else if (viewType === 'Week') {
+        try {
+          const startOfWeek = new Date(currentDate);
+          startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
+          
+          const endOfWeek = new Date(startOfWeek);
+          endOfWeek.setDate(startOfWeek.getDate() + 6);
+          
+          if (startOfWeek.getMonth() === endOfWeek.getMonth()) {
+            return `${startOfWeek.toLocaleDateString('en-US', { month: 'long' })} ${startOfWeek.getFullYear()}`;
+          } else if (startOfWeek.getFullYear() === endOfWeek.getFullYear()) {
+            return `${startOfWeek.toLocaleDateString('en-US', { month: 'short' })} ${startOfWeek.getDate()} - ${endOfWeek.toLocaleDateString('en-US', { month: 'short' })} ${endOfWeek.getDate()}, ${startOfWeek.getFullYear()}`;
+          } else {
+            return `${startOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} - ${endOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+          }
+        } catch (error) {
+          console.error('Error generating week title:', error);
+          return currentDate.toLocaleDateString('en-US', options);
+        }
+      } else if (viewType === 'Month') {
+        return currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      } else if (viewType === 'Year') {
+        return currentDate.getFullYear().toString();
       }
-    } else if (viewType === 'Month') {
-      return currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-    } else if (viewType === 'Year') {
-      return currentDate.getFullYear().toString();
+      
+      return '';
+    } catch (error) {
+      console.error('Error in getViewTitle:', error);
+      return 'Calendar';
     }
-    
-    return '';
   };
 
   // Toggle chức năng All day
@@ -362,52 +505,66 @@ export const Calendar: React.FC<CalendarProps> = ({
 
   // Hàm xử lý khi chọn end date
   const handleEndDateSelection = (date: Date) => {
-    setEndDate(date);
+    setEventEndDate(date);
     setShowEndDatePicker(false);
   };
 
   // Format ngày kết thúc để hiển thị
   const formatEndDate = () => {
-    if (!endDate) return 'Select end date';
+    if (!eventEndDate) return 'Select end date';
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return `${days[endDate.getDay()]}, ${months[endDate.getMonth()]} ${endDate.getDate()}`;
+    return `${days[eventEndDate.getDay()]}, ${months[eventEndDate.getMonth()]} ${eventEndDate.getDate()}`;
   };
   
   // Cập nhật renderCalendarView và các hàm liên quan...
 
   const renderCalendarView = () => {
-    if (viewType === 'Day') {
-      return (
-        <DayView
-          currentDate={currentDate}
-          currentTime={currentTime}
-          taskEvents={taskEvents}
-          handleAddEvent={handleAddEvent}
-          handleEditEvent={handleViewEventDetail}
-        />
-      );
-    } else if (viewType === 'Week') {
-      return (
-        <WeekView
-          currentDate={currentDate}
-          currentTime={currentTime}
-          taskEvents={taskEvents}
-          handleAddEvent={handleAddEvent}
-          handleEditEvent={handleViewEventDetail}
-        />
-      );
-    } else if (viewType === 'Month') {
-      return (
-        <MonthView
-          currentDate={currentDate}
-          taskEvents={taskEvents}
-          handleAddEvent={handleAddEvent}
-          handleEditEvent={handleViewEventDetail}
-        />
-      );
-    } else {
-      return <div>Year view not implemented yet</div>;
+    try {
+      switch (viewType) {
+        case 'Day':
+          return (
+            <DayView
+              currentDate={currentDate}
+              currentTime={currentTime}
+              taskEvents={eventsWithLayout}
+              handleAddEvent={handleAddSchedule}
+              handleEditEvent={handleViewEventDetail}
+            />
+          );
+        case 'Week':
+          return (
+            <WeekView
+              currentDate={currentDate}
+              currentTime={currentTime}
+              taskEvents={eventsWithLayout}
+              handleAddEvent={handleAddSchedule}
+              handleEditEvent={handleViewEventDetail}
+            />
+          );
+        case 'Month':
+          return (
+            <MonthView
+              currentDate={currentDate}
+              taskEvents={eventsWithLayout}
+              handleAddEvent={handleAddSchedule}
+              handleEditEvent={handleViewEventDetail}
+            />
+          );
+        default:
+          return (
+            <WeekView
+              currentDate={currentDate}
+              currentTime={currentTime}
+              taskEvents={eventsWithLayout}
+              handleAddEvent={handleAddSchedule}
+              handleEditEvent={handleViewEventDetail}
+            />
+          );
+      }
+    } catch (error) {
+      console.error('Error rendering calendar view:', error);
+      return <div className="text-center text-red-500 p-4">Error loading calendar view</div>;
     }
   };
 
@@ -480,7 +637,7 @@ export const Calendar: React.FC<CalendarProps> = ({
       case 'daily':
         return 'Daily';
       case 'weekly':
-        if (customRepeatDays && customRepeatDays.length > 0) {
+        if (customRepeatDays && Array.isArray(customRepeatDays) && customRepeatDays.length > 0) {
           const dayNames = customRepeatDays.map(day => days[day]);
           return `Weekly on ${dayNames.join(', ')}`;
         }
@@ -498,7 +655,7 @@ export const Calendar: React.FC<CalendarProps> = ({
         if (customRepeatFrequency && customRepeatUnit) {
           text = `Every ${customRepeatFrequency} ${customRepeatUnit}${customRepeatFrequency > 1 ? 's' : ''}`;
           
-          if (customRepeatUnit === 'week' && customRepeatDays && customRepeatDays.length > 0) {
+          if (customRepeatUnit === 'week' && customRepeatDays && Array.isArray(customRepeatDays) && customRepeatDays.length > 0) {
             const dayNames = customRepeatDays.map(day => days[day]);
             text += ` on ${dayNames.join(', ')}`;
           }
@@ -533,7 +690,7 @@ export const Calendar: React.FC<CalendarProps> = ({
     setRepeatType('custom');
     
     // Đảm bảo có repeat_days nếu đang chọn tùy chỉnh theo tuần
-    if (customRepeatUnit === 'week' && customRepeatDays.length === 0) {
+    if (customRepeatUnit === 'week' && customRepeatDays && Array.isArray(customRepeatDays) && customRepeatDays.length === 0) {
       // Nếu chưa chọn ngày nào, mặc định chọn ngày hiện tại trong tuần
       setCustomRepeatDays([selectedDate.getDay()]);
     }
@@ -591,11 +748,11 @@ export const Calendar: React.FC<CalendarProps> = ({
       setNewEventTitle('');
       setIsAddScheduleOpen(false);
       
-      if (isAllDay && endDate) {
+      if (isAllDay && eventEndDate) {
         // Tạo danh sách các ngày từ selectedDate đến endDate
         const dates: Date[] = [];
         let currentDay = new Date(selectedDate);
-        const lastDay = new Date(endDate);
+        const lastDay = new Date(eventEndDate);
         
         // Đặt giờ về 0 để so sánh chỉ theo ngày
         currentDay.setHours(0, 0, 0, 0);
@@ -628,7 +785,7 @@ export const Calendar: React.FC<CalendarProps> = ({
             repeat_type: repeatType,
             repeat_interval: repeatType === 'custom' ? customRepeatFrequency : 1,
             repeat_days: (repeatType === 'weekly' || repeatType === 'custom') ? 
-              (customRepeatDays.length > 0 ? customRepeatDays : [selectedDate.getDay()]) : 
+              (customRepeatDays && Array.isArray(customRepeatDays) && customRepeatDays.length > 0 ? customRepeatDays : [selectedDate.getDay()]) : 
               undefined,
             repeat_end_type: repeatEndType,
             repeat_end_date: repeatEndType === 'on' && repeatEndDate ? repeatEndDate : undefined,
@@ -1084,15 +1241,15 @@ export const Calendar: React.FC<CalendarProps> = ({
                       onClick={() => toggleEndDatePicker()}
                       className="px-2 py-1.5 bg-gray-100 w-full text-left text-sm rounded-md hover:bg-gray-200 transition-colors"
                     >
-                      {endDate ? formatEndDate() : formatSelectedDate()}
+                      {eventEndDate ? formatEndDate() : formatSelectedDate()}
                     </button>
                     
                     {showEndDatePicker && (
                       <div className="absolute top-10 left-0 z-50">
                         <MiniCalendar
-                          currentDate={endDate || selectedDate}
-                          miniCalendarDate={endDate || selectedDate}
-                          setMiniCalendarDate={endDate ? setEndDate : setSelectedDate}
+                          currentDate={eventEndDate || selectedDate}
+                          miniCalendarDate={eventEndDate || selectedDate}
+                          setMiniCalendarDate={eventEndDate ? setEventEndDate : setSelectedDate}
                           handleDateClick={handleEndDateSelection}
                           setShowMiniCalendarPopup={setShowEndDatePicker}
                           showMiniCalendarPopup={showEndDatePicker}
@@ -1526,11 +1683,11 @@ export const Calendar: React.FC<CalendarProps> = ({
               <button
                 onClick={handleCreateNewEvent}
                 className={`px-4 py-2 text-white rounded-md ${
-                  isAllDay && !endDate 
+                  isAllDay && !eventEndDate 
                     ? 'bg-gray-400 cursor-not-allowed' 
                     : 'bg-blue-500 hover:bg-blue-600'
                 }`}
-                disabled={isAllDay && !endDate}
+                disabled={isAllDay && !eventEndDate}
               >
                 Save
               </button>

@@ -160,3 +160,127 @@ export function formatElapsedTime(seconds: number): string {
 
   return `${seconds} second${seconds !== 1 ? 's' : ''}`;
 }
+
+/**
+ * Tính thời gian còn lại đến deadline và trả về chuỗi hiển thị đếm ngược
+ * @param endTimeIso Thời gian kết thúc dưới dạng chuỗi ISO hoặc đối tượng Date
+ * @returns Chuỗi hiển thị thời gian còn lại, ví dụ: "2 days left", "5 hours left", "30 minutes left"
+ */
+export function getCountdownString(endTimeIso: string | Date): string {
+  if (!endTimeIso) return '';
+  
+  let endTime: Date;
+  
+  // Xử lý chuỗi ISO đặc biệt để tránh vấn đề múi giờ
+  if (typeof endTimeIso === 'string') {
+    // Trích xuất ngày và giờ từ chuỗi ISO, bỏ qua múi giờ
+    const matches = endTimeIso.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/);
+    if (matches) {
+      // Tạo đối tượng Date với múi giờ địa phương
+      const [, datePart, timePart] = matches;
+      const dateStr = `${datePart}T${timePart}:00`;
+      endTime = new Date(dateStr);
+    } else {
+      // Fallback nếu không phải định dạng mong đợi
+      endTime = new Date(endTimeIso);
+    }
+  } else {
+    endTime = endTimeIso;
+  }
+  
+  if (isNaN(endTime.getTime())) return '';
+  
+  const now = new Date();
+  const nowVN = new Date(now.getTime() + 7 * 60 * 60 * 1000); // Cộng thêm 7 tiếng
+  
+  // Tính khoảng thời gian còn lại tính bằng mili giây
+  const timeLeft = endTime.getTime() - now.getTime();
+  
+  // Nếu đã quá hạn, trả về chuỗi trống
+  if (timeLeft <= 0) return '';
+  
+  // Chuyển đổi thành giây
+  const secondsLeft = Math.floor(timeLeft / 1000);
+  
+  // Tính toán các đơn vị thời gian
+  const days = Math.floor(secondsLeft / 86400);
+  const hours = Math.floor((secondsLeft % 86400) / 3600);
+  const minutes = Math.floor((secondsLeft % 3600) / 60);
+  
+  // Hiển thị đơn vị thời gian lớn nhất
+  if (days > 0) {
+    return `${days} day${days > 1 ? 's' : ''} left`;
+  } else if (hours > 0) {
+    return `${hours} hour${hours > 1 ? 's' : ''} left`;
+  } else if (minutes > 0) {
+    return `${minutes} minute${minutes > 1 ? 's' : ''} left`;
+  } else {
+    return 'Less than a minute left';
+  }
+}
+
+/**
+ * Kiểm tra xem task đã quá 3/4 thời gian từ start đến end chưa, và vẫn đang ở trạng thái pending
+ * @param startTimeIso Thời gian bắt đầu task
+ * @param endTimeIso Thời gian kết thúc task
+ * @param status Trạng thái hiện tại của task
+ * @returns true nếu task đã qua 3/4 thời gian và vẫn pending, false trong các trường hợp khác
+ */
+export function isTaskNearDue(startTimeIso: string | Date, endTimeIso: string | Date, status: string): boolean {
+  if (!startTimeIso || !endTimeIso || status !== 'pending') return false;
+  
+  // Chuyển đổi sang Date
+  const startTime = startTimeIso instanceof Date ? startTimeIso : new Date(startTimeIso);
+  const endTime = endTimeIso instanceof Date ? endTimeIso : new Date(endTimeIso);
+  const now = new Date();
+  
+  // Kiểm tra nếu ngày không hợp lệ
+  if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) return false;
+  
+  // Tính toán tổng thời gian của task
+  const totalDuration = endTime.getTime() - startTime.getTime();
+  if (totalDuration <= 0) return false; // Đảm bảo thời gian hợp lệ
+  
+  // Tính thời gian đã trôi qua
+  const elapsedTime = now.getTime() - startTime.getTime();
+  if (elapsedTime < 0) return false; // Task chưa bắt đầu
+  
+  // Kiểm tra nếu đã qua 3/4 thời gian
+  return elapsedTime >= (totalDuration * 0.75) && elapsedTime < totalDuration;
+}
+
+/**
+ * Kiểm tra xem task đã quá hạn chưa
+ * @param endTimeIso Thời gian kết thúc task
+ * @param status Trạng thái hiện tại của task
+ * @returns true nếu task đã quá hạn và vẫn chưa completed, false trong các trường hợp khác
+ */
+export function isTaskOverdue(endTimeIso: string | Date, status: string): boolean {
+  if (!endTimeIso || status === 'completed') return false;
+  
+  // Chuyển đổi sang Date
+  const endTime = endTimeIso instanceof Date ? endTimeIso : new Date(endTimeIso);
+  const now = new Date();
+  const nowVN = new Date(now.getTime() + 7 * 60 * 60 * 1000); // Cộng thêm 7 tiếng
+
+  // Log để kiểm tra giá trị
+  console.log("isTaskOverdue check:", {
+    endTimeIso,
+    endTimeFormatted: endTime.toISOString(),
+    endTimeGetTime: endTime.getTime(),
+    nowFormatted: now.toISOString(),
+    nowGetTime: now.getTime(),
+    difference: now.getTime() - endTime.getTime(),
+    localTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    endTimeLocal: endTime.toString(),
+    nowLocal: now.toString()
+  });
+  
+  // Kiểm tra nếu ngày không hợp lệ
+  if (isNaN(endTime.getTime())) return false;
+  
+  // Kiểm tra nếu đã quá hạn
+  const isOverdue = nowVN.getTime() > endTime.getTime();
+  console.log("isOverdue:", isOverdue);
+  return isOverdue;
+}

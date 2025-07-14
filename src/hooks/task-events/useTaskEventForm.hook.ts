@@ -37,12 +37,12 @@ export const useTaskEventForm = (taskEvent?: TaskEvent) => {
   const [formData, setFormData] = useState<TaskEventFormState>(
     taskEvent
       ? {
-          task_id: taskEvent.task_id,
+          task_id: taskEvent.task_id || '',
           title: taskEvent.title || '',
           start_time: new Date(taskEvent.start_time),
           end_time: taskEvent.end_time ? new Date(taskEvent.end_time) : new Date(new Date(taskEvent.start_time).getTime() + 60 * 60 * 1000),
           all_day: taskEvent.all_day || false,
-          repeat_type: taskEvent.repeat_type,
+          repeat_type: taskEvent.repeat_type || 'none',
           repeat_interval: taskEvent.repeat_interval || 1,
           repeat_days: taskEvent.repeat_days || [new Date(taskEvent.start_time).getDay()],
           repeat_end_type: taskEvent.repeat_end_type || 'never',
@@ -57,7 +57,7 @@ export const useTaskEventForm = (taskEvent?: TaskEvent) => {
 
   const handleInputChange = (
     field: keyof TaskEventFormState,
-    value: string | Date | number | undefined
+    value: string | Date | number | boolean | number[] | undefined
   ) => {
     setFormData(prev => ({
       ...prev,

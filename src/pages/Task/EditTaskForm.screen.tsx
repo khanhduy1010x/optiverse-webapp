@@ -76,6 +76,7 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
             value={localTitle}
             onChange={(e) => setLocalTitle(e.target.value)}
             autoFocus
+            autoComplete="off"
           />
         </div>
 
@@ -87,6 +88,7 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
             value={localDescription}
             onChange={(e) => setLocalDescription(e.target.value)}
             rows={3}
+            autoComplete="off"
           />
         </div>
 
@@ -102,6 +104,7 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
                 className="flex-grow border-0 bg-transparent focus:outline-none focus:ring-0 text-sm text-gray-700"
                 value={localStatus}
                 onChange={(e) => setLocalStatus(e.target.value as any)}
+                autoComplete="off"
               >
                 <option value="pending">Pending</option>
                 <option value="completed">Completed</option>
@@ -119,6 +122,7 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
                 className="flex-grow border-0 bg-transparent focus:outline-none focus:ring-0 text-sm text-gray-700"
                 value={localPriority}
                 onChange={(e) => setLocalPriority(e.target.value as any)}
+                autoComplete="off"
               >
                 <option value="low">Low (P3)</option>
                 <option value="medium">Medium (P2)</option>
@@ -138,6 +142,7 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
                   className="w-full border border-gray-200 rounded px-2 py-1 text-sm"
                   value={isoToLocalDateTime(localStartTime || '')}
                   onChange={(e) => setLocalStartTime(e.target.value)}
+                  autoComplete="off"
                 />
               </div>
             </div>
@@ -154,6 +159,7 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
                   className="w-full border border-gray-200 rounded px-2 py-1 text-sm"
                   value={isoToLocalDateTime(localEndTime || '')}
                   onChange={(e) => setLocalEndTime(e.target.value)}
+                  autoComplete="off"
                 />
               </div>
             </div>
@@ -166,7 +172,7 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
               <div className="flex-grow">
                 <div className={GROUP_CLASSNAMES.tagContainer + ' mb-2'}>
                   {selectedTags.length === 0 ? (
-                    <span className="text-sm text-gray-400">No tags selected</span>
+                    <></>
                   ) : (
                     selectedTags.map(tag => (
                       <span
@@ -265,7 +271,7 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
           <button
             type="button"
             onClick={handleSave}
-            className={GROUP_CLASSNAMES.buttonPrimary + ' px-4 py-2 text-sm'}
+            className="px-4 py-2 text-sm bg-red-500 hover:bg-red-600 text-white rounded-md font-medium shadow-md"
           >
             Save Changes
           </button>

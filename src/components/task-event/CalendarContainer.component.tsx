@@ -4,7 +4,7 @@ import { RefreshButton } from './RefreshButton.component';
 import { TaskEvent } from '../../types/task-events/task-events.types';
 
 interface CalendarContainerProps {
-  taskId: string;
+  taskId: string | null;
   taskEvents: TaskEvent[];
   loading: boolean;
   error: string | null;
@@ -28,8 +28,11 @@ export const CalendarContainer: React.FC<CalendarContainerProps> = ({
 }) => {
   return (
     <div className="h-[calc(100vh-64px)] relative">
+      <div className="absolute top-4 right-4 z-50">
+        <RefreshButton onClick={onRefresh} />
+      </div>
       <Calendar
-        taskId={taskId}
+        taskId={taskId || ''}
         taskEvents={taskEvents}
         loading={loading}
         error={error}
@@ -38,9 +41,6 @@ export const CalendarContainer: React.FC<CalendarContainerProps> = ({
         updateEvent={updateEvent}
         refreshTaskEvents={refreshTaskEvents}
       />
-      <div className="absolute bottom-4 right-4 z-10">
-        <RefreshButton onClick={onRefresh} />
-      </div>
     </div>
   );
 }; 

@@ -48,11 +48,15 @@ class TaskService {
   // Create a new task
   async createTask(taskData: Omit<Task, '_id'>): Promise<Task> {
     try {
-      // Chuyển đổi start_time và end_time sang định dạng ISO string nếu là Date
+      // Xử lý đặc biệt cho start_time và end_time để đảm bảo định dạng ISO đúng
       const formattedData = {
         ...taskData,
-        start_time: taskData.start_time instanceof Date ? taskData.start_time.toISOString() : taskData.start_time,
-        end_time: taskData.end_time instanceof Date ? taskData.end_time.toISOString() : taskData.end_time
+        start_time: taskData.start_time ? 
+          (typeof taskData.start_time === 'string' ? taskData.start_time : taskData.start_time.toISOString()) : 
+          undefined,
+        end_time: taskData.end_time ? 
+          (typeof taskData.end_time === 'string' ? taskData.end_time : taskData.end_time.toISOString()) : 
+          undefined
       };
 
       const response = await api.post<ApiResponse<{ task: Task }>>(
@@ -75,27 +79,44 @@ class TaskService {
   }
 
   // Update an existing task
-  async updateTask(taskId: string, taskData: Partial<Task>) {
+  async updateTask(taskId: string, taskData: Partial<Task>, retryCount = 0): Promise<ApiResponse<{ task: Task }>> {
     try {
-      // Chuyển đổi start_time và end_time sang định dạng ISO string nếu là Date
+      // Xử lý đặc biệt cho start_time và end_time để đảm bảo định dạng ISO đúng
       const formattedData = {
         ...taskData,
-        start_time: taskData.start_time instanceof Date ? taskData.start_time.toISOString() : taskData.start_time,
-        end_time: taskData.end_time instanceof Date ? taskData.end_time.toISOString() : taskData.end_time
+        start_time: taskData.start_time ? 
+          (typeof taskData.start_time === 'string' ? taskData.start_time : taskData.start_time.toISOString()) : 
+          undefined,
+        end_time: taskData.end_time ? 
+          (typeof taskData.end_time === 'string' ? taskData.end_time : taskData.end_time.toISOString()) : 
+          undefined
       };
 
       console.log('Updating task with data:', formattedData);
+      
+      // Thêm timeout dài hơn cho request này
       const response = await api.put<ApiResponse<{ task: Task }>>(
         `/productivity/task/${taskId}`,
-        formattedData
+        formattedData,
+        { timeout: 10000 } // Timeout 10 giây
       );
+      
       console.log('Update response:', response.data);
       if (response.data && response.data.data) {
         return response.data;
       }
-      throw new Error('Failed to update task');
+      throw new Error('Failed to update task: Invalid response');
     } catch (error) {
       console.error(`Error updating task ${taskId}:`, error);
+      
+      // Thử lại tối đa 2 lần nếu là lỗi mạng hoặc timeout
+      if (retryCount < 2) {
+        console.log(`Retrying update task ${taskId} (attempt ${retryCount + 1})...`);
+        // Đợi một chút trước khi thử lại
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return this.updateTask(taskId, taskData, retryCount + 1);
+      }
+      
       throw error;
     }
   }

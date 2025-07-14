@@ -43,12 +43,12 @@ const EVENT_COLORS = [
 ];
 
 // Map of color values to tailwind classes
-const COLOR_MAP: Record<string, { bg: string, text: string }> = {
-  '#3B82F6': { bg: 'bg-blue-100', text: 'text-blue-800' },   // Blue
-  '#F87171': { bg: 'bg-red-100', text: 'text-red-800' },     // Red
-  '#FBBF24': { bg: 'bg-yellow-100', text: 'text-yellow-800' }, // Yellow
-  '#10B981': { bg: 'bg-green-100', text: 'text-green-800' },  // Green
-  '#A78BFA': { bg: 'bg-purple-100', text: 'text-purple-800' }, // Purple
+const COLOR_MAP: Record<string, { bg: string, text: string, border: string }> = {
+  '#3B82F6': { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-200' },   // Blue
+  '#F87171': { bg: 'bg-red-100', text: 'text-red-800', border: 'border-red-200' },     // Red
+  '#FBBF24': { bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-200' }, // Yellow
+  '#10B981': { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-200' },  // Green
+  '#A78BFA': { bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-200' }, // Purple
 };
 
 export const CalendarEvent: React.FC<CalendarEventProps> = ({
@@ -68,10 +68,6 @@ export const CalendarEvent: React.FC<CalendarEventProps> = ({
     colorSet = EVENT_COLORS[colorIndex];
   }
   
-  const formatEventTime = (date: Date | string) => {
-    return new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
   // Format time range
   const formatTimeRange = () => {
     const startDate = new Date(event.start_time);
@@ -86,14 +82,25 @@ export const CalendarEvent: React.FC<CalendarEventProps> = ({
     return startTime;
   };
 
+  // Luôn hiển thị block lớn, không compact view
   return (
     <div
       onClick={onClick}
-      style={style}
-      className={`absolute inset-x-1 top-1 bottom-1 rounded-md p-2 cursor-pointer z-20 transition-colors shadow-sm ${className || ''} ${colorSet.bg} overflow-hidden`}
+      style={{
+        width: '100%',
+        boxSizing: 'border-box',
+        padding: '6px 10px',
+        background: '#039BE5',
+        borderRadius: 6,
+        ...style
+      }}
+      className={`cursor-pointer flex flex-col items-start ${className || ''}`}
     >
-      <div className={`text-xs font-medium ${colorSet.text}`}>{event.title || 'Untitled Event'}</div>
-      <div className="text-xs text-gray-600 mt-0.5">{formatTimeRange()}</div>
+      <div className="font-bold text-white text-base leading-tight w-full" style={{whiteSpace: 'normal'}}>{event.title || 'Untitled Event'}</div>
+      <div className="text-xs text-white/90 mt-1 w-full">{formatTimeRange()}</div>
+      {event.description && (
+        <div className="text-xs text-white/80 mt-1 line-clamp-2 w-full">{event.description}</div>
+      )}
     </div>
   );
 }; 

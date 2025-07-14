@@ -9,7 +9,7 @@ import { CalendarContainer } from '../../components/task-event/CalendarContainer
 
 const Schedule: React.FC = () => {
   // Custom hook to fetch the first task
-  const { taskId, loading: loadingTask, error: taskError } = useFirstTask();
+  const { taskId, loading: loadingTask, error: taskError, refreshTask } = useFirstTask();
 
   // Custom hook to fetch task events
   const { 
@@ -28,9 +28,19 @@ const Schedule: React.FC = () => {
     enabled: false // Disable auto refresh
   });
 
-  // Handle page reload
+  // Handle reload - refresh cả task và task events
   const handleReload = () => {
-    window.location.reload();
+    try {
+      // Làm mới dữ liệu task
+      refreshTask();
+      
+      // Làm mới dữ liệu task events nếu có taskId
+      if (taskId) {
+        refreshTaskEvents();
+      }
+    } catch (error) {
+      console.error('Error reloading data:', error);
+    }
   };
 
   // Show loading state while fetching tasks
