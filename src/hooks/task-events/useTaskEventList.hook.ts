@@ -1,290 +1,213 @@
 import { useState, useEffect, useCallback } from 'react';
 import { TaskEvent } from '../../types/task-events/task-events.types';
 import { taskEventService } from '../../services/task-event.service';
+import { CreateTaskEventRequest } from '../../types/task-events/request/create-task-event.request';
+import { UpdateTaskEventRequest } from '../../types/task-events/request/update-task-event.request';
 
 // Helper function to generate recurring events
 const generateRecurringEvents = (events: TaskEvent[]): TaskEvent[] => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  // Look ahead 3 months for recurring events
-  const futureDate = new Date();
-  futureDate.setMonth(futureDate.getMonth() + 3);
-  
-  const recurringEvents: TaskEvent[] = [];
-  
-  events.forEach(event => {
-    // Add the original event first
-    recurringEvents.push(event);
+  // Trả về các sự kiện gốc mà không tạo thêm các sự kiện lặp lại ảo
+  // Các sự kiện lặp lại thực sự sẽ được tạo và lưu vào cơ sở dữ liệu
+  return [...events];
+};
+
+// Hàm tạo các sự kiện lặp lại từ sự kiện gốc
+const createRecurringEvents = async (originalEvent: TaskEvent) => {
+  try {
+    console.log('Creating recurring events from:', originalEvent);
     
-    if (event.repeat_type === 'none') {
-      return; // Skip non-recurring events
+    if (!originalEvent.repeat_type || originalEvent.repeat_type === 'none') {
+      console.log('Event is not recurring, skipping');
+      return [];
     }
     
-    const startTime = new Date(event.start_time);
-    const endTime = event.end_time ? new Date(event.end_time) : undefined;
-    const eventDuration = endTime ? endTime.getTime() - startTime.getTime() : 0;
+    // Lấy thông tin về sự kiện gốc
+    const startDate = new Date(originalEvent.start_time);
+    const endDate = originalEvent.end_time ? new Date(originalEvent.end_time) : new Date(startDate.getTime() + 60 * 60 * 1000); // Mặc định 1 giờ
+    const duration = endDate.getTime() - startDate.getTime();
     
-    // Calculate end date for recurring events
-    let endDate = futureDate;
-    if (event.repeat_end_type === 'on' && event.repeat_end_date) {
-      const specificEndDate = new Date(event.repeat_end_date);
-      if (specificEndDate < futureDate) {
-        endDate = specificEndDate;
-      }
-    }
+    // Lấy các thông số lặp lại
+    const repeatType = originalEvent.repeat_type;
+    const repeatFrequency = originalEvent.repeat_frequency || 1;
+    const repeatDays = originalEvent.repeat_days || [];
+    const repeatEndType = originalEvent.repeat_end_type || 'never';
+    const repeatEndDate = originalEvent.repeat_end_date ? new Date(originalEvent.repeat_end_date) : null;
+    const repeatOccurrences = originalEvent.repeat_occurrences || 10;
     
-    // Calculate max occurrences
-    let maxOccurrences = 100; // Default max occurrences to prevent infinite loops
-    if (event.repeat_end_type === 'after' && event.repeat_occurrences) {
-      maxOccurrences = event.repeat_occurrences;
-    }
+    // Mảng chứa các sự kiện lặp lại
+    const recurringEvents: TaskEvent[] = [];
     
-    // Handle different recurrence types
-    switch (event.repeat_type) {
-      case 'daily': {
-        const interval = event.repeat_interval || 1;
-        let currentDate = new Date(startTime);
-        currentDate.setDate(currentDate.getDate() + interval); // Start with next occurrence
-        
-        let occurrenceCount = 1; // Count the original event
-        while (currentDate <= endDate && occurrenceCount < maxOccurrences) {
-          // Check if we've reached the occurrence limit
-          if (event.repeat_end_type === 'after' && event.repeat_occurrences && 
-              occurrenceCount >= event.repeat_occurrences) {
-            break;
-          }
-          
-          const newStartTime = new Date(currentDate);
-          newStartTime.setHours(startTime.getHours(), startTime.getMinutes());
-          
-          let newEndTime;
-          if (endTime) {
-            newEndTime = new Date(newStartTime.getTime() + eventDuration);
-          }
-          
-          recurringEvents.push({
-            ...event,
-            _id: `${event._id}-recurrence-${occurrenceCount}`,
-            start_time: newStartTime,
-            end_time: newEndTime,
-            isRecurrence: true // Mark as a generated recurrence
-          });
-          
-          occurrenceCount++;
-          currentDate.setDate(currentDate.getDate() + interval);
-        }
+    // Tạo các sự kiện lặp lại dựa trên loại lặp lại
+    let currentDate = new Date(startDate);
+    let occurrenceCount = 0;
+    
+    // Đặt biến này để đảm bảo không tạo sự kiện trùng lặp cho ngày đầu tiên
+    // Bỏ qua ngày đầu tiên vì đã có sự kiện gốc
+    let isFirstOccurrence = true;
+    
+    // Vòng lặp tạo các sự kiện lặp lại
+    while (true) {
+      // Kiểm tra điều kiện kết thúc
+      if (repeatEndType === 'on' && repeatEndDate && currentDate > repeatEndDate) {
         break;
       }
       
-      case 'weekly': {
-        const interval = event.repeat_interval || 1;
-        let occurrenceCount = 1; // Count the original event
+      if (repeatEndType === 'after' && occurrenceCount >= repeatOccurrences) {
+        break;
+      }
+      
+      if (occurrenceCount > 100) { // Giới hạn số lượng sự kiện tạo ra để tránh vòng lặp vô hạn
+        console.warn('Reached maximum number of recurring events (100), stopping');
+        break;
+      }
+      
+      // Bỏ qua sự kiện đầu tiên vì đã có sự kiện gốc
+      if (isFirstOccurrence) {
+        isFirstOccurrence = false;
         
-        // Get the days of week to repeat on
-        const daysOfWeek = event.repeat_days && event.repeat_days.length > 0 
-          ? event.repeat_days 
-          : [startTime.getDay()]; // Default to the day of the original event
-        
-        // Start with the next day after the original event
-        let currentDate = new Date(startTime);
-        currentDate.setDate(currentDate.getDate() + 1);
-        
-        while (currentDate <= endDate && occurrenceCount < maxOccurrences) {
-          // Check if we've reached the occurrence limit
-          if (event.repeat_end_type === 'after' && event.repeat_occurrences && 
-              occurrenceCount >= event.repeat_occurrences) {
+        // Tăng ngày cho lần lặp tiếp theo dựa trên loại lặp lại
+        switch (repeatType) {
+          case 'daily':
+            currentDate.setDate(currentDate.getDate() + repeatFrequency);
             break;
-          }
-          
-          const dayOfWeek = currentDate.getDay();
-          
-          // If this day of the week is in our repeat days
-          if (daysOfWeek.includes(dayOfWeek)) {
-            // For the first week, make sure we're not duplicating the original event
-            const isFirstWeek = Math.floor((currentDate.getTime() - startTime.getTime()) / (24 * 60 * 60 * 1000)) < 7;
-            const isSameWeekday = dayOfWeek === startTime.getDay();
             
-            if (!isFirstWeek || !isSameWeekday) {
-              const newStartTime = new Date(currentDate);
-              newStartTime.setHours(startTime.getHours(), startTime.getMinutes());
-              
-              let newEndTime;
-              if (endTime) {
-                newEndTime = new Date(newStartTime.getTime() + eventDuration);
-              }
-              
-              recurringEvents.push({
-                ...event,
-                _id: `${event._id}-recurrence-${occurrenceCount}`,
-                start_time: newStartTime,
-                end_time: newEndTime,
-                isRecurrence: true // Mark as a generated recurrence
-              });
-              
-              occurrenceCount++;
-            }
-          }
-          
-          // Move to the next day
-          currentDate.setDate(currentDate.getDate() + 1);
-          
-          // If we've completed a full week interval, skip ahead
-          const weeksSinceStart = Math.floor((currentDate.getTime() - startTime.getTime()) / (7 * 24 * 60 * 60 * 1000));
-          if (interval > 1 && weeksSinceStart % interval === 0 && currentDate.getDay() === 0) {
-            currentDate.setDate(currentDate.getDate() + (7 * (interval - 1)));
-          }
-        }
-        break;
-      }
-      
-      case 'monthly': {
-        const interval = event.repeat_interval || 1;
-        let occurrenceCount = 1; // Count the original event
-        
-        // Get the day of the month from the original event
-        const dayOfMonth = startTime.getDate();
-        
-        // Start with the next month
-        let currentDate = new Date(startTime);
-        currentDate.setMonth(currentDate.getMonth() + interval);
-        
-        while (currentDate <= endDate && occurrenceCount < maxOccurrences) {
-          // Check if we've reached the occurrence limit
-          if (event.repeat_end_type === 'after' && event.repeat_occurrences && 
-              occurrenceCount >= event.repeat_occurrences) {
+          case 'weekly':
+            currentDate.setDate(currentDate.getDate() + 7 * repeatFrequency);
             break;
-          }
-          
-          // Set to the same day of month (handle month length differences)
-          currentDate.setDate(Math.min(dayOfMonth, new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()));
-          
-          const newStartTime = new Date(currentDate);
-          newStartTime.setHours(startTime.getHours(), startTime.getMinutes());
-          
-          let newEndTime;
-          if (endTime) {
-            newEndTime = new Date(newStartTime.getTime() + eventDuration);
-          }
-          
-          recurringEvents.push({
-            ...event,
-            _id: `${event._id}-recurrence-${occurrenceCount}`,
-            start_time: newStartTime,
-            end_time: newEndTime,
-            isRecurrence: true // Mark as a generated recurrence
-          });
-          
-          occurrenceCount++;
-          currentDate.setMonth(currentDate.getMonth() + interval);
-        }
-        break;
-      }
-      
-      case 'yearly': {
-        const interval = event.repeat_interval || 1;
-        let occurrenceCount = 1; // Count the original event
-        
-        // Start with the next year
-        let currentDate = new Date(startTime);
-        currentDate.setFullYear(currentDate.getFullYear() + interval);
-        
-        while (currentDate <= endDate && occurrenceCount < maxOccurrences) {
-          // Check if we've reached the occurrence limit
-          if (event.repeat_end_type === 'after' && event.repeat_occurrences && 
-              occurrenceCount >= event.repeat_occurrences) {
-            break;
-          }
-          
-          const newStartTime = new Date(currentDate);
-          newStartTime.setHours(startTime.getHours(), startTime.getMinutes());
-          
-          let newEndTime;
-          if (endTime) {
-            newEndTime = new Date(newStartTime.getTime() + eventDuration);
-          }
-          
-          recurringEvents.push({
-            ...event,
-            _id: `${event._id}-recurrence-${occurrenceCount}`,
-            start_time: newStartTime,
-            end_time: newEndTime,
-            isRecurrence: true // Mark as a generated recurrence
-          });
-          
-          occurrenceCount++;
-          currentDate.setFullYear(currentDate.getFullYear() + interval);
-        }
-        break;
-      }
-      
-      case 'custom': {
-        const interval = event.repeat_interval || 1;
-        let occurrenceCount = 1; // Count the original event
-        
-        // Xác định đơn vị thời gian dựa trên repeat_interval
-        // Giả định rằng custom repeat sử dụng tuần làm đơn vị mặc định
-        // Trong thực tế, bạn có thể cần một trường bổ sung để lưu đơn vị (ngày, tuần, tháng, năm)
-        
-        // Get the days of week to repeat on (nếu đơn vị là tuần)
-        const daysOfWeek = event.repeat_days && event.repeat_days.length > 0 
-          ? event.repeat_days 
-          : [startTime.getDay()]; // Default to the day of the original event
-        
-        // Start with the next day after the original event
-        let currentDate = new Date(startTime);
-        currentDate.setDate(currentDate.getDate() + 1);
-        
-        // Xử lý tương tự như weekly, nhưng với interval tùy chỉnh
-        while (currentDate <= endDate && occurrenceCount < maxOccurrences) {
-          // Check if we've reached the occurrence limit
-          if (event.repeat_end_type === 'after' && event.repeat_occurrences && 
-              occurrenceCount >= event.repeat_occurrences) {
-            break;
-          }
-          
-          const dayOfWeek = currentDate.getDay();
-          
-          // If this day of the week is in our repeat days
-          if (daysOfWeek.includes(dayOfWeek)) {
-            // For the first week, make sure we're not duplicating the original event
-            const isFirstWeek = Math.floor((currentDate.getTime() - startTime.getTime()) / (24 * 60 * 60 * 1000)) < 7 * interval;
-            const isSameWeekday = dayOfWeek === startTime.getDay();
             
-            if (!isFirstWeek || !isSameWeekday) {
-              const newStartTime = new Date(currentDate);
-              newStartTime.setHours(startTime.getHours(), startTime.getMinutes());
-              
-              let newEndTime;
-              if (endTime) {
-                newEndTime = new Date(newStartTime.getTime() + eventDuration);
-              }
-              
-              // Kiểm tra xem sự kiện này có nằm trong khoảng thời gian lặp lại không
-              const weeksSinceStart = Math.floor((currentDate.getTime() - startTime.getTime()) / (7 * 24 * 60 * 60 * 1000));
-              if (weeksSinceStart % interval === 0) {
-                recurringEvents.push({
-                  ...event,
-                  _id: `${event._id}-recurrence-${occurrenceCount}`,
-                  start_time: newStartTime,
-                  end_time: newEndTime,
-                  isRecurrence: true // Mark as a generated recurrence
-                });
-                
-                occurrenceCount++;
-              }
+          case 'monthly':
+            currentDate.setMonth(currentDate.getMonth() + repeatFrequency);
+            break;
+            
+          case 'yearly':
+            currentDate.setFullYear(currentDate.getFullYear() + repeatFrequency);
+            break;
+            
+          case 'custom':
+            if (originalEvent.repeat_unit === 'day') {
+              currentDate.setDate(currentDate.getDate() + repeatFrequency);
+            } else if (originalEvent.repeat_unit === 'week') {
+              currentDate.setDate(currentDate.getDate() + 7 * repeatFrequency);
+            } else if (originalEvent.repeat_unit === 'month') {
+              currentDate.setMonth(currentDate.getMonth() + repeatFrequency);
+            } else if (originalEvent.repeat_unit === 'year') {
+              currentDate.setFullYear(currentDate.getFullYear() + repeatFrequency);
             }
-          }
-          
-          // Move to the next day
-          currentDate.setDate(currentDate.getDate() + 1);
+            break;
         }
-        break;
+        
+        continue;
+      }
+      
+      // Tạo sự kiện mới
+      const newStartDate = new Date(currentDate);
+      const newEndDate = new Date(newStartDate.getTime() + duration);
+      
+      const newEvent: Omit<TaskEvent, '_id'> = {
+        ...originalEvent,
+        start_time: newStartDate,
+        end_time: newEndDate,
+        parent_event_id: originalEvent._id, // Liên kết với sự kiện gốc
+        repeat_type: 'none', // Các sự kiện con không lặp lại
+        repeat_frequency: undefined,
+        repeat_days: undefined,
+        repeat_end_type: undefined,
+        repeat_end_date: undefined,
+        repeat_occurrences: undefined,
+        repeat_unit: undefined
+      };
+      
+      delete (newEvent as any)._id; // Xóa _id để tạo mới
+      
+      // Tạo sự kiện trong cơ sở dữ liệu
+      try {
+        const response = await taskEventService.createTaskEvent(newEvent);
+        if (response && response.data && response.data.data) {
+          recurringEvents.push(response.data.data);
+        }
+      } catch (error) {
+        console.error('Error creating recurring event:', error);
+      }
+      
+      occurrenceCount++;
+      
+      // Tăng ngày cho lần lặp tiếp theo dựa trên loại lặp lại
+      switch (repeatType) {
+        case 'daily':
+          currentDate.setDate(currentDate.getDate() + repeatFrequency);
+          break;
+          
+        case 'weekly':
+          currentDate.setDate(currentDate.getDate() + 7 * repeatFrequency);
+          break;
+          
+        case 'monthly':
+          currentDate.setMonth(currentDate.getMonth() + repeatFrequency);
+          break;
+          
+        case 'yearly':
+          currentDate.setFullYear(currentDate.getFullYear() + repeatFrequency);
+          break;
+          
+        case 'custom':
+          if (originalEvent.repeat_unit === 'day') {
+            currentDate.setDate(currentDate.getDate() + repeatFrequency);
+          } else if (originalEvent.repeat_unit === 'week') {
+            currentDate.setDate(currentDate.getDate() + 7 * repeatFrequency);
+          } else if (originalEvent.repeat_unit === 'month') {
+            currentDate.setMonth(currentDate.getMonth() + repeatFrequency);
+          } else if (originalEvent.repeat_unit === 'year') {
+            currentDate.setFullYear(currentDate.getFullYear() + repeatFrequency);
+          }
+          break;
       }
     }
-  });
+    
+    return recurringEvents;
+  } catch (error) {
+    console.error('Error creating recurring events:', error);
+    return [];
+  }
+};
+
+// Hàm ước tính ngày kết thúc dựa trên số lần lặp lại
+const estimateEndDateFromOccurrences = (startTime: Date, event: TaskEvent): Date => {
+  const endDate = new Date(startTime);
+  const occurrences = event.repeat_occurrences || 10;
   
-  return recurringEvents;
+  switch (event.repeat_type) {
+    case 'daily': {
+      const interval = event.repeat_interval || 1;
+      endDate.setDate(endDate.getDate() + (interval * occurrences));
+      break;
+    }
+    case 'weekly': {
+      const interval = event.repeat_interval || 1;
+      endDate.setDate(endDate.getDate() + (7 * interval * occurrences));
+      break;
+    }
+    case 'monthly': {
+      const interval = event.repeat_interval || 1;
+      endDate.setMonth(endDate.getMonth() + (interval * occurrences));
+      break;
+    }
+    case 'yearly': {
+      const interval = event.repeat_interval || 1;
+      endDate.setFullYear(endDate.getFullYear() + (interval * occurrences));
+      break;
+    }
+    case 'custom': {
+      // Giả định custom là theo tuần
+      const interval = event.repeat_interval || 1;
+      endDate.setDate(endDate.getDate() + (7 * interval * occurrences));
+      break;
+    }
+    default:
+      // Mặc định là 3 tháng
+      endDate.setMonth(endDate.getMonth() + 3);
+  }
+  
+  return endDate;
 };
 
 export const useTaskEventList = (taskId: string) => {
@@ -324,10 +247,8 @@ export const useTaskEventList = (taskId: string) => {
           end_time: event.end_time ? new Date(event.end_time) : undefined
         }));
         
-        // Generate recurring events
-        const eventsWithRecurrences = generateRecurringEvents(formattedEvents);
-        
-        setTaskEvents(eventsWithRecurrences);
+        // Không cần tạo các sự kiện lặp lại ảo nữa
+        setTaskEvents(formattedEvents);
       } else {
         console.log('No data in response or invalid response structure');
         setTaskEvents([]);
@@ -347,49 +268,97 @@ export const useTaskEventList = (taskId: string) => {
     setRefreshKey(prevKey => prevKey + 1);
   }, []);
 
-  // Thêm hàm thêm sự kiện mới vào state local
-  const addEvent = (event: TaskEvent) => {
-    console.log('Adding event to local state:', event);
-    setTaskEvents(prev => {
-      const updatedEvents = [...prev, event];
-      return generateRecurringEvents(updatedEvents.filter(e => !e.isRecurrence));
-    });
+  // Thêm hàm thêm sự kiện mới vào state local và cơ sở dữ liệu
+  const addEvent = async (event: TaskEvent) => {
+    console.log('Adding event to local state and database:', event);
+    
+    try {
+      // Đảm bảo task_id luôn có giá trị
+      const eventToCreate: CreateTaskEventRequest = {
+        ...event,
+        task_id: event.task_id || taskId
+      };
+      
+      // Nếu là sự kiện lặp lại, tạo sự kiện gốc trước
+      if (event.repeat_type !== 'none') {
+        // Tạo sự kiện gốc
+        const response = await taskEventService.createTaskEvent(eventToCreate);
+        if (response && response.data && response.data.data) {
+          const createdEvent = response.data.data;
+          
+          // Thêm sự kiện gốc vào state
+          setTaskEvents(prev => [...prev, createdEvent]);
+          
+          // Tạo các sự kiện lặp lại (không hiển thị ngay, sẽ được tải lại khi refresh)
+          await createRecurringEvents(createdEvent);
+          
+          // Refresh để tải lại toàn bộ danh sách
+          setTimeout(() => {
+            refreshTaskEvents();
+          }, 500);
+        }
+      } else {
+        // Nếu không phải sự kiện lặp lại, chỉ tạo một sự kiện đơn
+        const response = await taskEventService.createTaskEvent(eventToCreate);
+        if (response && response.data && response.data.data) {
+          setTaskEvents(prev => [...prev, response.data.data]);
+        }
+      }
+    } catch (error) {
+      console.error('Error creating event:', error);
+    }
   };
 
-  // Thêm hàm xóa sự kiện khỏi state local
-  const removeEvent = (eventId: string) => {
-    console.log('Removing event from local state:', eventId);
-    // If it's a recurrence, extract the original event ID
-    const originalId = eventId.includes('-recurrence-') ? eventId.split('-recurrence-')[0] : eventId;
+  // Thêm hàm xóa sự kiện khỏi state local và cơ sở dữ liệu
+  const removeEvent = async (eventId: string) => {
+    console.log('Removing event from local state and database:', eventId);
     
-    setTaskEvents(prev => {
-      const filteredEvents = prev.filter(event => 
-        !event._id.toString().startsWith(originalId)
-      );
-      return filteredEvents;
-    });
+    try {
+      // Xóa sự kiện khỏi cơ sở dữ liệu
+      await taskEventService.deleteTaskEvent(eventId);
+      
+      // Xóa sự kiện khỏi state local
+      setTaskEvents(prev => prev.filter(event => event._id !== eventId));
+    } catch (error) {
+      console.error('Error deleting event:', error);
+    }
   };
 
-  // Thêm hàm cập nhật sự kiện trong state local
-  const updateEvent = (eventId: string, updatedEvent: TaskEvent) => {
-    console.log('Updating event in local state:', eventId, updatedEvent);
-    // If it's a recurrence, extract the original event ID
-    const originalId = eventId.includes('-recurrence-') ? eventId.split('-recurrence-')[0] : eventId;
+  // Thêm hàm cập nhật sự kiện trong state local và cơ sở dữ liệu
+  const updateEvent = async (eventId: string, updatedEvent: TaskEvent) => {
+    console.log('Updating event in local state and database:', eventId, updatedEvent);
     
-    setTaskEvents(prev => {
-      // Remove all recurrences of this event
-      const filteredEvents = prev.filter(event => 
-        !event._id.toString().startsWith(originalId) || event._id === originalId
-      );
+    try {
+      // Chuẩn bị dữ liệu cập nhật
+      const eventToUpdate: UpdateTaskEventRequest = {
+        title: updatedEvent.title,
+        start_time: updatedEvent.start_time,
+        end_time: updatedEvent.end_time,
+        all_day: updatedEvent.all_day,
+        repeat_type: updatedEvent.repeat_type,
+        repeat_interval: updatedEvent.repeat_interval,
+        repeat_days: updatedEvent.repeat_days,
+        repeat_end_type: updatedEvent.repeat_end_type,
+        repeat_end_date: updatedEvent.repeat_end_date,
+        repeat_occurrences: updatedEvent.repeat_occurrences,
+        location: updatedEvent.location,
+        description: updatedEvent.description,
+        guests: updatedEvent.guests,
+        parent_event_id: updatedEvent.parent_event_id
+      };
       
-      // Update the original event
-      const updatedEvents = filteredEvents.map(event => 
-        event._id === originalId ? updatedEvent : event
-      );
+      // Cập nhật sự kiện trong cơ sở dữ liệu
+      const response = await taskEventService.updateTaskEvent(eventId, eventToUpdate);
       
-      // Regenerate recurrences
-      return generateRecurringEvents(updatedEvents.filter(e => !e.isRecurrence));
-    });
+      if (response && response.data && response.data.data) {
+        // Cập nhật state local
+        setTaskEvents(prev => prev.map(event => 
+          event._id === eventId ? response.data.data : event
+        ));
+      }
+    } catch (error) {
+      console.error('Error updating event:', error);
+    }
   };
 
   // Fetch dữ liệu khi taskId hoặc refreshKey thay đổi

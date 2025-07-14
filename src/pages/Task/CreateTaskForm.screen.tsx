@@ -38,6 +38,7 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         autoFocus
+                        autoComplete="off"
                     />
                 </div>
 
@@ -49,6 +50,7 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                         rows={3}
+                        autoComplete="off"
                     />
                 </div>
 
@@ -65,6 +67,7 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                                 className="flex-grow border-0 bg-transparent focus:outline-none focus:ring-0 text-sm text-gray-700"
                                 value={priority}
                                 onChange={(e) => setPriority(e.target.value as any)}
+                                autoComplete="off"
                             >
                                 <option value="low">Low (P3)</option>
                                 <option value="medium">Medium (P2)</option>
@@ -84,6 +87,7 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                                     className="w-full border border-gray-200 rounded px-2 py-1 text-sm"
                                     value={isoToLocalDateTime(start_time || '')}
                                     onChange={(e) => setStartTime(e.target.value)}
+                                    autoComplete="off"
                                 />
                             </div>
                         </div>
@@ -100,6 +104,7 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                                     className="w-full border border-gray-200 rounded px-2 py-1 text-sm"
                                     value={isoToLocalDateTime(end_time || '')}
                                     onChange={(e) => setEndTime(e.target.value)}
+                                    autoComplete="off"
                                 />
                             </div>
                         </div>
@@ -112,7 +117,7 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                             <div className="flex-grow">
                                 <div className={GROUP_CLASSNAMES.tagContainer + " mb-2"}>
                                     {selectedTags.length === 0 ? (
-                                        <span className="text-sm text-gray-400">No tags selected</span>
+                                        <></>
                                     ) : (
                                         selectedTags.map(tag => (
                                             <span
@@ -221,7 +226,7 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                             handleSaveTask(title);
                         }}
                         disabled={!title.trim()}
-                        className={GROUP_CLASSNAMES.buttonPrimary + " px-4 py-2 text-sm"}
+                        className="px-4 py-2 text-sm bg-red-500 hover:bg-red-600 text-white rounded-md font-medium shadow-md"
                     >
                         Create Task
                     </button>

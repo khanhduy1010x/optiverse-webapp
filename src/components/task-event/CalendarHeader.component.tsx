@@ -36,89 +36,50 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
   };
 
   return (
-    <div className="flex items-center justify-between p-4 border-b bg-white shadow-sm">
-      <div className="flex items-center space-x-4">
-        <h2 className="text-xl font-semibold text-gray-800">Calendar</h2>
-        
-        <div className="relative">
-          <button 
-            onClick={() => setShowMiniCalendarPopup(!showMiniCalendarPopup)}
-            className="px-4 py-1.5 bg-white border rounded-md flex items-center justify-between hover:bg-gray-50 transition-colors min-w-[180px]"
-          >
-            <span>{getViewTitle()}</span>
-            <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          
-          <MiniCalendar 
-            currentDate={currentDate}
-            miniCalendarDate={miniCalendarDate}
-            setMiniCalendarDate={setMiniCalendarDate}
-            handleDateClick={handleDateClick}
-            setShowMiniCalendarPopup={setShowMiniCalendarPopup}
-            showMiniCalendarPopup={showMiniCalendarPopup}
-          />
-          
-          {showMiniCalendarPopup && (
-            <div 
-              className="fixed inset-0 z-40" 
-              onClick={() => setShowMiniCalendarPopup(false)}
-            />
-          )}
-        </div>
-        
-        <div className="flex items-center space-x-1">
-          <button
-            onClick={handlePrevious}
-            className="p-1 rounded-full hover:bg-gray-100 transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <button
-            onClick={handleNext}
-            className="p-1 rounded-full hover:bg-gray-100 transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-        </div>
-      </div>
-      
-      <div className="flex items-center space-x-3">
-        <button 
-          onClick={handleAddEvent}
-          className="px-3 py-1.5 bg-green-500 text-white rounded-md hover:bg-green-600 flex items-center"
+    <div className="flex items-center justify-between px-6 py-4 bg-white rounded-t-2xl shadow-sm border-b">
+      <div className="flex items-center gap-2">
+        <button
+          onClick={handleToday}
+          className="px-4 py-2 bg-gray-100 rounded-full font-semibold text-gray-700 hover:bg-gray-200 border border-gray-200"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Add new
+          Today
         </button>
-        
-        <div className="border border-gray-200 rounded-md flex divide-x">
-          <button 
-            className={`px-3 py-1 text-sm ${viewType === 'Day' ? 'bg-gray-100 text-gray-800' : 'text-gray-600 hover:bg-gray-50'}`}
-            onClick={() => setViewType('Day')}
-          >
-            Day
-          </button>
-          <button 
-            className={`px-3 py-1 text-sm ${viewType === 'Week' ? 'bg-gray-100 text-gray-800' : 'text-gray-600 hover:bg-gray-50'}`}
-            onClick={() => setViewType('Week')}
-          >
-            Week
-          </button>
-          <button 
-            className={`px-3 py-1 text-sm ${viewType === 'Month' ? 'bg-gray-100 text-gray-800' : 'text-gray-600 hover:bg-gray-50'}`}
-            onClick={() => setViewType('Month')}
-          >
-            Month
-          </button>
-        </div>
+        <button
+          onClick={handlePrevious}
+          className="p-2 rounded-full hover:bg-gray-100"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
+        </button>
+        <button
+          onClick={handleNext}
+          className="p-2 rounded-full hover:bg-gray-100"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
+        </button>
+        <span className="text-2xl font-bold text-gray-800 ml-4">{getViewTitle()}</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <select
+          value={viewType}
+          onChange={e => setViewType(e.target.value as any)}
+          className="px-3 py-2 rounded-lg border border-gray-200 bg-gray-50 text-gray-700 font-semibold focus:outline-none"
+        >
+          <option value="Day">Day</option>
+          <option value="Week">Week</option>
+          <option value="Month">Month</option>
+        </select>
+        <button
+          onClick={handleAddEvent}
+          className="px-4 py-2 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 shadow"
+        >
+          + Add event
+        </button>
+        <button className="p-2 rounded-full hover:bg-gray-100">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-4.35-4.35" /></svg>
+        </button>
+        <button className="p-2 rounded-full hover:bg-gray-100">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6l4 2" /></svg>
+        </button>
       </div>
     </div>
   );

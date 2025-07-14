@@ -39,7 +39,7 @@ export const useTaskEventOperations = () => {
       
       try {
         // If the event has a task_id, get the task and update its status
-        if (event.task_id) {
+        if (event.task_id && event.task_id.trim() !== '') {
           try {
             const task = await taskService.fetchTaskById(event.task_id);
             

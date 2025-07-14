@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Task } from '../../types/task/response/task.response';
 import { Tag } from '../../types/task/response/tag.response';
 import { GROUP_CLASSNAMES } from '../../styles';
 import { TaskListProps as TaskListComponentProps } from '../../types/task/props/component.props';
-import { formatConsistentDateTime } from '../../utils/date.utils';
+import { formatConsistentDateTime, getCountdownString, isTaskOverdue } from '../../utils/date.utils';
 
 const TaskList: React.FC<TaskListComponentProps> = ({
     filteredTasks,
@@ -17,6 +17,62 @@ const TaskList: React.FC<TaskListComponentProps> = ({
     searchQuery,
     filterTags
 }) => {
+    // State để lưu trữ thời gian đếm ngược cho mỗi task
+    const [countdowns, setCountdowns] = useState<Record<string, string>>({});
+    
+    // Kiểm tra và cập nhật task overdue
+    const checkAndUpdateOverdueTasks = () => {
+        const now = new Date();
+        console.log("Check task overdue");
+        filteredTasks.forEach(task => {
+            // Chỉ kiểm tra task đang ở trạng thái pending
+            if (task.status === 'pending' && task.end_time) {
+                // Kiểm tra xem task đã quá hạn chưa
+                if (isTaskOverdue(task.end_time, task.status)) {
+                    console.log(`Task "${task.title}" (${task._id}) đã quá hạn, cập nhật trạng thái thành overdue`);
+                    // Cập nhật trạng thái task thành overdue, thêm xử lý lỗi
+                    try {
+                        handleTaskUpdate(task._id, { status: 'overdue' });
+                    } catch (error) {
+                        console.error(`Lỗi khi cập nhật trạng thái task ${task._id} thành overdue:`, error);
+                        // Không hiển thị alert vì có thể gây phiền nhiễu nếu có nhiều task quá hạn cùng lúc
+                    }
+                }
+            }
+        });
+    };
+    
+    // Cập nhật thời gian đếm ngược mỗi giây
+    useEffect(() => {
+        const updateCountdowns = () => {
+            const newCountdowns: Record<string, string> = {};
+            
+            filteredTasks.forEach(task => {
+                if (task.status === 'pending' && task.end_time) {
+                    newCountdowns[task._id] = getCountdownString(task.end_time);
+                }
+            });
+            
+            setCountdowns(newCountdowns);
+            
+            // Kiểm tra và cập nhật các task quá hạn
+            checkAndUpdateOverdueTasks();
+        };
+        
+        // Cập nhật ngay lập tức
+        updateCountdowns();
+        
+        // Cập nhật mỗi giây
+        const intervalId = setInterval(updateCountdowns, 10000);
+        
+        return () => clearInterval(intervalId);
+    }, [filteredTasks]);
+    
+    // Kiểm tra task quá hạn khi component mount hoặc filteredTasks thay đổi
+    useEffect(() => {
+        checkAndUpdateOverdueTasks();
+    }, [filteredTasks]);
+
     if (loading) {
         return (
             <div className={GROUP_CLASSNAMES.flexCenterCenter + " py-12"}>
@@ -102,25 +158,13 @@ const TaskList: React.FC<TaskListComponentProps> = ({
                                 </p>
                             )}
 
-                            {/* Time information */}
-                            {(task.start_time || task.end_time) && (
-                                <div className="mt-1 mb-2 text-xs text-gray-500">
-                                    {task.start_time && (
-                                        <div className="flex items-center">
-                                            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                            <span>Start: {formatConsistentDateTime(task.start_time)}</span>
-                                        </div>
-                                    )}
-                                    {task.end_time && (
-                                        <div className="flex items-center mt-0.5">
-                                            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                                            </svg>
-                                            <span>Due: {formatConsistentDateTime(task.end_time)}</span>
-                                        </div>
-                                    )}
+                            {/* Hiển thị thời gian đếm ngược cho task pending */}
+                            {task.status === 'pending' && countdowns[task._id] && (
+                                <div className="mt-1 mb-2 text-xs flex items-center">
+                                    <svg className="w-3 h-3 mr-1 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span className="text-amber-500 font-medium">{countdowns[task._id]}</span>
                                 </div>
                             )}
 
@@ -140,7 +184,7 @@ const TaskList: React.FC<TaskListComponentProps> = ({
                                             </span>
                                         ))
                                     ) : (
-                                        <span className="text-xs text-gray-400">No tags</span>
+                                        <></>
                                     )}
                                 </div>
                                 <span className="ml-auto text-xs text-gray-500">

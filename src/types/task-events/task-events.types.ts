@@ -21,4 +21,13 @@ export interface TaskEvent {
   createdAt?: Date;
   updatedAt?: Date;
   isRecurrence?: boolean; // Flag to identify generated recurring events
+  parent_event_id?: string; // ID của sự kiện gốc (nếu đây là sự kiện lặp lại)
+  
+  // Layout properties for calendar display
+  top?: number;
+  height?: number;
+  left?: number;
+  width?: number;
+  column?: number;
+  totalColumns?: number;
 } 

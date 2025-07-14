@@ -224,9 +224,14 @@ export function useTaskOperations(
     taskId: string,
     updatedFields: Partial<Task>
   ) => {
+    // Lấy trạng thái hiện tại của tasks
+    const originalTasks = [...tasks];
+    
     try {
       // Keep track if we're marking a task as completed
       const isCompletingTask = updatedFields.status === 'completed';
+      
+      console.log(`Updating task ${taskId} with fields:`, updatedFields);
       
       // Create a temporary optimistic update for better UI responsiveness
       setTasks(prevTasks => {
@@ -237,7 +242,8 @@ export function useTaskOperations(
         // If the task is being marked as completed, sort the tasks to move completed tasks to the bottom
         if (
           updatedFields.status === 'completed' ||
-          updatedFields.status === 'pending'
+          updatedFields.status === 'pending' ||
+          updatedFields.status === 'overdue'
         ) {
           return sortTasksWithCompletedAtBottom(updatedTasks);
         }
@@ -247,6 +253,9 @@ export function useTaskOperations(
 
       // Apply the same sorting to filtered tasks
       setFilteredTasks(prevFilteredTasks => {
+        // Lưu lại trạng thái hiện tại để sử dụng cho việc phục hồi nếu cần
+        const originalFilteredTasks = [...prevFilteredTasks];
+        
         const updatedFilteredTasks = prevFilteredTasks.map(task =>
           task._id === taskId ? { ...task, ...updatedFields } : task
         );
@@ -254,7 +263,8 @@ export function useTaskOperations(
         // If the task is being marked as completed, sort the tasks to move completed tasks to the bottom
         if (
           updatedFields.status === 'completed' ||
-          updatedFields.status === 'pending'
+          updatedFields.status === 'pending' ||
+          updatedFields.status === 'overdue'
         ) {
           return sortTasksWithCompletedAtBottom(updatedFilteredTasks);
         }
@@ -274,13 +284,22 @@ export function useTaskOperations(
           checkAchievements();
         }
       } else {
-        // If there was an issue with the response, revert back and fetch tasks
-        fetchTasks();
+        console.error('Task update response is invalid:', response);
+        // Revert changes on response issue
+        setTasks(originalTasks);
+        setFilteredTasks(prevState => originalTasks.filter(task => 
+          prevState.some(filteredTask => filteredTask._id === task._id)
+        ));
+        alert('Failed to update task. Please try again.');
       }
     } catch (error) {
       console.error('Error updating task:', error);
-      // Revert changes on error
-      fetchTasks();
+      // Revert changes on error by restoring original tasks
+      setTasks(originalTasks);
+      setFilteredTasks(prevState => originalTasks.filter(task => 
+        prevState.some(filteredTask => filteredTask._id === task._id)
+      ));
+      alert('Failed to update task. Please try again.');
     }
   };
 

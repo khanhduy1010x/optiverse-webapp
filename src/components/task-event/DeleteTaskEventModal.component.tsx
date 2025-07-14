@@ -18,12 +18,12 @@ export const DeleteTaskEventModal: React.FC<DeleteTaskEventModalProps> = ({
   removeEvent
 }) => {
   const { deleteTaskEvent, loading, error, setListOperations } = useTaskEventOperations();
-  const [deleteOption, setDeleteOption] = useState<'this' | 'all'>('this');
+  const [deleteOption, setDeleteOption] = useState<'this' | 'all' | 'future'>('this');
   
   // Check if the event is part of a recurring series
   const isRecurring = taskEvent && (
     taskEvent.repeat_type !== 'none' || 
-    (taskEvent.isRecurrence || taskEvent?._id.toString().includes('-recurrence-'))
+    taskEvent?.parent_event_id
   );
 
   React.useEffect(() => {
@@ -40,19 +40,22 @@ export const DeleteTaskEventModal: React.FC<DeleteTaskEventModalProps> = ({
     if (!taskEvent) return;
     
     try {
+      // Xóa sự kiện hiện tại từ cơ sở dữ liệu
       const success = await deleteTaskEvent(taskEvent._id);
+      
       if (success) {
         if (removeEvent) {
-          if (deleteOption === 'all' && isRecurring) {
-            // If deleting all occurrences, extract the original event ID
-            const originalId = taskEvent._id.toString().includes('-recurrence-') 
-              ? taskEvent._id.toString().split('-recurrence-')[0] 
-              : taskEvent._id;
-            
-            // Call removeEvent with the original ID to remove all occurrences
-            removeEvent(originalId);
-          } else {
-            // Just remove this specific event
+          if (deleteOption === 'this') {
+            // Chỉ xóa sự kiện hiện tại
+            removeEvent(taskEvent._id);
+          } else if (deleteOption === 'all' && taskEvent.parent_event_id) {
+            // Nếu xóa tất cả các sự kiện trong chuỗi, xóa sự kiện gốc
+            removeEvent(taskEvent.parent_event_id);
+          } else if (deleteOption === 'all' && taskEvent.repeat_type !== 'none') {
+            // Nếu đây là sự kiện gốc và xóa tất cả
+            removeEvent(taskEvent._id);
+          } else if (deleteOption === 'future') {
+            // Xử lý xóa các sự kiện trong tương lai (cần xử lý ở phía backend)
             removeEvent(taskEvent._id);
           }
         }
@@ -77,76 +80,18 @@ export const DeleteTaskEventModal: React.FC<DeleteTaskEventModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-md overflow-hidden">
-        <div className="p-4 border-b">
-          <h2 className="text-lg font-medium text-gray-800">Delete Event</h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Bạn có chắc là bạn muốn xóa sự kiện này?
-          </p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
+      <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm relative">
+        <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100">
+          <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+        <div className="mb-6">
+          <div className="font-bold text-xl text-gray-900 mb-2">Delete Event</div>
+          <div className="text-gray-700 text-base mb-4">Are you sure you want to delete this event?</div>
         </div>
-        <div className="p-4">
-          <p className="text-gray-600 mb-4">
-            Are you sure you want to delete this event? This action cannot be undone.
-          </p>
-          
-          <div className="bg-gray-50 p-3 rounded-md mb-4">
-            <div className="font-medium">{taskEvent.title || 'Untitled Event'}</div>
-            <div className="text-sm text-gray-500">
-              {formatDate(taskEvent.start_time)}
-              <div>
-                {formatTime(taskEvent.start_time)}
-                {taskEvent.end_time && ` - ${formatTime(taskEvent.end_time)}`}
-              </div>
-            </div>
-          </div>
-          
-          {isRecurring && (
-            <div className="mb-4">
-              <p className="text-sm font-medium mb-2">Delete options:</p>
-              <div className="space-y-2">
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="deleteOption"
-                    checked={deleteOption === 'this'}
-                    onChange={() => setDeleteOption('this')}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Delete this event only</span>
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="deleteOption"
-                    checked={deleteOption === 'all'}
-                    onChange={() => setDeleteOption('all')}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Delete all recurring events in the series</span>
-                </label>
-              </div>
-            </div>
-          )}
-          
-          {error && (
-            <div className="mt-4 text-red-500 text-sm">{error}</div>
-          )}
-        </div>
-        <div className="flex justify-end space-x-2 p-4 border-t">
-          <button 
-            onClick={onClose}
-            className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
-          >
-            Cancel
-          </button>
-          <button 
-            onClick={handleDelete}
-            disabled={loading}
-            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:bg-red-300"
-          >
-            {loading ? 'Deleting...' : 'Delete'}
-          </button>
+        <div className="flex gap-4 mt-6">
+          <button onClick={handleDelete} className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600">Delete</button>
+          <button onClick={onClose} className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300">Cancel</button>
         </div>
       </div>
     </div>

@@ -20,6 +20,24 @@ class NotificationService {
     }
   }
 
+  // Gửi thông báo nhắc nhở khi task đã qua 3/4 thời gian mà chưa hoàn thành
+  async sendTaskNearDueNotification(taskId: string, taskTitle: string) {
+    try {
+      const response = await api.post<ApiResponse<any>>('/notification', {
+        title: 'Task Due Soon',
+        content: `Your task "${taskTitle}" is 75% through its timeframe and still pending!`,
+        type: 'task_near_due',
+        metadata: {
+          taskId
+        }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error sending task near due notification:', error);
+      throw error;
+    }
+  }
+
   // Gửi thông báo nhắc nhở cho task event quá hạn
   async sendTaskEventOverdueNotification(taskId: string, eventId: string, taskTitle: string, eventTitle: string) {
     try {

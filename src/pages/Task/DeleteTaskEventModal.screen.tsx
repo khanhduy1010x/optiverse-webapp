@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { TaskEvent } from '../../types/task-events/task-events.types';
 import { useTaskEventOperations } from '../../hooks/task-events/useTaskEventOperations.hook';
 import Modal from 'react-modal';
@@ -20,6 +20,13 @@ export const DeleteTaskEventModal: React.FC<DeleteTaskEventModalProps> = ({
   removeEvent
 }) => {
   const { deleteTaskEvent, loading, error, setListOperations } = useTaskEventOperations();
+  const [deleteOption, setDeleteOption] = useState<'this' | 'following' | 'all'>('this');
+  
+  // Check if the event is part of a recurring series
+  const isRecurring = taskEvent && (
+    taskEvent.repeat_type !== 'none' || 
+    taskEvent?.parent_event_id
+  );
 
   useEffect(() => {
     if (removeEvent) {
@@ -34,60 +41,114 @@ export const DeleteTaskEventModal: React.FC<DeleteTaskEventModalProps> = ({
   const handleDelete = async () => {
     if (!taskEvent) return;
     
-    const success = await deleteTaskEvent(taskEvent._id);
-    if (success) {
-      onSuccess();
-      onClose();
+    try {
+      // Delete the current event from the database
+      const success = await deleteTaskEvent(taskEvent._id);
+      
+      if (success) {
+        if (removeEvent) {
+          if (deleteOption === 'this') {
+            // Only delete this event
+            removeEvent(taskEvent._id);
+          } else if (deleteOption === 'all' && taskEvent.parent_event_id) {
+            // If deleting all events in the series, delete the parent event
+            removeEvent(taskEvent.parent_event_id);
+          } else if (deleteOption === 'all' && taskEvent.repeat_type !== 'none') {
+            // If this is the parent event and deleting all
+            removeEvent(taskEvent._id);
+          } else if (deleteOption === 'following') {
+            // Handle deleting this and following events (would need backend support)
+            removeEvent(taskEvent._id);
+          }
+        }
+        onSuccess();
+        onClose();
+      }
+    } catch (err) {
+      console.error('Error deleting event:', err);
     }
   };
 
   if (!isOpen || !taskEvent) return null;
 
-  const formatDate = (date: Date | string) => {
-    return new Date(date).toLocaleString();
+  const formatEventTime = (date: Date | string) => {
+    return new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const formatEventDate = (date: Date | string) => {
+    return new Date(date).toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
   };
 
   return (
     <Modal isOpen={isOpen}
-      className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[450px] max-w-[90vw] bg-white rounded-2xl shadow-2xl z-[2000] outline-none"
+      className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[400px] max-w-[90vw] bg-white rounded-lg shadow-2xl z-[2000] outline-none"
       overlayClassName="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000]"
       onRequestClose={onClose}
+      ariaHideApp={false}
     >
-      <div className={GROUP_CLASSNAMES.taskModalContent}>
-        <div className={GROUP_CLASSNAMES.taskDetailHeader}>
-          <h2 className="text-xl font-medium mb-2">Delete Event</h2>
-        </div>
+      <div className="p-6">
+        <h2 className="text-xl font-medium mb-6">Delete recurring event</h2>
         
-        <div className="mb-6">
-          <p className="text-gray-700 mb-4">
-            Are you sure you want to delete this event:
-            <span className="font-medium block mt-2 text-gray-900">{taskEvent.title}</span>
-            scheduled for{' '}
-            <span className="font-medium">{formatDate(taskEvent.start_time)}</span>?
+        {isRecurring ? (
+          <div className="mb-6">
+            <div className="mb-4">
+              <label className="flex items-center space-x-3 mb-3 cursor-pointer">
+                <input 
+                  type="radio" 
+                  name="deleteOption" 
+                  checked={deleteOption === 'this'} 
+                  onChange={() => setDeleteOption('this')}
+                  className="form-radio h-5 w-5 text-blue-600"
+                />
+                <span className="text-gray-700">This event</span>
+              </label>
+              
+              <label className="flex items-center space-x-3 mb-3 cursor-pointer">
+                <input 
+                  type="radio" 
+                  name="deleteOption" 
+                  checked={deleteOption === 'following'} 
+                  onChange={() => setDeleteOption('following')}
+                  className="form-radio h-5 w-5 text-blue-600"
+                />
+                <span className="text-gray-700">This and following events</span>
+              </label>
+              
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input 
+                  type="radio" 
+                  name="deleteOption" 
+                  checked={deleteOption === 'all'} 
+                  onChange={() => setDeleteOption('all')}
+                  className="form-radio h-5 w-5 text-blue-600"
+                />
+                <span className="text-gray-700">All events</span>
+              </label>
+            </div>
+          </div>
+        ) : (
+          <p className="text-gray-700 mb-6">
+            Are you sure you want to delete this event: 
+            <span className="font-medium block mt-2">{taskEvent.title}</span>
+            on <span className="font-medium">{formatEventDate(taskEvent.start_time)}</span> at <span className="font-medium">{formatEventTime(taskEvent.start_time)}</span>?
           </p>
-          
-          <p className="text-sm text-gray-500">
-            This action cannot be undone.
-          </p>
-          
-          {error && <p className="text-red-500 mt-4">{error}</p>}
-        </div>
+        )}
         
-        <div className={GROUP_CLASSNAMES.taskModalFooter}>
+        {error && <p className="text-red-500 mb-4">{error}</p>}
+        
+        <div className="flex justify-end space-x-3 mt-6">
           <button
-            type="button"
             onClick={onClose}
-            className={GROUP_CLASSNAMES.buttonSecondary + " px-4 py-2 text-sm"}
+            className="px-6 py-2 text-gray-600 hover:bg-gray-100 rounded"
           >
             Cancel
           </button>
           <button
-            type="button"
             onClick={handleDelete}
             disabled={loading}
-            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:bg-red-300 text-sm font-medium transition-colors"
+            className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-blue-300"
           >
-            {loading ? 'Deleting...' : 'Delete'}
+            OK
           </button>
         </div>
       </div>

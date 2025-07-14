@@ -6,12 +6,6 @@ interface TaskHeaderProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   setShowPopup: (show: boolean) => void;
-  showFilterMenu: boolean;
-  setShowFilterMenu: (show: boolean) => void;
-  showSortMenu: boolean;
-  setShowSortMenu: (show: boolean) => void;
-  showStatusFilterMenu: boolean;
-  setShowStatusFilterMenu: (show: boolean) => void;
   filterTags: string[];
   filterStatus: ('pending' | 'completed' | 'overdue')[];
   allTags: Tag[];
@@ -28,12 +22,6 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
     searchQuery,
     setSearchQuery,
     setShowPopup,
-    showFilterMenu,
-    setShowFilterMenu,
-    showSortMenu,
-    setShowSortMenu,
-    showStatusFilterMenu,
-    setShowStatusFilterMenu,
     filterTags,
     filterStatus,
     allTags,
@@ -127,78 +115,90 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
             </button>
           </div>
 
-          {/* Status Filter */}
-          <div className="relative">
+          {/* Status Filter - Updated to match example */}
+          <div className="relative group">
             <button
               id="status-filter-button"
-              onClick={() => {
-                setShowStatusFilterMenu(!showStatusFilterMenu);
-                setShowFilterMenu(false);
-                setShowSortMenu(false);
-              }}
-              className={`flex items-center justify-center px-4 py-2 border ${
-                filterStatus.length > 0 ? 'border-purple-500 text-purple-500' : 'border-gray-300 text-gray-700'
-              } rounded-md bg-white hover:bg-gray-50`}
+              className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md bg-white hover:bg-gray-50 text-gray-700"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              Status {filterStatus.length > 0 && `(${filterStatus.length})`}
+              Status
             </button>
 
-            {showStatusFilterMenu && (
-              <div id="status-filter-menu" className="absolute z-10 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200">
-                <div className="p-3">
-                  <h3 className="text-sm font-medium text-gray-700 mb-2">Filter by Status</h3>
-                  <div className="space-y-2">
-                    {['pending', 'completed', 'overdue'].map((status) => (
-                      <div key={status} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          id={`status-${status}`}
-                          checked={filterStatus.includes(status as 'pending' | 'completed' | 'overdue')}
-                          onChange={() => handleFilterStatusClick(status as 'pending' | 'completed' | 'overdue')}
-                          className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
-                        />
-                        <label htmlFor={`status-${status}`} className="ml-2 text-sm text-gray-700 flex items-center">
-                          <span className={`px-2 py-0.5 rounded text-xs ${getStatusColor(status)}`}>
-                            {status.charAt(0).toUpperCase() + status.slice(1)}
-                          </span>
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-3 flex justify-between">
-                    <button
-                      onClick={() => handleFilterByStatus([])}
-                      className="text-sm text-gray-600 hover:text-gray-900"
-                    >
-                      Clear All
-                    </button>
-                    <button
-                      onClick={() => setShowStatusFilterMenu(false)}
-                      className="text-sm bg-purple-500 text-white px-2 py-1 rounded hover:bg-purple-600"
-                    >
-                      Apply
-                    </button>
-                  </div>
+            <div id="status-filter-menu" className="absolute z-10 mt-1 w-64 bg-white rounded-md shadow-lg border border-gray-200 hidden group-hover:block">
+              <div className="p-4">
+                <h3 className="text-base font-medium text-gray-700 mb-3">Filter by Status</h3>
+                <div className="space-y-2">
+                  <button
+                    onClick={() => {
+                      const updatedStatus = filterStatus.includes('pending') 
+                        ? filterStatus.filter(s => s !== 'pending') 
+                        : [...filterStatus, 'pending'];
+                      handleFilterByStatus(updatedStatus as ('pending' | 'completed' | 'overdue')[]);
+                    }}
+                    className={`block w-full text-left px-4 py-2 text-sm rounded-md ${
+                      filterStatus.includes('pending') ? 'bg-blue-100 text-blue-800' : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    <span className="px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-800 mr-2">
+                      Pending
+                    </span>
+                    {filterStatus.includes('pending') && '✓'}
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      const updatedStatus = filterStatus.includes('completed') 
+                        ? filterStatus.filter(s => s !== 'completed') 
+                        : [...filterStatus, 'completed'];
+                      handleFilterByStatus(updatedStatus as ('pending' | 'completed' | 'overdue')[]);
+                    }}
+                    className={`block w-full text-left px-4 py-2 text-sm rounded-md ${
+                      filterStatus.includes('completed') ? 'bg-green-100 text-green-800' : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    <span className="px-2 py-0.5 rounded text-xs bg-green-100 text-green-800 mr-2">
+                      Completed
+                    </span>
+                    {filterStatus.includes('completed') && '✓'}
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      const updatedStatus = filterStatus.includes('overdue') 
+                        ? filterStatus.filter(s => s !== 'overdue') 
+                        : [...filterStatus, 'overdue'];
+                      handleFilterByStatus(updatedStatus as ('pending' | 'completed' | 'overdue')[]);
+                    }}
+                    className={`block w-full text-left px-4 py-2 text-sm rounded-md ${
+                      filterStatus.includes('overdue') ? 'bg-red-100 text-red-800' : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    <span className="px-2 py-0.5 rounded text-xs bg-red-100 text-red-800 mr-2">
+                      Overdue
+                    </span>
+                    {filterStatus.includes('overdue') && '✓'}
+                  </button>
+                </div>
+                <div className="mt-4 flex justify-between items-center">
+                  <button
+                    onClick={() => handleFilterByStatus([])}
+                    className="text-sm text-gray-600 hover:text-gray-900"
+                  >
+                    Clear All
+                  </button>
                 </div>
               </div>
-            )}
+            </div>
           </div>
 
           {/* Tag Filter */}
-          <div className="relative">
+          <div className="relative group">
             <button
               id="filter-button"
-              onClick={() => {
-                setShowFilterMenu(!showFilterMenu);
-                setShowSortMenu(false);
-                setShowStatusFilterMenu(false);
-              }}
-              className={`flex items-center justify-center px-4 py-2 border ${
-                filterTags.length > 0 ? 'border-blue-500 text-blue-500' : 'border-gray-300 text-gray-700'
-              } rounded-md bg-white hover:bg-gray-50`}
+              className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md bg-white hover:bg-gray-50 text-gray-700"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
@@ -206,62 +206,49 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
               Tags {filterTags.length > 0 && `(${filterTags.length})`}
             </button>
 
-            {showFilterMenu && (
-              <div id="filter-menu" className="absolute z-10 mt-1 w-64 bg-white rounded-md shadow-lg border border-gray-200">
-                <div className="p-3">
-                  <h3 className="text-sm font-medium text-gray-700 mb-2">Filter by Tags</h3>
-                  <div className="space-y-2 max-h-60 overflow-y-auto">
-                    {allTags.length > 0 ? (
-                      allTags.map((tag) => (
-                        <div key={tag._id} className="flex items-center">
-                          <input
-                            type="checkbox"
-                            id={`tag-${tag._id}`}
-                            checked={filterTags.includes(tag._id)}
-                            onChange={() => handleFilterTagClick(tag._id)}
-                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                          />
-                          <label htmlFor={`tag-${tag._id}`} className="ml-2 text-sm text-gray-700 flex items-center">
-                            <span
-                              className="w-3 h-3 rounded-full mr-1"
-                              style={{ backgroundColor: tag.color }}
-                            ></span>
-                            {tag.name}
-                          </label>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-sm text-gray-500">No tags available</p>
-                    )}
-                  </div>
-                  <div className="mt-3 flex justify-between">
-                    <button
-                      onClick={() => handleFilterByTags([])}
-                      className="text-sm text-gray-600 hover:text-gray-900"
-                    >
-                      Clear All
-                    </button>
-                    <button
-                      onClick={() => setShowFilterMenu(false)}
-                      className="text-sm bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
-                    >
-                      Apply
-                    </button>
-                  </div>
+            <div id="filter-menu" className="absolute z-10 mt-1 w-64 bg-white rounded-md shadow-lg border border-gray-200 hidden group-hover:block">
+              <div className="p-4">
+                <h3 className="text-base font-medium text-gray-700 mb-3">Filter by Tags</h3>
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {allTags.length > 0 ? (
+                    allTags.map((tag) => (
+                      <button
+                        key={tag._id}
+                        onClick={() => handleFilterTagClick(tag._id)}
+                        className={`block w-full text-left px-4 py-2 text-sm rounded-md ${
+                          filterTags.includes(tag._id) ? 'bg-blue-100 text-blue-800' : 'text-gray-700 hover:bg-gray-100'
+                        }`}
+                      >
+                        <span className="flex items-center">
+                          <span
+                            className="w-3 h-3 rounded-full mr-2"
+                            style={{ backgroundColor: tag.color }}
+                          ></span>
+                          {tag.name}
+                          {filterTags.includes(tag._id) && <span className="ml-2">✓</span>}
+                        </span>
+                      </button>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-500">No tags available</p>
+                  )}
+                </div>
+                <div className="mt-4 flex justify-between items-center">
+                  <button
+                    onClick={() => handleFilterByTags([])}
+                    className="text-sm text-gray-600 hover:text-gray-900"
+                  >
+                    Clear All
+                  </button>
                 </div>
               </div>
-            )}
+            </div>
           </div>
 
           {/* Sort Options */}
-          <div className="relative">
+          <div className="relative group">
             <button
               id="sort-button"
-              onClick={() => {
-                setShowSortMenu(!showSortMenu);
-                setShowFilterMenu(false);
-                setShowStatusFilterMenu(false);
-              }}
               className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md bg-white hover:bg-gray-50 text-gray-700"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -270,16 +257,17 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
               Sort: {sortOrder === 'newest' ? 'Newest' : sortOrder === 'oldest' ? 'Oldest' : 'Deadline'}
             </button>
 
-            {showSortMenu && (
-              <div id="sort-menu" className="absolute right-0 z-10 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200">
-                <div className="p-2">
+            <div id="sort-menu" className="absolute right-0 z-10 mt-1 w-64 bg-white rounded-md shadow-lg border border-gray-200 hidden group-hover:block">
+              <div className="p-4">
+                <h3 className="text-base font-medium text-gray-700 mb-3">Sort By</h3>
+                <div className="space-y-2">
                   <button
                     onClick={() => handleSortChange('newest')}
                     className={`block w-full text-left px-4 py-2 text-sm rounded-md ${
                       sortOrder === 'newest' ? 'bg-blue-100 text-blue-800' : 'text-gray-700 hover:bg-gray-100'
                     }`}
                   >
-                    Newest First
+                    Newest First {sortOrder === 'newest' && '✓'}
                   </button>
                   <button
                     onClick={() => handleSortChange('oldest')}
@@ -287,7 +275,7 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                       sortOrder === 'oldest' ? 'bg-blue-100 text-blue-800' : 'text-gray-700 hover:bg-gray-100'
                     }`}
                   >
-                    Oldest First
+                    Oldest First {sortOrder === 'oldest' && '✓'}
                   </button>
                   <button
                     onClick={() => handleSortChange('deadline')}
@@ -295,11 +283,11 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                       sortOrder === 'deadline' ? 'bg-blue-100 text-blue-800' : 'text-gray-700 hover:bg-gray-100'
                     }`}
                   >
-                    Deadline
+                    Deadline {sortOrder === 'deadline' && '✓'}
                   </button>
                 </div>
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>

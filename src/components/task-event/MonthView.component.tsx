@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { TaskEvent } from '../../types/task-events/task-events.types';
+import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isToday } from 'date-fns';
+import { CalendarEvent } from './CalendarEvent.component';
 
 interface MonthViewProps {
   currentDate: Date;
@@ -14,129 +16,190 @@ export const MonthView: React.FC<MonthViewProps> = ({
   handleAddEvent,
   handleEditEvent
 }) => {
-  // Get days in the month with padding for full weeks
-  const getDaysInMonth = () => {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
+  // Tạo mảng các ngày trong tháng (bao gồm cả ngày của tháng trước và tháng sau để hiển thị đủ lịch)
+  const days = useMemo(() => {
+    try {
+      const monthStart = startOfMonth(currentDate);
+      const monthEnd = endOfMonth(currentDate);
+      const startDate = startOfWeek(monthStart);
+      const endDate = endOfWeek(monthEnd);
+
+      const daysArray = [];
+      let day = startDate;
+
+      while (day <= endDate) {
+        daysArray.push(day);
+        day = addDays(day, 1);
+      }
+
+      return daysArray;
+    } catch (error) {
+      console.error('Error generating month days:', error);
+      return [];
+    }
+  }, [currentDate]);
+
+  // Hàm lấy màu sắc cho sự kiện
+  const getEventColor = (event: TaskEvent) => {
+    if (event.color) return event.color;
     
-    // Get the first day of the week containing the first day of the month
-    const start = new Date(firstDay);
-    start.setDate(start.getDate() - start.getDay());
+    // Màu mặc định dựa trên title nếu không có màu được chỉ định
+    const colors = [
+      'bg-blue-200 hover:bg-blue-300 border-blue-300 text-blue-800',
+      'bg-green-200 hover:bg-green-300 border-green-300 text-green-800',
+      'bg-purple-200 hover:bg-purple-300 border-purple-300 text-purple-800',
+      'bg-red-200 hover:bg-red-300 border-red-300 text-red-800',
+      'bg-yellow-200 hover:bg-yellow-300 border-yellow-300 text-yellow-800',
+      'bg-pink-200 hover:bg-pink-300 border-pink-300 text-pink-800',
+      'bg-indigo-200 hover:bg-indigo-300 border-indigo-300 text-indigo-800'
+    ];
     
-    // Get the last day of the week containing the last day of the month
-    const end = new Date(lastDay);
-    const daysToAdd = 6 - end.getDay();
-    end.setDate(end.getDate() + daysToAdd);
-    
-    const days = [];
-    let current = new Date(start);
-    
-    while (current <= end) {
-      days.push(new Date(current));
-      current.setDate(current.getDate() + 1);
+    // Tạo một số ngẫu nhiên nhưng nhất quán dựa trên title
+    let hash = 0;
+    for (let i = 0; i < event.title.length; i++) {
+      hash = ((hash << 5) - hash) + event.title.charCodeAt(i);
+      hash |= 0; // Convert to 32bit integer
     }
     
-    return days;
+    // Lấy màu từ mảng màu
+    return colors[Math.abs(hash) % colors.length];
   };
 
-  const daysInMonth = getDaysInMonth();
+  // Kiểm tra xem một sự kiện có thuộc về một ngày cụ thể không
+  const getEventsForDay = (day: Date) => {
+    try {
+      return taskEvents.filter(event => {
+        const eventDate = new Date(event.start_time);
+        return (
+          eventDate.getDate() === day.getDate() &&
+          eventDate.getMonth() === day.getMonth() &&
+          eventDate.getFullYear() === day.getFullYear()
+        );
+      });
+    } catch (error) {
+      console.error('Error filtering events for day:', error, day);
+      return [];
+    }
+  };
 
-  // Get events for a specific day
-  const getEventsByDay = (day: Date) => {
-    return taskEvents.filter(event => {
-      const eventDate = new Date(event.start_time);
-      return (
-        eventDate.getDate() === day.getDate() &&
-        eventDate.getMonth() === day.getMonth() &&
-        eventDate.getFullYear() === day.getFullYear()
-      );
+  // Hàm định dạng thời gian
+  const formatEventTime = (date: Date) => {
+    return date.toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
     });
   };
 
-  // Check if a date is today
-  const isToday = (date: Date) => {
-    const today = new Date();
-    return (
-      date.getDate() === today.getDate() &&
-      date.getMonth() === today.getMonth() &&
-      date.getFullYear() === today.getFullYear()
-    );
-  };
+  // Hàm tạo các hàng cho lịch
+  const renderCalendarRows = () => {
+    const rows: React.ReactNode[] = [];
+    let cells: React.ReactNode[] = [];
 
-  // Check if a date is in the current month
-  const isSameMonth = (date: Date) => {
-    return date.getMonth() === currentDate.getMonth();
-  };
+    // Tên các ngày trong tuần
+    const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-  // Format event time
-  const formatEventTime = (date: Date | string) => {
-    return new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
-  // Weeks are always 6 rows max in a month view
-  const weekRows = [];
-  for (let i = 0; i < daysInMonth.length; i += 7) {
-    weekRows.push(daysInMonth.slice(i, i + 7));
-  }
-
-  return (
-    <div className="flex-1 overflow-y-auto">
-      {/* Days of week header */}
-      <div className="grid grid-cols-7 text-center font-medium text-gray-600 bg-white sticky top-0 z-10 border-b">
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => (
-          <div key={index} className="py-2">{day}</div>
-        ))}
-      </div>
-      
-      {/* Calendar grid */}
-      <div className="flex-1">
-        {weekRows.map((week, weekIndex) => (
-          <div key={weekIndex} className="grid grid-cols-7 border-b">
-            {week.map((day, dayIndex) => {
-              const events = getEventsByDay(day);
-              const dayClasses = `min-h-[100px] border-r relative p-1 ${
-                isToday(day) ? 'bg-blue-50' : 
-                !isSameMonth(day) ? 'bg-gray-100 text-gray-400' : 'bg-white'
-              }`;
-              
-              return (
-                <div 
-                  key={dayIndex} 
-                  className={dayClasses}
-                >
-                  <div className={`text-right p-1 ${isToday(day) ? 'bg-blue-500 text-white rounded-full w-7 h-7 flex items-center justify-center ml-auto' : ''}`}>
-                    {day.getDate()}
-                  </div>
-                  
-                  <div className="mt-1 space-y-1 overflow-y-auto max-h-[80px]">
-                    {events.slice(0, 3).map((event) => (
-                      <div
-                        key={event._id}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEditEvent(event);
-                        }}
-                        className="text-xs bg-blue-100 p-1 rounded truncate cursor-pointer hover:bg-blue-200"
-                      >
-                        <span className="font-medium">{formatEventTime(event.start_time)}</span>
-                        {' '}
-                        {event.title || 'Untitled'}
-                      </div>
-                    ))}
-                    
-                    {events.length > 3 && (
-                      <div className="text-xs text-gray-500 font-medium">
-                        + {events.length - 3} more
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+    // Tạo header cho lịch
+    rows.push(
+      <div key="header" className="grid grid-cols-7 border-b bg-gray-50">
+        {weekDays.map((day, index) => (
+          <div 
+            key={index} 
+            className={`p-2 text-center font-semibold text-sm text-gray-600 border-r ${
+              index === 0 || index === 6 ? 'text-red-500' : ''
+            }`}
+          >
+            {day}
           </div>
         ))}
+      </div>
+    );
+
+    // Tạo các ô cho từng ngày
+    days.forEach((day, i) => {
+      const dayEvents = getEventsForDay(day);
+      const isCurrentMonth = isSameMonth(day, currentDate);
+      const isTodayDate = isToday(day);
+      
+      cells.push(
+        <div
+          key={i}
+          className={`min-h-[120px] p-1 border-r border-b relative ${
+            !isCurrentMonth ? 'bg-gray-50' : ''
+          }`}
+          onClick={() => handleAddEvent(day, 9)} // Mặc định thêm sự kiện vào 9 giờ sáng
+        >
+          {/* Hiển thị ngày */}
+          <div 
+            className={`text-right p-1 ${
+              !isCurrentMonth ? 'text-gray-400' : 'text-gray-700'
+            }`}
+          >
+            <span 
+              className={`inline-block w-7 h-7 rounded-full text-center leading-7 ${
+                isTodayDate ? 'bg-blue-500 text-white' : ''
+              }`}
+            >
+              {format(day, 'd')}
+            </span>
+          </div>
+          
+          {/* Hiển thị các sự kiện trong ngày */}
+          <div className="mt-1 max-h-[90px] overflow-y-auto flex flex-col items-start gap-1">
+            {dayEvents.slice(0, 3).map((event, index) => (
+              <CalendarEvent
+                key={event._id || index}
+                event={event}
+                onClick={() => handleEditEvent(event)}
+                className="w-full block"
+              />
+            ))}
+            
+            {/* Hiển thị số sự kiện còn lại nếu có nhiều hơn 3 */}
+            {dayEvents.length > 3 && (
+              <div className="text-xs text-center bg-gray-100 rounded py-0.5 cursor-pointer">
+                +{dayEvents.length - 3} more
+              </div>
+            )}
+          </div>
+        </div>
+      );
+
+      // Tạo hàng mới sau mỗi 7 ô (1 tuần)
+      if ((i + 1) % 7 === 0) {
+        rows.push(
+          <div key={i} className="grid grid-cols-7">
+            {cells}
+          </div>
+        );
+        cells = [];
+      }
+    });
+
+    // Thêm hàng cuối cùng nếu còn cells
+    if (cells.length > 0) {
+      rows.push(
+        <div key="last-row" className="grid grid-cols-7">
+          {cells}
+        </div>
+      );
+    }
+
+    return rows;
+  };
+
+  return (
+    <div className="flex flex-col h-full overflow-auto">
+      {/* Header hiển thị tháng và năm */}
+      <div className="border-b p-2 bg-white sticky top-0 z-10">
+        <h2 className="text-xl font-semibold text-center text-gray-800">
+          {format(currentDate, 'MMMM yyyy')}
+        </h2>
+      </div>
+
+      {/* Lưới lịch */}
+      <div className="flex-grow">
+        {renderCalendarRows()}
       </div>
     </div>
   );

@@ -192,7 +192,16 @@ const TaskPage: React.FC = () => {
 
   // Sửa hàm mở form tạo task
   const openCreateTaskForm = () => {
+    // Reset form state
     resetForm();
+    setTitle('');
+    setDescription('');
+    setPriority('low');
+    setStartTime('');
+    setEndTime('');
+    setSelectedTags([]);
+    
+    // Hiển thị form
     setShowCreateTaskForm(true);
     setShowEditTaskForm(false);
     setTaskToEdit(null);
@@ -370,12 +379,6 @@ const TaskPage: React.FC = () => {
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
                 setShowPopup={openCreateTaskForm}
-                showFilterMenu={showFilterMenu}
-                setShowFilterMenu={setShowFilterMenu}
-                showSortMenu={showSortMenu}
-                setShowSortMenu={setShowSortMenu}
-                showStatusFilterMenu={showStatusFilterMenu}
-                setShowStatusFilterMenu={setShowStatusFilterMenu}
                 filterTags={filterTags}
                 filterStatus={filterStatus}
                 allTags={allTags}
