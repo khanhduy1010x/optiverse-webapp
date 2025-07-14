@@ -1,9 +1,15 @@
 import { useState, useEffect } from 'react';
 import authService from '../../services/auth.service';
+import { useAppSelector, useAppDispatch } from '../../store/hooks';
+import { UserRole } from '../../types/admin/user.types';
+import { setUser } from '../../store/slices/auth.slice';
 
 export const useAuthStatus = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const user = useAppSelector(state => state.auth.user);
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     const checkAuthStatus = async () => {
@@ -15,43 +21,85 @@ export const useAuthStatus = () => {
         setIsLoading(false);
         return;
       }
-      // Bước 1: verify token qua API
-      let userInfo = await authService.verifyToken();
-      if (userInfo) {
-        setIsAuthenticated(true);
-        setIsLoading(false);
-        return;
-      }
-      // Bước 2: refresh token nếu verify fail
+
       try {
-        await authService.refreshToken();
-        // Thử verify lại lần nữa
-        userInfo = await authService.verifyToken();
-        if (userInfo) {
+        let response = await authService.verifyToken();
+        if (response) {
           setIsAuthenticated(true);
+
+          // Lấy thông tin user từ response và cập nhật vào Redux store
+          if (response.headers && response.headers['x-user-info']) {
+            const userInfo = response.headers['x-user-info'];
+            const userData = JSON.parse(atob(userInfo));
+            dispatch(setUser(userData));
+
+            // Cập nhật isAdmin ngay lập tức
+            if (userData && userData.role === UserRole.ADMIN) {
+              setIsAdmin(true);
+            } else {
+              setIsAdmin(false);
+            }
+          }
+
+          setIsLoading(false);
+          return;
+        }
+
+        // Nếu token không hợp lệ, thử refresh token
+        await authService.refreshToken();
+        response = await authService.verifyToken();
+
+        if (response) {
+          setIsAuthenticated(true);
+
+          // Lấy thông tin user từ response và cập nhật vào Redux store
+          if (response.headers && response.headers['x-user-info']) {
+            const userInfo = response.headers['x-user-info'];
+            const userData = JSON.parse(atob(userInfo));
+            dispatch(setUser(userData));
+
+            // Cập nhật isAdmin ngay lập tức
+            if (userData && userData.role === UserRole.ADMIN) {
+              setIsAdmin(true);
+            } else {
+              setIsAdmin(false);
+            }
+          }
+
           setIsLoading(false);
           return;
         }
       } catch (e) {
-        // refresh token fail
+        console.error('Lỗi xác thực:', e);
       }
-      // Nếu vẫn fail thì logout
+
       localStorage.clear();
       setIsAuthenticated(false);
+      setIsAdmin(false);
       setIsLoading(false);
     };
+
     checkAuthStatus();
-    console.log('isAuthenticated', isAuthenticated);
-  }, []);
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (user && user.role === UserRole.ADMIN) {
+      setIsAdmin(true);
+    } else {
+      setIsAdmin(false);
+    }
+  }, [user]);
 
   const logout = () => {
     localStorage.clear();
     setIsAuthenticated(false);
+    setIsAdmin(false);
   };
 
   return {
     isAuthenticated,
     isLoading,
+    isAdmin,
     logout,
   };
 };

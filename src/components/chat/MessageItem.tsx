@@ -230,21 +230,21 @@ const MessageItem: React.FC<MessageItemProps> = ({
             if (isHidden) {
                 success = await unhideMessage(message.id);
                 if (success) {
-                    toast.success('Đã hiện tin nhắn');
+                    toast.success('Message unhidden');
                 } else {
-                    toast.error('Không thể hiện tin nhắn');
+                    toast.error('Could not unhide message');
                 }
             } else {
                 success = await hideMessage(message.id);
                 if (success) {
-                    toast.success('Đã ẩn tin nhắn');
+                    toast.success('Message hidden');
                 } else {
-                    toast.error('Không thể ẩn tin nhắn');
+                    toast.error('Could not hide message');
                 }
             }
         } catch (error) {
             console.error('Error toggling message visibility:', error);
-            toast.error('Đã xảy ra lỗi khi thay đổi trạng thái tin nhắn');
+            toast.error('An error occurred while changing message visibility');
         }
         handleMenuClose();
     };

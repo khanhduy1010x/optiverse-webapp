@@ -5,17 +5,13 @@ import '../../styles/note/MarkdownEditor.style.css';
 import { setShowWarningModal } from '../../store/slices/ui.slice';
 import { formatDateTimeFull } from '../../utils/date.utils';
 import ToolBarNote from './ToolbarNote.screen';
-import Icon from '../../components/common/Icon/Icon.component';
 import { useMarkdownEditor } from '../../hooks/note/useMarkdownEditor.hook';
 import { useTranslation } from 'react-i18next';
-import ShareService from '../../services/share.service';
-import { toast } from 'react-toastify';
-import { useDispatch } from 'react-redux';
-import { fetchItems } from '../../store/slices/items.slice';
 import { MarkdownEditorProps } from '../../types/note/props/component.props';
+import Icon from '../../components/common/Icon/Icon.component';
 
 const quillModules = {
-  toolbar: false // Tắt toolbar mặc định của Quill
+  toolbar: false
 };
 
 const quillFormats = [
@@ -49,12 +45,14 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = () => {
     handleAction,
     handleAccept,
     handleReject,
-    dispatch
+    dispatch,
+    exportToPDF
   } = useMarkdownEditor();
 
   const { t } = useTranslation();
 
   const [shouldIgnoreValue, setShouldIgnoreValue] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const hasEditPermission = !currentNote?.permission || currentNote?.permission === 'edit';
 
@@ -72,6 +70,16 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = () => {
 
     return () => clearInterval(interval);
   }, [quillRef]);
+
+  const handleExportPDF = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
+    try {
+      await exportToPDF();
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   if (isNoteDeleted || !currentNote) {
     return (
@@ -120,48 +128,83 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = () => {
 
   return (
     <div className="flex w-full flex-col h-full relative">
-      <div className="flex items-center justify-between p-4 bg-gray-100 border-b">
-        <div>
-          <h1 className="text-lg font-semibold text-gray-900">
-            {currentNote?.title || 'No note selected'}
-          </h1>
-          <div className="flex justify-center items-center text-sm text-gray-500">
-            {currentNote?.updatedAt && (
-              <span>Last saved: {formatDateTimeFull(currentNote.updatedAt)}</span>
-            )}
-            {!hasEditPermission && (
-              <span className="ml-3 px-2 py-1 bg-yellow-100 text-yellow-800 rounded-md text-xs font-medium">
-                View only
-              </span>
-            )}
+      <div className="bg-white shadow-sm">
+        <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-[#f8fdfe] to-white">
+          <div>
+            <h1 className="text-xl font-semibold text-gray-800 flex items-center">
+              <span className="mr-2">{currentNote?.title || 'No note selected'}</span>
+              {!hasEditPermission && (
+                <span className="ml-2 px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded-md text-xs font-medium">
+                  View only
+                </span>
+              )}
+            </h1>
+            <div className="flex items-center text-sm text-gray-500 mt-1">
+              {currentNote?.updatedAt && (
+                <div className="flex items-center">
+                  <svg className="w-4 h-4 mr-1 text-[#21b4ca]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>Last saved: {formatDateTimeFull(currentNote.updatedAt)}</span>
+                </div>
+              )}
 
-            {typingUsers.size > 0 && (
-              <span className="ml-3 text-[#21b4ca] animate-pulse">
-                {typingUsers.size === 1 ? 'Someone is typing...' : `${typingUsers.size} people are typing...`}
-              </span>
+              {typingUsers.size > 0 && (
+                <span className="ml-4 text-[#21b4ca] animate-pulse flex items-center">
+                  <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                  {typingUsers.size === 1 ? 'Someone is typing...' : `${typingUsers.size} people are typing...`}
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="flex gap-3 items-center">
+            <button
+              onClick={handleExportPDF}
+              disabled={isExporting || !currentNote}
+              className="px-3 py-1.5 bg-[#21b4ca] text-white rounded-lg font-medium hover:bg-[#1a9db0] flex items-center gap-1.5 transition-all shadow-sm"
+              title="Export to PDF"
+            >
+              {isExporting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Exporting...</span>
+                </>
+              ) : (
+                <button className="flex items-center gap-1.5 cursor-pointer" >
+                  <Icon name="pdf" size={16} className="text-[#21b4ca]" />
+                  <span>Export PDF</span>
+                </button>
+              )}
+            </button>
+
+            {showAcceptReject && hasEditPermission && (
+              <>
+                <button
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 shadow-sm"
+                  onClick={handleAccept}
+                >
+                  Accept
+                </button>
+                <button
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 shadow-sm"
+                  onClick={handleReject}
+                >
+                  Reject
+                </button>
+              </>
             )}
           </div>
         </div>
-        <div className="flex gap-2 items-center">
-          {showAcceptReject && hasEditPermission && (
-            <>
-              <button
-                className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700"
-                onClick={handleAccept}
-              >
-                Accept
-              </button>
-              <button
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300"
-                onClick={handleReject}
-              >
-                Reject
-              </button>
-            </>
-          )}
 
-        </div>
+        {hasEditPermission && (
+          <div className="border-t border-gray-100">
+            <ToolBarNote onAction={handleAction} formatState={formatState} />
+          </div>
+        )}
       </div>
+
       {isFormatting && (
         <div className="absolute inset-0 bg-black/30 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-8 flex flex-col items-center shadow-xl">
@@ -171,17 +214,13 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = () => {
         </div>
       )}
 
-      {hasEditPermission && (
-        <ToolBarNote onAction={handleAction} formatState={formatState} />
-      )}
-
       <div className="quill-wrapper">
         <div className="relative">
           <ReactQuill
             ref={quillRef}
             value={shouldIgnoreValue ? undefined : (showAcceptReject && aiContent !== null ? aiContent : currentNote?.content || '')}
             onChange={handleChange}
-            className="flex-1 markdown-editor"
+            className="flex-1 markdown-editor custom-scrollbar-1"
             theme="snow"
             modules={quillModules}
             formats={quillFormats}

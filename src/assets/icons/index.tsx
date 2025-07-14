@@ -1,5 +1,6 @@
 import { ReactComponent as add } from './add.svg';
 import { ReactComponent as adjust } from './adjust.svg';
+import { ReactComponent as admin } from './admin.svg';
 import { ReactComponent as android } from './android.svg';
 import { ReactComponent as array } from './array.svg';
 import { ReactComponent as arrowDropdown } from './arrow-dropdown.svg';
@@ -62,10 +63,13 @@ import { ReactComponent as web } from './web.svg';
 import { ReactComponent as blinkAI } from './blinkAI.svg';
 import { ReactComponent as friend } from './friend.svg';
 import { ReactComponent as profile } from './profile.svg';
+import { ReactComponent as pdf } from './pdf.svg';
+import { ReactComponent as detail } from './detail-user.svg';
 
 export const ICONS = {
   add: add,
   adjust: adjust,
+  admin: admin,
   android: android,
   array: array,
   arrowDropdown: arrowDropdown,
@@ -127,7 +131,9 @@ export const ICONS = {
   web: web,
   blinkAI: blinkAI,
   friend: friend,
-  profile: profile
+  profile: profile,
+  pdf: pdf,
+  detail: detail,
 };
 
 export type IconName = keyof typeof ICONS;

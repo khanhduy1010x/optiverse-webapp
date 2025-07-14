@@ -1,25 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { debounce } from 'lodash';
 import { RootState, AppDispatch } from '../../store';
 import {
   setCurrentNote,
   updateCurrentNoteContent,
   fetchItems,
 } from '../../store/slices/items.slice';
-import { setShowWarningModal } from '../../store/slices/ui.slice';
 import noteService from '../../services/note.service';
 import SocketService from '../../services/socket.service';
 import ReactQuill, { Quill } from 'react-quill';
+import { toast } from 'react-toastify';
 
 const Delta = Quill.import('delta');
 
-// Đăng ký các định dạng tùy chỉnh
-const Parchment = Quill.import('parchment');
 const Inline = Quill.import('blots/inline');
-const Block = Quill.import('blots/block');
 
-// Định dạng Highlight (đánh dấu văn bản)
 class HighlightBlot extends Inline {
   static create(value: string): HTMLElement {
     let node = super.create();
@@ -35,15 +30,12 @@ HighlightBlot.blotName = 'highlight';
 HighlightBlot.tagName = 'mark';
 Quill.register('formats/highlight', HighlightBlot);
 
-// Định dạng Alignment (căn lề)
 const AlignClass = Quill.import('attributors/class/align');
 Quill.register(AlignClass, true);
 
-// Định dạng Font
 const FontClass = Quill.import('attributors/class/font');
 Quill.register(FontClass, true);
 
-// Định dạng Size
 const SizeClass = Quill.import('attributors/class/size');
 Quill.register(SizeClass, true);
 
@@ -192,7 +184,6 @@ export const useMarkdownEditor = () => {
     eventType?: 'my_note' | 'shared_note';
     isSharedView?: boolean;
   }) => {
-    // Chỉ xử lý sự kiện my_note vì editor chỉ hoạt động với my notes
     if (data?.eventType === 'shared_note') {
       console.log(
         'Skipping folder_structure_changed in useMarkdownEditor hook because eventType=shared_note'
@@ -584,6 +575,65 @@ export const useMarkdownEditor = () => {
     };
   }, [quillRef.current, currentNote]);
 
+  const exportToPDF = async () => {
+    if (!currentNote) return;
+
+    try {
+      const jsPDF = (await import('jspdf')).default;
+      const html2canvas = (await import('html2canvas')).default;
+
+      const quillEditor = document.querySelector('.ql-editor');
+      if (!quillEditor) return;
+
+      const editorClone = quillEditor.cloneNode(true) as HTMLElement;
+      const tempContainer = document.createElement('div');
+      tempContainer.appendChild(editorClone);
+      document.body.appendChild(tempContainer);
+
+      tempContainer.style.position = 'absolute';
+      tempContainer.style.left = '-9999px';
+      tempContainer.style.top = '0';
+      editorClone.style.width = '794px';
+      editorClone.style.padding = '40px';
+      editorClone.style.backgroundColor = 'white';
+
+      const canvas = await html2canvas(editorClone, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      });
+
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgData = canvas.toDataURL('image/png');
+      const imgWidth = 210;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      let heightLeft = imgHeight;
+      let position = 0;
+      let pageHeight = 295;
+
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      const fileName = `${currentNote.title || 'Untitled Note'}.pdf`;
+      pdf.save(fileName);
+
+      document.body.removeChild(tempContainer);
+
+      toast.success('PDF exported successfully!');
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+      toast.error('Failed to export PDF. Please try again.');
+    }
+  };
+
   return {
     quillRef,
     currentNote,
@@ -600,5 +650,6 @@ export const useMarkdownEditor = () => {
     handleAccept,
     handleReject,
     dispatch,
+    exportToPDF,
   };
 };

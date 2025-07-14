@@ -1,8 +1,11 @@
-import { Socket } from 'socket.io-client';
+// Khai báo kiểu cho các biến global
+import { Store } from '@reduxjs/toolkit';
 
 declare global {
   interface Window {
-    socket?: Socket;
+    store: Store;
+    showUserBannedModal?: () => void;
+    __adminScrollEl?: HTMLElement | null;
   }
 }
 

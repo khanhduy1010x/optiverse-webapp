@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { GOOGLE_AUTH_CONFIG } from '../../config/google-auth.config';
 import authService from '../../services/auth.service';
-import { setUser, setLoading } from '../../store/slices/auth.slice';
+import { setUser, login } from '../../store/slices/auth.slice';
 import { AppDispatch } from '../../store';
 
 /**
@@ -101,27 +101,31 @@ export function useLoginForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isEmailLoginLoading) return;
-
     setError(null);
     setIsEmailLoginLoading(true);
-    dispatch(setLoading(true));
-
+    dispatch(login());
     try {
-      // Thu thập thông tin thiết bị dưới dạng chuỗi đơn giản
       const device_info = getDeviceInfo();
-
-      // Sử dụng authService.loginWithEmail thay vì axios.post trực tiếp
       await authService.loginWithEmail(email, password, device_info);
-
-      // Lấy thông tin người dùng sau khi login thành công
       const userInfo = await authService.getUserInfo();
+      if (
+        userInfo.status === 'suspended' ||
+        userInfo.code === 'USER_IS_BANNED'
+      ) {
+        if (window.showUserBannedModal) window.showUserBannedModal();
+        setIsEmailLoginLoading(false);
+        return;
+      }
       dispatch(setUser(userInfo));
-
       navigate('/dashboard', { replace: true });
     } catch (err: any) {
+      if (err?.response?.data?.code === 'USER_IS_BANNED') {
+        if (window.showUserBannedModal) window.showUserBannedModal();
+        setIsEmailLoginLoading(false);
+        return;
+      }
       console.error('Login error:', err);
       setError(err.message || 'Login failed. Please try again later.');
-      dispatch(setLoading(false));
     } finally {
       setIsEmailLoginLoading(false);
     }
@@ -170,7 +174,6 @@ export function useLoginForm() {
           } catch (err) {
             setError('Google login failed. Please try again.');
             console.error('Google login error:', err);
-            dispatch(setLoading(false));
           } finally {
             setIsGoogleLoginLoading(false);
             window.removeEventListener('message', messageHandler);

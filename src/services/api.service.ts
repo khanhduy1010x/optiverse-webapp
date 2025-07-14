@@ -9,6 +9,7 @@ import {
   TOKEN_REFRESH_SUCCESS,
   SESSION_EXPIRED_EVENT,
 } from '../constants/auth.constants';
+import { logout } from '../store/slices/auth.slice';
 
 const api: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_URL_BASE,
@@ -60,6 +61,42 @@ const resetRefreshState = () => {
   refreshSuccessTimestamp = Date.now();
 };
 
+// Hàm refresh token khi role thay đổi
+const handleRoleChangeRefresh = async (config: InternalAxiosRequestConfig) => {
+  try {
+    console.log('Role changed, refreshing token...');
+
+    // Gọi API refresh token
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (!refreshToken) {
+      throw new Error('No refresh token available');
+    }
+
+    const response = await axios.post(
+      `${import.meta.env.VITE_URL_BASE}/auth/refresh`,
+      {
+        refresh_token: refreshToken,
+      }
+    );
+
+    const { access_token, refresh_token } = response.data.data;
+
+    // Cập nhật tokens
+    localStorage.setItem('accessToken', access_token);
+    localStorage.setItem('refreshToken', refresh_token);
+
+    // Cập nhật header cho request hiện tại
+    config.headers.Authorization = `Bearer ${access_token}`;
+
+    console.log('Token refreshed successfully after role change');
+    return api(config);
+  } catch (error) {
+    console.error('Failed to refresh token after role change:', error);
+    handleLogout();
+    return Promise.reject(error);
+  }
+};
+
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem('accessToken');
@@ -85,116 +122,72 @@ if (typeof window !== 'undefined') {
 }
 
 api.interceptors.response.use(
-  response => response,
-  async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig;
-    if (!originalRequest) {
-      return Promise.reject(error);
-    }
-
-    const requestUrl = originalRequest?.url || '';
-
+  response => {
+    // Kiểm tra user banned
     if (
-      requestUrl.includes('auth/login') ||
-      requestUrl.includes('refresh-token')
+      response.headers['x-user-banned'] === 'true' ||
+      response.data?.code === 'USER_IS_BANNED' ||
+      response.data?.code === 1040
     ) {
-      return Promise.reject(error);
+      if (window.showUserBannedModal) window.showUserBannedModal();
+      window.store?.dispatch?.(logout());
     }
 
+    // Kiểm tra role change
+    if (response.headers['x-role-changed'] === 'true') {
+      console.log(
+        'Role changed detected, new role:',
+        response.headers['x-new-role']
+      );
+
+      // Dispatch event để thông báo role change
+      window.dispatchEvent(
+        new CustomEvent('ROLE_CHANGED', {
+          detail: { newRole: response.headers['x-new-role'] },
+        })
+      );
+    }
+
+    return response;
+  },
+  async error => {
+    const originalRequest = error.config;
+
+    // Kiểm tra user banned
     if (
-      error.response?.data &&
-      ((error.response.data as any).code === 1019 ||
-        (error.response.data as any).message === 'Account is log out')
+      error?.response?.headers['x-user-banned'] === 'true' ||
+      error?.response?.data?.code === 'USER_IS_BANNED' ||
+      error?.response?.data?.code === 1040
     ) {
-      handleLogout();
-      return Promise.reject(error);
+      if (window.showUserBannedModal) window.showUserBannedModal();
+      window.store?.dispatch?.(logout());
     }
 
-    const shouldAttemptRefresh = () => {
-      // Check for auth error header
-      const hasAuthError = error.response?.headers?.['x-auth-error'] === 'true';
+    // Kiểm tra role change trong error response
+    if (error?.response?.headers['x-role-changed'] === 'true') {
+      console.log(
+        'Role changed detected in error response, new role:',
+        error.response.headers['x-new-role']
+      );
 
-      // If we have a specific auth error header, we should attempt refresh
-      if (hasAuthError) {
-        console.log('Auth error detected from headers, attempting refresh');
-        return true;
-      }
-
-      return false;
-    };
-
-    if (shouldAttemptRefresh() && !originalRequest?.headers['X-Retry']) {
-      const now = Date.now();
-      const MIN_REFRESH_INTERVAL = 5000;
-
-      if (isRefreshing) {
-        console.log('Another refresh is in progress, adding request to queue');
-        return new Promise<unknown>((resolve, reject) => {
-          failedQueue.push({
-            resolve,
-            reject,
-            config: originalRequest,
-          });
-        });
-      }
-
-      const retryRequest = new Promise<unknown>((resolve, reject) => {
-        failedQueue.push({
-          resolve,
-          reject,
-          config: originalRequest,
-        });
-      });
-
-      console.log('Starting token refresh process');
-      isRefreshing = true;
-
+      // Thử refresh token và retry request
       try {
-        const refreshToken = localStorage.getItem('refreshToken');
-        if (!refreshToken) {
-          throw new Error('No refresh token available');
-        }
-
-        console.log('Attempting to refresh token...');
-        const response = await axios.post(
-          `${import.meta.env.VITE_URL_BASE}/core/auth/refresh-token`,
-          {},
-          {
-            headers: {
-              Authorization: `Bearer ${refreshToken}`,
-            },
-          }
-        );
-
-        const data = response.data;
-
-        if (!data?.data?.access_token) {
-          throw new Error('Invalid refresh token response');
-        }
-
-        const newToken = data.data.access_token;
-        const newRefreshToken = data.data.refresh_token;
-
-        localStorage.setItem('accessToken', newToken);
-        localStorage.setItem('refreshToken', newRefreshToken);
-
-        console.log('Token refreshed successfully, processing queue');
-
-        window.dispatchEvent(new Event(TOKEN_REFRESH_SUCCESS));
+        const result = await handleRoleChangeRefresh(originalRequest);
+        return result;
       } catch (refreshError) {
-        console.error('Token refresh failed:', refreshError);
-        handleLogout();
         return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
-        tokenRefreshPromise = null;
       }
-
-      return retryRequest;
     }
 
     return Promise.reject(error);
   }
 );
+
+declare global {
+  interface Window {
+    showUserBannedModal?: () => void;
+    store: any;
+  }
+}
 
 export default api;

@@ -18,6 +18,7 @@ import { getMainSidebarActiveSection } from './components/common/Navigation/navi
 import SliderBar from './components/layout/Sidebar.component';
 import AddFlashcard from './pages/Flashcard/AddFlashcard.page';
 import UserProfile from './pages/Profile/UserProfile.page';
+import NotificationSettingsPage from './pages/Profile/NotificationSettingsPage';
 import FocusTimer from './pages/FocusTimer/FocusTimer.page';
 import FocusTimerStatistic from './pages/FocusTimer/FocusTimerStatistic.page';
 import { ThemeProvider } from './contexts/theme.context';
@@ -28,6 +29,7 @@ import FriendList from './pages/Friend/FriendList.page';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { PublicRoute } from './components/PublicRoute';
 import { AuthChecker } from './components/auth/AuthChecker';
+import { AdminRoute } from './components/AdminRoute';
 import FocusSessionList from './pages/FocusTimer/FocusTimerList.page';
 import { AuthViewType } from './types/auth/auth.types';
 import LoginSessions from './pages/Profile/LoginSession.page';
@@ -39,7 +41,21 @@ import ChatPage from './pages/chat/ChatPage';
 import { useNewMessageNotification } from './hooks/chat/useNewMessageNotification';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { typingAnimationStyles } from './styles/global.style';
+import { typingAnimationStyles, countdownAnimationStyles } from './styles/global.style';
+import AdminDashboard from './pages/Admin/UserManagement.page';
+import UserManagement from './pages/Admin/UserManagement';
+import SystemSettings from './pages/Admin/SystemSettings';
+import AdminLayout from './pages/Admin/AdminLayout';
+import { useEffect, useState } from 'react';
+import Modal from 'react-modal';
+import { GROUP_CLASSNAMES } from './styles';
+import BannedModal from './components/BannedModal';
+
+declare global {
+  interface Window {
+    showUserBannedModal?: () => void;
+  }
+}
 
 const AppContent: React.FC = () => {
   const location = useLocation();
@@ -47,21 +63,7 @@ const AppContent: React.FC = () => {
   const [searchParams] = useSearchParams();
   const initialView = (searchParams.get('view') as AuthViewType) || 'login';
 
-  // Sử dụng hook để lắng nghe tin nhắn mới
   useNewMessageNotification();
-
-  // Thêm CSS cho hiệu ứng đang nhập
-  React.useEffect(() => {
-    // Tạo style element
-    const styleElement = document.createElement('style');
-    styleElement.textContent = typingAnimationStyles;
-    document.head.appendChild(styleElement);
-
-    // Cleanup khi unmount
-    return () => {
-      document.head.removeChild(styleElement);
-    };
-  }, []);
 
   const showSidebar =
     location.pathname !== '/' &&
@@ -69,7 +71,6 @@ const AppContent: React.FC = () => {
     !location.pathname.startsWith('/auth/google') &&
     !location.pathname.startsWith('/forgot-password');
 
-  // Sử dụng hàm mới để lấy active section cho sidebar chính
   const activeSection = getMainSidebarActiveSection(location.pathname);
 
   const handleNavClick = (path: string) => {
@@ -132,14 +133,21 @@ const AppContent: React.FC = () => {
               </ProtectedRoute>
             }
           />
+
+          {/* Admin routes */}
           <Route
-            path="*"
+            path="/admin"
             element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
+              <AdminRoute>
+                <AdminLayout />
+              </AdminRoute>
             }
-          />
+          >
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="users" element={<UserManagement />} />
+            <Route path="settings" element={<SystemSettings />} />
+          </Route>
+
           <Route
             path="/flashcard-statistic"
             element={
@@ -185,6 +193,14 @@ const AppContent: React.FC = () => {
             element={
               <ProtectedRoute>
                 <UserProfile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute>
+                <NotificationSettingsPage />
               </ProtectedRoute>
             }
           />
@@ -267,12 +283,30 @@ const AppContent: React.FC = () => {
 };
 
 const App: React.FC = () => {
+  const [bannedModal, setBannedModal] = useState(false);
+  useEffect(() => {
+    window.showUserBannedModal = () => setBannedModal(true);
+    return () => { window.showUserBannedModal = undefined; };
+  }, []);
+
+  useEffect(() => {
+    // Add typing animation styles to the document head
+    const styleElement = document.createElement('style');
+    styleElement.innerHTML = typingAnimationStyles + countdownAnimationStyles;
+    document.head.appendChild(styleElement);
+
+    return () => {
+      document.head.removeChild(styleElement);
+    };
+  }, []);
+
   return (
     <ThemeProvider>
       <Router>
         <AuthChecker>
           <AppContent />
         </AuthChecker>
+        <BannedModal open={bannedModal} onClose={() => setBannedModal(false)} />
         <ToastContainer
           position="top-right"
           autoClose={5000}

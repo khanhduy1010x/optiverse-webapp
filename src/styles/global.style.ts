@@ -41,3 +41,19 @@ export const typingAnimationStyles = `
     }
   }
 `;
+
+// CSS cho animation đếm ngược
+export const countdownAnimationStyles = `
+  @keyframes countdown {
+    0% {
+      width: 100%;
+    }
+    100% {
+      width: 0%;
+    }
+  }
+  
+  .animate-countdown {
+    animation: countdown 5s linear forwards;
+  }
+`;

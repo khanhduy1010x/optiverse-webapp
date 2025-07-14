@@ -208,12 +208,10 @@ class AuthService {
     }
   }
 
-  public async verifyToken(): Promise<string | null> {
+  public async verifyToken() {
     try {
       const response = await api.get('/core/auth/verify');
-      const userInfo =
-        response.headers['x-user-info'] || response.headers['X-User-Info'];
-      return userInfo || null;
+      return response;
     } catch (error: any) {
       return null;
     }

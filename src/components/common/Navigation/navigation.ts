@@ -6,6 +6,7 @@ export interface NavSection {
   icon?: IconName;
   subsections?: NavSection[];
   parentPath?: string;
+  adminOnly?: boolean;
 }
 
 export const NAV_SECTIONS: NavSection[] = [
@@ -90,6 +91,12 @@ export const NAV_SECTIONS: NavSection[] = [
         parentPath: '/user-profile',
       },
       {
+        label: 'Notification Settings',
+        path: '/notifications',
+        icon: 'notification',
+        parentPath: '/user-profile',
+      },
+      {
         label: 'Login Sessions',
         path: '/login-session',
         icon: 'devices',
@@ -103,6 +110,32 @@ export const NAV_SECTIONS: NavSection[] = [
       },
     ],
   },
+  {
+    label: 'Admin',
+    path: '/admin/dashboard',
+    icon: 'admin',
+    adminOnly: true,
+    subsections: [
+      {
+        label: 'Dashboard',
+        path: '/admin/dashboard',
+        icon: 'home',
+        parentPath: '/admin/dashboard',
+      },
+      {
+        label: 'User Management',
+        path: '/admin/users',
+        icon: 'group',
+        parentPath: '/admin/dashboard',
+      },
+      {
+        label: 'System Settings',
+        path: '/admin/settings',
+        icon: 'setting',
+        parentPath: '/admin/dashboard',
+      },
+    ],
+  },
 ];
 
 // Map các path con tới path cha để dễ dàng tìm kiếm
@@ -112,9 +145,13 @@ const PATH_MAPPING: Record<string, string> = {
   '/statistics-timer': '/focus-timer',
   '/user-profile': '/user-profile',
   '/login-session': '/user-profile',
+  '/notifications': '/user-profile',
   '/flashcard-statistic': '/flashcard-deck',
   '/flashcard-deck': '/flashcard-deck',
   '/achievements': '/user-profile',
+  '/admin/dashboard': '/admin/dashboard',
+  '/admin/users': '/admin/dashboard',
+  '/admin/settings': '/admin/dashboard',
 };
 
 export const getSectionKeyFromPath = (path: string): string => {
@@ -146,8 +183,8 @@ export const getSectionKeyFromPath = (path: string): string => {
 export const getMainSidebarActiveSection = (path: string): string => {
   if (PATH_MAPPING[path]) return PATH_MAPPING[path];
 
-  const matchingPrefix = Object.keys(PATH_MAPPING).find(
-    key => path.startsWith(key + '/')
+  const matchingPrefix = Object.keys(PATH_MAPPING).find(key =>
+    path.startsWith(key + '/')
   );
 
   if (matchingPrefix) return PATH_MAPPING[matchingPrefix];

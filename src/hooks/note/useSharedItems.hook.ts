@@ -157,7 +157,6 @@ export const useSharedItems = () => {
       return;
     }
 
-    // Nếu đang ở shared view hoặc có eventType shared_note, refresh shared items
     if (
       isSharedView ||
       data?.eventType === 'shared_note' ||
@@ -170,7 +169,6 @@ export const useSharedItems = () => {
       return;
     }
 
-    // Nếu không ở shared view và không có eventType shared_note, bỏ qua
     console.log(
       'Skipping folder_structure_changed in useSharedItems hook - not in shared view and no shared_note event'
     );

@@ -7,10 +7,8 @@ import MarkdownEditor from './MarkdownEditor.screen';
 import { NoteScreenProps } from '../../types/note/props/component.props';
 
 const NoteScreen: React.FC<NoteScreenProps> = () => {
-  // Khởi tạo data note một lần duy nhất
   useNoteInitializer();
 
-  // Các hook khác chỉ xử lý logic, không gọi fetchItems
   useNote();
   useSharedItems();
 

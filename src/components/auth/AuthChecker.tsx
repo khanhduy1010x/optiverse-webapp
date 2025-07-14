@@ -1,31 +1,46 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuthStatus } from '../../hooks/auth/useAuthStatus.hook';
+import { useAppDispatch } from '../../store/hooks';
+import { setUser } from '../../store/slices/auth.slice';
+import authService from '../../services/auth.service';
 
 interface AuthCheckerProps {
     children: React.ReactNode;
 }
 
 export const AuthChecker: React.FC<AuthCheckerProps> = ({ children }) => {
-    const [isLoading, setIsLoading] = useState(true);
+    const { isAuthenticated } = useAuthStatus();
+    const dispatch = useAppDispatch();
+    const navigate = useNavigate();
 
     useEffect(() => {
-        const checkAuth = () => {
-            const accessToken = localStorage.getItem('accessToken');
-            const refreshToken = localStorage.getItem('refreshToken');
+        const checkAuth = async () => {
+            if (isAuthenticated) {
+                try {
+                    const response = await authService.verifyToken();
+                    if (response && response.headers) {
+                        const userInfo = response.headers['x-user-info'];
 
-            if (accessToken && refreshToken) {
-            } else {
-                localStorage.clear();
-                console.log('User is not authenticated');
+                        if (userInfo) {
+                            const userData = JSON.parse(atob(userInfo));
+                            dispatch(setUser(userData));
+
+                            // Kiểm tra chuyển hướng từ server
+                            const redirectUrl = response.headers['x-redirect-url'];
+                            if (redirectUrl) {
+                                navigate(redirectUrl);
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error verifying token:', error);
+                }
             }
-            setIsLoading(false);
         };
 
         checkAuth();
-    }, []);
-
-    if (isLoading) {
-        return <div className="flex justify-center items-center h-screen">Loading...</div>;
-    }
+    }, [isAuthenticated, dispatch, navigate]);
 
     return <>{children}</>;
 }; 
