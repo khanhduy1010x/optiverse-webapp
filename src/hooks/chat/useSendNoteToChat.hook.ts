@@ -5,11 +5,16 @@ import { toast } from 'react-toastify';
 
 export const useSendNoteToChat = () => {
   const sendNoteToChat = useCallback(
-    async (friendId: string, noteTitle: string, noteContent: string) => {
+    async (
+      friendId: string,
+      noteTitle: string,
+      noteContent: string,
+      showToast = true
+    ) => {
       try {
         const currentUserId = localStorage.getItem('user_id');
         if (!currentUserId) {
-          toast.error('Người dùng chưa đăng nhập');
+          if (showToast) toast.error('User not logged in');
           return false;
         }
 
@@ -51,7 +56,7 @@ export const useSendNoteToChat = () => {
         }
 
         if (!conversationId) {
-          toast.error('Không thể tạo cuộc trò chuyện');
+          if (showToast) toast.error('Could not create conversation');
           return false;
         }
 
@@ -95,11 +100,11 @@ export const useSendNoteToChat = () => {
         const currentCount = unreadSnapshot.val() || 0;
         set(unreadCountRef, currentCount + 1);
 
-        toast.success('Đã gửi note thành công!');
+        if (showToast) toast.success('Note sent successfully!');
         return true;
       } catch (error) {
         console.error('Error sending note:', error);
-        toast.error('Đã xảy ra lỗi khi gửi note');
+        if (showToast) toast.error('An error occurred while sending the note');
         return false;
       }
     },

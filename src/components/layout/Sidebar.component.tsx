@@ -2,6 +2,7 @@ import React from 'react';
 import Icon from '../common/Icon/Icon.component';
 import { NAV_SECTIONS, getMainSidebarActiveSection } from '../common/Navigation/navigation';
 import './Sidebar.css';
+import { useAuthStatus } from '../../hooks/auth/useAuthStatus.hook';
 
 interface SliderBarProps {
   activeSection: string;
@@ -9,18 +10,26 @@ interface SliderBarProps {
 }
 
 const SliderBar: React.FC<SliderBarProps> = ({ activeSection, onNavClick }) => {
-  // Xác định section nào đang active dựa trên path hiện tại
   const normalizedActiveSection = getMainSidebarActiveSection(activeSection);
+  const { isAdmin } = useAuthStatus();
+
+  // Lọc các mục navigation dựa vào quyền admin
+  const filteredNavSections = NAV_SECTIONS.filter(section => {
+    if (section.adminOnly) {
+      return isAdmin;
+    }
+    return true;
+  });
 
   return (
     <div>
       <div className="slidebar-container w-16 bg-black h-screen py-18 flex flex-col items-center justify-between relative z-10">
         <div className="slidebar-container flex flex-col items-center justify-between flex-1 w-full">
-          {NAV_SECTIONS.map((section) => (
-            <div key={section.path} className="relative group w-full flex justify-center my-2 slidebar-container">
+          {filteredNavSections.map((section) => (
+            <div key={section.path} className="relative group w-full flex justify-center my-2 ">
               <button
                 onClick={() => onNavClick(section.path)}
-                className={`group flex items-center cursor-pointer justify-center w-12 h-12 rounded-lg transition-all duration-300 ${normalizedActiveSection === section.path
+                className={`group/button slidebar-container flex items-center cursor-pointer justify-center w-12 h-12 rounded-lg transition-all duration-300 ${normalizedActiveSection === section.path
                   ? 'bg-white'
                   : 'hover:bg-white'
                   }`}
@@ -28,7 +37,7 @@ const SliderBar: React.FC<SliderBarProps> = ({ activeSection, onNavClick }) => {
                 <Icon
                   name={section.icon || 'home'}
                   size={36}
-                  className={`group-hover:text-black ${normalizedActiveSection === section.path ? 'text-black' : 'text-white'
+                  className={`group-hover/button:text-black transition-all duration-300 ${normalizedActiveSection === section.path ? 'text-black' : 'text-white'
                     }`}
                 />
               </button>

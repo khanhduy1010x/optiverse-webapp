@@ -309,25 +309,6 @@ export const useFolderNote = () => {
     dispatch(popFolderStack());
   };
 
-  const findNoteInState = (noteId: string): NoteItem | undefined => {
-    for (const item of items) {
-      if (item.type === 'file' && item._id === noteId) {
-        return item as NoteItem;
-      }
-      if (item.type === 'folder') {
-        const file = item.files.find((file: NoteItem) => file._id === noteId);
-        if (file) return file;
-        for (const subfolder of item.subfolders) {
-          const subFile = subfolder.files.find(
-            (file: NoteItem) => file._id === noteId
-          );
-          if (subFile) return subFile;
-        }
-      }
-    }
-    return undefined;
-  };
-
   const handleSelectNote = async (note: RootItem) => {
     if (note.type === 'file') {
       if (!note._id) {

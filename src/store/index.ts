@@ -37,6 +37,9 @@ export const store = configureStore({
     }),
 });
 
+// Gán store vào window để có thể truy cập từ bất kỳ đâu
+window.store = store;
+
 export const persistor = persistStore(store);
 
 export type RootState = ReturnType<typeof store.getState>;

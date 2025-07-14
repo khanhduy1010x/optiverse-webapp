@@ -29,8 +29,10 @@ const AchievementsPage: React.FC = () => {
       <ProfileSidebar selectedMenu={selectedMenu} handleNavigate={handleNavigate} />
 
       <View className="flex-1 p-4 md:p-6">
-        <h1 className="text-3xl font-normal text-gray-800 border-b border-gray-200 pb-2 mb-8">My Achievements</h1>
-
+        <h1 className="text-[22px] font-normal text-gray-800  pb-2">My Achievements</h1>
+        <div className="mb-2 text-[14px] text-gray-400  text:bold">
+          Open the world achievements and earn rewards
+        </div>
         <div className="bg-white rounded-xl shadow-sm p-5 mb-8">
           {loading ? (
             <Loader />

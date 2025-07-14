@@ -1,37 +1,43 @@
 // File: D:\optiverse\webapp\src\store\slices\authSlice.ts
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { AuthState, UserResponse } from '../../types/auth/auth.types';
+import { UserRole } from '../../types/admin/user.types';
+
+interface AuthState {
+  isAuthenticated: boolean;
+  user: {
+    _id?: string;
+    email?: string;
+    full_name?: string;
+    avatar_url?: string;
+    role?: UserRole;
+  } | null;
+}
 
 const initialState: AuthState = {
+  isAuthenticated: !!localStorage.getItem('accessToken'),
   user: null,
-  isAuthenticated: false,
-  isLoading: false,
 };
 
 const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    setUser: (state, action: PayloadAction<UserResponse>) => {
-      state.user = action.payload;
+    login: state => {
       state.isAuthenticated = true;
-      state.isLoading = false;
-    },
-    clearUser: state => {
-      state.user = null;
-      state.isAuthenticated = false;
-      state.isLoading = false;
-    },
-    setLoading: (state, action: PayloadAction<boolean>) => {
-      state.isLoading = action.payload;
     },
     logout: state => {
-      state.user = null;
       state.isAuthenticated = false;
-      state.isLoading = false;
+      state.user = null;
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user_id');
+    },
+    setUser: (state, action: PayloadAction<any>) => {
+      state.user = action.payload;
     },
   },
 });
 
-export const { setUser, clearUser, setLoading, logout } = authSlice.actions;
+export const { login, logout, setUser } = authSlice.actions;
+
 export default authSlice.reducer;

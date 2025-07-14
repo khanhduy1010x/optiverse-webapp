@@ -5,7 +5,7 @@ import SocketService from './socket.service';
 
 const URLBASE = 'productivity/note';
 
-class NoteService {
+class NoteServiceClass {
   async saveNote(note: NoteItem): Promise<NoteItem> {
     try {
       const response = await api.patch<ApiResponse<{ note: NoteItem }>>(
@@ -158,13 +158,15 @@ ${content}
     if (!formattedContent) throw new Error('No formatted content from Gemini');
     return formattedContent;
   }
-}
 
-const noteService = {
   async fetchNoteById(noteId: string) {
     const res = await api.get(`/productivity/note/${noteId}`);
     return res.data.data;
-  },
-};
+  }
+}
 
+// Tạo instance của class
+const noteService = new NoteServiceClass();
+
+// Export instance làm default
 export default noteService;

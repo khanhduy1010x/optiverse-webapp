@@ -12,10 +12,8 @@ import { useSearchMessages } from '../../hooks/chat/useSearchMessages';
 import ConversationList from './ConversationList';
 import ThemeSelector from '../../components/chat/ThemeSelector';
 import ImagePreview from '../../components/chat/ImagePreview';
-import AudioRecorder from '../../components/chat/AudioRecorder';
 import { UserResponse } from '../../types/auth/auth.types';
 import friendService from '../../services/friend.service';
-import chatService from '../../services/chat.service';
 import { Friend } from '../../types/friend/response/friend.response';
 import { ref, update, get, child, remove } from 'firebase/database';
 import { db } from '../../firebase';
@@ -801,7 +799,10 @@ const ChatPage: React.FC = () => {
   // Function to scroll to bottom
   const scrollToBottom = () => {
     if (messageContainerRef.current) {
-      messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
+      messageContainerRef.current.scrollTo({
+        top: messageContainerRef.current.scrollHeight,
+        behavior: 'smooth',
+      });
       setIsScrolledUp(false);
     }
   };
@@ -884,10 +885,11 @@ const ChatPage: React.FC = () => {
 
         .scroll-to-bottom-btn {
           position: absolute;
-          bottom: 80px;
-          right: 20px;
-          width: 40px;
-          height: 40px;
+          left: 50%;
+          bottom: 15%;
+          transform: translateX(-50%);
+          width: 44px;
+          height: 44px;
           border-radius: 50%;
           background-color: #21b4ca;
           color: white;
@@ -895,21 +897,21 @@ const ChatPage: React.FC = () => {
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-          transition: all 0.2s ease;
-          z-index: 10;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+          transition: all 0.2s cubic-bezier(.4,0,.2,1);
+          z-index: 30;
           opacity: 0;
-          transform: translateY(20px);
+          border: 2px solid white;
         }
         
         .scroll-to-bottom-btn.visible {
           opacity: 1;
-          transform: translateY(0);
         }
         
         .scroll-to-bottom-btn:hover {
           background-color: #1a9db0;
-          box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+          box-shadow: 0 3px 12px rgba(0,0,0,0.22);
+          transform: translateX(-50%) scale(1.05);
         }
 
         .chat-container {
@@ -923,6 +925,7 @@ const ChatPage: React.FC = () => {
           flex: 1;
           overflow-y: auto;
           min-height: 0;
+          position: relative;
         }
       `}} />
       {/* Sidebar */}
@@ -1108,7 +1111,7 @@ const ChatPage: React.FC = () => {
       </div>
 
       {/* Main chat area */}
-      <div className="flex-1 flex flex-col h-full" style={{ color: textColor }}>
+      <div className="flex-1 flex flex-col h-full " style={{ color: textColor }}>
         {activeConversationId ? (
           <>
             {/* Header */}
@@ -1271,13 +1274,21 @@ const ChatPage: React.FC = () => {
               </div>
             )}
 
-            <div className="flex-1 flex min-h-0">
+            <div className="flex-1 flex min-h-0 relative ">
+              <div
+                className={`scroll-to-bottom-btn ${isScrolledUp ? 'visible' : ''}`}
+                onClick={scrollToBottom}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                </svg>
+              </div>
               {/* Chat content */}
-              <div className="flex-1 flex flex-col min-h-0">
+              <div className="flex-1 flex flex-col h-full ">
                 {/* Messages area */}
                 <div
                   ref={messageContainerRef}
-                  className="flex-1 p-4 overflow-y-auto custom-scrollbar-3 overflow-x-hidden relative messages-container"
+                  className="flex-1 p-4 overflow-y-auto custom-scrollbar-3 overflow-x-hidden messages-container"
                   onScroll={handleScroll}
                   style={{
                     backgroundColor: theme?.backgroundColor || 'transparent',
@@ -1285,8 +1296,6 @@ const ChatPage: React.FC = () => {
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                     color: textColor,
-                    maxHeight: 'calc(100vh - 200px)',
-                    minHeight: '300px'
                   }}
                 >
                   {messagesLoading ? (
@@ -1363,21 +1372,17 @@ const ChatPage: React.FC = () => {
                   )}
 
                   {/* Nút cuộn xuống */}
-                  <div
-                    className={`scroll-to-bottom-btn ${isScrolledUp ? 'visible' : ''}`}
-                    onClick={scrollToBottom}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                    </svg>
-                  </div>
+
                 </div>
 
                 {/* Hiển thị trạng thái đang nhập - đặt trước input */}
-                <div className="border-t border-gray-200 flex-shrink-0">
+                <div className="border-t border-gray-200 ">
                   {activeConversationId && isTyping && (
-                    <div className="typing-indicator px-4 py-2 text-sm text-gray-500 italic bg-gray-50">
+                    <div className="typing-indicator px-4 py-2 text-sm text-gray-500 bg-gray-50 border-b border-gray-100 rounded-t-lg shadow-sm">
                       <div className="flex items-center">
+                        <span className="w-6 h-6 rounded-full bg-[#21b4ca] text-white flex items-center justify-center text-xs mr-2">
+                          {getInitials(getOtherUserInChat()?.full_name || 'U')}
+                        </span>
                         <span className="mr-2">{getOtherUserInChat()?.full_name || 'Người dùng'} đang nhập</span>
                         <span className="typing-animation">
                           <span>.</span>
@@ -1389,7 +1394,7 @@ const ChatPage: React.FC = () => {
                   )}
 
                   {/* Input gửi tin nhắn */}
-                  <div className="flex flex-col border-t">
+                  <div className="flex flex-col border-t border-gray-100 bg-white">
                     {/* Hiển thị xem trước hình ảnh */}
                     {selectedImages.length > 0 && (
                       <div className="p-2">
@@ -1400,12 +1405,12 @@ const ChatPage: React.FC = () => {
                     {/* Hiển thị trả lời nhỏ nhỏ bên trên input */}
                     {renderReplyPreview()}
 
-                    <form className="flex items-center p-3" onSubmit={e => { e.preventDefault(); handleSendMessage(); }}>
+                    <form className="flex items-center p-3 bg-white shadow-sm rounded-lg m-2" onSubmit={e => { e.preventDefault(); handleSendMessage(); }}>
                       {/* Nút chọn file */}
                       <button
                         onClick={handleOpenFileDialog}
                         type="button"
-                        className="p-2 rounded-full hover:bg-gray-100 text-gray-500"
+                        className="p-2 rounded-full hover:bg-gray-100 text-gray-500 transition-colors duration-200"
                         title="Đính kèm hình ảnh"
                       >
                         <AttachFileIcon />
@@ -1426,7 +1431,7 @@ const ChatPage: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                          className="p-2 rounded-full hover:bg-gray-100 text-gray-500"
+                          className="p-2 rounded-full hover:bg-gray-100 text-gray-500 transition-colors duration-200"
                         >
                           😊
                         </button>
@@ -1448,15 +1453,15 @@ const ChatPage: React.FC = () => {
                         onFocus={handleInputFocusEvent}
                         onBlur={handleInputBlurEvent}
                         placeholder="Nhập tin nhắn..."
-                        className="flex-1 p-2 mx-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="flex-1 p-3 mx-2 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-[#21b4ca] bg-gray-50 hover:bg-white transition-all duration-200"
                       />
 
                       <button
                         type="submit"
                         disabled={!messageText.trim() && selectedImages.length === 0}
-                        className={`p-2 rounded-full ${!messageText.trim() && selectedImages.length === 0
+                        className={`p-2.5 rounded-full transition-all duration-200 ${!messageText.trim() && selectedImages.length === 0
                           ? 'bg-gray-200 text-gray-400'
-                          : 'bg-blue-500 text-white hover:bg-blue-600'
+                          : 'bg-[#21b4ca] text-white hover:bg-[#1a9db0] shadow-sm'
                           }`}
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1494,8 +1499,13 @@ const ChatPage: React.FC = () => {
           type: 'file',
           title: 'This conversion',
           content: '',
+          _id: selectedConversation.id,
+          user_id: '',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
         } : null}
         onDelete={confirmDeleteConversation}
+        onOpenActionModal={() => { }}
       />
     </div>
   );

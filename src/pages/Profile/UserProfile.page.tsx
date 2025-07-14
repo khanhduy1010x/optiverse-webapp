@@ -84,9 +84,12 @@ export default function UserProfile() {
         {/* Main Content */}
         <View className={GROUP_CLASSNAMES.profileMainContent}>
           <div className="p-8">
-            <Text textStyle="regular32" className="mb-4 text-gray-800 text:bold">
+            <span className="mb-4 text-[22px] text-gray-800 text:bold">
               My Profile
-            </Text>
+            </span>
+            <div className="mb-2 text-[14px] text-gray-400  text:bold">
+              Manage your profile information
+            </div>
             <hr className="mb-6 border-gray-200" />
 
             {error && (

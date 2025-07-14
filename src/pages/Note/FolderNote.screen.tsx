@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { formatDateTime } from '../../utils/date.utils';
 import { formatDateTimeShort } from '../../utils/date.utils';
 import { FilterType, RootItem } from '../../types/note/note.types';
 import ToolBarFolder from './ToolBarFolder.screen';
@@ -18,15 +17,12 @@ import { setSelectedItem } from '../../store/slices/ui.slice';
 import { setFolderStack, fetchItems } from '../../store/slices/items.slice';
 import { truncateText } from '../../utils/string.utils';
 import { toast } from 'react-toastify';
-import noteService from '../../services/note.service';
 
 const FolderNote: React.FC = () => {
   const dispatch = useDispatch();
   const [shareModalVisible, setShareModalVisible] = useState(false);
   const [sendToChatModalVisible, setSendToChatModalVisible] = useState(false);
-  const [noteContent, setNoteContent] = useState('');
-  const [noteTitle, setNoteTitle] = useState('');
-  const [sendToChatLoading, setSendToChatLoading] = useState(false);
+
   const [sendToChatItem, setSendToChatItem] = useState<RootItem | null>(null);
 
   const {
@@ -95,7 +91,7 @@ const FolderNote: React.FC = () => {
 
   const handleSendToChat = (item: RootItem) => {
     if (!item || item.type !== 'file') {
-      toast.error('Chỉ gửi được note dạng file');
+      toast.error('Only file-type notes can be sent');
       return;
     }
     setSendToChatItem(item);
@@ -524,8 +520,6 @@ const FolderNote: React.FC = () => {
         isOpen={sendToChatModalVisible}
         onClose={() => setSendToChatModalVisible(false)}
         selectedItem={sendToChatItem}
-        noteContent={noteContent}
-        noteTitle={noteTitle}
       />
     </div>
   );

@@ -37,7 +37,7 @@ const NoteMessage: React.FC<NoteMessageProps> = ({ title, content }) => {
                 </div>
                 <div>
                     <h3 className="font-semibold text-black text-sm">{title}</h3>
-                    <p className="text-xs text-gray-500">Note shared</p>
+                    <p className="text-xs text-gray-500">Shared Note</p>
                 </div>
             </div>
 

@@ -1,99 +1,36 @@
 import React from 'react';
 import { RootItem } from '../../types/note/note.types';
-import friendService from '../../services/friend.service';
 import { Friend } from '../../types/friend/response/friend.response';
-import { useSendNoteToChat } from '../../hooks/chat/useSendNoteToChat.hook';
-import { toast } from 'react-toastify';
-import noteService from '../../services/note.service';
+import { useSendNoteToChatModal } from '../../hooks/note/useSendNoteToChatModal.hook';
 import { GROUP_CLASSNAMES } from '../../styles';
 
 interface SendToChatModalProps {
     isOpen: boolean;
     onClose: () => void;
     selectedItem: RootItem | null;
-    noteContent?: string;
 }
 
 const SendToChatModal: React.FC<SendToChatModalProps> = ({
     isOpen,
     onClose,
     selectedItem,
-    noteContent,
 }) => {
-    const [friends, setFriends] = React.useState<Friend[]>([]);
-    const [loading, setLoading] = React.useState(false);
-    const [searchQuery, setSearchQuery] = React.useState('');
-    const [filteredFriends, setFilteredFriends] = React.useState<Friend[]>([]);
-    const [selectedFriend, setSelectedFriend] = React.useState<Friend | null>(null);
-    const [sending, setSending] = React.useState(false);
-    const [isFocused, setIsFocused] = React.useState(false);
-
-    const { sendNoteToChat } = useSendNoteToChat();
-
-    React.useEffect(() => {
-        if (isOpen) {
-            fetchFriends();
-        }
-    }, [isOpen]);
-
-    React.useEffect(() => {
-        if (searchQuery.trim() === '') {
-            setFilteredFriends(friends);
-        } else {
-            const filtered = friends.filter(friend =>
-                friend.friendInfo?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                friend.friendInfo?.email?.toLowerCase().includes(searchQuery.toLowerCase())
-            );
-            setFilteredFriends(filtered);
-        }
-    }, [searchQuery, friends]);
-
-    const fetchFriends = async () => {
-        try {
-            setLoading(true);
-            const friendsList = await friendService.viewAllFriends();
-            setFriends(friendsList);
-            setFilteredFriends(friendsList);
-        } catch (error) {
-            console.error('Error fetching friends:', error);
-            toast.error('Could not load friends list');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleSendNote = async () => {
-        if (!selectedFriend || !selectedItem) return;
-        try {
-            setSending(true);
-            // Lấy nội dung note từ API
-            const note = await noteService.fetchNoteById(selectedItem._id);
-            if (!note || !note.content) {
-                toast.error('Note has no content');
-                setSending(false);
-                return;
-            }
-            const success = await sendNoteToChat(
-                selectedFriend.friend_id,
-                note.title || 'Untitled Note',
-                note.content
-            );
-            if (success) {
-                onClose();
-                setSelectedFriend(null);
-                setSearchQuery('');
-            }
-        } catch (error) {
-            console.error('Error sending note:', error);
-            toast.error('Failed to send note');
-        } finally {
-            setSending(false);
-        }
-    };
-
-    const handleFriendSelect = (friend: Friend) => {
-        setSelectedFriend(friend);
-    };
+    const {
+        loading,
+        searchQuery,
+        setSearchQuery,
+        filteredFriends,
+        selectedFriends,
+        sending,
+        isFocused,
+        setIsFocused,
+        handleSendNote,
+        handleFriendSelect,
+        isFriendSelected,
+        selectAllFriends,
+        deselectAllFriends,
+        sendProgress
+    } = useSendNoteToChatModal(isOpen, onClose, selectedItem);
 
     if (!isOpen) return null;
 
@@ -119,7 +56,7 @@ const SendToChatModal: React.FC<SendToChatModalProps> = ({
                 <div className="mb-4 relative">
                     <label
                         htmlFor="search-friend-input"
-                        className={`absolute select-none outline-none pointer-events-none duration-300 left-3 text-xs z-10 block transition-all bg-white px-1 ${isFocused || searchQuery ? 'text-[#21b4ca] -top-2' : 'text-gray-500 top-[38%] text-[16px] bg-transparent px-0'} ${isFocused || searchQuery ? '' : '-translate-y-1/2'}`}
+                        className={`absolute select-none outline-none pointer-events-none duration-300 left-3 text-xs z-10 block transition-all bg-white px-1 ${isFocused || searchQuery ? 'text-[#21b4ca] -top-2' : 'text-gray-500 top-[50%] text-[16px] bg-transparent px-0'} ${isFocused || searchQuery ? '' : '-translate-y-1/2'}`}
                     >
                         Search friends
                     </label>
@@ -143,6 +80,31 @@ const SendToChatModal: React.FC<SendToChatModalProps> = ({
                         )}
                     </div>
                 </div>
+
+                <div className="flex justify-between items-center mb-2">
+                    <p className="text-sm text-gray-600">
+                        {selectedFriends.length} {selectedFriends.length === 1 ? 'recipient' : 'recipients'} selected
+                    </p>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={selectAllFriends}
+                            className="text-xs text-[#21b4ca] hover:text-[#1a9db0]"
+                            disabled={sending || filteredFriends.length === 0}
+                        >
+                            Select all
+                        </button>
+                        {selectedFriends.length > 0 && (
+                            <button
+                                onClick={deselectAllFriends}
+                                className="text-xs text-gray-500 hover:text-gray-700"
+                                disabled={sending}
+                            >
+                                Clear selection
+                            </button>
+                        )}
+                    </div>
+                </div>
+
                 <div className="mb-4 max-h-48 overflow-y-auto">
                     {filteredFriends.length === 0 ? (
                         <p className="text-center text-gray-500 py-4">No friends found</p>
@@ -152,11 +114,20 @@ const SendToChatModal: React.FC<SendToChatModalProps> = ({
                                 <div
                                     key={friend.friend_id}
                                     onClick={() => handleFriendSelect(friend)}
-                                    className={`p-3 rounded-lg cursor-pointer transition-colors ${selectedFriend?.friend_id === friend.friend_id ? 'bg-[#e6f7f9] border border-[#21b4ca]' : 'bg-gray-50 hover:bg-gray-100'}`}
+                                    className={`p-3 rounded-lg cursor-pointer transition-colors ${isFriendSelected(friend.friend_id) ? 'bg-[#e6f7f9] border border-[#21b4ca]' : 'bg-gray-50 hover:bg-gray-100'}`}
                                 >
                                     <div className="flex items-center">
+                                        <div className="flex items-center justify-center mr-3">
+                                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${isFriendSelected(friend.friend_id) ? 'border-[#21b4ca] bg-[#21b4ca]' : 'border-gray-300'}`}>
+                                                {isFriendSelected(friend.friend_id) && (
+                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                                    </svg>
+                                                )}
+                                            </div>
+                                        </div>
                                         <div className="w-10 h-10 bg-[#21b4ca] rounded-full flex items-center justify-center text-white font-semibold mr-3">
-                                            {friend.friendInfo?.full_name?.charAt(0)?.toUpperCase() || 'U'}
+                                            <img src={friend.friendInfo?.avatar_url} alt="avatar" className="w-full h-full object-cover rounded-full" />
                                         </div>
                                         <div>
                                             <p className="font-medium text-gray-900">
@@ -172,6 +143,21 @@ const SendToChatModal: React.FC<SendToChatModalProps> = ({
                         </div>
                     )}
                 </div>
+
+                {sending && sendProgress.total > 0 && (
+                    <div className="mb-4">
+                        <div className="w-full bg-gray-200 rounded-full h-2.5">
+                            <div
+                                className="bg-[#21b4ca] h-2.5 rounded-full transition-all duration-300"
+                                style={{ width: `${(sendProgress.current / sendProgress.total) * 100}%` }}
+                            ></div>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1 text-center">
+                            Sending {sendProgress.current} of {sendProgress.total}
+                        </p>
+                    </div>
+                )}
+
                 <div className="flex gap-3">
                     <button
                         onClick={onClose}
@@ -182,8 +168,8 @@ const SendToChatModal: React.FC<SendToChatModalProps> = ({
                     </button>
                     <button
                         onClick={handleSendNote}
-                        disabled={!selectedFriend || sending}
-                        className={GROUP_CLASSNAMES.buttonPrimary + ' flex-1 bg-[#21b4ca] flex items-center justify-center gap-2 cursor-pointer'}
+                        disabled={selectedFriends.length === 0 || sending}
+                        className={GROUP_CLASSNAMES.buttonPrimary + ' flex-1 bg-[#21b4ca] flex items-center justify-center gap-2 cursor-pointer text-sm'}
                     >
                         {sending ? (
                             <>
@@ -192,10 +178,8 @@ const SendToChatModal: React.FC<SendToChatModalProps> = ({
                             </>
                         ) : (
                             <>
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                    <path d="M12 4V20M4 12H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                                </svg>
-                                <span>Send</span>
+
+                                <span>Send to {selectedFriends.length} {selectedFriends.length === 1 ? 'recipient' : 'recipients'}</span>
                             </>
                         )}
                     </button>
