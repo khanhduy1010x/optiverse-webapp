@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ViewTypeDropdown } from './ViewTypeDropdown.component';
 import { MiniCalendar } from './MiniCalendar.component';
 
@@ -30,18 +30,48 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
   const [miniCalendarDate, setMiniCalendarDate] = useState(new Date(currentDate));
   const [showMiniCalendarPopup, setShowMiniCalendarPopup] = useState(false);
   const [showViewTypeDropdown, setShowViewTypeDropdown] = useState(false);
+  const miniCalendarRef = useRef<HTMLDivElement>(null);
+  const dateTextRef = useRef<HTMLDivElement>(null);
 
   const handleDateClick = (date: Date) => {
     setCurrentDate(date);
+    setShowMiniCalendarPopup(false);
+  };
+
+  // Handle clicks outside the mini calendar
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        miniCalendarRef.current && 
+        !miniCalendarRef.current.contains(event.target as Node) &&
+        dateTextRef.current &&
+        !dateTextRef.current.contains(event.target as Node)
+      ) {
+        setShowMiniCalendarPopup(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const toggleMiniCalendar = () => {
+    setShowMiniCalendarPopup(!showMiniCalendarPopup);
+    setMiniCalendarDate(new Date(currentDate)); // Reset mini calendar to current view date
   };
 
   return (
     <div className="flex items-center justify-between px-6 py-4 bg-white rounded-t-2xl shadow-sm border-b">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 relative">
         <button
           onClick={handleToday}
-          className="px-4 py-2 bg-gray-100 rounded-full font-semibold text-gray-700 hover:bg-gray-200 border border-gray-200"
+          className="px-4 py-2 bg-blue-50 rounded-full font-semibold text-blue-700 hover:bg-blue-100 border border-blue-200 transition-colors flex items-center"
         >
+          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
           Today
         </button>
         <button
@@ -56,7 +86,33 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
         </button>
-        <span className="text-2xl font-bold text-gray-800 ml-4">{getViewTitle()}</span>
+        <div 
+          ref={dateTextRef}
+          onClick={toggleMiniCalendar}
+          className="text-2xl font-bold text-gray-800 ml-4 cursor-pointer hover:text-blue-600 transition-colors flex items-center px-3 py-1 rounded-lg hover:bg-gray-100"
+        >
+          <svg className="w-5 h-5 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          {getViewTitle()}
+          <svg className="w-5 h-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={showMiniCalendarPopup ? "M5 15l7-7 7 7" : "M19 9l-7 7-7-7"} />
+          </svg>
+        </div>
+        
+        {/* Mini Calendar Popup */}
+        {showMiniCalendarPopup && (
+          <div ref={miniCalendarRef} className="absolute top-14 left-0 z-50">
+            <MiniCalendar
+              currentDate={currentDate}
+              miniCalendarDate={miniCalendarDate}
+              setMiniCalendarDate={setMiniCalendarDate}
+              handleDateClick={handleDateClick}
+              setShowMiniCalendarPopup={setShowMiniCalendarPopup}
+              showMiniCalendarPopup={showMiniCalendarPopup}
+            />
+          </div>
+        )}
       </div>
       <div className="flex items-center gap-2">
         <select

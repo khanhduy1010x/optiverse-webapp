@@ -238,7 +238,11 @@ export const Calendar: React.FC<CalendarProps> = ({
 
   const handleToday = () => {
     try {
-      setCurrentDate(new Date());
+      const today = new Date();
+      setCurrentDate(today);
+      // Reset the selected date to today as well
+      setSelectedDate(today);
+      console.log('Calendar view set to today:', today);
     } catch (error) {
       console.error('Error in handleToday:', error);
     }

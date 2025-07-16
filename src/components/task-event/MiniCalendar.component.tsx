@@ -55,6 +55,24 @@ export const MiniCalendar: React.FC<MiniCalendarProps> = ({
     setMiniCalendarDate(newDate);
   };
 
+  const handlePrevYear = () => {
+    const newDate = new Date(miniCalendarDate);
+    newDate.setFullYear(newDate.getFullYear() - 1);
+    setMiniCalendarDate(newDate);
+  };
+
+  const handleNextYear = () => {
+    const newDate = new Date(miniCalendarDate);
+    newDate.setFullYear(newDate.getFullYear() + 1);
+    setMiniCalendarDate(newDate);
+  };
+
+  const handleToday = () => {
+    const today = new Date();
+    setMiniCalendarDate(today);
+    handleDateClick(today);
+  };
+
   const isToday = (date: Date) => {
     const today = new Date();
     return date.getDate() === today.getDate() && 
@@ -73,7 +91,11 @@ export const MiniCalendar: React.FC<MiniCalendarProps> = ({
   };
 
   const formatMonth = (date: Date) => {
-    return date.toLocaleString('default', { month: 'long', year: 'numeric' });
+    return date.toLocaleString('default', { month: 'long' });
+  };
+
+  const formatYear = (date: Date) => {
+    return date.getFullYear().toString();
   };
 
   const daysInMonth = getDaysInMonth(miniCalendarDate.getFullYear(), miniCalendarDate.getMonth());
@@ -81,8 +103,30 @@ export const MiniCalendar: React.FC<MiniCalendarProps> = ({
   return (
     <div 
       ref={miniCalendarRef}
-      className={`absolute z-50 bg-white rounded-lg shadow-lg p-4 left-0 top-10 w-64 ${!showMiniCalendarPopup ? 'hidden' : ''}`}
+      className="bg-white rounded-lg shadow-xl p-4 w-72 border border-gray-200"
     >
+      {/* Year selector */}
+      <div className="flex justify-between items-center mb-2">
+        <button 
+          onClick={handlePrevYear}
+          className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+          </svg>
+        </button>
+        <div className="text-sm font-bold">{formatYear(miniCalendarDate)}</div>
+        <button 
+          onClick={handleNextYear}
+          className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Month selector */}
       <div className="flex justify-between items-center mb-3">
         <button 
           onClick={handlePrevMonth}
@@ -115,18 +159,28 @@ export const MiniCalendar: React.FC<MiniCalendarProps> = ({
             key={index}
             onClick={() => {
               handleDateClick(date);
-              setShowMiniCalendarPopup(false);
             }}
             className={`
               w-8 h-8 rounded-full flex items-center justify-center text-xs
-              ${isToday(date) ? 'border border-blue-500' : ''}
-              ${isSelectedDate(date) ? 'bg-blue-500 text-white' : 
+              ${isToday(date) ? 'ring-2 ring-blue-500 font-bold' : ''}
+              ${isSelectedDate(date) ? 'bg-blue-500 text-white hover:bg-blue-600' : 
                 !isSameMonth(date) ? 'text-gray-400' : 'hover:bg-gray-100'}
+              transition-colors
             `}
           >
             {date.getDate()}
           </button>
         ))}
+      </div>
+
+      {/* Today button */}
+      <div className="mt-3 flex justify-center">
+        <button
+          onClick={handleToday}
+          className="px-4 py-1.5 bg-gray-100 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-200 border border-gray-200 transition-colors"
+        >
+          Today
+        </button>
       </div>
     </div>
   );

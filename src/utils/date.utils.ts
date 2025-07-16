@@ -98,49 +98,76 @@ export const formatConsistentDateTime = (isoString: string | Date): string => {
 export const localDateTimeToISO = (dateTimeValue: string): string => {
   if (!dateTimeValue) return '';
   
-  // Tạo một đối tượng Date từ giá trị datetime-local
-  // Giữ nguyên giờ mà người dùng nhập, không chuyển đổi múi giờ
-  const [datePart, timePart] = dateTimeValue.split('T');
-  if (!datePart || !timePart) return '';
-  
-  // Tạo chuỗi ISO với múi giờ UTC (Z)
-  return `${datePart}T${timePart}:00.000Z`;
-};
+  try {
+    // Parse the local date string (format: YYYY-MM-DDThh:mm)
+    // For datetime-local inputs, the browser uses local time without timezone info
+    const [datePart, timePart] = dateTimeValue.split('T');
+    if (!datePart || !timePart) {
+      console.warn('Invalid date format in localDateTimeToISO:', dateTimeValue);
+      return '';
+    }
+    
+    // Create date object in local timezone
+    const localDate = new Date(`${datePart}T${timePart}:00`);
+    
+    // Check if the date is valid
+    if (isNaN(localDate.getTime())) {
+      console.warn('Invalid date provided to localDateTimeToISO:', dateTimeValue);
+      return '';
+    }
+    
+    // Log for debugging
+    console.log('Date conversion in localDateTimeToISO:', {
+      input: dateTimeValue,
+      localDate: localDate.toString(),
+      isoString: localDate.toISOString()
+    });
+    
+    // Convert to ISO string (will automatically handle timezone offset)
+    return localDate.toISOString();
+  } catch (error) {
+    console.error('Error converting date in localDateTimeToISO:', error);
+    return '';
+  }
+}
 
 // Convert ISO string to local datetime-local input value
 export const isoToLocalDateTime = (isoString: string | Date): string => {
   if (!isoString) return '';
   
-  let dateString = '';
-  
-  if (typeof isoString === 'string') {
-    // Trích xuất phần ngày và giờ từ chuỗi ISO, bỏ qua múi giờ
-    const matches = isoString.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/);
-    if (matches) {
-      return `${matches[1]}T${matches[2]}`;
+  try {
+    // Convert to Date object if it's a string
+    const date = typeof isoString === 'string' ? new Date(isoString) : isoString;
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      console.warn('Invalid date in isoToLocalDateTime:', isoString);
+      return '';
     }
     
-    // Nếu không phải định dạng ISO chuẩn, chuyển thành đối tượng Date
-    dateString = isoString;
-  } else {
-    dateString = isoString.toISOString();
-  }
-  
-  const date = new Date(dateString);
-  
-  if (isNaN(date.getTime())) {
+    // Format to local date-time string (YYYY-MM-DDThh:mm)
+    // This approach ensures we're using the local timezone correctly
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    
+    const formattedDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+    
+    // Log for debugging
+    console.log('Date conversion in isoToLocalDateTime:', {
+      input: typeof isoString === 'string' ? isoString : isoString.toISOString(),
+      date: date.toString(),
+      formattedDateTime
+    });
+    
+    return formattedDateTime;
+  } catch (error) {
+    console.error('Error in isoToLocalDateTime:', error);
     return '';
   }
-  
-  // Format YYYY-MM-DDThh:mm (định dạng yêu cầu cho input datetime-local)
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
-};
+}
 
 export function formatElapsedTime(seconds: number): string {
   const days = Math.floor(seconds / (24 * 3600));
@@ -167,66 +194,87 @@ export function formatElapsedTime(seconds: number): string {
  * @returns Chuỗi hiển thị thời gian còn lại, ví dụ: "2 days left", "5 hours left", "30 minutes left"
  */
 export function getCountdownString(endTimeIso: string | Date): string {
-  if (!endTimeIso) return '';
+  if (!endTimeIso) {
+    console.log('getCountdownString: No end time provided');
+    return '';
+  }
   
   let endTime: Date;
   
-  // Xử lý chuỗi ISO đặc biệt để tránh vấn đề múi giờ
+  // Convert to Date object
   if (typeof endTimeIso === 'string') {
-    // Trích xuất ngày và giờ từ chuỗi ISO, bỏ qua múi giờ
-    const matches = endTimeIso.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/);
-    if (matches) {
-      // Tạo đối tượng Date với múi giờ địa phương
-      const [, datePart, timePart] = matches;
-      const dateStr = `${datePart}T${timePart}:00`;
-      endTime = new Date(dateStr);
-    } else {
-      // Fallback nếu không phải định dạng mong đợi
-      endTime = new Date(endTimeIso);
-    }
+    endTime = new Date(endTimeIso);
   } else {
     endTime = endTimeIso;
   }
   
-  if (isNaN(endTime.getTime())) return '';
+  // Check if date is valid
+  if (isNaN(endTime.getTime())) {
+    console.warn('getCountdownString: Invalid date:', endTimeIso);
+    return '';
+  }
   
   const now = new Date();
-  const nowVN = new Date(now.getTime() + 7 * 60 * 60 * 1000); // Cộng thêm 7 tiếng
   
-  // Tính khoảng thời gian còn lại tính bằng mili giây
+  // Log for debugging
+  console.log('getCountdownString debug:', {
+    endTimeIso,
+    endTimeFormatted: endTime.toISOString(),
+    nowFormatted: now.toISOString(),
+    timeLeftMs: endTime.getTime() - now.getTime()
+  });
+  
+  // Calculate time left in milliseconds
   const timeLeft = endTime.getTime() - now.getTime();
   
-  // Nếu đã quá hạn, trả về chuỗi trống
-  if (timeLeft <= 0) return '';
+  // If already passed deadline, return "Overdue" instead of empty string
+  if (timeLeft <= 0) {
+    console.log('getCountdownString: Time already passed, returning Overdue');
+    return 'Overdue';
+  }
   
-  // Chuyển đổi thành giây
+  // Convert to seconds
   const secondsLeft = Math.floor(timeLeft / 1000);
   
-  // Tính toán các đơn vị thời gian
+  // Calculate time units
   const days = Math.floor(secondsLeft / 86400);
   const hours = Math.floor((secondsLeft % 86400) / 3600);
   const minutes = Math.floor((secondsLeft % 3600) / 60);
+  const seconds = Math.floor(secondsLeft % 60);
   
-  // Hiển thị đơn vị thời gian lớn nhất
+  // For debugging
+  console.log('getCountdownString time units:', { days, hours, minutes, seconds });
+  
+  // Return the largest time unit with proper formatting
   if (days > 0) {
     return `${days} day${days > 1 ? 's' : ''} left`;
   } else if (hours > 0) {
     return `${hours} hour${hours > 1 ? 's' : ''} left`;
   } else if (minutes > 0) {
     return `${minutes} minute${minutes > 1 ? 's' : ''} left`;
+  } else if (seconds > 0) {
+    return `${seconds} second${seconds > 1 ? 's' : ''} left`;
   } else {
-    return 'Less than a minute left';
+    return 'Less than a second left';
   }
 }
 
 /**
  * Kiểm tra xem task đã quá 3/4 thời gian từ start đến end chưa, và vẫn đang ở trạng thái pending
- * @param startTimeIso Thời gian bắt đầu task
- * @param endTimeIso Thời gian kết thúc task
- * @param status Trạng thái hiện tại của task
+ * @param taskOrStartTime Task object hoặc thời gian bắt đầu task
+ * @param endTimeIso Thời gian kết thúc task (nếu tham số đầu không phải Task object)
+ * @param status Trạng thái hiện tại của task (nếu tham số đầu không phải Task object)
  * @returns true nếu task đã qua 3/4 thời gian và vẫn pending, false trong các trường hợp khác
  */
-export function isTaskNearDue(startTimeIso: string | Date, endTimeIso: string | Date, status: string): boolean {
+export function isTaskNearDue(taskOrStartTime: any, endTimeIso?: string | Date, status?: string): boolean {
+  // Kiểm tra nếu tham số đầu tiên là Task object
+  if (taskOrStartTime && typeof taskOrStartTime === 'object' && !Array.isArray(taskOrStartTime) && !(taskOrStartTime instanceof Date)) {
+    const task = taskOrStartTime;
+    return isTaskNearDue(task.start_time, task.end_time, task.status);
+  }
+
+  // Xử lý như trước đây nếu không phải Task object
+  const startTimeIso = taskOrStartTime;
   if (!startTimeIso || !endTimeIso || status !== 'pending') return false;
   
   // Chuyển đổi sang Date
@@ -251,17 +299,24 @@ export function isTaskNearDue(startTimeIso: string | Date, endTimeIso: string | 
 
 /**
  * Kiểm tra xem task đã quá hạn chưa
- * @param endTimeIso Thời gian kết thúc task
- * @param status Trạng thái hiện tại của task
+ * @param taskOrEndTime Task object hoặc thời gian kết thúc task
+ * @param status Trạng thái hiện tại của task (nếu tham số đầu không phải Task object)
  * @returns true nếu task đã quá hạn và vẫn chưa completed, false trong các trường hợp khác
  */
-export function isTaskOverdue(endTimeIso: string | Date, status: string): boolean {
+export function isTaskOverdue(taskOrEndTime: any, status?: string): boolean {
+  // Kiểm tra nếu tham số đầu tiên là Task object
+  if (taskOrEndTime && typeof taskOrEndTime === 'object' && !Array.isArray(taskOrEndTime) && !(taskOrEndTime instanceof Date)) {
+    const task = taskOrEndTime;
+    return isTaskOverdue(task.end_time, task.status);
+  }
+
+  // Xử lý như trước đây nếu không phải Task object
+  const endTimeIso = taskOrEndTime;
   if (!endTimeIso || status === 'completed') return false;
   
   // Chuyển đổi sang Date
   const endTime = endTimeIso instanceof Date ? endTimeIso : new Date(endTimeIso);
   const now = new Date();
-  const nowVN = new Date(now.getTime() + 7 * 60 * 60 * 1000); // Cộng thêm 7 tiếng
 
   // Log để kiểm tra giá trị
   console.log("isTaskOverdue check:", {
@@ -279,8 +334,8 @@ export function isTaskOverdue(endTimeIso: string | Date, status: string): boolea
   // Kiểm tra nếu ngày không hợp lệ
   if (isNaN(endTime.getTime())) return false;
   
-  // Kiểm tra nếu đã quá hạn
-  const isOverdue = nowVN.getTime() > endTime.getTime();
+  // Kiểm tra nếu đã quá hạn - sử dụng giờ hiện tại trực tiếp, không thêm offset
+  const isOverdue = now.getTime() > endTime.getTime();
   console.log("isOverdue:", isOverdue);
   return isOverdue;
 }

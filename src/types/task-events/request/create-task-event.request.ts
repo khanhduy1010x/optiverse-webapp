@@ -1,4 +1,4 @@
-import { RepeatType, RepeatEndType } from '../task-events.types';
+import { RepeatType, RepeatEndType, RepeatUnit } from '../task-events.types';
 
 export interface CreateTaskEventRequest {
   task_id: string;
@@ -8,6 +8,8 @@ export interface CreateTaskEventRequest {
   all_day?: boolean;
   repeat_type: RepeatType;
   repeat_interval?: number;
+  repeat_frequency?: number;
+  repeat_unit?: RepeatUnit;
   repeat_days?: number[];
   repeat_end_type?: RepeatEndType;
   repeat_end_date?: Date | string;
@@ -16,4 +18,5 @@ export interface CreateTaskEventRequest {
   description?: string;
   guests?: string[];
   parent_event_id?: string; // ID của sự kiện gốc (nếu đây là sự kiện lặp lại)
+  color?: string; // Event color (hex code)
 } 

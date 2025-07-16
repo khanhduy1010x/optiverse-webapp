@@ -1,6 +1,9 @@
 import React from 'react';
 import { Tag } from '../../types/task/response/tag.response';
 import { GROUP_CLASSNAMES } from '../../styles/group-class-name.style';
+import { TaskStatusTab } from './Task.page';
+import NotificationBell from '../../components/task-event/NotificationBell.component';
+import { Task } from '../../types/task/response/task.response';
 
 interface TaskHeaderProps {
   searchQuery: string;
@@ -16,6 +19,15 @@ interface TaskHeaderProps {
   handleSearchChange: (query: string) => void;
   setShowTagManagement: (show: boolean) => void;
   onCheckOverdue?: () => void;
+  activeTab: TaskStatusTab;
+  handleTabChange: (tab: TaskStatusTab) => void;
+  taskCounts: {
+    all: number;
+    pending: number;
+    completed: number;
+    overdue: number;
+  };
+  tasks: Task[]; // Add tasks prop for NotificationBell
 }
 
 const TaskHeader: React.FC<TaskHeaderProps> = ({
@@ -31,7 +43,11 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
     handleSortChange,
     handleSearchChange,
     setShowTagManagement,
-    onCheckOverdue
+    onCheckOverdue,
+    activeTab,
+    handleTabChange,
+    taskCounts,
+    tasks
 }) => {
   const handleFilterTagClick = (tagId: string) => {
     const updatedFilterTags = filterTags.includes(tagId)
@@ -66,18 +82,9 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-xl font-semibold text-gray-900">My Tasks</h1>
           <div className={GROUP_CLASSNAMES.flexItemsCenter + " space-x-4"}>
-            {onCheckOverdue && (
-              <button
-                onClick={onCheckOverdue}
-                className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded-md text-sm flex items-center font-medium shadow-md transition-all duration-200 ease-in-out transform hover:scale-105"
-                title="Manually check and update any tasks that have passed their due date"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Check Overdue
-              </button>
-            )}
+            {/* Add NotificationBell component */}
+            <NotificationBell tasks={tasks} />
+            
             <button
               onClick={() => setShowTagManagement(true)}
               className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-md text-sm flex items-center"
@@ -99,7 +106,7 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2 md:flex-nowrap">
+        <div className="flex flex-wrap gap-2 md:flex-nowrap mb-4">
           <div className="relative flex-grow">
             <input
               type="text"
@@ -113,85 +120,6 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </button>
-          </div>
-
-          {/* Status Filter - Updated to match example */}
-          <div className="relative group">
-            <button
-              id="status-filter-button"
-              className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md bg-white hover:bg-gray-50 text-gray-700"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Status
-            </button>
-
-            <div id="status-filter-menu" className="absolute z-10 mt-1 w-64 bg-white rounded-md shadow-lg border border-gray-200 hidden group-hover:block">
-              <div className="p-4">
-                <h3 className="text-base font-medium text-gray-700 mb-3">Filter by Status</h3>
-                <div className="space-y-2">
-                  <button
-                    onClick={() => {
-                      const updatedStatus = filterStatus.includes('pending') 
-                        ? filterStatus.filter(s => s !== 'pending') 
-                        : [...filterStatus, 'pending'];
-                      handleFilterByStatus(updatedStatus as ('pending' | 'completed' | 'overdue')[]);
-                    }}
-                    className={`block w-full text-left px-4 py-2 text-sm rounded-md ${
-                      filterStatus.includes('pending') ? 'bg-blue-100 text-blue-800' : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    <span className="px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-800 mr-2">
-                      Pending
-                    </span>
-                    {filterStatus.includes('pending') && '✓'}
-                  </button>
-                  
-                  <button
-                    onClick={() => {
-                      const updatedStatus = filterStatus.includes('completed') 
-                        ? filterStatus.filter(s => s !== 'completed') 
-                        : [...filterStatus, 'completed'];
-                      handleFilterByStatus(updatedStatus as ('pending' | 'completed' | 'overdue')[]);
-                    }}
-                    className={`block w-full text-left px-4 py-2 text-sm rounded-md ${
-                      filterStatus.includes('completed') ? 'bg-green-100 text-green-800' : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    <span className="px-2 py-0.5 rounded text-xs bg-green-100 text-green-800 mr-2">
-                      Completed
-                    </span>
-                    {filterStatus.includes('completed') && '✓'}
-                  </button>
-                  
-                  <button
-                    onClick={() => {
-                      const updatedStatus = filterStatus.includes('overdue') 
-                        ? filterStatus.filter(s => s !== 'overdue') 
-                        : [...filterStatus, 'overdue'];
-                      handleFilterByStatus(updatedStatus as ('pending' | 'completed' | 'overdue')[]);
-                    }}
-                    className={`block w-full text-left px-4 py-2 text-sm rounded-md ${
-                      filterStatus.includes('overdue') ? 'bg-red-100 text-red-800' : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    <span className="px-2 py-0.5 rounded text-xs bg-red-100 text-red-800 mr-2">
-                      Overdue
-                    </span>
-                    {filterStatus.includes('overdue') && '✓'}
-                  </button>
-                </div>
-                <div className="mt-4 flex justify-between items-center">
-                  <button
-                    onClick={() => handleFilterByStatus([])}
-                    className="text-sm text-gray-600 hover:text-gray-900"
-                  >
-                    Clear All
-                  </button>
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Tag Filter */}
@@ -252,12 +180,12 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
               className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md bg-white hover:bg-gray-50 text-gray-700"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
               </svg>
-              Sort: {sortOrder === 'newest' ? 'Newest' : sortOrder === 'oldest' ? 'Oldest' : 'Deadline'}
+              Sort: {sortOrder.charAt(0).toUpperCase() + sortOrder.slice(1)}
             </button>
 
-            <div id="sort-menu" className="absolute right-0 z-10 mt-1 w-64 bg-white rounded-md shadow-lg border border-gray-200 hidden group-hover:block">
+            <div id="sort-menu" className="absolute right-0 z-10 mt-1 w-56 bg-white rounded-md shadow-lg border border-gray-200 hidden group-hover:block">
               <div className="p-4">
                 <h3 className="text-base font-medium text-gray-700 mb-3">Sort By</h3>
                 <div className="space-y-2">
@@ -267,7 +195,8 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                       sortOrder === 'newest' ? 'bg-blue-100 text-blue-800' : 'text-gray-700 hover:bg-gray-100'
                     }`}
                   >
-                    Newest First {sortOrder === 'newest' && '✓'}
+                    Newest First
+                    {sortOrder === 'newest' && <span className="ml-2">✓</span>}
                   </button>
                   <button
                     onClick={() => handleSortChange('oldest')}
@@ -275,7 +204,8 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                       sortOrder === 'oldest' ? 'bg-blue-100 text-blue-800' : 'text-gray-700 hover:bg-gray-100'
                     }`}
                   >
-                    Oldest First {sortOrder === 'oldest' && '✓'}
+                    Oldest First
+                    {sortOrder === 'oldest' && <span className="ml-2">✓</span>}
                   </button>
                   <button
                     onClick={() => handleSortChange('deadline')}
@@ -283,12 +213,69 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                       sortOrder === 'deadline' ? 'bg-blue-100 text-blue-800' : 'text-gray-700 hover:bg-gray-100'
                     }`}
                   >
-                    Deadline {sortOrder === 'deadline' && '✓'}
+                    Deadline (Soonest First)
+                    {sortOrder === 'deadline' && <span className="ml-2">✓</span>}
                   </button>
                 </div>
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Tab Navigation - Di chuyển xuống dưới thanh tìm kiếm */}
+        <div className="flex mb-4 border-b border-gray-200">
+          <button
+            className={`px-4 py-2 font-medium text-sm mr-2 ${
+              activeTab === 'all'
+                ? 'text-blue-600 border-b-2 border-blue-500'
+                : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+            onClick={() => handleTabChange('all')}
+          >
+            All
+            <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-700">
+              {taskCounts.all}
+            </span>
+          </button>
+          <button
+            className={`px-4 py-2 font-medium text-sm mr-2 ${
+              activeTab === 'pending'
+                ? 'text-blue-600 border-b-2 border-blue-500'
+                : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+            onClick={() => handleTabChange('pending')}
+          >
+            Pending
+            <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700">
+              {taskCounts.pending}
+            </span>
+          </button>
+          <button
+            className={`px-4 py-2 font-medium text-sm mr-2 ${
+              activeTab === 'completed'
+                ? 'text-blue-600 border-b-2 border-blue-500'
+                : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+            onClick={() => handleTabChange('completed')}
+          >
+            Completed
+            <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700">
+              {taskCounts.completed}
+            </span>
+          </button>
+          <button
+            className={`px-4 py-2 font-medium text-sm ${
+              activeTab === 'overdue'
+                ? 'text-blue-600 border-b-2 border-blue-500'
+                : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+            onClick={() => handleTabChange('overdue')}
+          >
+            Overdue
+            <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-700">
+              {taskCounts.overdue}
+            </span>
+          </button>
         </div>
       </div>
     </>

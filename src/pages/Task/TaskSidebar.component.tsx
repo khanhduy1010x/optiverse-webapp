@@ -1,5 +1,6 @@
 import React from 'react';
 import View from '../../components/common/View.component';
+import { GROUP_CLASSNAMES } from '../../styles/group-class-name.style';
 import Icon from '../../components/common/Icon/Icon.component';
 import { IconName } from '../../assets/icons';
 
@@ -23,7 +24,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({ selectedMenu, handleNavigate 
                     <p className="text-sm text-gray-500 mt-1">Task Management</p>
                 </div>
 
-                {/* Navigation items */}
+                {/* Navigation items - Centered with proper spacing */}
                 <div className="flex-1 flex flex-col pt-10 px-6 space-y-4">
                     {menuItems.map(menu => (
                         <button
@@ -39,7 +40,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({ selectedMenu, handleNavigate 
                         >
                             <Icon
                                 name={menu.icon}
-                                size={24}
+                                size={18}
                                 className={`mr-3 ${selectedMenu === menu.id ? 'text-[#21b4ca]' : 'text-gray-500'}`}
                             />
                             <span className="font-medium text-sm">
@@ -52,7 +53,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({ selectedMenu, handleNavigate 
                 {/* Footer section */}
                 <div className="p-6 border-t border-gray-200">
                     <div className="text-xs text-gray-500 text-center">
-                        Task Settings
+                        Task Management
                     </div>
                 </div>
             </div>

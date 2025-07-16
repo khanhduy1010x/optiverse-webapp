@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { GROUP_CLASSNAMES } from '../../styles';
 import Modal from 'react-modal';
 import { CreateTaskFormProps } from '../../types/task/props/component.props';
-import { isoToLocalDateTime } from '../../utils/date.utils';
+import { isoToLocalDateTime, localDateTimeToISO } from '../../utils/date.utils';
 
 const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
     title,
@@ -15,14 +15,129 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
     setStartTime,
     end_time,
     setEndTime,
-    setShowPopup,
+    onClose,
+    onSave,
     selectedTags,
     allTags,
     handleTagSelect,
     showNewTagForm,
     setShowNewTagForm,
-    handleSaveTask
+    newTagName,
+    setNewTagName,
+    newTagColor,
+    setNewTagColor,
+    handleCreateNewTag
 }) => {
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    // Add errors state object for validation
+    const [errors, setErrors] = useState<{
+        title?: string;
+        description?: string;
+        time?: string;
+    }>({});
+
+    const validateForm = (): boolean => {
+        const newErrors: {
+            title?: string;
+            description?: string;
+            time?: string;
+        } = {};
+        
+        // Validate title
+        if (!title || !title.trim()) {
+            newErrors.title = 'Title is required';
+        } else if (title.length > 50) {
+            newErrors.title = 'Title cannot exceed 50 characters';
+        }
+        
+        // Validate description
+        if (description && description.length > 150) {
+            newErrors.description = 'Description cannot exceed 150 characters';
+        }
+        
+        // Hàm helper để phân tích chuỗi ngày tháng từ input datetime-local
+        const parseDateTime = (dateTimeStr: string | Date): Date => {
+            if (!dateTimeStr) return new Date(0); // Invalid date
+            
+            if (dateTimeStr instanceof Date) return dateTimeStr;
+            
+            // Xử lý chuỗi datetime-local (YYYY-MM-DDThh:mm)
+            if (dateTimeStr.includes('T')) {
+                const [datePart, timePart] = dateTimeStr.split('T');
+                const [year, month, day] = datePart.split('-').map(Number);
+                const [hours, minutes] = timePart.split(':').map(Number);
+                
+                // JavaScript months are 0-based (0-11)
+                return new Date(year, month - 1, day, hours, minutes);
+            }
+            
+            return new Date(dateTimeStr);
+        };
+        
+        // Chuyển đổi thời gian
+        const startDate = start_time ? parseDateTime(start_time) : null;
+        const endDate = end_time ? parseDateTime(end_time) : null;
+        
+        // Kiểm tra thời gian - chỉ kiểm tra mối quan hệ giữa start_time và end_time
+        if (startDate && endDate) {
+            // Kiểm tra nếu ngày kết thúc <= ngày bắt đầu
+            if (endDate <= startDate) {
+                newErrors.time = 'Deadline must be after start time';
+            }
+        }
+        
+        // In ra log để debug
+        console.log('Validation check:', {
+            start_time,
+            startDate: startDate ? startDate.toString() : null,
+            end_time,
+            endDate: endDate ? endDate.toString() : null,
+            errors: newErrors
+        });
+        
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const handleCreateTask = async () => {
+        // Validate form before submission
+        if (!validateForm()) {
+            return;
+        }
+
+        try {
+            setIsSubmitting(true);
+            
+            // Log date values for debugging
+            console.log('CreateTaskForm - Date values before submission:', {
+                start_time_original: start_time,
+                start_time_formatted: start_time ? localDateTimeToISO(start_time as string) : undefined,
+                end_time_original: end_time,
+                end_time_formatted: end_time ? localDateTimeToISO(end_time as string) : undefined
+            });
+            
+            // Gọi hàm onSave và đợi kết quả
+            const success = await onSave({
+                title,
+                description,
+                priority,
+                tags: selectedTags,
+                start_time,
+                end_time
+            });
+            
+            if (success) {
+                // Đóng form sau khi lưu thành công
+                onClose();
+            }
+        } catch (error) {
+            console.error('Error creating task:', error);
+            alert('Failed to create task. Please try again.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     return (
         <Modal isOpen={true}
             className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[450px] max-w-[90vw] bg-white rounded-2xl shadow-2xl z-[2000] outline-none"
@@ -32,26 +147,46 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                 {/* Task name */}
                 <div className={GROUP_CLASSNAMES.taskDetailHeader}>
                     <input
-                        className="w-full text-xl font-medium border-0 p-0 mb-2 focus:outline-none focus:ring-0 placeholder-gray-400"
+                        className={`w-full text-xl font-medium border-0 p-0 mb-2 focus:outline-none focus:ring-0 placeholder-gray-400 ${errors.title ? 'border-b border-red-500' : ''}`}
                         type="text"
                         placeholder="Task name"
                         value={title}
-                        onChange={(e) => setTitle(e.target.value)}
+                        onChange={(e) => {
+                            setTitle(e.target.value);
+                            if (errors.title) {
+                                setErrors(prev => ({ ...prev, title: undefined }));
+                            }
+                        }}
                         autoFocus
                         autoComplete="off"
+                        maxLength={50}
                     />
+                    {errors.title && (
+                        <div className="text-red-500 text-xs mt-1">{errors.title}</div>
+                    )}
+                    <div className="text-xs text-gray-400 mt-1">{title.length}/50 characters</div>
                 </div>
 
                 {/* Description */}
                 <div className={GROUP_CLASSNAMES.taskDetailDescription}>
                     <textarea
-                        className="w-full text-sm border-0 p-0 focus:outline-none focus:ring-0 placeholder-gray-400 resize-none"
+                        className={`w-full text-sm border-0 p-0 focus:outline-none focus:ring-0 placeholder-gray-400 resize-none ${errors.description ? 'border border-red-500' : ''}`}
                         placeholder="Description"
                         value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        rows={3}
+                        onChange={(e) => {
+                            setDescription(e.target.value);
+                            if (errors.description) {
+                                setErrors(prev => ({ ...prev, description: undefined }));
+                            }
+                        }}
+                        rows={1}
                         autoComplete="off"
+                        maxLength={150}
                     />
+                    {errors.description && (
+                        <div className="text-red-500 text-xs mt-1">{errors.description}</div>
+                    )}
+                    <div className="text-xs text-gray-400 mt-1">{description.length}/150 characters</div>
                 </div>
 
                 <div className={GROUP_CLASSNAMES.taskDetailSection}>
@@ -84,9 +219,14 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                                 <label className="text-sm text-gray-500 block mb-1">Start Time</label>
                                 <input
                                     type="datetime-local"
-                                    className="w-full border border-gray-200 rounded px-2 py-1 text-sm"
+                                    className={`w-full border border-gray-200 rounded px-2 py-1 text-sm ${errors.time ? 'border-red-500' : ''}`}
                                     value={isoToLocalDateTime(start_time || '')}
-                                    onChange={(e) => setStartTime(e.target.value)}
+                                    onChange={(e) => {
+                                        setStartTime(e.target.value);
+                                        if (errors.time) {
+                                            setErrors(prev => ({ ...prev, time: undefined }));
+                                        }
+                                    }}
                                     autoComplete="off"
                                 />
                             </div>
@@ -101,13 +241,21 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                                 <label className="text-sm text-gray-500 block mb-1">Deadline</label>
                                 <input
                                     type="datetime-local"
-                                    className="w-full border border-gray-200 rounded px-2 py-1 text-sm"
+                                    className={`w-full border border-gray-200 rounded px-2 py-1 text-sm ${errors.time ? 'border-red-500' : ''}`}
                                     value={isoToLocalDateTime(end_time || '')}
-                                    onChange={(e) => setEndTime(e.target.value)}
+                                    onChange={(e) => {
+                                        setEndTime(e.target.value);
+                                        if (errors.time) {
+                                            setErrors(prev => ({ ...prev, time: undefined }));
+                                        }
+                                    }}
                                     autoComplete="off"
                                 />
                             </div>
                         </div>
+                        {errors.time && (
+                            <div className="text-red-500 text-xs mt-1 ml-8">{errors.time}</div>
+                        )}
 
                         {/* Tags */}
                         <div className={GROUP_CLASSNAMES.flexItemsCenter + " py-2"}>
@@ -210,27 +358,46 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                 <div className={GROUP_CLASSNAMES.taskModalFooter}>
                     <button
                         type="button"
-                        onClick={() => setShowPopup(false)}
-                        className={GROUP_CLASSNAMES.buttonSecondary + " px-4 py-2 text-sm"}
+                        onClick={onClose}
+                        className="text-sm text-gray-500 hover:text-gray-700"
+                        disabled={isSubmitting}
                     >
                         Cancel
                     </button>
                     <button
                         type="button"
-                        onClick={() => {
-                            if (!title || !title.trim()) {
-                                alert('Please enter a title first');
-                                return;
-                            }
-
-                            handleSaveTask(title);
-                        }}
-                        disabled={!title.trim()}
-                        className="px-4 py-2 text-sm bg-red-500 hover:bg-red-600 text-white rounded-md font-medium shadow-md"
+                        onClick={handleCreateTask}
+                        className={`px-4 py-2 text-sm bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center ${
+                            isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
+                        }`}
+                        disabled={isSubmitting}
                     >
-                        Create Task
+                        {isSubmitting ? (
+                            <>
+                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Creating...
+                            </>
+                        ) : (
+                            'Create Task'
+                        )}
                     </button>
                 </div>
+
+                {/* Close button */}
+                <button
+                    type="button"
+                    onClick={onClose}
+                    className={GROUP_CLASSNAMES.taskModalCloseButton}
+                    aria-label="Close task creation form"
+                    title="Close task creation form"
+                >
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
             </div>
         </Modal>
     );

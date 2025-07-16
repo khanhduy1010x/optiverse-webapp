@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { GROUP_CLASSNAMES } from '../../styles';
 import { Task } from '../../types/task/response/task.response';
 import { Tag } from '../../types/task/response/tag.response';
 import Modal from 'react-modal';
-import { isoToLocalDateTime } from '../../utils/date.utils';
+import { isoToLocalDateTime, localDateTimeToISO } from '../../utils/date.utils';
 
 interface EditTaskFormProps {
   task: Task;
@@ -16,50 +16,190 @@ interface EditTaskFormProps {
     tags: Tag[];
     start_time?: string | Date;
     end_time?: string | Date;
-  }) => Promise<void>;
+  }) => Promise<boolean | void>;
+  title: string;
+  setTitle: React.Dispatch<React.SetStateAction<string>>;
+  description: string;
+  setDescription: React.Dispatch<React.SetStateAction<string>>;
+  status: 'pending' | 'completed' | 'overdue';
+  setStatus: React.Dispatch<React.SetStateAction<'pending' | 'completed' | 'overdue'>>;
+  priority: 'low' | 'medium' | 'high';
+  setPriority: React.Dispatch<React.SetStateAction<'low' | 'medium' | 'high'>>;
+  start_time: Date | string | undefined;
+  setStartTime: React.Dispatch<React.SetStateAction<Date | string | undefined>>;
+  end_time: Date | string | undefined;
+  setEndTime: React.Dispatch<React.SetStateAction<Date | string | undefined>>;
   selectedTags: Tag[];
+  setSelectedTags: React.Dispatch<React.SetStateAction<Tag[]>>;
   allTags: Tag[];
   handleTagSelect: (tag: Tag) => void;
   showNewTagForm: boolean;
   setShowNewTagForm: React.Dispatch<React.SetStateAction<boolean>>;
+  newTagName: string;
+  setNewTagName: React.Dispatch<React.SetStateAction<string>>;
+  newTagColor: string;
+  setNewTagColor: React.Dispatch<React.SetStateAction<string>>;
+  handleCreateNewTag: (
+    newTagName: string,
+    newTagColor: string,
+    resetForm: () => void
+  ) => Promise<Tag | null>;
 }
 
 const EditTaskForm: React.FC<EditTaskFormProps> = ({
   task,
   onClose,
   onSave,
+  title,
+  setTitle,
+  description,
+  setDescription,
+  status,
+  setStatus,
+  priority,
+  setPriority,
+  start_time,
+  setStartTime,
+  end_time,
+  setEndTime,
   selectedTags,
+  setSelectedTags,
   allTags,
   handleTagSelect,
   showNewTagForm,
-  setShowNewTagForm
+  setShowNewTagForm,
+  newTagName,
+  setNewTagName,
+  newTagColor,
+  setNewTagColor,
+  handleCreateNewTag
 }) => {
-  const [localTitle, setLocalTitle] = React.useState(task.title);
-  const [localDescription, setLocalDescription] = React.useState(task.description || '');
-  const [localStatus, setLocalStatus] = React.useState(task.status);
-  const [localPriority, setLocalPriority] = React.useState(task.priority);
-  const [localStartTime, setLocalStartTime] = React.useState<string | Date | undefined>(task.start_time);
-  const [localEndTime, setLocalEndTime] = React.useState<string | Date | undefined>(task.end_time);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<{
+    title?: string;
+    description?: string;
+    time?: string;
+    general?: string;
+  }>({});
 
-  React.useEffect(() => {
-    setLocalTitle(task.title);
-    setLocalDescription(task.description || '');
-    setLocalStatus(task.status);
-    setLocalPriority(task.priority);
-    setLocalStartTime(task.start_time);
-    setLocalEndTime(task.end_time);
-  }, [task]);
+  const validateForm = (): boolean => {
+    const newErrors: {
+      title?: string;
+      description?: string;
+      time?: string;
+      general?: string;
+    } = {};
+    
+    // Validate title
+    if (!title || !title.trim()) {
+      newErrors.title = 'Title is required';
+    } else if (title.length > 50) {
+      newErrors.title = 'Title cannot exceed 50 characters';
+    }
+    
+    // Validate description
+    if (description && description.length > 150) {
+      newErrors.description = 'Description cannot exceed 150 characters';
+    }
+    
+    // Validate times
+    if (start_time && end_time) {
+      const startDate = new Date(start_time);
+      const endDate = new Date(end_time);
+      const now = new Date();
+      
+      // Check if dates are in the past
+      if (startDate < now) {
+        newErrors.time = 'Start time cannot be in the past';
+        return false;
+      }
+      
+      // Check if end time is after start time
+      if (endDate <= startDate) {
+        newErrors.time = 'Deadline must be after start time';
+        return false;
+      }
+    } else if (start_time) {
+      const startDate = new Date(start_time);
+      const now = new Date();
+      
+      // Check if start date is in the past
+      if (startDate < now) {
+        newErrors.time = 'Start time cannot be in the past';
+        return false;
+      }
+    } else if (end_time) {
+      const endDate = new Date(end_time);
+      const now = new Date();
+      
+      // Check if end date is in the past
+      if (endDate < now) {
+        newErrors.time = 'Deadline cannot be in the past';
+        return false;
+      }
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSave = async () => {
-    await onSave({
-      title: localTitle,
-      description: localDescription,
-      status: localStatus,
-      priority: localPriority,
+    // Validate form before submission
+    if (!validateForm()) {
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      setErrors({});
+      
+      // Log date values for debugging
+      console.log('EditTaskForm - Date values before submission:', {
+        start_time_original: start_time,
+        start_time_formatted: start_time ? (start_time instanceof Date ? start_time.toISOString() : localDateTimeToISO(start_time)) : undefined,
+        end_time_original: end_time,
+        end_time_formatted: end_time ? (end_time instanceof Date ? end_time.toISOString() : localDateTimeToISO(end_time)) : undefined
+      });
+      
+      console.log('EditTaskForm: Saving task with data:', {
+        title,
+        description,
+        status,
+        priority,
+        tags: selectedTags,
+        start_time,
+        end_time
+      });
+      
+      // Call onSave and wait for result
+      const result = await onSave({
+        title,
+        description,
+        status,
+        priority,
       tags: selectedTags,
-      start_time: localStartTime,
-      end_time: localEndTime
-    });
+        start_time,
+        end_time
+      });
+      
+      console.log('EditTaskForm: Save result:', result);
+      
+      // Close form after successful save
+      if (result !== false) {
+        console.log('EditTaskForm: Save successful, closing form');
+        onClose();
+      } else {
+        console.error('EditTaskForm: Save returned false');
+        setErrors({ general: 'Failed to save task. Please try again.' });
+      }
+    } catch (error) {
+      console.error('EditTaskForm: Error saving task:', error);
+      setErrors({ 
+        general: error instanceof Error ? error.message : 'Failed to save task. Please try again.' 
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -70,26 +210,46 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
         {/* Task name */}
         <div className={GROUP_CLASSNAMES.taskDetailHeader}>
           <input
-            className="w-full text-xl font-medium border-0 p-0 mb-2 focus:outline-none focus:ring-0 placeholder-gray-400"
+            className={`w-full text-xl font-medium border-0 p-0 mb-2 focus:outline-none focus:ring-0 placeholder-gray-400 ${errors.title ? 'border-b border-red-500' : ''}`}
             type="text"
             placeholder="Task name"
-            value={localTitle}
-            onChange={(e) => setLocalTitle(e.target.value)}
+            value={title}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              if (errors.title) {
+                setErrors(prev => ({ ...prev, title: undefined }));
+              }
+            }}
             autoFocus
             autoComplete="off"
+            maxLength={50}
           />
+          {errors.title && (
+            <div className="text-red-500 text-xs mt-1">{errors.title}</div>
+          )}
+          <div className="text-xs text-gray-400 mt-1">{title.length}/50 characters</div>
         </div>
 
         {/* Description */}
         <div className={GROUP_CLASSNAMES.taskDetailDescription}>
           <textarea
-            className="w-full text-sm border-0 p-0 focus:outline-none focus:ring-0 placeholder-gray-400 resize-none"
+            className={`w-full text-sm border-0 p-0 focus:outline-none focus:ring-0 placeholder-gray-400 resize-none ${errors.description ? 'border border-red-500' : ''}`}
             placeholder="Description"
-            value={localDescription}
-            onChange={(e) => setLocalDescription(e.target.value)}
-            rows={3}
+            value={description}
+            onChange={(e) => {
+              setDescription(e.target.value);
+              if (errors.description) {
+                setErrors(prev => ({ ...prev, description: undefined }));
+              }
+            }}
+            rows={1}
             autoComplete="off"
+            maxLength={150}
           />
+          {errors.description && (
+            <div className="text-red-500 text-xs mt-1">{errors.description}</div>
+          )}
+          <div className="text-xs text-gray-400 mt-1">{description.length}/150 characters</div>
         </div>
 
         <div className={GROUP_CLASSNAMES.taskDetailSection}>
@@ -102,8 +262,8 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
               <select
                 aria-label="Task status"
                 className="flex-grow border-0 bg-transparent focus:outline-none focus:ring-0 text-sm text-gray-700"
-                value={localStatus}
-                onChange={(e) => setLocalStatus(e.target.value as any)}
+                value={status}
+                onChange={(e) => setStatus(e.target.value as any)}
                 autoComplete="off"
               >
                 <option value="pending">Pending</option>
@@ -120,8 +280,8 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
               <select
                 aria-label="Task priority"
                 className="flex-grow border-0 bg-transparent focus:outline-none focus:ring-0 text-sm text-gray-700"
-                value={localPriority}
-                onChange={(e) => setLocalPriority(e.target.value as any)}
+                value={priority}
+                onChange={(e) => setPriority(e.target.value as any)}
                 autoComplete="off"
               >
                 <option value="low">Low (P3)</option>
@@ -139,9 +299,14 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
                 <label className="text-sm text-gray-500 block mb-1">Start Time</label>
                 <input
                   type="datetime-local"
-                  className="w-full border border-gray-200 rounded px-2 py-1 text-sm"
-                  value={isoToLocalDateTime(localStartTime || '')}
-                  onChange={(e) => setLocalStartTime(e.target.value)}
+                  className={`w-full border border-gray-200 rounded px-2 py-1 text-sm ${errors.time ? 'border-red-500' : ''}`}
+                  value={isoToLocalDateTime(start_time || '')}
+                  onChange={(e) => {
+                    setStartTime(e.target.value);
+                    if (errors.time) {
+                      setErrors(prev => ({ ...prev, time: undefined }));
+                    }
+                  }}
                   autoComplete="off"
                 />
               </div>
@@ -156,13 +321,21 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
                 <label className="text-sm text-gray-500 block mb-1">Deadline</label>
                 <input
                   type="datetime-local"
-                  className="w-full border border-gray-200 rounded px-2 py-1 text-sm"
-                  value={isoToLocalDateTime(localEndTime || '')}
-                  onChange={(e) => setLocalEndTime(e.target.value)}
+                  className={`w-full border border-gray-200 rounded px-2 py-1 text-sm ${errors.time ? 'border-red-500' : ''}`}
+                  value={isoToLocalDateTime(end_time || '')}
+                  onChange={(e) => {
+                    setEndTime(e.target.value);
+                    if (errors.time) {
+                      setErrors(prev => ({ ...prev, time: undefined }));
+                    }
+                  }}
                   autoComplete="off"
                 />
               </div>
             </div>
+            {errors.time && (
+              <div className="text-red-500 text-xs mt-1 ml-8">{errors.time}</div>
+            )}
 
             {/* Tags */}
             <div className={GROUP_CLASSNAMES.flexItemsCenter + ' py-2'}>
@@ -236,21 +409,32 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
                               >
                                 <div className={GROUP_CLASSNAMES.flexItemsCenter}>
                                   <span
-                                    className="w-4 h-4 rounded-full mr-2"
+                                    className="w-3 h-3 rounded-full mr-2"
                                     style={{ backgroundColor: tag.color }}
                                   ></span>
-                                  <span>{tag.name}</span>
-                                  {isSelected && (
-                                    <svg className="w-4 h-4 ml-auto text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                  )}
+                                  {tag.name}
                                 </div>
                               </div>
                             );
                           })}
                         </div>
                       )}
+                      <div className="sticky bottom-0 bg-white px-4 py-3 border-t border-gray-200">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            // Create a new tag form
+                            setNewTagName('');
+                            setNewTagColor('#3B82F6'); // Default blue color
+                            setShowNewTagForm(false);
+                            // Show the new tag form
+                            // This would typically open another modal or form component
+                          }}
+                          className="text-xs text-blue-500 hover:text-blue-700 focus:outline-none"
+                        >
+                          + Create new tag
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -259,23 +443,53 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
           </div>
         </div>
 
-        {/* Action buttons */}
-        <div className={GROUP_CLASSNAMES.taskModalFooter}>
+        {/* Bottom buttons */}
+        <div className={GROUP_CLASSNAMES.taskDetailFooter}>
+          {errors.general && (
+            <div className="text-red-500 text-sm mb-2 w-full text-center">
+              {errors.general}
+            </div>
+          )}
           <button
-            type="button"
             onClick={onClose}
-            className={GROUP_CLASSNAMES.buttonSecondary + ' px-4 py-2 text-sm'}
+            className="text-sm text-gray-500 hover:text-gray-700"
+            disabled={isSubmitting}
           >
             Cancel
           </button>
           <button
-            type="button"
             onClick={handleSave}
-            className="px-4 py-2 text-sm bg-red-500 hover:bg-red-600 text-white rounded-md font-medium shadow-md"
+            className={`px-4 py-2 text-sm bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center ${
+              isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
+            }`}
+            disabled={isSubmitting}
           >
-            Save Changes
+            {isSubmitting ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Saving...
+              </>
+            ) : (
+              'Save'
+            )}
           </button>
         </div>
+
+        {/* Close button */}
+        <button
+          type="button"
+          onClick={onClose}
+          className={GROUP_CLASSNAMES.taskModalCloseButton}
+          aria-label="Close task edit form"
+          title="Close task edit form"
+        >
+          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
     </Modal>
   );

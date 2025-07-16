@@ -89,9 +89,14 @@ export const useTaskEventOperations = () => {
         // Check if the event is already overdue
         await checkEventOverdue(createdEvent);
         
-        // Cập nhật state local nếu có
-        if (addEventToList) {
+        // Only update local state if addEventToList is a real function (not an empty function)
+        // This prevents duplicate events when the component that called this function
+        // is also listening for API updates
+        if (addEventToList && addEventToList.toString() !== '() => {}') {
+          console.log('Adding event to local state via addEventToList');
           addEventToList(createdEvent);
+        } else {
+          console.log('Skipping local state update - empty or missing addEventToList function');
         }
         
         return createdEvent;

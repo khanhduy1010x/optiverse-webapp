@@ -57,7 +57,7 @@ export const useTaskEventForm = (taskEvent?: TaskEvent) => {
 
   const handleInputChange = (
     field: keyof TaskEventFormState,
-    value: string | Date | number | boolean | number[] | undefined
+    value: string | Date | number | boolean | number[] | string[] | undefined
   ) => {
     setFormData(prev => ({
       ...prev,

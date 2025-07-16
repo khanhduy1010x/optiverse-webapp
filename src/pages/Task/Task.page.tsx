@@ -12,6 +12,8 @@ import TagManagement from './TagManagement.screen';
 import TaskSidebar from './TaskSidebar.component';
 import TaskEvent from './TaskEvent.screen';
 import { TaskOverdueNotifier, setForceCheckFunction, forceCheckForOverdueTasks } from '../../components/task-event/TaskOverdueNotifier.component';
+import View from '../../components/common/View.component';
+import { GROUP_CLASSNAMES } from '../../styles/group-class-name.style';
 
 // Hooks
 import { useTaskState } from '../../hooks/task/useTaskState.hook';
@@ -25,6 +27,9 @@ import tagService from '../../services/tag.service';
 import type { Task } from '../../types/task/response/task.response';
 import taskService from '../../services/task.service';
 import { localDateTimeToISO } from '../../utils/date.utils';
+
+// Định nghĩa kiểu dữ liệu cho các tab
+export type TaskStatusTab = 'all' | 'pending' | 'completed' | 'overdue';
 
 const TaskPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -99,7 +104,13 @@ const TaskPage: React.FC = () => {
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
 
   // State cho sidebar
-  const [selectedMenu, setSelectedMenu] = useState<'task' | 'task-event'>('task');
+  const [selectedMenu, setSelectedMenu] = useState<'task' | 'task-event' | 'task-settings'>('task');
+  
+  // State mới để theo dõi tab đang được chọn
+  const [activeTab, setActiveTab] = useState<TaskStatusTab>('all');
+  
+  // State để lưu trữ các task đã được lọc theo tab
+  const [tabFilteredTasks, setTabFilteredTasks] = useState<Task[]>([]);
 
   // Task operations
   const taskOperations = useTaskOperations(
@@ -190,6 +201,31 @@ const TaskPage: React.FC = () => {
     }
   };
 
+  // Hàm mới để chuyển đổi giữa các tab
+  const handleTabChange = (tab: TaskStatusTab) => {
+    setActiveTab(tab);
+  };
+
+  // Effect để lọc task dựa trên tab đang được chọn
+  useEffect(() => {
+    if (activeTab === 'all') {
+      // Nếu tab là 'all', hiển thị tất cả task đã được lọc theo các điều kiện khác
+      setTabFilteredTasks(filteredTasks);
+    } else {
+      // Nếu tab là 'pending', 'completed', hoặc 'overdue', lọc task theo status
+      const tasksFilteredByTab = filteredTasks.filter(task => task.status === activeTab);
+      setTabFilteredTasks(tasksFilteredByTab);
+    }
+  }, [activeTab, filteredTasks]);
+
+  // Tính toán số lượng task cho mỗi trạng thái
+  const taskCounts = {
+    all: filteredTasks.length,
+    pending: filteredTasks.filter(task => task.status === 'pending').length,
+    completed: filteredTasks.filter(task => task.status === 'completed').length,
+    overdue: filteredTasks.filter(task => task.status === 'overdue').length,
+  };
+
   // Sửa hàm mở form tạo task
   const openCreateTaskForm = () => {
     // Reset form state
@@ -271,8 +307,20 @@ const TaskPage: React.FC = () => {
 
   // Load data
   useEffect(() => {
+    console.log('Loading task data and user tags...');
     fetchTasksAndCheckOverdue();
-    fetchUserTags();
+    
+    // Add debug logging for tag fetching
+    fetchUserTags()
+      .then(tags => {
+        console.log('Fetched user tags:', tags);
+        if (!tags || tags.length === 0) {
+          console.warn('No tags were fetched or the tags array is empty');
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching user tags:', error);
+      });
   }, []);
 
   // Load task details if ID is provided in URL
@@ -316,20 +364,46 @@ const TaskPage: React.FC = () => {
     applyFilters(filterStatus, allTags.filter(tag => tagIds.includes(tag._id)));
   };
 
-  const handleUpdateTask = async (updatedTask: Partial<Task>) => {
+  const handleUpdateTask = async (updatedTask: {
+    title: string;
+    description: string;
+    status: string;
+    priority: string;
+    tags: Tag[];
+    start_time?: string | Date;
+    end_time?: string | Date;
+  }) => {
     if (!taskToEdit) return;
 
-    // Đảm bảo truyền đủ trường khi update
-    const dataToUpdate = {
-      title: updatedTask.title ?? taskToEdit.title,
-      description: updatedTask.description ?? taskToEdit.description,
-      status: updatedTask.status ?? taskToEdit.status,
-      priority: updatedTask.priority ?? taskToEdit.priority,
-      start_time: updatedTask.start_time ?? taskToEdit.start_time,
-      end_time: updatedTask.end_time ?? taskToEdit.end_time,
-    };
-
     try {
+      setLoading(true);
+      
+      // Chuyển đổi status và priority để phù hợp với kiểu dữ liệu của Task
+      const dataToUpdate = {
+        title: updatedTask.title,
+        description: updatedTask.description,
+        status: updatedTask.status as 'pending' | 'completed' | 'overdue',
+        priority: updatedTask.priority as 'low' | 'medium' | 'high',
+        start_time: updatedTask.start_time instanceof Date 
+          ? updatedTask.start_time.toISOString() 
+          : typeof updatedTask.start_time === 'string'
+            ? localDateTimeToISO(updatedTask.start_time)
+            : undefined,
+        end_time: updatedTask.end_time instanceof Date 
+          ? updatedTask.end_time.toISOString() 
+          : typeof updatedTask.end_time === 'string'
+            ? localDateTimeToISO(updatedTask.end_time)
+            : undefined
+      };
+
+      console.log('Updating task with formatted data:', dataToUpdate);
+      console.log('Original dates from form:', {
+        start_time: updatedTask.start_time,
+        end_time: updatedTask.end_time
+      });
+      console.log('Task ID for update:', taskToEdit._id);
+
+      // Cập nhật UI trước (optimistic update)
       setTasks(prevTasks => {
         const updatedTasks = prevTasks.map(task =>
           task._id === taskToEdit._id ? { ...task, ...dataToUpdate } : task
@@ -337,21 +411,47 @@ const TaskPage: React.FC = () => {
         return sortTasksWithCompletedAtBottom(updatedTasks);
       });
 
-      const response = await taskService.updateTask(taskToEdit._id, dataToUpdate);
-      if (response && response.data && response.data.task) {
-        await fetchTasksAndCheckOverdue();
-      } else {
-        await fetchTasksAndCheckOverdue();
-        throw new Error('Failed to update task');
+      try {
+        // Gọi API cập nhật
+        const response = await taskService.updateTask(taskToEdit._id, dataToUpdate);
+        
+        if (response && response.data && response.data.task) {
+          console.log('Task updated successfully:', response.data.task);
+          
+          // Cập nhật tags nếu cần
+          if (updatedTask.tags && updatedTask.tags.length > 0) {
+            const currentTags = taskTags[taskToEdit._id] || [];
+            await updateTaskTags(taskToEdit._id, updatedTask.tags, currentTags);
+          }
+          
+          // Làm mới dữ liệu
+          await fetchTasksAndCheckOverdue();
+          return true;
+        } else {
+          // Nếu API không trả về kết quả như mong đợi
+          console.error('API response is invalid:', response);
+          await fetchTasksAndCheckOverdue();
+          throw new Error('Failed to update task: Invalid response');
+        }
+      } catch (apiError: any) {
+        console.error('API call failed:', apiError);
+        if (apiError.response) {
+          console.error('Error response:', apiError.response.status, apiError.response.data);
+        }
+        throw apiError;
       }
     } catch (error) {
+      console.error('Failed to update task:', error);
       alert('Failed to update task. Please try again.');
+      return false;
+    } finally {
+      setLoading(false);
     }
   };
 
   // Hàm điều hướng sidebar
   const handleNavigate = (menu: string, path: string) => {
-    setSelectedMenu(menu as 'task' | 'task-event');
+    setSelectedMenu(menu as 'task' | 'task-event' | 'task-settings');
     // Nếu muốn điều hướng route thực sự, có thể dùng useNavigate ở đây
     // navigate(path);
   };
@@ -362,237 +462,250 @@ const TaskPage: React.FC = () => {
     forceCheckForOverdueTasks();
   };
 
+  // Wrapper for confirmDeleteTag to match the expected signature in TagManagement
+  const confirmDeleteTagWrapper = (tag: Tag) => {
+    confirmDeleteTag(tag, setTagToDelete, setShowDeleteTagConfirm);
+  };
+
   return (
-    <div className="flex h-screen">
+    <View className="w-full dark:border-gray-700 rounded-lg overflow-hidden">
+      {/* Sidebar and Main Content */}
+      <View className="flex flex-1 overflow-hidden min-h-screen">
+        {/* Sidebar */}
+        <TaskSidebar selectedMenu={selectedMenu} handleNavigate={handleNavigate} />
+
+        {/* Main Content */}
+        <View className={GROUP_CLASSNAMES.profileMainContent}>
+          <div className="p-8">
+            <hr className="mb-6 border-gray-200" />
+
+            {selectedMenu === 'task' ? (
+              <>
+                {/* Task Header */}
+                <TaskHeader
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
+                  setShowPopup={openCreateTaskForm}
+                  filterTags={filterTags}
+                  filterStatus={filterStatus}
+                  allTags={allTags}
+                  sortOrder={sortOrder}
+                  handleFilterByTags={handleFilterByTagsWrapper}
+                  handleFilterByStatus={handleFilterByStatus}
+                  handleSortChange={handleSortChangeWrapper}
+                  handleSearchChange={handleSearchChange}
+                  setShowTagManagement={setShowTagManagement}
+                  onCheckOverdue={checkForOverdueTasks}
+                  taskCounts={taskCounts}
+                  activeTab={activeTab}
+                  handleTabChange={handleTabChange}
+                  tasks={tasks}
+                />
+
+                {/* Task List */}
+                <TaskList
+                  filteredTasks={tabFilteredTasks}
+                  taskTags={taskTags}
+                  handleTaskClick={handleTaskClick}
+                  handleTaskUpdate={handleTaskUpdate}
+                  confirmDeleteTask={confirmDeleteTask}
+                  handleEditTask={openEditTaskForm}
+                  loading={loading}
+                  setShowPopup={openCreateTaskForm}
+                  searchQuery={searchQuery}
+                  filterTags={filterTags}
+                />
+              </>
+            ) : selectedMenu === 'task-event' ? (
+              <TaskEvent />
+            ) : (
+              <div className="p-6">
+                <h2 className="text-xl font-semibold mb-4">Task Settings</h2>
+                <p className="text-gray-600 mb-6">Manage your task preferences and configurations here.</p>
+                {showTagManagement ? (
+                  <TagManagement
+                    allTags={allTags}
+                    newTagName={newTagName}
+                    setNewTagName={setNewTagName}
+                    newTagColor={newTagColor}
+                    setNewTagColor={setNewTagColor}
+                    handleCreateNewTag={handleCreateNewTag}
+                    confirmDeleteTag={confirmDeleteTagWrapper}
+                    setShowTagManagement={setShowTagManagement}
+                  />
+                ) : (
+                  <button
+                    onClick={() => setShowTagManagement(true)}
+                    className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                  >
+                    Manage Tags
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </View>
+      </View>
+
+      {/* Task Detail Modal */}
+      {showTaskDetail && selectedTask && (
+        <TaskDetail
+          task={selectedTask}
+          onClose={() => setShowTaskDetail(false)}
+          tags={taskTags[selectedTask._id] || []}
+          onEdit={openEditTaskForm}
+          onDelete={confirmDeleteTask}
+        />
+      )}
+
+      {/* Create Task Form */}
+      {showCreateTaskForm && (
+        <CreateTaskForm
+          onClose={() => setShowCreateTaskForm(false)}
+          onSave={async (taskData) => {
+            try {
+              console.log('Creating task with data:', taskData);
+
+              // Create the task first
+              const response = await taskService.createTask({
+                title: taskData.title || '',
+                description: taskData.description || '',
+                priority: taskData.priority as 'low' | 'medium' | 'high',
+                status: 'pending',
+                start_time: taskData.start_time instanceof Date ? taskData.start_time.toISOString() : localDateTimeToISO(taskData.start_time as string),
+                end_time: taskData.end_time instanceof Date ? taskData.end_time.toISOString() : localDateTimeToISO(taskData.end_time as string)
+              });
+
+              if (response) {
+                console.log('Task created successfully:', response);
+
+                // Add tags to the newly created task if there are any selected
+                if (taskData.tags && taskData.tags.length > 0) {
+                  console.log('Adding tags to new task:', taskData.tags);
+
+                  try {
+                    // Use Promise.all to add all tags in parallel
+                    await Promise.all(
+                      taskData.tags.map(tag =>
+                        taskService.createTaskTag(response._id, tag._id)
+                      )
+                    );
+                    console.log('Tags added successfully to task:', response._id);
+                  } catch (tagError) {
+                    console.error('Error adding tags to task:', tagError);
+                  }
+                }
+
+                // Refresh tasks list to include the new task with tags
+                await fetchTasksAndCheckOverdue();
+                return true;
+              }
+              return false;
+            } catch (error) {
+              console.error('Failed to create task:', error);
+              alert('Failed to create task. Please try again.');
+              return false;
+            }
+          }}
+          title={title}
+          setTitle={setTitle}
+          description={description}
+          setDescription={setDescription}
+          priority={priority}
+          setPriority={setPriority}
+          start_time={start_time}
+          setStartTime={setStartTime}
+          end_time={end_time}
+          setEndTime={setEndTime}
+          allTags={allTags}
+          selectedTags={selectedTags}
+          setSelectedTags={setSelectedTags}
+          showNewTagForm={showNewTagForm}
+          setShowNewTagForm={setShowNewTagForm}
+          newTagName={newTagName}
+          setNewTagName={setNewTagName}
+          newTagColor={newTagColor}
+          setNewTagColor={setNewTagColor}
+          handleCreateNewTag={handleCreateNewTag}
+          handleTagSelect={handleTagSelect}
+        />
+      )}
+
+      {/* Edit Task Form */}
+      {showEditTaskForm && taskToEdit && (
+        <EditTaskForm
+          onClose={() => setShowEditTaskForm(false)}
+          onSave={(updatedTask) => handleUpdateTask(updatedTask)}
+          task={taskToEdit}
+          title={title}
+          setTitle={setTitle}
+          description={description}
+          setDescription={setDescription}
+          status={status}
+          setStatus={setStatus}
+          priority={priority}
+          setPriority={setPriority}
+          start_time={start_time}
+          setStartTime={setStartTime}
+          end_time={end_time}
+          setEndTime={setEndTime}
+          allTags={allTags}
+          selectedTags={selectedTags}
+          setSelectedTags={setSelectedTags}
+          showNewTagForm={showNewTagForm}
+          setShowNewTagForm={setShowNewTagForm}
+          newTagName={newTagName}
+          setNewTagName={setNewTagName}
+          newTagColor={newTagColor}
+          setNewTagColor={setNewTagColor}
+          handleCreateNewTag={handleCreateNewTag}
+          handleTagSelect={handleTagSelect}
+        />
+      )}
+
+      {/* Tag Management Modal */}
+      {showTagManagement && (
+        <TagManagement
+          allTags={allTags}
+          newTagName={newTagName}
+          setNewTagName={setNewTagName}
+          newTagColor={newTagColor}
+          setNewTagColor={setNewTagColor}
+          handleCreateNewTag={handleCreateNewTag}
+          confirmDeleteTag={confirmDeleteTagWrapper}
+          setShowTagManagement={setShowTagManagement}
+        />
+      )}
+
+      {/* Delete Tag Confirmation */}
+      {showDeleteTagConfirm && tagToDelete && (
+        <DeleteConfirmation
+          title="Delete Tag"
+          description={`Are you sure you want to delete the tag "${tagToDelete.name}"? This will remove the tag from all tasks.`}
+          onCancel={() => {
+            setShowDeleteTagConfirm(false);
+            setTagToDelete(null);
+          }}
+          onConfirm={() => handleDeleteTag(tagToDelete, setShowDeleteTagConfirm, setTagToDelete)}
+        />
+      )}
+
+      {/* Delete Task Confirmation */}
+      {showDeleteConfirm && taskToDelete && (
+        <DeleteConfirmation
+          title="Delete Task"
+          description="Are you sure you want to delete this task? This action cannot be undone."
+          onCancel={() => {
+            setShowDeleteConfirm(false);
+            setTaskToDelete(null);
+          }}
+          onConfirm={() => handleDeleteTask(taskToDelete)}
+        />
+      )}
+
       {/* Add the TaskOverdueNotifier component here */}
       <TaskOverdueNotifier tasks={tasks} taskEvents={[]} />
-      
-      {/* Sidebar */}
-      <TaskSidebar selectedMenu={selectedMenu} handleNavigate={handleNavigate} />
-      {/* Main content */}
-      <div className="flex-1 transition-all duration-300 ease-in-out h-full w-full overflow-auto">
-        <div className="p-4">
-          {selectedMenu === 'task' ? (
-            <>
-              {/* Task Header */}
-              <TaskHeader
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
-                setShowPopup={openCreateTaskForm}
-                filterTags={filterTags}
-                filterStatus={filterStatus}
-                allTags={allTags}
-                sortOrder={sortOrder}
-                handleFilterByTags={handleFilterByTagsWrapper}
-                handleFilterByStatus={handleFilterByStatus}
-                handleSortChange={handleSortChangeWrapper}
-                handleSearchChange={handleSearchChange}
-                setShowTagManagement={setShowTagManagement}
-                onCheckOverdue={checkForOverdueTasks}
-              />
-
-              {/* Task List */}
-              <TaskList
-                filteredTasks={filteredTasks}
-                taskTags={taskTags}
-                handleTaskClick={handleTaskClick}
-                handleTaskUpdate={handleTaskUpdate}
-                confirmDeleteTask={confirmDeleteTask}
-                handleEditTask={openEditTaskForm}
-                loading={loading}
-                setShowPopup={openCreateTaskForm}
-                searchQuery={searchQuery}
-                filterTags={filterTags}
-              />
-
-              {/* Task Detail */}
-              {showTaskDetail && selectedTask && (
-                <TaskDetail
-                  selectedTask={selectedTask}
-                  taskTags={taskTags}
-                  setShowTaskDetail={setShowTaskDetail}
-                  handleEditTask={task => openEditTaskForm(task)}
-                />
-              )}
-
-              {/* Task Form */}
-              {showCreateTaskForm && (
-                <CreateTaskForm
-                  title={title}
-                  setTitle={setTitle}
-                  description={description}
-                  setDescription={setDescription}
-                  priority={priority}
-                  setPriority={setPriority}
-                  start_time={start_time}
-                  setStartTime={setStartTime}
-                  end_time={end_time}
-                  setEndTime={setEndTime}
-                  setShowPopup={setShowCreateTaskForm}
-                  selectedTags={selectedTags}
-                  allTags={allTags}
-                  handleTagSelect={handleTagSelect}
-                  showNewTagForm={showNewTagForm}
-                  setShowNewTagForm={setShowNewTagForm}
-                  handleSaveTask={async (title) => {
-                    try {
-                      console.log('Creating task with title:', title);
-                      console.log('Selected tags:', selectedTags);
-
-                      // Create the task first
-                      const response = await taskService.createTask({
-                        title: title || '',
-                        description,
-                        priority,
-                        status: 'pending',
-                        start_time: start_time instanceof Date ? start_time.toISOString() : localDateTimeToISO(start_time as string),
-                        end_time: end_time instanceof Date ? end_time.toISOString() : localDateTimeToISO(end_time as string)
-                      });
-
-                      if (response) {
-                        console.log('Task created successfully:', response);
-
-                        // Add tags to the newly created task if there are any selected
-                        if (selectedTags.length > 0) {
-                          console.log('Adding tags to new task:', selectedTags);
-
-                          try {
-                            // Use Promise.all to add all tags in parallel
-                            await Promise.all(
-                              selectedTags.map(tag =>
-                                tagService.createTaskTag(response._id, tag._id)
-                              )
-                            );
-                            console.log('Tags added successfully to task:', response._id);
-                          } catch (tagError) {
-                            console.error('Error adding tags to task:', tagError);
-                          }
-                        }
-
-                        // Refresh tasks list to include the new task with tags
-                        await fetchTasksAndCheckOverdue();
-                        setShowCreateTaskForm(false);
-                        // Clear selected tags
-                        setSelectedTags([]);
-                        return true;
-                      }
-                      return false;
-                    } catch (error) {
-                      console.error('Failed to create task:', error);
-                      alert('Failed to create task. Please try again.');
-                      return false;
-                    }
-                  }}
-                />
-              )}
-              {showEditTaskForm && taskToEdit && (
-                <EditTaskForm
-                  task={taskToEdit}
-                  onClose={() => {
-                    setShowEditTaskForm(false);
-                    setTaskToEdit(null);
-                    setSelectedTags([]); // Clear selected tags when closing
-                  }}
-                  onSave={async (updated) => {
-                    try {
-                      console.log('Saving task updates for task ID:', taskToEdit?._id);
-
-                      // Update the task data
-                      await handleUpdateTask({
-                        ...updated,
-                        status: updated.status as "pending" | "completed" | "overdue",
-                        priority: updated.priority as "low" | "medium" | "high",
-                        start_time: updated.start_time instanceof Date ? updated.start_time.toISOString() : localDateTimeToISO(updated.start_time as string),
-                        end_time: updated.end_time instanceof Date ? updated.end_time.toISOString() : localDateTimeToISO(updated.end_time as string)
-                      });
-
-                      // Update task tags
-                      if (taskToEdit && taskToEdit._id) {
-                        console.log('Updating tags for task ID:', taskToEdit._id);
-                        const currentTags = taskTags[taskToEdit._id] || [];
-                        await updateTaskTags(taskToEdit._id, selectedTags, currentTags);
-                      } else {
-                        console.error('Cannot update tags: taskToEdit is null or missing ID');
-                      }
-
-                      console.log('Task update completed successfully');
-                    } catch (error) {
-                      console.error('Error saving task:', error);
-                    } finally {
-                      // Always clean up state regardless of success/failure
-                      setShowEditTaskForm(false);
-                      setTaskToEdit(null);
-                      setSelectedTags([]);
-                      // Refresh task list to get latest data
-                      await fetchTasksAndCheckOverdue();
-                    }
-                  }}
-                  selectedTags={selectedTags}
-                  allTags={allTags}
-                  handleTagSelect={handleTagSelect}
-                  showNewTagForm={showNewTagForm}
-                  setShowNewTagForm={setShowNewTagForm}
-                />
-              )}
-
-              {/* Delete Confirmation */}
-              {showDeleteConfirm && taskToDelete && typeof taskToDelete === 'string' && (
-                <DeleteConfirmation
-                  title="Delete Task"
-                  description={`Are you sure you want to delete "${tasks.find(t => t._id === taskToDelete)?.title || 'this task'}"? This action cannot be undone.`}
-                  onCancel={() => {
-                    setShowDeleteConfirm(false);
-                    setTaskToDelete(null);
-                  }}
-                  onConfirm={() => {
-                    // Handle delete confirmation
-                    console.log('Confirming delete for task:', taskToDelete);
-                    handleDeleteTask(taskToDelete);
-                    setShowDeleteConfirm(false);
-                    setTaskToDelete(null);
-                  }}
-                />
-              )}
-
-              {/* Tag Management */}
-              {showTagManagement && (
-                <TagManagement
-                  allTags={allTags}
-                  newTagName={newTagName}
-                  setNewTagName={setNewTagName}
-                  newTagColor={newTagColor}
-                  setNewTagColor={setNewTagColor}
-                  handleCreateNewTag={handleCreateNewTag}
-                  confirmDeleteTag={tag => confirmDeleteTag(tag, setTagToDelete, setShowDeleteTagConfirm)}
-                  setShowTagManagement={setShowTagManagement}
-                />
-              )}
-
-              {/* Delete Tag Confirmation */}
-              {showDeleteTagConfirm && tagToDelete && (
-                <DeleteConfirmation
-                  title="Delete Tag"
-                  description={`Are you sure you want to delete tag "${tagToDelete.name}"? This action cannot be undone.`}
-                  onCancel={() => {
-                    setShowDeleteTagConfirm(false);
-                    setTagToDelete(null);
-                  }}
-                  onConfirm={() => {
-                    if (filterTags.some(t => t === tagToDelete._id)) {
-                      const remainingTags = filterTags.filter(t => t !== tagToDelete._id);
-                      setFilterTags(remainingTags);
-                    }
-                    handleDeleteTag(tagToDelete, setShowDeleteTagConfirm, setTagToDelete);
-                  }}
-                />
-              )}
-            </>
-          ) : (
-            <TaskEvent />
-          )}
-        </div>
-      </div>
-    </div>
+    </View>
   );
 };
 
