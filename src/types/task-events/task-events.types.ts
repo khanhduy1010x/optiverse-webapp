@@ -1,5 +1,6 @@
 export type RepeatType = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'weekday' | 'custom';
 export type RepeatEndType = 'never' | 'on' | 'after';
+export type RepeatUnit = 'day' | 'week' | 'month' | 'year';
 
 export interface TaskEvent {
   _id: string;
@@ -11,6 +12,8 @@ export interface TaskEvent {
   all_day?: boolean;
   repeat_type: RepeatType;
   repeat_interval?: number;
+  repeat_frequency?: number; // Frequency of repetition
+  repeat_unit?: RepeatUnit; // Unit for custom repetition (day, week, month, year)
   repeat_days?: number[]; // 0-6 for Sunday-Saturday
   repeat_end_type?: RepeatEndType;
   repeat_end_date?: Date | string;

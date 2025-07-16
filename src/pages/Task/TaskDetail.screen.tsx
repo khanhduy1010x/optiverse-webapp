@@ -7,12 +7,13 @@ import Modal from 'react-modal';
 import { formatConsistentDateTime } from '../../utils/date.utils';
 
 const TaskDetail: React.FC<TaskDetailProps> = ({
-    selectedTask,
-    taskTags,
-    setShowTaskDetail,
-    handleEditTask
+    task,
+    tags,
+    onClose,
+    onEdit,
+    onDelete
 }) => {
-    if (!selectedTask) return null;
+    if (!task) return null;
 
     return (
         <Modal isOpen={true}
@@ -22,15 +23,15 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
                 {/* Task title */}
                 <div className={GROUP_CLASSNAMES.taskDetailHeader}>
                     <h2 className="text-xl font-medium text-gray-900">
-                        {selectedTask.title}
+                        {task.title}
                     </h2>
                 </div>
 
                 {/* Description */}
-                {selectedTask.description && (
+                {task.description && (
                     <div className={GROUP_CLASSNAMES.taskDetailDescription}>
                         <p className="text-sm text-gray-600 whitespace-pre-wrap">
-                            {selectedTask.description}
+                            {task.description}
                         </p>
                     </div>
                 )}
@@ -42,11 +43,11 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             <div className="text-sm text-gray-700">Status:</div>
-                            <span className={`ml-auto ${GROUP_CLASSNAMES.taskStatusBadge} ${selectedTask.status === 'completed' ? GROUP_CLASSNAMES.taskStatusCompleted :
-                                selectedTask.status === 'overdue' ? GROUP_CLASSNAMES.taskStatusOverdue :
+                            <span className={`ml-auto ${GROUP_CLASSNAMES.taskStatusBadge} ${task.status === 'completed' ? GROUP_CLASSNAMES.taskStatusCompleted :
+                                task.status === 'overdue' ? GROUP_CLASSNAMES.taskStatusOverdue :
                                     GROUP_CLASSNAMES.taskStatusPending
                                 }`}>
-                                {selectedTask.status.charAt(0).toUpperCase() + selectedTask.status.slice(1)}
+                                {task.status.charAt(0).toUpperCase() + task.status.slice(1)}
                             </span>
                         </div>
 
@@ -55,37 +56,37 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
                             </svg>
                             <div className="text-sm text-gray-700">Priority:</div>
-                            <span className={`ml-auto ${GROUP_CLASSNAMES.taskStatusBadge} ${selectedTask.priority === 'high' ? GROUP_CLASSNAMES.taskPriorityHigh :
-                                selectedTask.priority === 'medium' ? GROUP_CLASSNAMES.taskPriorityMedium :
+                            <span className={`ml-auto ${GROUP_CLASSNAMES.taskStatusBadge} ${task.priority === 'high' ? GROUP_CLASSNAMES.taskPriorityHigh :
+                                task.priority === 'medium' ? GROUP_CLASSNAMES.taskPriorityMedium :
                                     GROUP_CLASSNAMES.taskPriorityLow
                                 }`}>
-                                {selectedTask.priority === 'high' ? 'P1' :
-                                    selectedTask.priority === 'medium' ? 'P2' : 'P3'}
+                                {task.priority === 'high' ? 'P1' :
+                                    task.priority === 'medium' ? 'P2' : 'P3'}
                             </span>
                         </div>
 
                         {/* Start Time */}
-                        {selectedTask.start_time && (
+                        {task.start_time && (
                             <div className="flex items-center py-2">
                                 <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                 </svg>
                                 <div className="text-sm text-gray-700">Start:</div>
                                 <span className="ml-auto text-sm text-gray-600">
-                                    {formatConsistentDateTime(selectedTask.start_time)}
+                                    {formatConsistentDateTime(task.start_time)}
                                 </span>
                             </div>
                         )}
 
                         {/* End Time */}
-                        {selectedTask.end_time && (
+                        {task.end_time && (
                             <div className="flex items-center py-2">
                                 <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                                 <div className="text-sm text-gray-700">Due:</div>
                                 <span className="ml-auto text-sm text-gray-600">
-                                    {formatConsistentDateTime(selectedTask.end_time)}
+                                    {formatConsistentDateTime(task.end_time)}
                                 </span>
                             </div>
                         )}
@@ -96,8 +97,8 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
                             </svg>
                             <div className="text-sm text-gray-700">Tags:</div>
                             <div className={GROUP_CLASSNAMES.tagContainer}>
-                                {taskTags[selectedTask._id] && taskTags[selectedTask._id].length > 0 ? (
-                                    taskTags[selectedTask._id].map((tag) => (
+                                {tags && tags.length > 0 ? (
+                                    tags.map((tag) => (
                                         <span
                                             key={tag._id || `temp-${tag.name}-${Math.random().toString(36).substr(2, 9)}`}
                                             className={GROUP_CLASSNAMES.tagItem}
@@ -120,23 +121,31 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
                 {/* Bottom buttons */}
                 <div className={GROUP_CLASSNAMES.taskDetailFooter}>
                     <button
-                        onClick={() => setShowTaskDetail(false)}
+                        onClick={onClose}
                         className="text-sm text-gray-500 hover:text-gray-700"
                     >
                         Close
                     </button>
-                    <button
-                        onClick={() => handleEditTask(selectedTask)}
-                        className="px-4 py-2 text-sm bg-red-500 hover:bg-red-600 text-white rounded-full"
-                    >
-                        Edit
-                    </button>
+                    <div className="flex space-x-2">
+                        <button
+                            onClick={() => onDelete(task._id)}
+                            className="px-4 py-2 text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full"
+                        >
+                            Delete
+                        </button>
+                        <button
+                            onClick={() => onEdit(task)}
+                            className="px-4 py-2 text-sm bg-red-500 hover:bg-red-600 text-white rounded-full"
+                        >
+                            Edit
+                        </button>
+                    </div>
                 </div>
 
                 {/* Close button */}
                 <button
                     type="button"
-                    onClick={() => setShowTaskDetail(false)}
+                    onClick={onClose}
                     className={GROUP_CLASSNAMES.taskModalCloseButton}
                     aria-label="Close task details"
                     title="Close task details"

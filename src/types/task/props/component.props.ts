@@ -55,10 +55,11 @@ export interface TagManagementProps {
   setShowTagManagement: React.Dispatch<React.SetStateAction<boolean>>;
 }
 export interface TaskDetailProps {
-  selectedTask: Task | null;
-  taskTags: { [taskId: string]: Tag[] };
-  setShowTaskDetail: React.Dispatch<React.SetStateAction<boolean>>;
-  handleEditTask: (task: Task) => void;
+  task: Task;
+  onClose: () => void;
+  tags: Tag[];
+  onEdit: (task: Task) => void;
+  onDelete: (taskId: string) => void;
 }
 
 export interface CreateTaskFormProps {
@@ -72,13 +73,31 @@ export interface CreateTaskFormProps {
   setStartTime: React.Dispatch<React.SetStateAction<Date | string | undefined>>;
   end_time: Date | string | undefined;
   setEndTime: React.Dispatch<React.SetStateAction<Date | string | undefined>>;
-  setShowPopup: React.Dispatch<React.SetStateAction<boolean>>;
+  onClose: () => void;
+  onSave: (updatedTask: {
+    title: string;
+    description: string;
+    status?: string;
+    priority: string;
+    tags: Tag[];
+    start_time?: string | Date;
+    end_time?: string | Date;
+  }) => Promise<boolean>;
   selectedTags: Tag[];
+  setSelectedTags: React.Dispatch<React.SetStateAction<Tag[]>>;
   allTags: Tag[];
   handleTagSelect: (tag: Tag) => void;
   showNewTagForm: boolean;
   setShowNewTagForm: React.Dispatch<React.SetStateAction<boolean>>;
-  handleSaveTask: (title?: string) => Promise<boolean>;
+  newTagName: string;
+  setNewTagName: React.Dispatch<React.SetStateAction<string>>;
+  newTagColor: string;
+  setNewTagColor: React.Dispatch<React.SetStateAction<string>>;
+  handleCreateNewTag: (
+    newTagName: string,
+    newTagColor: string,
+    resetForm: () => void
+  ) => Promise<Tag | null>;
 }
 
 export interface EditTaskFormProps {
@@ -94,14 +113,31 @@ export interface EditTaskFormProps {
   setStartTime: React.Dispatch<React.SetStateAction<Date | string | undefined>>;
   end_time: Date | string | undefined;
   setEndTime: React.Dispatch<React.SetStateAction<Date | string | undefined>>;
-  selectedTask: Task;
-  setShowPopup: React.Dispatch<React.SetStateAction<boolean>>;
+  task: Task;
+  onClose: () => void;
+  onSave: (updatedTask: {
+    title: string;
+    description: string;
+    status: string;
+    priority: string;
+    tags: Tag[];
+    start_time?: string | Date;
+    end_time?: string | Date;
+  }) => Promise<boolean | void>;
   selectedTags: Tag[];
   allTags: Tag[];
   handleTagSelect: (tag: Tag) => void;
   showNewTagForm: boolean;
   setShowNewTagForm: React.Dispatch<React.SetStateAction<boolean>>;
-  handleSaveTask: (title?: string) => Promise<boolean>;
+  newTagName: string;
+  setNewTagName: React.Dispatch<React.SetStateAction<string>>;
+  newTagColor: string;
+  setNewTagColor: React.Dispatch<React.SetStateAction<string>>;
+  handleCreateNewTag: (
+    newTagName: string,
+    newTagColor: string,
+    resetForm: () => void
+  ) => Promise<Tag | null>;
 }
 
 export interface TaskHeaderProps {

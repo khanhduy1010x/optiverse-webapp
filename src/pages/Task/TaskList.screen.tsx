@@ -44,14 +44,42 @@ const TaskList: React.FC<TaskListComponentProps> = ({
     
     // Cập nhật thời gian đếm ngược mỗi giây
     useEffect(() => {
+        console.log('TaskList useEffect for countdowns triggered with', filteredTasks.length, 'tasks');
+        
         const updateCountdowns = () => {
             const newCountdowns: Record<string, string> = {};
             
             filteredTasks.forEach(task => {
-                if (task.status === 'pending' && task.end_time) {
-                    newCountdowns[task._id] = getCountdownString(task.end_time);
+                // Skip completed tasks, but include pending and overdue tasks
+                if (task.status === 'completed') {
+                    return;
+                }
+                
+                // Log for debugging - this helps see if tasks with end times are being processed
+                if (task.end_time) {
+                    console.log(`Processing countdown for task: ${task._id} - ${task.title}`, {
+                        status: task.status,
+                        end_time: task.end_time,
+                        hasEndTime: !!task.end_time
+                    });
+                    
+                    // Calculate countdown for any task with end_time that's not completed
+                    const countdown = getCountdownString(task.end_time);
+                    newCountdowns[task._id] = countdown;
+                    
+                    // Debug if countdown string is empty for a task with end_time
+                    if (!countdown) {
+                        console.warn(`Empty countdown returned for task with end_time:`, {
+                            taskId: task._id,
+                            title: task.title,
+                            end_time: task.end_time
+                        });
+                    }
                 }
             });
+            
+            // Debug total countdowns
+            console.log(`Updated countdowns for ${Object.keys(newCountdowns).length} tasks`);
             
             setCountdowns(newCountdowns);
             
@@ -63,7 +91,7 @@ const TaskList: React.FC<TaskListComponentProps> = ({
         updateCountdowns();
         
         // Cập nhật mỗi giây
-        const intervalId = setInterval(updateCountdowns, 10000);
+        const intervalId = setInterval(updateCountdowns, 5000); // Update every 5 seconds instead of 10
         
         return () => clearInterval(intervalId);
     }, [filteredTasks]);
@@ -139,7 +167,13 @@ const TaskList: React.FC<TaskListComponentProps> = ({
 
                         <div className="ml-3 flex-1 min-w-0">
                             <div className={GROUP_CLASSNAMES.flexJustifyBetween}>
-                                <p className={`${GROUP_CLASSNAMES.taskTitle} ${task.status === 'completed' ? GROUP_CLASSNAMES.taskTitleCompleted : GROUP_CLASSNAMES.taskTitlePending}`}>
+                                <p className={`${GROUP_CLASSNAMES.taskTitle} ${
+                                    task.status === 'completed' 
+                                        ? GROUP_CLASSNAMES.taskTitleCompleted 
+                                        : task.status === 'overdue'
+                                            ? 'text-red-500 font-medium' // Màu đỏ cho task overdue
+                                            : GROUP_CLASSNAMES.taskTitlePending
+                                }`}>
                                     {task.title}
                                 </p>
                                 <div className="ml-2 flex-shrink-0 flex">
@@ -158,17 +192,20 @@ const TaskList: React.FC<TaskListComponentProps> = ({
                                 </p>
                             )}
 
-                            {/* Hiển thị thời gian đếm ngược cho task pending */}
-                            {task.status === 'pending' && countdowns[task._id] && (
-                                <div className="mt-1 mb-2 text-xs flex items-center">
-                                    <svg className="w-3 h-3 mr-1 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <span className="text-amber-500 font-medium">{countdowns[task._id]}</span>
-                                </div>
-                            )}
-
+                            {/* Task Tags and Countdown */}
                             <div className={GROUP_CLASSNAMES.taskTagContainer}>
+                                {/* Hiển thị thời gian đếm ngược cho tasks với end_time, không hiển thị cho task overdue */}
+                                {task.end_time && task.status !== 'completed' && task.status !== 'overdue' && (
+                                    <div className="mt-1 mb-2 text-xs flex items-center">
+                                        <svg className="w-3 h-3 mr-1 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <span className="text-amber-500 font-medium">
+                                            {countdowns[task._id] || formatConsistentDateTime(task.end_time)}
+                                        </span>
+                                    </div>
+                                )}
+                                
                                 <div className={GROUP_CLASSNAMES.tagContainer}>
                                     {taskTags[task._id] && taskTags[task._id].length > 0 ? (
                                         taskTags[task._id].map((tag) => (
