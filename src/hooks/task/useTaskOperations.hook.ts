@@ -4,6 +4,14 @@ import { Tag } from '../../types/task/response/tag.response';
 import taskService from '../../services/task.service';
 import achievementService from '../../services/achievement.service';
 import { useSelector } from 'react-redux';
+import { useState } from 'react';
+import { Task } from '../../types/task/response/task.response';
+import { Tag } from '../../types/tag/response/tag.response';
+import taskService from '../../services/task.service';
+import taskTagService from '../../services/task-tag.service';
+import tagService from '../../services/tag.service';
+import achievementService from '../../services/achievement.service';
+import { useTaskStreak } from '../streak/useTaskStreak.hook';
 
 export function useTaskOperations(
   tasks: Task[],
@@ -21,6 +29,9 @@ export function useTaskOperations(
   setTaskToDelete: React.Dispatch<React.SetStateAction<string | null>>,
   setShowDeleteConfirm: React.Dispatch<React.SetStateAction<boolean>>
 ) {
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const { updateTaskStreak } = useTaskStreak();
+
   // Get current user from Redux store
   const { currentUser } = useSelector((state: any) => state.auth);
   
@@ -279,9 +290,11 @@ export function useTaskOperations(
       if (response && response.data) {
         console.log('Task updated successfully:', response.data);
         
-        // If we're completing a task, check for achievements
+        // If we're completing a task, check for achievements and update streak
         if (isCompletingTask) {
           checkAchievements();
+          // Update task streak when task is completed
+          await updateTaskStreak();
         }
       } else {
         console.error('Task update response is invalid:', response);
@@ -294,12 +307,12 @@ export function useTaskOperations(
       }
     } catch (error) {
       console.error('Error updating task:', error);
-      // Revert changes on error by restoring original tasks
+      // Revert changes on error
       setTasks(originalTasks);
       setFilteredTasks(prevState => originalTasks.filter(task => 
         prevState.some(filteredTask => filteredTask._id === task._id)
       ));
-      alert('Failed to update task. Please try again.');
+      alert('An error occurred while updating the task. Please try again.');
     }
   };
 

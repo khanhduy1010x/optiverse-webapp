@@ -27,6 +27,7 @@ import tagService from '../../services/tag.service';
 import type { Task } from '../../types/task/response/task.response';
 import taskService from '../../services/task.service';
 import { localDateTimeToISO } from '../../utils/date.utils';
+import { useTaskStreak } from '../../hooks/streak/useTaskStreak.hook';
 
 // Định nghĩa kiểu dữ liệu cho các tab
 export type TaskStatusTab = 'all' | 'pending' | 'completed' | 'overdue';
@@ -467,6 +468,9 @@ const TaskPage: React.FC = () => {
     confirmDeleteTag(tag, setTagToDelete, setShowDeleteTagConfirm);
   };
 
+  // Add the task streak hook
+  const { updateTaskStreak } = useTaskStreak();
+
   return (
     <View className="w-full dark:border-gray-700 rounded-lg overflow-hidden">
       {/* Sidebar and Main Content */}
@@ -576,34 +580,27 @@ const TaskPage: React.FC = () => {
                 end_time: taskData.end_time instanceof Date ? taskData.end_time.toISOString() : localDateTimeToISO(taskData.end_time as string)
               });
 
-              if (response) {
+              if (response && response._id) {
                 console.log('Task created successfully:', response);
-
-                // Add tags to the newly created task if there are any selected
+                
+                // Update task streak when task is created
+                await updateTaskStreak();
+                
+                // Add tags if any
                 if (taskData.tags && taskData.tags.length > 0) {
-                  console.log('Adding tags to new task:', taskData.tags);
-
-                  try {
-                    // Use Promise.all to add all tags in parallel
-                    await Promise.all(
-                      taskData.tags.map(tag =>
-                        taskService.createTaskTag(response._id, tag._id)
-                      )
-                    );
-                    console.log('Tags added successfully to task:', response._id);
-                  } catch (tagError) {
-                    console.error('Error adding tags to task:', tagError);
+                  for (const tag of taskData.tags) {
+                    await taskService.createTaskTag(response._id, tag._id);
                   }
                 }
-
-                // Refresh tasks list to include the new task with tags
-                await fetchTasksAndCheckOverdue();
+                
+                // Close form and refresh tasks
+                setShowCreateTaskForm(false);
+                fetchTasksAndCheckOverdue();
                 return true;
               }
               return false;
             } catch (error) {
-              console.error('Failed to create task:', error);
-              alert('Failed to create task. Please try again.');
+              console.error('Error creating task:', error);
               return false;
             }
           }}

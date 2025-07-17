@@ -8,6 +8,7 @@ import EmptyAchievements from '../../components/achievement/EmptyAchievements.co
 import Loader from '../../components/achievement/Loader.component';
 import ErrorDisplay from '../../components/achievement/ErrorDisplay.component';
 import { Achievement, UserAchievementWithDetails } from '../../types/achievement/achievement.type';
+import { GROUP_CLASSNAMES } from '../../styles/group-class-name.style';
 
 const AchievementsPage: React.FC = () => {
   const {
@@ -24,38 +25,45 @@ const AchievementsPage: React.FC = () => {
     (lockedAchievements && lockedAchievements.length > 0);
 
   return (
-    <View className="flex w-full min-h-screen bg-gray-50">
-      {/* Using the shared ProfileSidebar component */}
-      <ProfileSidebar selectedMenu={selectedMenu} handleNavigate={handleNavigate} />
+    <View className="w-full h-screen flex">
+      <View className="flex flex-1 overflow-hidden">
+        {/* Using the shared ProfileSidebar component */}
+        <ProfileSidebar selectedMenu={selectedMenu} handleNavigate={handleNavigate} />
 
-      <View className="flex-1 p-4 md:p-6">
-        <h1 className="text-[22px] font-normal text-gray-800  pb-2">My Achievements</h1>
-        <div className="mb-2 text-[14px] text-gray-400  text:bold">
-          Open the world achievements and earn rewards
-        </div>
-        <div className="bg-white rounded-xl shadow-sm p-5 mb-8">
-          {loading ? (
-            <Loader />
-          ) : error ? (
-            <ErrorDisplay error={error} />
-          ) : hasAchievements ? (
-            <View>
-              <AchievementList
-                title="Unlocked"
-                achievements={unlockedAchievements}
-                unlocked={true}
-              />
+        {/* Main Content */}
+        <View className={GROUP_CLASSNAMES.profileMainContent}>
+          <div className="p-8">
+            <h1 className="text-[22px] font-normal text-gray-800 pb-2">My Achievements</h1>
+            <div className="mb-2 text-[14px] text-gray-400 text:bold">
+              Open the world achievements and earn rewards
+            </div>
+            <hr className="mb-6 border-gray-200" />
 
-              <AchievementList
-                title="Locked"
-                achievements={lockedAchievements}
-                unlocked={false}
-              />
-            </View>
-          ) : (
-            <EmptyAchievements />
-          )}
-        </div>
+            <div className="bg-white rounded-xl shadow-sm p-5 mb-8">
+              {loading ? (
+                <Loader />
+              ) : error ? (
+                <ErrorDisplay error={error} />
+              ) : hasAchievements ? (
+                <View>
+                  <AchievementList
+                    title="Unlocked"
+                    achievements={unlockedAchievements}
+                    unlocked={true}
+                  />
+
+                  <AchievementList
+                    title="Locked"
+                    achievements={lockedAchievements}
+                    unlocked={false}
+                  />
+                </View>
+              ) : (
+                <EmptyAchievements />
+              )}
+            </div>
+          </div>
+        </View>
       </View>
     </View>
   );

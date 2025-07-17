@@ -4,6 +4,7 @@ import { useAuthStatus } from '../../hooks/auth/useAuthStatus.hook';
 import { useAppDispatch } from '../../store/hooks';
 import { setUser } from '../../store/slices/auth.slice';
 import authService from '../../services/auth.service';
+import { useLoginStreak } from '../../hooks/streak/useLoginStreak.hook';
 
 interface AuthCheckerProps {
     children: React.ReactNode;
@@ -13,6 +14,9 @@ export const AuthChecker: React.FC<AuthCheckerProps> = ({ children }) => {
     const { isAuthenticated } = useAuthStatus();
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
+    
+    // Use the login streak hook to update streak when user logs in
+    useLoginStreak();
 
     useEffect(() => {
         const checkAuth = async () => {

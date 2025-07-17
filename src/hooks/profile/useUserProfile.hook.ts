@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import profileService from '../../services/profile.service';
+import streakService from '../../services/streak.service';
 import { ProfileData } from '../../types/profile/response/profile.response';
+import { StreakResponse } from '../../types/streak/streak.types';
 
 export function useUserProfile() {
   const navigate = useNavigate();
@@ -25,9 +27,11 @@ export function useUserProfile() {
   });
   const [showAvatarMenu, setShowAvatarMenu] = useState(false);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
+  const [streakData, setStreakData] = useState<StreakResponse | null>(null);
 
   useEffect(() => {
     fetchProfile();
+    fetchStreakData();
   }, []);
 
   useEffect(() => {
@@ -54,6 +58,15 @@ export function useUserProfile() {
       );
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchStreakData = async () => {
+    try {
+      const data = await streakService.getUserStreak();
+      setStreakData(data);
+    } catch (error: any) {
+      console.error('Failed to fetch streak data:', error);
     }
   };
 
@@ -171,5 +184,6 @@ export function useUserProfile() {
     handleViewAvatar,
     handleNameChange,
     handleKeyPress,
+    streakData,
   };
 }
