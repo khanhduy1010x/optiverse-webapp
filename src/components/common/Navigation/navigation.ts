@@ -134,6 +134,12 @@ export const NAV_SECTIONS: NavSection[] = [
         icon: 'setting',
         parentPath: '/admin/dashboard',
       },
+      {
+        label: 'Achievements',
+        path: '/admin/achievements',
+        icon: 'trophy',
+        parentPath: '/admin/dashboard',
+      },
     ],
   },
 ];
@@ -152,6 +158,7 @@ const PATH_MAPPING: Record<string, string> = {
   '/admin/dashboard': '/admin/dashboard',
   '/admin/users': '/admin/dashboard',
   '/admin/settings': '/admin/dashboard',
+  '/admin/achievements': '/admin/dashboard',
 };
 
 export const getSectionKeyFromPath = (path: string): string => {

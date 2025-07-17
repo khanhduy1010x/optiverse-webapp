@@ -41,7 +41,7 @@ const AchievementCard: React.FC<AchievementCardProps> = ({ achievement, unlocked
           : 'bg-gray-50 shadow-sm'}
         rounded-xl overflow-hidden transition-all duration-300
         border ${unlocked ? 'border-blue-100' : 'border-gray-100'} hover:border-blue-200
-        flex flex-col items-center justify-center cursor-pointer
+        flex flex-col items-center cursor-pointer
         relative
       `}>
         {/* Status indicator */}
@@ -51,34 +51,37 @@ const AchievementCard: React.FC<AchievementCardProps> = ({ achievement, unlocked
           </div>
         )}
         
-        {/* Achievement Icon with gradient background */}
-        <div className={`
-          w-16 h-16 flex items-center justify-center mb-3
-          ${unlocked 
-            ? 'bg-gradient-to-br from-blue-50 to-green-50 rounded-full shadow-inner border border-blue-100' 
-            : 'bg-gray-100 rounded-full filter grayscale opacity-70 border border-gray-200'}
-        `}>
+        {/* Fixed height icon container */}
+        <div className="w-full h-[90px] flex items-center justify-center pt-4">
           {(achievement.badge_image || achievement.icon_url) ? (
             <img 
               src={achievement.badge_image || achievement.icon_url} 
               alt={achievement.title} 
-              className={`w-10 h-10 object-contain ${!unlocked && 'opacity-60'}`}
+              className={`w-14 h-14 object-contain ${!unlocked && 'opacity-60 filter grayscale'}`}
             />
           ) : (
-            <Icon 
-              name="trophy" 
-              size={28} 
-              className={unlocked ? 'text-amber-500' : 'text-gray-400'} 
-            />
+            <div className={`
+              w-14 h-14 flex items-center justify-center
+              ${unlocked 
+                ? 'bg-gradient-to-br from-blue-50 to-green-50 rounded-full shadow-inner border border-blue-100' 
+                : 'bg-gray-100 rounded-full filter grayscale opacity-70 border border-gray-200'}
+            `}>
+              <Icon 
+                name="trophy" 
+                size={28} 
+                className={unlocked ? 'text-amber-500' : 'text-gray-400'} 
+              />
+            </div>
           )}
         </div>
         
-        {/* Title */}
-        <Text className={`text-xs font-medium text-center px-3 line-clamp-2
-          ${unlocked ? 'text-gray-800' : 'text-gray-500'}`}>
-          {achievement.title}
-        </Text>
-      
+        {/* Fixed height title container */}
+        <div className="w-full h-[70px] flex items-start justify-center px-2 pt-1">
+          <Text className={`text-xs font-medium text-center line-clamp-2
+            ${unlocked ? 'text-gray-800' : 'text-gray-500'}`}>
+            {achievement.title}
+          </Text>
+        </div>
       </div>
       
       {/* Hover Detail Popup */}
@@ -104,8 +107,6 @@ const AchievementCard: React.FC<AchievementCardProps> = ({ achievement, unlocked
               </Text>
             </div>
           )}
-          
-      
         </div>
       )}
     </div>
