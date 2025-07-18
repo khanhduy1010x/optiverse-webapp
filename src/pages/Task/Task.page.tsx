@@ -477,7 +477,7 @@ const TaskPage: React.FC = () => {
         {/* Main Content */}
         <View className={GROUP_CLASSNAMES.profileMainContent}>
           <div className="p-8">
-            <hr className="mb-6 border-gray-200" />
+            
 
             {selectedMenu === 'task' ? (
               <>

@@ -16,6 +16,7 @@ import { useTaskEventOperations } from '../../hooks/task-events/useTaskEventOper
 import { MiniCalendar } from './MiniCalendar.component';
 import { taskEventService } from '../../services/task-event.service';
 import { useCalendarEventLayout } from '../../hooks/task-events/useCalendarEventLayout.hook';
+import { CreateTaskEventRequest } from '../../types/task-events/request/create-task-event.request';
 
 type ViewType = 'Day' | 'Week' | 'Month' | 'Year';
 
@@ -398,8 +399,9 @@ export const Calendar: React.FC<CalendarProps> = ({
     
     setSelectedDate(selectedDateTime);
     
-    // Reset endDate khi mở modal mới
-    setEventEndDate(null);
+    // Thiết lập ngày kết thúc mặc định là cùng ngày với ngày bắt đầu
+    const defaultEndDate = new Date(selectedDateTime);
+    setEventEndDate(defaultEndDate);
     
     // Reset chế độ All day
     setIsAllDay(false);
@@ -421,7 +423,15 @@ export const Calendar: React.FC<CalendarProps> = ({
     const formattedHour = hour12.toString().padStart(2, '0');
     const formattedStartTime = `${formattedHour}:00${isPM ? 'pm' : 'am'}`;
     
+    // Thiết lập thời gian kết thúc mặc định là 1 giờ sau thời gian bắt đầu
+    const endHour = (hours + 1) % 24;
+    const endIsPM = endHour >= 12;
+    const endHour12 = endHour % 12 || 12;
+    const formattedEndHour = endHour12.toString().padStart(2, '0');
+    const formattedEndTime = `${formattedEndHour}:00${endIsPM ? 'pm' : 'am'}`;
+    
     setNewEventStartTime(formattedStartTime);
+    setNewEventEndTime(formattedEndTime);
     setNewEventTitle('');
     
     // Tạo đối tượng event tạm thời với các giá trị mặc định
@@ -525,6 +535,9 @@ export const Calendar: React.FC<CalendarProps> = ({
 
   const renderCalendarView = () => {
     try {
+      // Tạo một hàm rỗng để thay thế handleAddSchedule
+      const emptyFunction = () => {};
+      
       switch (viewType) {
         case 'Day':
           return (
@@ -532,7 +545,7 @@ export const Calendar: React.FC<CalendarProps> = ({
               currentDate={currentDate}
               currentTime={currentTime}
               taskEvents={eventsWithLayout}
-              handleAddEvent={handleAddSchedule}
+              handleAddEvent={emptyFunction} // Thay thế bằng hàm rỗng
               handleEditEvent={handleViewEventDetail}
             />
           );
@@ -542,7 +555,7 @@ export const Calendar: React.FC<CalendarProps> = ({
               currentDate={currentDate}
               currentTime={currentTime}
               taskEvents={eventsWithLayout}
-              handleAddEvent={handleAddSchedule}
+              handleAddEvent={emptyFunction} // Thay thế bằng hàm rỗng
               handleEditEvent={handleViewEventDetail}
             />
           );
@@ -551,7 +564,7 @@ export const Calendar: React.FC<CalendarProps> = ({
             <MonthView
               currentDate={currentDate}
               taskEvents={eventsWithLayout}
-              handleAddEvent={handleAddSchedule}
+              handleAddEvent={emptyFunction} // Thay thế bằng hàm rỗng
               handleEditEvent={handleViewEventDetail}
             />
           );
@@ -561,7 +574,7 @@ export const Calendar: React.FC<CalendarProps> = ({
               currentDate={currentDate}
               currentTime={currentTime}
               taskEvents={eventsWithLayout}
-              handleAddEvent={handleAddSchedule}
+              handleAddEvent={emptyFunction} // Thay thế bằng hàm rỗng
               handleEditEvent={handleViewEventDetail}
             />
           );
@@ -752,7 +765,10 @@ export const Calendar: React.FC<CalendarProps> = ({
       setNewEventTitle('');
       setIsAddScheduleOpen(false);
       
-      if (isAllDay && eventEndDate) {
+      // Nếu là sự kiện kéo dài nhiều ngày (có eventEndDate)
+      if (eventEndDate) {
+        console.log('Creating multi-day event from', selectedDate, 'to', eventEndDate);
+        
         // Tạo danh sách các ngày từ selectedDate đến endDate
         const dates: Date[] = [];
         let currentDay = new Date(selectedDate);
@@ -760,13 +776,15 @@ export const Calendar: React.FC<CalendarProps> = ({
         
         // Đặt giờ về 0 để so sánh chỉ theo ngày
         currentDay.setHours(0, 0, 0, 0);
-        lastDay.setHours(0, 0, 0, 0);
+        lastDay.setHours(23, 59, 59, 999);
         
         // Tạo array các ngày
         while (currentDay <= lastDay) {
           dates.push(new Date(currentDay));
           currentDay.setDate(currentDay.getDate() + 1);
         }
+        
+        console.log('Will create events for these dates:', dates.map(d => d.toDateString()));
         
         // Tạo event cho mỗi ngày
         for (const date of dates) {
@@ -780,25 +798,18 @@ export const Calendar: React.FC<CalendarProps> = ({
           const endTime = new Date(date);
           endTime.setHours(endHours, endMinutes);
           
-          const newEventData = {
+          const newEventData: CreateTaskEventRequest = {
             task_id: taskId,
             title: savedTitle,
             start_time: startTime,
             end_time: endTime,
             all_day: isAllDay,
-            repeat_type: repeatType,
-            repeat_interval: repeatType === 'custom' ? customRepeatFrequency : 1,
-            repeat_days: (repeatType === 'weekly' || repeatType === 'custom') ? 
-              (customRepeatDays && Array.isArray(customRepeatDays) && customRepeatDays.length > 0 ? customRepeatDays : [selectedDate.getDay()]) : 
-              undefined,
-            repeat_end_type: repeatEndType,
-            repeat_end_date: repeatEndType === 'on' && repeatEndDate ? repeatEndDate : undefined,
-            repeat_occurrences: repeatEndType === 'after' ? repeatOccurrences : undefined,
+            repeat_type: 'none', // Sử dụng kiểu RepeatType
             location: '', // Thêm location trống để tương thích với backend
             guests: [] // Thêm guests trống để tương thích với backend
           };
           
-          console.log('Creating all-day task event for date:', date.toDateString(), newEventData);
+          console.log('Creating task event for date:', date.toDateString(), newEventData);
           
           // Gọi API để lưu event vào database
           try {
@@ -809,18 +820,6 @@ export const Calendar: React.FC<CalendarProps> = ({
               // Nếu API trả về thành công
               const createdEvent = response.data.data;
               console.log('Event created successfully for date', date.toDateString(), ':', createdEvent);
-              
-              // Thêm event vào state local tạm thời để UI cập nhật ngay lập tức
-              if (addEvent) {
-                // Chuyển đổi chuỗi thời gian thành đối tượng Date
-                const formattedEvent = {
-                  ...createdEvent,
-                  start_time: new Date(createdEvent.start_time),
-                  end_time: createdEvent.end_time ? new Date(createdEvent.end_time) : undefined
-                };
-                
-                addEvent(formattedEvent);
-              }
             }
           } catch (err: any) {
             console.error('Error creating event for date', date.toDateString(), ':', err);
@@ -831,7 +830,7 @@ export const Calendar: React.FC<CalendarProps> = ({
         
         // Refresh danh sách sau một khoảng thời gian ngắn để đảm bảo API đã cập nhật
         setTimeout(() => {
-          console.log('Refreshing task events after create all-day events');
+          console.log('Refreshing task events after create multi-day events');
           refreshTaskEvents();
         }, 500);
       } else {
@@ -848,7 +847,7 @@ export const Calendar: React.FC<CalendarProps> = ({
         endTime.setHours(endHours, endMinutes);
         
         // Chuẩn bị dữ liệu cho API với đầy đủ các trường
-        const newEventData: any = {
+        const newEventData: CreateTaskEventRequest = {
           task_id: taskId,
           title: savedTitle,
           description: '',
@@ -895,17 +894,8 @@ export const Calendar: React.FC<CalendarProps> = ({
             const createdEvent = response.data.data;
             console.log('Event created successfully:', createdEvent);
             
-            // Thêm event vào state local tạm thời để UI cập nhật ngay lập tức
-            if (addEvent) {
-              // Chuyển đổi chuỗi thời gian thành đối tượng Date
-              const formattedEvent = {
-                ...createdEvent,
-                start_time: new Date(createdEvent.start_time),
-                end_time: createdEvent.end_time ? new Date(createdEvent.end_time) : undefined
-              };
-              
-              addEvent(formattedEvent);
-            }
+            // Không thêm event vào state local để tránh trùng lặp
+            // addEvent sẽ được gọi thông qua refreshTaskEvents
             
             // Refresh danh sách sau một khoảng thời gian ngắn để đảm bảo API đã cập nhật
             setTimeout(() => {
@@ -1138,6 +1128,18 @@ export const Calendar: React.FC<CalendarProps> = ({
     setShowRepeatOptions(!showRepeatOptions);
   };
 
+  // Thêm hàm wrapper để ép kiểu setEventEndDate về Dispatch<SetStateAction<Date>>
+  const setEventEndDateAsDate: React.Dispatch<React.SetStateAction<Date>> = (value) => {
+    // value can be Date or (prev: Date) => Date
+    setEventEndDate((prev) => {
+      if (typeof value === 'function') {
+        // @ts-ignore
+        return value(prev ?? new Date()) as Date; // fallback if prev is null
+      }
+      return value;
+    });
+  };
+
   return (
     <div className="flex h-full bg-gray-50 relative">
       {/* Task Overdue Notifier - invisible component that checks for overdue tasks */}
@@ -1253,7 +1255,7 @@ export const Calendar: React.FC<CalendarProps> = ({
                         <MiniCalendar
                           currentDate={eventEndDate || selectedDate}
                           miniCalendarDate={eventEndDate || selectedDate}
-                          setMiniCalendarDate={eventEndDate ? setEventEndDate : setSelectedDate}
+                          setMiniCalendarDate={eventEndDate ? setEventEndDateAsDate : setSelectedDate}
                           handleDateClick={handleEndDateSelection}
                           setShowMiniCalendarPopup={setShowEndDatePicker}
                           showMiniCalendarPopup={showEndDatePicker}
@@ -1262,6 +1264,32 @@ export const Calendar: React.FC<CalendarProps> = ({
                     )}
                   </div>
                 </div>
+              </div>
+              
+              {/* Thêm thông tin về việc tạo sự kiện nhiều ngày */}
+              {eventEndDate && selectedDate && eventEndDate.getTime() !== selectedDate.getTime() && (
+                <div className="text-xs text-blue-600 mb-2 bg-blue-50 p-2 rounded-md">
+                  <div className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>Sự kiện sẽ được tạo cho mỗi ngày từ {selectedDate.toLocaleDateString('vi-VN')} đến {eventEndDate.toLocaleDateString('vi-VN')}</span>
+                  </div>
+                </div>
+              )}
+              
+              {/* Thêm tùy chọn All day */}
+              <div className="flex items-center mt-2">
+                <input
+                  type="checkbox"
+                  id="all-day-checkbox"
+                  checked={isAllDay}
+                  onChange={handleAllDayToggle}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor="all-day-checkbox" className="ml-2 block text-sm text-gray-700">
+                  Cả ngày
+                </label>
               </div>
             </div>
             
@@ -1435,19 +1463,6 @@ export const Calendar: React.FC<CalendarProps> = ({
                   </div>
                 )}
               </div>
-            </div>
-            
-            {/* Checkbox All day - di chuyển xuống dưới phần lặp lại */}
-            <div className="flex items-center mb-3">
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={isAllDay}
-                  onChange={handleAllDayToggle}
-                  className="form-checkbox h-4 w-4 text-blue-500"
-                />
-                <span className="ml-2 text-sm text-gray-700">All day</span>
-              </label>
             </div>
             
             <div className="flex items-center mb-4">
@@ -1686,14 +1701,12 @@ export const Calendar: React.FC<CalendarProps> = ({
               </div>
               <button
                 onClick={handleCreateNewEvent}
-                className={`px-4 py-2 text-white rounded-md ${
-                  isAllDay && !eventEndDate 
-                    ? 'bg-gray-400 cursor-not-allowed' 
-                    : 'bg-blue-500 hover:bg-blue-600'
-                }`}
-                disabled={isAllDay && !eventEndDate}
+                className="px-4 py-2 text-white rounded-md bg-blue-500 hover:bg-blue-600"
+                disabled={!newEventTitle.trim()}
               >
-                Save
+                {eventEndDate && selectedDate && eventEndDate.getTime() !== selectedDate.getTime() 
+                  ? `Tạo ${Math.floor((eventEndDate.getTime() - selectedDate.getTime()) / (1000 * 60 * 60 * 24)) + 1} sự kiện` 
+                  : 'Lưu'}
               </button>
             </div>
           </div>
@@ -1707,11 +1720,13 @@ export const Calendar: React.FC<CalendarProps> = ({
         onClose={() => setIsModalOpen(false)}
         taskId={taskId}
         taskEvent={selectedEvent}
-          onSuccess={() => {
-            setIsModalOpen(false);
-            refreshTaskEvents();
-          }}
-        />
+        onSuccess={() => {
+          setIsModalOpen(false);
+          refreshTaskEvents();
+        }}
+        addEvent={addEvent}
+        updateEvent={updateEvent}
+      />
       )}
       
       {/* Delete Event Modal */}
@@ -1720,12 +1735,10 @@ export const Calendar: React.FC<CalendarProps> = ({
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         taskEvent={eventToDelete}
-          onSuccess={() => {
-            if (eventToDelete) {
-              removeEvent(eventToDelete._id);
-            }
-            setIsDeleteModalOpen(false);
-          }}
+        onSuccess={() => {
+          setIsDeleteModalOpen(false);
+          refreshTaskEvents();
+        }}
         removeEvent={removeEvent}
       />
       )}

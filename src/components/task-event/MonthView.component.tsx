@@ -101,12 +101,12 @@ export const MonthView: React.FC<MonthViewProps> = ({
 
     // Tạo header cho lịch
     rows.push(
-      <div key="header" className="grid grid-cols-7 border-b bg-gray-50">
+      <div key="header" className="grid grid-cols-7 border-b bg-gray-50 shadow-sm">
         {weekDays.map((day, index) => (
           <div 
             key={index} 
-            className={`p-2 text-center font-semibold text-sm text-gray-600 border-r ${
-              index === 0 || index === 6 ? 'text-red-500' : ''
+            className={`p-3 text-center font-medium text-sm border-r ${
+              index === 0 || index === 6 ? 'text-red-500' : 'text-gray-700'
             }`}
           >
             {day}
@@ -124,10 +124,9 @@ export const MonthView: React.FC<MonthViewProps> = ({
       cells.push(
         <div
           key={i}
-          className={`min-h-[120px] p-1 border-r border-b relative ${
-            !isCurrentMonth ? 'bg-gray-50' : ''
+          className={`min-h-[140px] p-2 border-r border-b relative group transition-all hover:bg-gray-50 ${
+            !isCurrentMonth ? 'bg-gray-50/50' : ''
           }`}
-          onClick={() => handleAddEvent(day, 9)} // Mặc định thêm sự kiện vào 9 giờ sáng
         >
           {/* Hiển thị ngày */}
           <div 
@@ -136,8 +135,8 @@ export const MonthView: React.FC<MonthViewProps> = ({
             }`}
           >
             <span 
-              className={`inline-block w-7 h-7 rounded-full text-center leading-7 ${
-                isTodayDate ? 'bg-blue-500 text-white' : ''
+              className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-center ${
+                isTodayDate ? 'bg-blue-600 text-white shadow-md' : ''
               }`}
             >
               {format(day, 'd')}
@@ -145,7 +144,7 @@ export const MonthView: React.FC<MonthViewProps> = ({
           </div>
           
           {/* Hiển thị các sự kiện trong ngày */}
-          <div className="mt-1 max-h-[90px] overflow-y-auto flex flex-col items-start gap-1">
+          <div className="mt-1 max-h-[100px] overflow-y-auto flex flex-col items-start gap-1 pr-1">
             {dayEvents.slice(0, 3).map((event, index) => (
               <CalendarEvent
                 key={event._id || index}
@@ -157,7 +156,10 @@ export const MonthView: React.FC<MonthViewProps> = ({
             
             {/* Hiển thị số sự kiện còn lại nếu có nhiều hơn 3 */}
             {dayEvents.length > 3 && (
-              <div className="text-xs text-center bg-gray-100 rounded py-0.5 cursor-pointer">
+              <div 
+                className="text-xs text-center bg-gray-100 rounded-full py-1 px-2 cursor-pointer hover:bg-gray-200 transition-colors w-full font-medium text-gray-700 shadow-sm"
+                onClick={() => dayEvents.slice(3).forEach(event => handleEditEvent(event))}
+              >
                 +{dayEvents.length - 3} more
               </div>
             )}
@@ -191,14 +193,13 @@ export const MonthView: React.FC<MonthViewProps> = ({
   return (
     <div className="flex flex-col h-full overflow-auto">
       {/* Header hiển thị tháng và năm */}
-      <div className="border-b p-2 bg-white sticky top-0 z-10">
-        <h2 className="text-xl font-semibold text-center text-gray-800">
+      <div className="border-b p-4 bg-white sticky top-0 z-10 shadow-sm">
+        <h2 className="text-2xl md:text-3xl font-bold text-center text-gray-800">
           {format(currentDate, 'MMMM yyyy')}
         </h2>
       </div>
-
       {/* Lưới lịch */}
-      <div className="flex-grow">
+      <div className="flex-grow overflow-x-auto">
         {renderCalendarRows()}
       </div>
     </div>

@@ -84,71 +84,68 @@ export const DayView: React.FC<DayViewProps> = ({
     }
   };
 
-    return (
+  return (
     <div className="flex flex-col h-full overflow-auto">
       {/* Header hiển thị ngày hiện tại */}
-      <div className="flex border-b sticky top-0 bg-white z-10">
-        <div className="w-16 flex-shrink-0 border-r"></div>
-        <div className="flex-1 p-2 text-center">
-          <div className="font-semibold text-gray-600">{format(currentDate, 'EEEE')}</div>
-          <div className="text-2xl font-bold text-gray-800">{format(currentDate, 'MMMM d, yyyy')}</div>
+      <div className="flex border-b sticky top-0 bg-white z-10 shadow-sm">
+        <div className="w-20 flex-shrink-0 border-r bg-gray-50"></div>
+        <div className="flex-1 p-4 text-center">
+          <div className="font-medium text-blue-600 text-lg md:text-xl">{format(currentDate, 'EEEE')}</div>
+          <div className="text-2xl md:text-3xl font-bold text-gray-800">{format(currentDate, 'MMMM d, yyyy')}</div>
         </div>
       </div>
 
       {/* Lưới thời gian */}
-      <div className="flex-grow">
+      <div className="flex-grow overflow-x-auto">
         {hours.map((hour) => {
           const isCurrentTimeHour = isCurrentHour(hour);
           const isWorkingHour = hour >= 9 && hour <= 17; // 9 AM - 5 PM
 
-  return (
-            <div key={hour} className="flex border-b">
+          return (
+            <div key={hour} className="flex border-b hover:bg-blue-50/30 group transition-colors min-w-[340px] md:min-w-0">
               {/* Nhãn giờ */}
-              <div className="w-16 flex-shrink-0 border-r text-xs text-gray-500 p-1 sticky left-0 bg-white">
-                {hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`}
+              <div className="w-20 flex-shrink-0 border-r text-sm text-gray-600 p-2 sticky left-0 bg-white flex items-center justify-center select-none">
+                <span className="font-medium">
+                  {(() => {
+                    if (hour === 0) return '12 AM';
+                    if (hour < 12) return `${hour} AM`;
+                    if (hour === 12) return '12 PM';
+                    return `${hour - 12} PM`;
+                  })()}
+                </span>
               </div>
-              
               {/* Ô cho giờ */}
               <div 
-                className={`flex-1 h-20 relative transition-colors ${
-                  isCurrentTimeHour ? 'bg-yellow-50' : 
-                  isWorkingHour ? 'bg-gray-50' : ''
+                className={`flex-1 h-24 relative transition-colors ${
+                  isCurrentTimeHour ? 'bg-blue-100/60' : 
+                  isWorkingHour ? 'bg-gray-50/70' : ''
                 }`}
-                onClick={() => {
-                  try {
-                    const clickedDate = new Date(currentDate);
-                    clickedDate.setHours(hour);
-                    handleAddEvent(clickedDate, hour);
-                  } catch (error) {
-                    console.error('Error handling cell click:', error, hour);
-                  }
-                }}
               >
                 {/* Đường chỉ thời gian hiện tại */}
                 {isCurrentTimeHour && (
                   <div 
-                    className="absolute left-0 right-0 border-t-2 border-red-400 z-10"
+                    className="absolute left-0 right-0 border-t-2 border-pink-500 z-10 animate-pulse"
                     style={{
                       top: `${(currentTime.getMinutes() / 60) * 100}%`,
                     }}
                   >
-                    <div className="absolute -left-1 -top-2 w-2 h-2 rounded-full bg-red-500"></div>
+                    <div className="absolute -left-1 -top-2.5 w-5 h-5 rounded-full bg-pink-500 shadow-md flex items-center justify-center">
+                      <div className="w-2 h-2 rounded-full bg-white"></div>
+                    </div>
                   </div>
                 )}
-                
                 {/* Container cho các sự kiện trong giờ này */}
-                <div className="absolute inset-0">
+                <div className="absolute inset-0 p-1 flex flex-col gap-1">
                   {taskEvents
                     .filter(event => isEventInHour(event, hour))
                     .map((event, eventIndex) => {
                       try {
-                        const colorClasses = getEventColor(event);
                         return (
                           <CalendarEvent
                             key={event._id || eventIndex}
                             event={event}
                             onClick={() => handleEditEvent(event)}
-                            className="w-full block"
+                            className="w-full block mb-1 rounded-xl shadow-md hover:scale-[1.03] transition-all duration-200"
                           />
                         );
                       } catch (error) {

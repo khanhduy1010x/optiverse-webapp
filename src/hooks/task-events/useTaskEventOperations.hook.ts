@@ -137,8 +137,11 @@ export const useTaskEventOperations = () => {
         await checkEventOverdue(updatedEvent);
         
         // Cập nhật state local nếu có
-        if (updateEventInList) {
+        if (updateEventInList && typeof updateEventInList === 'function') {
+          console.log('Updating event in local state');
           updateEventInList(taskEventId, updatedEvent);
+        } else {
+          console.log('No updateEventInList function provided or it is not a function');
         }
         
         return updatedEvent;
@@ -180,6 +183,14 @@ export const useTaskEventOperations = () => {
       // For real events, call the API
       const response = await taskEventService.deleteTaskEvent(originalId);
       console.log('API response:', response);
+      
+      // Xóa sự kiện khỏi state local nếu có
+      if (removeEventFromList && typeof removeEventFromList === 'function') {
+        console.log('Removing event from local state');
+        removeEventFromList(taskEventId);
+      } else {
+        console.log('No removeEventFromList function provided or it is not a function');
+      }
       
       return true;
     } catch (err) {

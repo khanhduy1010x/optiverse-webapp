@@ -117,7 +117,7 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ tasks }) => {
       setNotifications(prev => prev.filter(notification => notification.id !== taskId));
       
       // Show success toast
-      toast.success('Task marked as completed!', {
+      toast.success('Overdue task notification has been viewed!', {
         position: "top-right",
         autoClose: 3000
       });

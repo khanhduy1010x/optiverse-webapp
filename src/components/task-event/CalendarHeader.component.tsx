@@ -63,46 +63,45 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
   };
 
   return (
-    <div className="flex items-center justify-between px-6 py-4 bg-white rounded-t-2xl shadow-sm border-b">
-      <div className="flex items-center gap-2 relative">
+    <div className="flex flex-col md:flex-row items-center justify-between px-4 md:px-8 py-5 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-t-2xl shadow-md gap-4 md:gap-0">
+      <div className="flex items-center gap-2 relative w-full md:w-auto">
         <button
           onClick={handleToday}
-          className="px-4 py-2 bg-blue-50 rounded-full font-semibold text-blue-700 hover:bg-blue-100 border border-blue-200 transition-colors flex items-center"
+          className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full font-semibold text-white hover:bg-white/30 border border-white/30 transition-colors flex items-center shadow-sm text-base md:text-lg"
         >
-          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
           Today
         </button>
         <button
           onClick={handlePrevious}
-          className="p-2 rounded-full hover:bg-gray-100"
+          className="p-2 rounded-full hover:bg-white/30 text-white transition-colors"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
         </button>
         <button
           onClick={handleNext}
-          className="p-2 rounded-full hover:bg-gray-100"
+          className="p-2 rounded-full hover:bg-white/30 text-white transition-colors"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
         </button>
         <div 
           ref={dateTextRef}
           onClick={toggleMiniCalendar}
-          className="text-2xl font-bold text-gray-800 ml-4 cursor-pointer hover:text-blue-600 transition-colors flex items-center px-3 py-1 rounded-lg hover:bg-gray-100"
+          className="text-3xl md:text-4xl font-extrabold text-white ml-4 cursor-pointer hover:bg-white/20 transition-colors flex items-center px-3 py-1 rounded-lg select-none"
         >
-          <svg className="w-5 h-5 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-6 h-6 mr-2 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
           {getViewTitle()}
-          <svg className="w-5 h-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-6 h-6 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={showMiniCalendarPopup ? "M5 15l7-7 7 7" : "M19 9l-7 7-7-7"} />
           </svg>
         </div>
-        
         {/* Mini Calendar Popup */}
         {showMiniCalendarPopup && (
-          <div ref={miniCalendarRef} className="absolute top-14 left-0 z-50">
+          <div ref={miniCalendarRef} className="absolute top-16 left-0 z-50 shadow-2xl rounded-xl animate-fadeIn">
             <MiniCalendar
               currentDate={currentDate}
               miniCalendarDate={miniCalendarDate}
@@ -114,11 +113,12 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
           </div>
         )}
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3 w-full md:w-auto justify-end">
         <select
           value={viewType}
           onChange={e => setViewType(e.target.value as any)}
-          className="px-3 py-2 rounded-lg border border-gray-200 bg-gray-50 text-gray-700 font-semibold focus:outline-none"
+          className="px-3 py-2 rounded-lg border border-white/30 bg-white/20 backdrop-blur-sm text-white font-semibold focus:outline-none appearance-none cursor-pointer text-base md:text-lg"
+          style={{ backgroundImage: "url(\"data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 0.5rem center", backgroundSize: "1.5em 1.5em", paddingRight: "2.5rem" }}
         >
           <option value="Day">Day</option>
           <option value="Week">Week</option>
@@ -126,15 +126,12 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
         </select>
         <button
           onClick={handleAddEvent}
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 shadow"
+          className="px-6 py-3 bg-gradient-to-r from-yellow-400 to-pink-500 text-white rounded-xl font-bold shadow-lg hover:scale-105 hover:shadow-xl transition-all flex items-center gap-2 text-base md:text-lg border-2 border-white/20"
         >
-          + Add event
-        </button>
-        <button className="p-2 rounded-full hover:bg-gray-100">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-4.35-4.35" /></svg>
-        </button>
-        <button className="p-2 rounded-full hover:bg-gray-100">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6l4 2" /></svg>
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          Add event
         </button>
       </div>
     </div>

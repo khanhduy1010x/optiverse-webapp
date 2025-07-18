@@ -188,21 +188,22 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
 
   return (
     <Modal isOpen={isOpen}
-      className="fixed top-1/2 right-16 transform -translate-y-1/2 w-[360px] max-w-[90vw] bg-white rounded-xl shadow-2xl z-[2000] outline-none"
-      overlayClassName="fixed inset-0 bg-black/30 backdrop-blur-sm z-[2000]"
+      className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md md:max-w-xl bg-white rounded-3xl shadow-2xl z-[2000] outline-none border border-gray-100 animate-fadeIn"
+      overlayClassName="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000] transition-all duration-300"
       onRequestClose={handleCancel}
       shouldCloseOnOverlayClick={false}
       ariaHideApp={false}
     >
-      <form onSubmit={handleSubmit} className="p-5">
+      <form onSubmit={handleSubmit} className="p-6 md:p-8 flex flex-col gap-4">
         <div className="flex justify-between items-center mb-5">
-          <h3 className="text-lg font-medium">{isEditMode ? 'Edit Event' : 'Add Event'}</h3>
+          <h3 className="text-2xl font-bold text-gray-800">{isEditMode ? 'Edit Event' : 'Add Event'}</h3>
           <button 
             type="button"
             onClick={handleCancel} 
-            className="text-gray-400 hover:text-gray-600"
+            className="text-gray-400 hover:text-gray-600 rounded-full p-2 transition-colors"
+            aria-label="Close"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
             </svg>
           </button>
@@ -213,7 +214,7 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
           placeholder="Add title"
           value={formData.title}
           onChange={(e) => handleInputChange('title', e.target.value)}
-          className="w-full border-0 border-b border-gray-200 py-2 mb-4 focus:outline-none focus:ring-0 focus:border-gray-300 placeholder-gray-400"
+          className="w-full border-0 border-b-2 border-blue-200 py-3 mb-2 focus:outline-none focus:ring-0 focus:border-blue-400 placeholder-gray-400 text-lg font-semibold bg-blue-50/30 rounded-t-xl transition-all"
           autoFocus
         />
         
@@ -364,41 +365,46 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
           <label htmlFor="all-day" className="text-sm text-gray-700">All day</label>
         </div>
         
-        <div className="flex justify-between items-center pt-4 border-t border-gray-100">
-          <div className="flex space-x-2">
+        <div className="flex justify-between items-center pt-6 border-t border-gray-100 mt-4">
+          <div className="flex space-x-3">
             <div 
-              className={`w-6 h-6 rounded-full bg-blue-400 cursor-pointer ${selectedColor === '#3B82F6' ? 'ring-2 ring-gray-300' : ''}`}
+              className={`w-8 h-8 rounded-full bg-blue-400 cursor-pointer border-2 border-white shadow-md flex items-center justify-center transition-transform duration-200 ${selectedColor === '#3B82F6' ? 'ring-4 ring-blue-200 scale-110' : 'hover:scale-105'}`}
               onClick={() => setSelectedColor('#3B82F6')}
+              title="Blue"
             ></div>
             <div 
-              className={`w-6 h-6 rounded-full bg-red-400 cursor-pointer ${selectedColor === '#F87171' ? 'ring-2 ring-gray-300' : ''}`}
+              className={`w-8 h-8 rounded-full bg-red-400 cursor-pointer border-2 border-white shadow-md flex items-center justify-center transition-transform duration-200 ${selectedColor === '#F87171' ? 'ring-4 ring-red-200 scale-110' : 'hover:scale-105'}`}
               onClick={() => setSelectedColor('#F87171')}
+              title="Red"
             ></div>
             <div 
-              className={`w-6 h-6 rounded-full bg-yellow-400 cursor-pointer ${selectedColor === '#FBBF24' ? 'ring-2 ring-gray-300' : ''}`}
+              className={`w-8 h-8 rounded-full bg-yellow-400 cursor-pointer border-2 border-white shadow-md flex items-center justify-center transition-transform duration-200 ${selectedColor === '#FBBF24' ? 'ring-4 ring-yellow-200 scale-110' : 'hover:scale-105'}`}
               onClick={() => setSelectedColor('#FBBF24')}
+              title="Yellow"
             ></div>
             <div 
-              className={`w-6 h-6 rounded-full bg-green-400 cursor-pointer ${selectedColor === '#10B981' ? 'ring-2 ring-gray-300' : ''}`}
+              className={`w-8 h-8 rounded-full bg-green-400 cursor-pointer border-2 border-white shadow-md flex items-center justify-center transition-transform duration-200 ${selectedColor === '#10B981' ? 'ring-4 ring-green-200 scale-110' : 'hover:scale-105'}`}
               onClick={() => setSelectedColor('#10B981')}
+              title="Green"
             ></div>
             <div 
-              className={`w-6 h-6 rounded-full bg-purple-400 cursor-pointer ${selectedColor === '#A78BFA' ? 'ring-2 ring-gray-300' : ''}`}
+              className={`w-8 h-8 rounded-full bg-purple-400 cursor-pointer border-2 border-white shadow-md flex items-center justify-center transition-transform duration-200 ${selectedColor === '#A78BFA' ? 'ring-4 ring-purple-200 scale-110' : 'hover:scale-105'}`}
               onClick={() => setSelectedColor('#A78BFA')}
+              title="Purple"
             ></div>
           </div>
           <div className="flex space-x-2">
             <button 
               type="button"
               onClick={handleCancel}
-              className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm"
+              className="px-5 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl text-base font-semibold transition-all"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading || !formData.title.trim()}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm disabled:bg-blue-300"
+              className="px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-bold shadow-md hover:scale-105 hover:shadow-xl transition-all text-base disabled:bg-blue-300 disabled:opacity-60"
             >
               Save
             </button>

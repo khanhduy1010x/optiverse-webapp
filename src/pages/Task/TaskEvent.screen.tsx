@@ -60,16 +60,16 @@ const Schedule: React.FC = () => {
 
   return (
     <CalendarContainer
-        taskId={taskId}
-        taskEvents={taskEvents}
-        loading={loading}
-        error={error}
-        addEvent={addEvent}
-        removeEvent={removeEvent}
-        updateEvent={updateEvent}
-        refreshTaskEvents={refreshTaskEvents}
+      taskId={taskId}
+      taskEvents={taskEvents}
+      loading={loading}
+      error={error}
+      addEvent={addEvent}
+      removeEvent={removeEvent}
+      updateEvent={updateEvent}
+      refreshTaskEvents={refreshTaskEvents}
       onRefresh={triggerRefresh}
-      />
+    />
   );
 };
 
