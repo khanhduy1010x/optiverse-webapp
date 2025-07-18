@@ -1,11 +1,12 @@
-import React, { useRef } from 'react';
+import React from 'react';
+import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isSameDay } from 'date-fns';
 
 interface MiniCalendarProps {
   currentDate: Date;
   miniCalendarDate: Date;
-  setMiniCalendarDate: (date: Date) => void;
+  setMiniCalendarDate: React.Dispatch<React.SetStateAction<Date>>;
   handleDateClick: (date: Date) => void;
-  setShowMiniCalendarPopup: (show: boolean) => void;
+  setShowMiniCalendarPopup: React.Dispatch<React.SetStateAction<boolean>>;
   showMiniCalendarPopup: boolean;
 }
 
@@ -17,169 +18,130 @@ export const MiniCalendar: React.FC<MiniCalendarProps> = ({
   setShowMiniCalendarPopup,
   showMiniCalendarPopup
 }) => {
-  const miniCalendarRef = useRef<HTMLDivElement>(null);
+  // Xử lý chuyển tháng
+  const prevMonth = () => {
+    setMiniCalendarDate(subMonths(miniCalendarDate, 1));
+  };
 
-  const getDaysInMonth = (year: number, month: number) => {
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    
-    // Get the first day of the week containing the first day of the month
-    const start = new Date(firstDay);
-    start.setDate(start.getDate() - start.getDay());
-    
-    // Get the last day of the week containing the last day of the month
-    const end = new Date(lastDay);
-    const daysToAdd = 6 - end.getDay();
-    end.setDate(end.getDate() + daysToAdd);
-    
+  const nextMonth = () => {
+    setMiniCalendarDate(addMonths(miniCalendarDate, 1));
+  };
+
+  // Tạo các ngày trong tháng
+  const renderDays = () => {
+    const monthStart = startOfMonth(miniCalendarDate);
+    const monthEnd = endOfMonth(monthStart);
+    const startDate = startOfWeek(monthStart);
+    const endDate = endOfWeek(monthEnd);
+
+    const dateFormat = 'EEEEEE';
     const days = [];
-    let current = new Date(start);
+    const weekDays = [];
+
+    let formattedDate = startDate;
     
-    while (current <= end) {
-      days.push(new Date(current));
-      current.setDate(current.getDate() + 1);
+    // Tạo header với tên các ngày trong tuần
+    for (let i = 0; i < 7; i++) {
+      weekDays.push(
+        <div className="w-8 h-8 flex items-center justify-center text-xs font-medium text-gray-600" key={i}>
+          {format(addDays(startDate, i), dateFormat)}
+        </div>
+      );
     }
+
+    // Tạo các ô cho từng ngày
+    let day = startDate;
+    let formattedDays = [];
     
-    return days;
-  };
+    while (day <= endDate) {
+      for (let i = 0; i < 7; i++) {
+        const cloneDay = new Date(day);
+        const isToday = isSameDay(day, new Date());
+        const isSelectedDate = isSameDay(day, currentDate);
+        const isCurrentMonth = isSameMonth(day, monthStart);
+        
+        formattedDays.push(
+          <div
+            className={`w-8 h-8 flex items-center justify-center text-sm rounded-full cursor-pointer transition-all duration-200 mx-auto
+              ${isCurrentMonth ? 'hover:bg-blue-100' : 'text-gray-400 hover:bg-gray-100'}
+              ${isToday ? 'bg-blue-100 text-blue-800 font-medium' : ''}
+              ${isSelectedDate ? 'bg-blue-600 text-white font-medium hover:bg-blue-700' : ''}
+            `}
+            key={day.toString()}
+            onClick={() => handleDateClick(cloneDay)}
+          >
+            {format(day, 'd')}
+          </div>
+        );
+        day = addDays(day, 1);
+      }
+    }
 
-  const handlePrevMonth = () => {
-    const newDate = new Date(miniCalendarDate);
-    newDate.setMonth(newDate.getMonth() - 1);
-    setMiniCalendarDate(newDate);
-  };
+    // Tạo các hàng cho lịch
+    let rows = [];
+    let cells = [];
 
-  const handleNextMonth = () => {
-    const newDate = new Date(miniCalendarDate);
-    newDate.setMonth(newDate.getMonth() + 1);
-    setMiniCalendarDate(newDate);
-  };
+    // Thêm header
+    rows.push(
+      <div className="grid grid-cols-7 gap-1 mb-1" key="header">
+        {weekDays}
+      </div>
+    );
 
-  const handlePrevYear = () => {
-    const newDate = new Date(miniCalendarDate);
-    newDate.setFullYear(newDate.getFullYear() - 1);
-    setMiniCalendarDate(newDate);
-  };
+    // Thêm các ngày
+    formattedDays.forEach((day, i) => {
+      if (i % 7 !== 0) {
+        cells.push(day);
+      } else {
+        rows.push(
+          <div className="grid grid-cols-7 gap-1 mb-1" key={i}>
+            {cells}
+          </div>
+        );
+        cells = [day];
+      }
+      if (i === formattedDays.length - 1) {
+        rows.push(
+          <div className="grid grid-cols-7 gap-1" key={i + 1}>
+            {cells}
+          </div>
+        );
+      }
+    });
 
-  const handleNextYear = () => {
-    const newDate = new Date(miniCalendarDate);
-    newDate.setFullYear(newDate.getFullYear() + 1);
-    setMiniCalendarDate(newDate);
+    return <div>{rows}</div>;
   };
-
-  const handleToday = () => {
-    const today = new Date();
-    setMiniCalendarDate(today);
-    handleDateClick(today);
-  };
-
-  const isToday = (date: Date) => {
-    const today = new Date();
-    return date.getDate() === today.getDate() && 
-           date.getMonth() === today.getMonth() && 
-           date.getFullYear() === today.getFullYear();
-  };
-
-  const isSameMonth = (date: Date) => {
-    return date.getMonth() === miniCalendarDate.getMonth();
-  };
-
-  const isSelectedDate = (date: Date) => {
-    return date.getDate() === currentDate.getDate() && 
-           date.getMonth() === currentDate.getMonth() && 
-           date.getFullYear() === currentDate.getFullYear();
-  };
-
-  const formatMonth = (date: Date) => {
-    return date.toLocaleString('default', { month: 'long' });
-  };
-
-  const formatYear = (date: Date) => {
-    return date.getFullYear().toString();
-  };
-
-  const daysInMonth = getDaysInMonth(miniCalendarDate.getFullYear(), miniCalendarDate.getMonth());
 
   return (
-    <div 
-      ref={miniCalendarRef}
-      className="bg-white rounded-lg shadow-xl p-4 w-72 border border-gray-200"
-    >
-      {/* Year selector */}
-      <div className="flex justify-between items-center mb-2">
-        <button 
-          onClick={handlePrevYear}
-          className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+    <div className="bg-white rounded-lg shadow-xl border border-gray-200 p-4 w-64 animate-fadeIn">
+      <div className="flex justify-between items-center mb-4">
+        <button
+          onClick={prevMonth}
+          className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-          </svg>
-        </button>
-        <div className="text-sm font-bold">{formatYear(miniCalendarDate)}</div>
-        <button 
-          onClick={handleNextYear}
-          className="p-1 rounded-full hover:bg-gray-100 transition-colors"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-          </svg>
-        </button>
-      </div>
-
-      {/* Month selector */}
-      <div className="flex justify-between items-center mb-3">
-        <button 
-          onClick={handlePrevMonth}
-          className="p-1 rounded-full hover:bg-gray-100 transition-colors"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <div className="text-sm font-medium">{formatMonth(miniCalendarDate)}</div>
-        <button 
-          onClick={handleNextMonth}
-          className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+        <h2 className="text-gray-800 font-bold">
+          {format(miniCalendarDate, 'MMMM yyyy')}
+        </h2>
+        <button
+          onClick={nextMonth}
+          className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
           </svg>
         </button>
       </div>
-      
-      <div className="grid grid-cols-7 text-center text-xs font-medium text-gray-500 mb-1">
-        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
-          <div key={index} className="py-1">{day}</div>
-        ))}
-      </div>
-      
-      <div className="grid grid-cols-7 gap-1">
-        {daysInMonth.map((date, index) => (
-          <button
-            key={index}
-            onClick={() => {
-              handleDateClick(date);
-            }}
-            className={`
-              w-8 h-8 rounded-full flex items-center justify-center text-xs
-              ${isToday(date) ? 'ring-2 ring-blue-500 font-bold' : ''}
-              ${isSelectedDate(date) ? 'bg-blue-500 text-white hover:bg-blue-600' : 
-                !isSameMonth(date) ? 'text-gray-400' : 'hover:bg-gray-100'}
-              transition-colors
-            `}
-          >
-            {date.getDate()}
-          </button>
-        ))}
-      </div>
-
-      {/* Today button */}
-      <div className="mt-3 flex justify-center">
+      {renderDays()}
+      <div className="mt-4 flex justify-end">
         <button
-          onClick={handleToday}
-          className="px-4 py-1.5 bg-gray-100 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-200 border border-gray-200 transition-colors"
+          onClick={() => setShowMiniCalendarPopup(false)}
+          className="px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 rounded transition-colors font-medium"
         >
-          Today
+          Close
         </button>
       </div>
     </div>

@@ -103,8 +103,9 @@ const createRecurringEvents = async (originalEvent: TaskEvent) => {
       const newStartDate = new Date(currentDate);
       const newEndDate = new Date(newStartDate.getTime() + duration);
       
-      const newEvent: Omit<TaskEvent, '_id'> = {
+      const newEvent: CreateTaskEventRequest = {
         ...originalEvent,
+        task_id: originalEvent.task_id || '', // Đảm bảo task_id luôn là string
         start_time: newStartDate,
         end_time: newEndDate,
         parent_event_id: originalEvent._id, // Liên kết với sự kiện gốc
@@ -286,8 +287,8 @@ export const useTaskEventList = (taskId: string) => {
         if (response && response.data && response.data.data) {
           const createdEvent = response.data.data;
           
-          // Thêm sự kiện gốc vào state
-          setTaskEvents(prev => [...prev, createdEvent]);
+          // Không thêm sự kiện vào state local để tránh trùng lặp
+          // Sẽ được cập nhật thông qua refreshTaskEvents
           
           // Tạo các sự kiện lặp lại (không hiển thị ngay, sẽ được tải lại khi refresh)
           await createRecurringEvents(createdEvent);
