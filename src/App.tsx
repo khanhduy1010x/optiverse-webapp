@@ -50,6 +50,7 @@ import { useEffect, useState } from 'react';
 import Modal from 'react-modal';
 import { GROUP_CLASSNAMES } from './styles';
 import BannedModal from './components/BannedModal';
+import AchievementsAdminPage from './pages/Admin/AchievementsAdmin.page';
 
 declare global {
   interface Window {
@@ -146,6 +147,7 @@ const AppContent: React.FC = () => {
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="users" element={<UserManagement />} />
             <Route path="settings" element={<SystemSettings />} />
+            <Route path="achievements" element={<AchievementsAdminPage />} />
           </Route>
 
           <Route

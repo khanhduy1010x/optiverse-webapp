@@ -222,6 +222,110 @@ const achievementService = {
         );
       }, index * 2000); // Hiển thị lần lượt, cách nhau 2 giây
     });
+  },
+
+  /**
+   * Get all achievements (admin)
+   */
+  getAllAchievements: async () => {
+    try {
+      const response = await api.get('/productivity/achievement');
+      if (response.data && response.data.data) {
+        return response.data.data;
+      }
+      return [];
+    } catch (error) {
+      console.error('Error fetching all achievements:', error);
+      return [];
+    }
+  },
+
+  /**
+   * Update an achievement (admin)
+   */
+  updateAchievement: async (id: string, data: { title: string; description?: string; keepExistingImage?: boolean } | FormData) => {
+    try {
+      // Kiểm tra nếu data là FormData
+      const isFormData = data instanceof FormData;
+      const config = isFormData ? { 
+        headers: { 'Content-Type': 'multipart/form-data' } 
+      } : {};
+      
+      // If data is not FormData and has keepExistingImage flag, remove it before sending to API
+      if (!isFormData && 'keepExistingImage' in data) {
+        const { keepExistingImage, ...cleanData } = data;
+        data = cleanData;
+      }
+      
+      const response = await api.put(`/productivity/achievement/${id}`, data, config);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error updating achievement:', error);
+      
+      // Handle network connectivity issues
+      if (error.code === 'EAI_AGAIN' || error.message?.includes('EAI_AGAIN')) {
+        throw new Error('Network connectivity issue with image upload service. Please check your internet connection and try again.');
+      }
+      
+      // Handle duplicate key error
+      if (error.response?.data?.code === 11000 || 
+          (error.response?.data?.error && error.response?.data?.error.includes('E11000')) ||
+          (error.response?.data?.message && error.response?.data?.message.includes('duplicate key'))) {
+        
+        // Extract title from the error if possible
+        const titleMatch = error.response?.data?.message?.match(/title:\s*"([^"]+)"/);
+        const title = titleMatch ? titleMatch[1] : 'this title';
+        throw new Error(`An achievement with the title "${title}" already exists. Please use a different title.`);
+      }
+      
+      // Handle specific API errors
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
+      
+      throw error;
+    }
+  },
+
+  /**
+   * Create a new achievement (admin)
+   */
+  createAchievement: async (data: { title: string; description?: string; icon_url?: string } | FormData) => {
+    try {
+      // Kiểm tra nếu data là FormData
+      const isFormData = data instanceof FormData;
+      const config = isFormData ? { 
+        headers: { 'Content-Type': 'multipart/form-data' } 
+      } : {};
+      
+      const response = await api.post('/productivity/achievement', data, config);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error creating achievement:', error);
+      
+      // Handle network connectivity issues
+      if (error.code === 'EAI_AGAIN' || error.message?.includes('EAI_AGAIN')) {
+        throw new Error('Network connectivity issue with image upload service. Please check your internet connection and try again.');
+      }
+      
+      // Handle duplicate key error
+      if (error.response?.data?.code === 11000 || 
+          (error.response?.data?.error && error.response?.data?.error.includes('E11000')) ||
+          (error.response?.data?.message && error.response?.data?.message.includes('duplicate key'))) {
+        
+        // Extract title from the error if possible
+        const titleMatch = error.response?.data?.message?.match(/title:\s*"([^"]+)"/);
+        const title = titleMatch ? titleMatch[1] : 'this title';
+        throw new Error(`An achievement with the title "${title}" already exists. Please use a different title.`);
+      }
+      
+      // Handle specific API errors
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
+      
+      throw error;
+    }
   }
 };
 
