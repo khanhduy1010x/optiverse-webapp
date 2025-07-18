@@ -202,7 +202,7 @@ const AchievementsAdminPage: React.FC = () => {
 
       {/* Edit Modal Popup */}
       {editingId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm z-[2000]">
           <div className="bg-white rounded-lg shadow-xl p-4 w-full max-w-lg relative animate-fadeIn">
             <h2 className="text-base font-bold mb-6 flex items-center text-gray-800">
               <svg className="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -341,7 +341,7 @@ const AchievementsAdminPage: React.FC = () => {
 
       {/* Create Modal Popup */}
       {createModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm z-[2000]">
           <div className="bg-white rounded-lg shadow-xl p-4 w-full max-w-lg relative animate-fadeIn">
             <h2 className="text-base font-bold mb-6 flex items-center text-gray-800">
               <svg className="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
