@@ -7,6 +7,7 @@ import { useUserProfile } from '../../hooks/profile/useUserProfile.hook';
 import ChangePasswordPopup from './ChangePasswordPopup.screen';
 import { GROUP_CLASSNAMES } from '../../styles/group-class-name.style';
 import ProfileSidebar from './ProfileSidebar.component';
+import StreakDisplay from '../../components/streak/StreakDisplay';
 
 export default function UserProfile() {
   const { theme, toggleTheme } = useTheme();
@@ -36,6 +37,7 @@ export default function UserProfile() {
     handleViewAvatar,
     handleNameChange,
     handleKeyPress,
+    streakData,
   } = useUserProfile();
 
   return (
@@ -84,12 +86,22 @@ export default function UserProfile() {
         {/* Main Content */}
         <View className={GROUP_CLASSNAMES.profileMainContent}>
           <div className="p-8">
-            <span className="mb-4 text-[22px] text-gray-800 text:bold">
-              My Profile
-            </span>
-            <div className="mb-2 text-[14px] text-gray-400  text:bold">
-              Manage your profile information
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <span className="text-[22px] text-gray-800 text:bold">
+                  My Profile
+                </span>
+                <div className="text-[14px] text-gray-400 text:bold">
+                  Manage your profile information
+                </div>
+              </div>
+              
+              {/* Streak Display Component - Positioned at the top right */}
+              <div className="flex-1 flex justify-end">
+                <StreakDisplay streakData={streakData} />
+              </div>
             </div>
+            
             <hr className="mb-6 border-gray-200" />
 
             {error && (

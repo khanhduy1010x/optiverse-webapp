@@ -8,11 +8,13 @@ import {
   FlashcardResponse,
 } from '../../types/flashcard/response/flashcard.response';
 import flashcardService from '../../services/flashcard.service';
+import { useFlashcardStreak } from '../streak/useFlashcardStreak.hook';
 
 export function useFlashcardReview() {
   const { deckId } = useParams();
   const location = useLocation();
   const { title, mode } = location.state;
+  const { updateFlashcardStreak } = useFlashcardStreak();
 
   const [flashcardDeck, setFlashcardDeck] =
     useState<FlashcardDeckResponse>(flashcardDeckMock);
@@ -38,6 +40,10 @@ export function useFlashcardReview() {
       flashcard_id: flashcard._id,
       quality,
     });
+    
+    // Update flashcard streak when a flashcard is reviewed
+    await updateFlashcardStreak();
+    
     await fetchData();
   };
 
