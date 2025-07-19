@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { FocusSession } from '../../types/focus-timer/response/focus-timer.response';
 import focusService from '../../services/focus.service';
 
@@ -9,16 +9,16 @@ export function useFocusSessionList() {
     null
   );
 
-  const fetchSessions = async () => {
+  const fetchSessions = useCallback(async () => {
     setLoading(true);
     const data = await focusService.getFocusTimerList();
     setFocusSessions(data);
     setLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
     fetchSessions();
-  }, []);
+  }, [fetchSessions]);
 
   return {
     focusSessions,

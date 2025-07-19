@@ -2,6 +2,70 @@ import React from 'react';
 import { Trash2 as TrashIcon } from 'lucide-react';
 import DeleteFocusSessionModal from './ConfirmDeleteModal';
 import { useFocusSessionList } from '../../hooks/focus-timer/useFocusTimerList.hook';
+import { FocusSession } from '../../types/focus-timer/response/focus-timer.response';
+import { useFocusTimerContext } from '../../contexts/FocusTimer.context';
+
+function formatTimeRange(start: string, end: string) {
+  const s = new Date(start);
+  const e = new Date(end);
+  return `${s.getHours().toString().padStart(2, '0')}:${s.getMinutes().toString().padStart(2, '0')} - ${e.getHours().toString().padStart(2, '0')}:${e.getMinutes().toString().padStart(2, '0')}`;
+}
+
+function getSessionMinutes(session: FocusSession): number {
+  const start = new Date(session.start_time);
+  const end = new Date(session.end_time);
+  return Math.round((end.getTime() - start.getTime()) / 60000);
+}
+
+function groupSessionsByDate(sessions: FocusSession[]): Record<string, FocusSession[]> {
+  return sessions.reduce((acc: Record<string, FocusSession[]>, session) => {
+    const d = new Date(session.start_time);
+    const key = d.getFullYear() + '-' + (d.getMonth()+1).toString().padStart(2, '0') + '-' + d.getDate().toString().padStart(2, '0');
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(session);
+    return acc;
+  }, {});
+}
+
+function isToday(dateStr: string) {
+  const d = new Date(dateStr);
+  const today = new Date();
+  return d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
+}
+
+function isYesterday(dateStr: string) {
+  const d = new Date(dateStr);
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  return d.getDate() === yesterday.getDate() && d.getMonth() === yesterday.getMonth() && d.getFullYear() === yesterday.getFullYear();
+}
+
+function formatSectionDate(dateStr: string) {
+  const d = new Date(dateStr);
+  if (isToday(dateStr)) {
+    return `Today, ${d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`;
+  }
+  if (isYesterday(dateStr)) {
+    return `Yesterday, ${d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`;
+  }
+  return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
+function formatSessionDuration(session: FocusSession): string {
+  const start = new Date(session.start_time);
+  const end = new Date(session.end_time);
+  const totalSeconds = Math.round((end.getTime() - start.getTime()) / 1000);
+  if (totalSeconds >= 3600) {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    return `${hours}h ${minutes}m`;
+  } else {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}m ${seconds}s`;
+  }
+}
 
 const FocusTimerList: React.FC = () => {
   const {
@@ -11,43 +75,48 @@ const FocusTimerList: React.FC = () => {
     setSessionToDelete,
     fetchSessions,
   } = useFocusSessionList();
+  const { setOnSessionSaved } = useFocusTimerContext();
+  React.useEffect(() => {
+    setOnSessionSaved(() => fetchSessions);
+    return () => setOnSessionSaved(null);
+  }, [setOnSessionSaved, fetchSessions]);
 
   return (
-    <div className="p-6 space-y-4">
-      <h1 className="text-3xl font-bold text-gray-800">Your Focus Sessions</h1>
-
+    <div className="bg-white rounded-lg shadow p-8 w-full max-w-3xl md:max-w-4xl mx-auto mt-8 px-4 md:px-8">
+      <h1 className="text-3xl font-bold mb-6">Focus timers</h1>
       {loading ? (
         <p>Loading...</p>
       ) : focusSessions.length === 0 ? (
         <p className="text-gray-500">No focus sessions yet.</p>
       ) : (
-        <div className="space-y-3">
-          {focusSessions.map(session => (
-            <div
-              key={session._id}
-              className="relative p-4 border border-gray-300 rounded-md shadow-sm"
-            >
-              <div>
-                <p>
-                  <strong>Start:</strong>{' '}
-                  {new Date(session.start_time).toLocaleString()}
-                </p>
-                <p>
-                  <strong>End:</strong>{' '}
-                  {new Date(session.end_time).toLocaleString()}
-                </p>
+        <div>
+          {Object.entries(groupSessionsByDate(focusSessions)).sort((a, b) => b[0].localeCompare(a[0])).map(([date, sessions]) => (
+            <div key={date} className="mb-6">
+              <div className="font-semibold text-lg mb-2">{formatSectionDate(sessions[0].start_time)}</div>
+              <div className="divide-y">
+                {sessions.map(session => (
+                  <div
+                    key={session._id}
+                    className="flex items-center justify-between py-4"
+                  >
+                    <div>
+                      <div className="font-semibold text-base text-gray-800">{formatSessionDuration(session)}</div>
+                      <div className="text-xs text-gray-500">{formatTimeRange(session.start_time, session.end_time)}</div>
+                    </div>
+                    <button
+                      onClick={() => setSessionToDelete(session)}
+                      className="text-red-500 hover:text-red-700"
+                      title="Delete session"
+                    >
+                      <TrashIcon size={20} />
+                    </button>
+                  </div>
+                ))}
               </div>
-              <button
-                onClick={() => setSessionToDelete(session)}
-                className="absolute top-2 right-2 text-red-500 hover:text-red-700"
-              >
-                <TrashIcon size={20} />
-              </button>
             </div>
           ))}
         </div>
       )}
-
       {sessionToDelete && (
         <DeleteFocusSessionModal
           session={sessionToDelete}
