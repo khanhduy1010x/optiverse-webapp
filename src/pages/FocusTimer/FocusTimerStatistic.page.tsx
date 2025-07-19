@@ -1,7 +1,32 @@
 import React, { useState } from 'react';
 import { format, getDaysInMonth } from 'date-fns';
 import { useFocusTimerStatistic } from '../../hooks/focus-timer/useFocusTimerStatistic.hook';
-import Modal from '../FocusTimer/ViewFocustimeListModal';
+import ViewFocustimeListModal from './ViewFocustimeListModal';
+import { Tooltip } from 'react-tooltip';
+import 'react-tooltip/dist/react-tooltip.css';
+import { BarChart, Bar, XAxis, YAxis, Tooltip as ReTooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell, LineChart, Line, Legend } from 'recharts';
+
+function SummaryCard({ title, value }: { title: string; value: string | number }) {
+  return (
+    <div className="bg-white border rounded-lg shadow text-center p-4 flex flex-col items-center justify-center h-full">
+      <div className="text-gray-500 text-xs mb-1">{title}</div>
+      <div className="font-bold text-lg text-blue-700">{value}</div>
+    </div>
+  );
+}
+
+function formatDuration(seconds: number) {
+  if (seconds >= 3600) {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    return `${h}h ${m}m`;
+  }
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m}m ${s}s`;
+}
+
+const COLORS = ['#8884d8', '#e0e0e0'];
 
 export default function FocusTimerStatisticPage() {
   const today = new Date();
@@ -10,8 +35,16 @@ export default function FocusTimerStatisticPage() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const { dayStats, summary, sessions } = useFocusTimerStatistic(month, year);
 
-  const maxSeconds = Math.max(...dayStats.map((d) => d.totalSeconds), 0);
+  // Charts
+  const daysInMonth = getDaysInMonth(new Date(year, month));
+  const pieData = [
+    { name: 'Active days', value: summary.activeDays },
+    { name: 'Inactive days', value: daysInMonth - summary.activeDays },
+  ];
+  const chartData = dayStats.map(d => ({ ...d, minutes: Math.round(d.totalSeconds / 60) }));
 
+  // Calendar
+  const maxSeconds = Math.max(...dayStats.map((d) => d.totalSeconds), 0);
   const getColor = (seconds: number) => {
     if (seconds === 0) return '#e0e0e0';
     const ratio = seconds / maxSeconds;
@@ -19,13 +52,10 @@ export default function FocusTimerStatisticPage() {
     if (ratio > 0.33) return '#66bb6a';
     return '#c8e6c9';
   };
-
   const renderCalendar = () => {
-    const daysInMonth = getDaysInMonth(new Date(year, month));
     const statsMap = Object.fromEntries(dayStats.map((d) => [d.date, d.totalSeconds]));
-
     return (
-      <div className="grid grid-cols-7 gap-2 mt-6">
+      <div className="grid grid-cols-7 gap-2 mb-6">
         {Array.from({ length: daysInMonth }).map((_, idx) => {
           const date = new Date(year, month, idx + 1);
           const iso = format(date, 'yyyy-MM-dd');
@@ -33,78 +63,101 @@ export default function FocusTimerStatisticPage() {
           return (
             <div
               key={idx}
-              className="w-10 h-10 flex items-center justify-center text-xs rounded shadow cursor-pointer"
-              style={{ backgroundColor: getColor(seconds) }}
+              className="flex items-center justify-center rounded-lg shadow cursor-pointer text-sm font-semibold transition-all duration-150 hover:scale-105"
+              data-tooltip-id="calendar-tooltip"
+              data-tooltip-content={`${Math.floor(seconds / 60)} minutes`}
+              style={{
+                width: 42,
+                height: 42,
+                backgroundColor: getColor(seconds),
+              }}
               onClick={() => setSelectedDate(iso)}
-              title={`${Math.floor(seconds / 60)} minutes`}
             >
               {idx + 1}
             </div>
           );
         })}
+        <Tooltip id="calendar-tooltip" place="top" />
       </div>
     );
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div className="max-w-3xl md:max-w-4xl mx-auto py-6 px-4 md:px-8">
+      <h1 className="text-3xl font-bold mb-6">Focus Timer Statistics</h1>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <SummaryCard title="Total sessions" value={summary.totalSessions} />
-        <SummaryCard title="Total time" value={`${Math.floor(summary.totalSeconds / 60)} minutes`} />
-        <SummaryCard title="This week's session" value={summary.weekSessions} />
-        <SummaryCard title="This week's time" value={`${Math.floor(summary.weekSeconds / 60)} minutes`} />
+        <SummaryCard title="Total focus time" value={formatDuration(summary.totalSeconds)} />
+        <SummaryCard title="Active days" value={summary.activeDays} />
+        <SummaryCard title="Streak days" value={summary.streakDays} />
+        <SummaryCard title="Average per session" value={`${summary.averageSessionMinutes} minutes`} />
+        <SummaryCard title="Sessions this week" value={summary.weekSessions} />
+        <SummaryCard title="Focus time this week" value={formatDuration(summary.weekSeconds)} />
       </div>
-
-      <div className="flex gap-4 items-center">
-        <select value={month} onChange={(e) => setMonth(Number(e.target.value))} className="p-2 border rounded">
+      <div className="flex flex-wrap gap-4 mb-6 items-center">
+        <select value={month} onChange={(e) => setMonth(Number(e.target.value))} className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
           {Array.from({ length: 12 }).map((_, i) => (
             <option key={i} value={i}>{`Month ${i + 1}`}</option>
           ))}
         </select>
-        <select value={year} onChange={(e) => setYear(Number(e.target.value))} className="p-2 border rounded">
+        <select value={year} onChange={(e) => setYear(Number(e.target.value))} className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
           {Array.from({ length: 5 }).map((_, i) => {
             const y = new Date().getFullYear() - i;
             return <option key={i} value={y}>{y}</option>;
           })}
         </select>
       </div>
-
+      {/* Calendar */}
       {renderCalendar()}
-
-      <Modal isOpen={!!selectedDate} onClose={() => setSelectedDate(null)}>
-        {selectedDate && (
-          <>
-            <h2 className="text-lg font-semibold mb-2">
-              Session on {format(new Date(selectedDate), 'dd/MM/yyyy')}
-            </h2>
-            <ul className="space-y-2">
-              {sessions
-                .filter((s) => s.start_time.startsWith(selectedDate))
-                .map((s) => {
-                  const start = new Date(s.start_time).toLocaleTimeString();
-                  const end = new Date(s.end_time).toLocaleTimeString();
-                  const duration = Math.floor(
-                    (new Date(s.end_time).getTime() - new Date(s.start_time).getTime()) / 60000
-                  );
-                  return (
-                    <li key={s._id} className="border-b pb-1">
-                      🕒 {start} - {end} ({duration} minutes)
-                    </li>
-                  );
-                })}
-            </ul>
-          </>
-        )}
-      </Modal>
-    </div>
-  );
-}
-
-function SummaryCard({ title, value }: { title: string; value: string | number }) {
-  return (
-    <div className="bg-white rounded-xl shadow p-4 text-center">
-      <div className="text-sm text-gray-500">{title}</div>
-      <div className="text-xl font-semibold">{value}</div>
+      {/* Charts */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div className="bg-white rounded-lg shadow p-4 flex flex-col">
+          <h2 className="font-semibold text-lg mb-2">Total focus time per day (Bar Chart)</h2>
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" />
+              <YAxis />
+              <ReTooltip />
+              <Bar dataKey="minutes" fill="#8884d8" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="bg-white rounded-lg shadow p-4 flex flex-col">
+          <h2 className="font-semibold text-lg mb-2">Active day ratio (Pie Chart)</h2>
+          <ResponsiveContainer width="100%" height={250}>
+            <PieChart>
+              <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+                {pieData.map((entry, idx) => (
+                  <Cell key={`cell-${idx}`} fill={COLORS[idx % COLORS.length]} />
+                ))}
+              </Pie>
+              <ReTooltip />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+      <div className="bg-white rounded-lg shadow p-4 mb-6">
+        <h2 className="font-semibold text-lg mb-2">Focus time trend (Line Chart)</h2>
+        <ResponsiveContainer width="100%" height={250}>
+          <LineChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="date" />
+            <YAxis />
+            <ReTooltip />
+            <Legend />
+            <Line type="monotone" dataKey="minutes" stroke="#8884d8" strokeWidth={2} />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+      {/* Modal: focus session details by day */}
+      <ViewFocustimeListModal
+        isOpen={!!selectedDate}
+        onClose={() => setSelectedDate(null)}
+        sessions={sessions.filter((s) => s.start_time.startsWith(selectedDate || ''))}
+        date={selectedDate}
+      />
     </div>
   );
 }

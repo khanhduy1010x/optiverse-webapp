@@ -40,7 +40,7 @@ export default function DurationPickerModal({ onClose, onSetDuration }: Props) {
         className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm relative"
       >
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">Choice Your Focus Time:</h3>
+          <h3 className="text-lg font-semibold">Choose Your Focus Time:</h3>
           {/* <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-700 text-xl font-bold"

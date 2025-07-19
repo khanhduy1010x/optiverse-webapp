@@ -19,6 +19,9 @@ export function useFocusTimerStatistic(month: number, year: number) {
     totalSeconds: 0,
     weekSessions: 0,
     weekSeconds: 0,
+    averageSessionMinutes: 0,
+    streakDays: 0,
+    activeDays: 0,
   });
 
   useEffect(() => {
@@ -45,6 +48,7 @@ export function useFocusTimerStatistic(month: number, year: number) {
 
     let weekSeconds = 0;
     let weekSessions = 0;
+    const activeDates = new Set<string>();
 
     sessions.forEach((session) => {
       const start = new Date(session.start_time);
@@ -53,6 +57,7 @@ export function useFocusTimerStatistic(month: number, year: number) {
       totalSeconds += duration;
       const key = start.toISOString().split('T')[0];
       dayMap[key] = (dayMap[key] || 0) + duration;
+      activeDates.add(key);
 
       if (start >= startOfWeek) {
         weekSeconds += duration;
@@ -65,13 +70,34 @@ export function useFocusTimerStatistic(month: number, year: number) {
       totalSeconds,
     }));
 
+    const averageSessionMinutes = sessions.length ? totalSeconds / 60 / sessions.length : 0;
+    const streakDays = calculateStreak([...activeDates]);
+
     setDayStats(dayStats);
     setSummary({
       totalSessions: sessions.length,
       totalSeconds,
       weekSessions,
       weekSeconds,
+      averageSessionMinutes: Math.round(averageSessionMinutes),
+      streakDays,
+      activeDays: activeDates.size,
     });
+  };
+
+  const calculateStreak = (dates: string[]): number => {
+    const sorted = dates.map((d) => new Date(d)).sort((a, b) => b.getTime() - a.getTime());
+    let streak = 0;
+    let current = new Date();
+    for (const d of sorted) {
+      if (d.toDateString() === current.toDateString()) {
+        streak++;
+        current.setDate(current.getDate() - 1);
+      } else {
+        break;
+      }
+    }
+    return streak;
   };
 
   return { dayStats, summary, sessions };

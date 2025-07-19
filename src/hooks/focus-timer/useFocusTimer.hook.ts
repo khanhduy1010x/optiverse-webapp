@@ -1,11 +1,11 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import focusService from '../../services/focus.service';
 
 type TimerMode = 'countup' | 'countdown';
 
 const STORAGE_KEY = 'focus_timer_state';
 
-function saveToStorage(data: any) {
+function saveToStorage(data: unknown) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
@@ -19,7 +19,7 @@ function loadFromStorage() {
   }
 }
 
-export function useFocusTimer(mode: TimerMode = 'countup') {
+export function useFocusTimer(mode: TimerMode = 'countup', onSessionSaved?: () => void) {
   const [seconds, setSeconds] = useState(0);
   const [duration, setDuration] = useState(0);
   const [remaining, setRemaining] = useState(0);
@@ -45,36 +45,61 @@ export function useFocusTimer(mode: TimerMode = 'countup') {
   };
 
   const saveFocusSession = async (start: Date, end: Date) => {
-    await focusService.createFocusTimer({ start_time: start, end_time: end });
+    try {
+      await focusService.createFocusTimer({ start_time: start, end_time: end });
+      console.log('Session saved!', start, end);
+      if (onSessionSaved) onSessionSaved();
+    } catch (e) {
+      console.log('Error saving session:', e);
+    }
   };
 
-  // Auto restore
+  // Restore state
   useEffect(() => {
     const saved = loadFromStorage();
-    if (!saved) return;
+    if (!saved || saved.mode !== mode || !saved.isRunning) return;
 
-    const { isRunning, mode: savedMode, startTime, duration, paused, lastTime } = saved;
-    if (!isRunning || savedMode !== mode) return;
+    const {
+      startTime,
+      duration: savedDuration,
+      remaining: savedRemaining,
+      seconds: savedSeconds,
+      paused: savedPaused,
+    } = saved;
 
-    const now = new Date().getTime();
-    const start = new Date(startTime);
-    const elapsed = Math.floor((now - new Date(lastTime).getTime()) / 1000);
+    const now = Date.now();
+    const startedAt = new Date(startTime).getTime();
+    const elapsed = Math.floor((now - startedAt) / 1000);
 
-    startTimeRef.current = start;
+    startTimeRef.current = new Date(startTime);
     setIsRunning(true);
-    setIsPaused(paused);
+    setIsPaused(savedPaused);
 
     if (mode === 'countup') {
-      setSeconds(saved.seconds + (paused ? 0 : elapsed));
+      setSeconds(savedPaused ? savedSeconds : savedSeconds + elapsed);
     } else {
-      durationRef.current = duration;
-      setDuration(duration);
-      setRemaining(Math.max(0, saved.remaining - (paused ? 0 : elapsed)));
+      durationRef.current = savedDuration;
+      setDuration(savedDuration);
+
+      const newRemaining = savedPaused
+        ? savedRemaining
+        : savedDuration - elapsed;
+
+      if (newRemaining <= 0) {
+        clear();
+        setIsRunning(false);
+        localStorage.removeItem(STORAGE_KEY);
+      } else {
+        setRemaining(newRemaining);
+      }
     }
   }, []);
 
   useEffect(() => {
     if (!isRunning || isPaused) return;
+
+    // Clear interval trước khi tạo mới
+    if (intervalRef.current) clearInterval(intervalRef.current);
 
     if (mode === 'countup') {
       intervalRef.current = window.setInterval(() => {
@@ -86,7 +111,6 @@ export function useFocusTimer(mode: TimerMode = 'countup') {
             startTime: startTimeRef.current?.toISOString(),
             seconds: updated,
             paused: false,
-            lastTime: new Date().toISOString(),
           });
           return updated;
         });
@@ -94,32 +118,31 @@ export function useFocusTimer(mode: TimerMode = 'countup') {
     } else {
       intervalRef.current = window.setInterval(() => {
         setRemaining((prev) => {
-          const next = prev - 1;
-          if (next <= 0) {
+          const updated = prev - 1;
+          if (updated <= 0) {
             clear();
             setIsRunning(false);
-            const end = new Date();
-            if (startTimeRef.current) saveFocusSession(startTimeRef.current, end);
+            if (startTimeRef.current) saveFocusSession(startTimeRef.current, new Date());
             localStorage.removeItem(STORAGE_KEY);
             return 0;
           }
-
           saveToStorage({
             isRunning: true,
             mode,
             startTime: startTimeRef.current?.toISOString(),
             duration: durationRef.current,
-            remaining: next,
+            remaining: updated,
             paused: false,
-            lastTime: new Date().toISOString(),
           });
-
-          return next;
+          return updated;
         });
       }, 1000);
     }
 
-    return clear;
+    // Cleanup interval khi unmount hoặc khi deps thay đổi
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
   }, [isRunning, isPaused, mode]);
 
   const start = () => {
@@ -136,7 +159,6 @@ export function useFocusTimer(mode: TimerMode = 'countup') {
         startTime: now.toISOString(),
         seconds: 0,
         paused: false,
-        lastTime: now.toISOString(),
       });
     } else {
       setRemaining(duration);
@@ -147,7 +169,6 @@ export function useFocusTimer(mode: TimerMode = 'countup') {
         duration: durationRef.current,
         remaining: duration,
         paused: false,
-        lastTime: now.toISOString(),
       });
     }
   };
@@ -155,11 +176,10 @@ export function useFocusTimer(mode: TimerMode = 'countup') {
   const pause = () => {
     setIsPaused(true);
     clear();
-    const now = new Date().toISOString();
 
     const saved = loadFromStorage();
     if (saved) {
-      saveToStorage({ ...saved, paused: true, lastTime: now });
+      saveToStorage({ ...saved, paused: true });
     }
   };
 
@@ -177,46 +197,22 @@ export function useFocusTimer(mode: TimerMode = 'countup') {
     localStorage.removeItem(STORAGE_KEY);
   };
 
-  const performStop = async () => {
-    const now = new Date();
+  const stop = () => {
+    pause(); // Dừng ngay lập tức
     if (startTimeRef.current) {
-      await saveFocusSession(startTimeRef.current, now);
+      saveFocusSession(startTimeRef.current, new Date());
     }
-    performReset();
+    setPendingAction('stop');
   };
 
-  // const stop = () => {
-  //   // Thực hiện lưu thời gian ngay khi bấm Stop
-  //   const now = new Date();
-  //   if (startTimeRef.current) {
-  //     saveFocusSession(startTimeRef.current, now);
-  //   }
-  //   setPendingAction('stop');
-  // };
-
-  //stop có thể dừng đồng hồ
-  const stop = () => {
-  pause(); // Dừng ngay lập tức khi mở modal xác nhận
-
-  // Lưu thời điểm nhấn stop (trước xác nhận)
-  const now = new Date();
-  if (startTimeRef.current) {
-    saveFocusSession(startTimeRef.current, now);
-  }
-
-  setPendingAction('stop');
-};
-
-  const confirmAction = async () => {
-    if (pendingAction === 'stop') {
-      performReset(); // Đã lưu session rồi khi bấm Stop
-    } else if (pendingAction === 'reset') {
-      performReset();
-    }
+  const confirmAction = () => {
+    if (pendingAction === 'stop') performReset();
+    if (pendingAction === 'reset') performReset();
     setPendingAction(null);
   };
 
   const cancelAction = () => {
+    if (pendingAction === 'stop') resume();
     setPendingAction(null);
   };
 
