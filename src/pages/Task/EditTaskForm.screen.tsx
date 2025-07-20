@@ -145,9 +145,9 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
 
   const handleSave = async () => {
     // Validate form before submission
-    if (!validateForm()) {
-      return;
-    }
+    // if (!validateForm()) {
+    //   return;
+    // }
 
     try {
       setIsSubmitting(true);
@@ -177,7 +177,7 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
         description,
         status,
         priority,
-      tags: selectedTags,
+        tags: selectedTags,
         start_time,
         end_time
       });
