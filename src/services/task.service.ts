@@ -95,10 +95,9 @@ class TaskService {
       console.log('Updating task with data:', formattedData);
       console.log('Using task ID:', taskId);
       
-      // Sửa URL endpoint để phù hợp với controller
-      // Thử sử dụng URL không có dấu / ở đầu
+      // Sử dụng URL endpoint đúng format với dấu / ở đầu
       const response = await api.put<ApiResponse<{ task: Task }>>(
-        `productivity/task/${taskId}`,
+        `/productivity/task/${taskId}`,
         formattedData,
         { timeout: 10000 } // Timeout 10 giây
       );

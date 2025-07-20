@@ -374,12 +374,15 @@ const TaskPage: React.FC = () => {
     start_time?: string | Date;
     end_time?: string | Date;
   }) => {
-    if (!taskToEdit) return;
+    if (!taskToEdit) {
+      console.error('No task to edit');
+      return false;
+    }
 
     try {
       setLoading(true);
       
-      // Chuyển đổi status và priority để phù hợp với kiểu dữ liệu của Task
+      // Format data for API update
       const dataToUpdate = {
         title: updatedTask.title,
         description: updatedTask.description,
@@ -398,13 +401,9 @@ const TaskPage: React.FC = () => {
       };
 
       console.log('Updating task with formatted data:', dataToUpdate);
-      console.log('Original dates from form:', {
-        start_time: updatedTask.start_time,
-        end_time: updatedTask.end_time
-      });
       console.log('Task ID for update:', taskToEdit._id);
 
-      // Cập nhật UI trước (optimistic update)
+      // Optimistic UI update
       setTasks(prevTasks => {
         const updatedTasks = prevTasks.map(task =>
           task._id === taskToEdit._id ? { ...task, ...dataToUpdate } : task
@@ -412,38 +411,51 @@ const TaskPage: React.FC = () => {
         return sortTasksWithCompletedAtBottom(updatedTasks);
       });
 
-      try {
-        // Gọi API cập nhật
-        const response = await taskService.updateTask(taskToEdit._id, dataToUpdate);
+      // Call API to update task
+      const response = await taskService.updateTask(taskToEdit._id, dataToUpdate);
+      
+      if (response && response.data && response.data.task) {
+        console.log('Task updated successfully:', response.data.task);
         
-        if (response && response.data && response.data.task) {
-          console.log('Task updated successfully:', response.data.task);
-          
-          // Cập nhật tags nếu cần
-          if (updatedTask.tags && updatedTask.tags.length > 0) {
-            const currentTags = taskTags[taskToEdit._id] || [];
-            await updateTaskTags(taskToEdit._id, updatedTask.tags, currentTags);
-          }
-          
-          // Làm mới dữ liệu
-          await fetchTasksAndCheckOverdue();
-          return true;
-        } else {
-          // Nếu API không trả về kết quả như mong đợi
-          console.error('API response is invalid:', response);
-          await fetchTasksAndCheckOverdue();
-          throw new Error('Failed to update task: Invalid response');
+        // Update tags if needed
+        if (updatedTask.tags && updatedTask.tags.length > 0) {
+          const currentTags = taskTags[taskToEdit._id] || [];
+          await updateTaskTags(taskToEdit._id, updatedTask.tags, currentTags);
         }
-      } catch (apiError: any) {
-        console.error('API call failed:', apiError);
-        if (apiError.response) {
-          console.error('Error response:', apiError.response.status, apiError.response.data);
-        }
-        throw apiError;
+        
+        // Refresh data and update task streak
+        await fetchTasksAndCheckOverdue();
+        await updateTaskStreak();
+        
+        return true;
+      } else {
+        console.error('API response is invalid:', response);
+        // Revert optimistic update on failure
+        await fetchTasksAndCheckOverdue();
+        throw new Error('Failed to update task: Invalid response');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to update task:', error);
-      alert('Failed to update task. Please try again.');
+      
+      // Revert optimistic update on error
+      await fetchTasksAndCheckOverdue();
+      
+      // Show user-friendly error message
+      if (error.response) {
+        console.error('Error response:', error.response.status, error.response.data);
+        if (error.response.status === 404) {
+          alert('Task not found. It may have been deleted.');
+        } else if (error.response.status === 400) {
+          alert('Invalid task data. Please check your input.');
+        } else if (error.response.status >= 500) {
+          alert('Server error. Please try again later.');
+        } else {
+          alert('Failed to update task. Please try again.');
+        }
+      } else {
+        alert('Network error. Please check your connection and try again.');
+      }
+      
       return false;
     } finally {
       setLoading(false);
@@ -632,7 +644,14 @@ const TaskPage: React.FC = () => {
       {showEditTaskForm && taskToEdit && (
         <EditTaskForm
           onClose={() => setShowEditTaskForm(false)}
-          onSave={(updatedTask) => handleUpdateTask(updatedTask)}
+          onSave={async (updatedTask) => {
+            const result = await handleUpdateTask(updatedTask);
+            if (result) {
+              setShowEditTaskForm(false); // Đóng form khi lưu thành công
+              return true;
+            }
+            return false;
+          }}
           task={taskToEdit}
           title={title}
           setTitle={setTitle}
