@@ -42,50 +42,132 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
       alert('Repeat type is required.');
       return;
     }
-    const startTimeISO = (formData.start_time instanceof Date)
-      ? formData.start_time.toISOString()
-      : new Date(formData.start_time).toISOString();
-    const endTimeISO = formData.end_time
-      ? (formData.end_time instanceof Date ? formData.end_time.toISOString() : new Date(formData.end_time).toISOString())
-      : undefined;
-    const mergedDescription = [
-      (formData.guests?.join(', ') || '').trim(),
-      (formData.location || '').trim(),
-      (formData.description || '').trim()
-    ].filter(Boolean).join('\n');
-    const guestsArr = Array.isArray(formData.guests) ? formData.guests.filter(g => !!g && g.trim()) : [];
-    const locationVal = formData.location || '';
+
+    // Lấy thời gian bắt đầu/kết thúc mẫu
+    const startTime = new Date(formData.start_time);
+    const endTime = formData.end_time ? new Date(formData.end_time) : null;
+    const mergedDescription = (formData.description || '').trim();
     const colorVal = selectedColor || '#3B82F6';
-    const payload = getCreatePayload();
-    payload.title = formData.title.trim();
-    payload.task_id = taskId;
-    payload.start_time = startTimeISO;
-    payload.end_time = endTimeISO;
-    payload.description = mergedDescription;
-    payload.guests = guestsArr;
-    payload.location = locationVal;
-    payload.color = colorVal;
-    if ((payload.repeat_type === 'weekly' || payload.repeat_type === 'custom') && 
-        (!payload.repeat_days || payload.repeat_days.length === 0)) {
-      payload.repeat_days = [new Date(formData.start_time).getDay()];
+
+    // Lấy khoảng lặp lại
+    // const repeatFrom = formData.repeat_from;
+    const repeatTo = formData.repeat_to;
+    const repeatType = formData.repeat_type;
+
+    // Helper tạo event
+    const createEvent = async (date: Date) => {
+      const eventStart = new Date(date);
+      eventStart.setHours(startTime.getHours(), startTime.getMinutes(), 0, 0);
+      let eventEnd: Date | undefined = undefined;
+      if (endTime) {
+        eventEnd = new Date(date);
+        eventEnd.setHours(endTime.getHours(), endTime.getMinutes(), 0, 0);
+      }
+      const payload = {
+        task_id: taskId,
+        title: formData.title.trim(),
+        start_time: eventStart,
+        end_time: eventEnd,
+        description: mergedDescription,
+        repeat_type: repeatType as import('../../types/task-events/task-events.types').RepeatType,
+        color: colorVal
+      };
+      await createTaskEvent(payload);
+    };
+
+    // Helper: chuyển repeat_to dạng week (YYYY-Www) thành ngày cuối tuần (chủ nhật)
+    function getDateOfISOWeek(isoWeekString: string) {
+      if (!isoWeekString) return undefined;
+      const [yearStr, weekStr] = isoWeekString.split('-W');
+      const year = Number(yearStr);
+      const week = Number(weekStr);
+      if (!year || !week) return undefined;
+      const simple = new Date(year, 0, 1 + (week - 1) * 7);
+      const dow = simple.getDay();
+      const ISOweekStart = new Date(simple);
+      if (dow <= 4)
+        ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
+      else
+        ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
+      // Ngày cuối tuần (chủ nhật)
+      const ISOweekEnd = new Date(ISOweekStart);
+      ISOweekEnd.setDate(ISOweekStart.getDate() + 6);
+      return ISOweekEnd;
     }
-    if (payload.repeat_end_type === undefined) payload.repeat_end_type = 'never';
-    if (payload.repeat_interval === undefined) payload.repeat_interval = 1;
-    if (payload.repeat_end_type === 'on' && !payload.repeat_end_date) {
-      const defaultEndDate = new Date(formData.start_time);
-      defaultEndDate.setMonth(defaultEndDate.getMonth() + 3);
-      payload.repeat_end_date = defaultEndDate.toISOString();
-    } else if (payload.repeat_end_type === 'after' && !payload.repeat_occurrences) {
-      payload.repeat_occurrences = 10;
+
+    // Xử lý từng loại lặp lại
+    if (repeatType !== 'none' && formData.start_time && repeatTo) {
+      if (repeatType === 'daily') {
+        let cur = new Date(formData.start_time);
+        let end = new Date(repeatTo);
+        cur.setHours(0,0,0,0);
+        end.setHours(0,0,0,0);
+        while (cur <= end) {
+          let eventDate = new Date(cur);
+          eventDate.setHours(startTime.getHours(), startTime.getMinutes(), 0, 0);
+          await createEvent(eventDate);
+          cur.setDate(cur.getDate() + 1);
+        }
+      } else if (repeatType === 'weekly') {
+        let cur = new Date(formData.start_time);
+        let end = getDateOfISOWeek(repeatTo) || new Date(formData.start_time);
+        cur.setHours(0,0,0,0);
+        end.setHours(0,0,0,0);
+        const targetDay = startTime.getDay();
+        if (cur <= end && cur.getDay() === targetDay) {
+          let eventDate = new Date(cur);
+          eventDate.setHours(startTime.getHours(), startTime.getMinutes(), 0, 0);
+          await createEvent(eventDate);
+        }
+        cur.setDate(cur.getDate() + ((7 + targetDay - cur.getDay()) % 7 || 7));
+        while (cur <= end) {
+          let eventDate = new Date(cur);
+          eventDate.setHours(startTime.getHours(), startTime.getMinutes(), 0, 0);
+          await createEvent(eventDate);
+          cur.setDate(cur.getDate() + 7);
+        }
+      } else if (repeatType === 'monthly') {
+        let cur = new Date(formData.start_time);
+        let end = new Date(repeatTo);
+        cur.setHours(0,0,0,0);
+        end.setHours(0,0,0,0);
+        const targetDate = startTime.getDate();
+        let month = cur.getMonth();
+        let year = cur.getFullYear();
+        while (true) {
+          let eventDate = new Date(year, month, targetDate, startTime.getHours(), startTime.getMinutes(), 0, 0);
+          if (eventDate > end) break;
+          if (eventDate.getDate() === targetDate && eventDate >= cur && eventDate <= end) {
+            await createEvent(eventDate);
+          }
+          month++;
+          if (month > 11) { month = 0; year++; }
+        }
+      } else if (repeatType === 'yearly') {
+        let cur = new Date(formData.start_time);
+        let end = new Date(repeatTo);
+        cur.setHours(0,0,0,0);
+        end.setHours(0,0,0,0);
+        const month = startTime.getMonth();
+        const date = startTime.getDate();
+        let year = cur.getFullYear();
+        const endYear = end.getFullYear();
+        while (year <= endYear) {
+          let eventDate = new Date(year, month, date, startTime.getHours(), startTime.getMinutes(), 0, 0);
+          if (eventDate.getDate() === date && eventDate >= cur && eventDate <= end) {
+            await createEvent(eventDate);
+          }
+          year++;
+        }
+      }
+    } else {
+      // Không lặp hoặc custom, tạo 1 event
+      await createEvent(startTime);
     }
-    const result = await createTaskEvent(payload);
-    if (result) {
+
       resetForm();
       onSuccess();
       onClose();
-    } else {
-      alert('Could not save event. Please try again later.');
-    }
   };
 
   if (!isOpen) return null;
@@ -111,7 +193,9 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
         {/* Ngày bắt đầu/kết thúc */}
         <div className="flex items-center gap-2 mb-2">
           <div className="flex flex-col flex-1">
+            <label className="text-xs text-gray-500 mb-1" htmlFor="start-date">Start Date</label>
             <input
+              id="start-date"
               type="date"
               value={formData.start_time ? new Date(formData.start_time).toISOString().slice(0, 10) : ''}
               onChange={e => {
@@ -124,26 +208,14 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
               placeholder="Start date"
             />
           </div>
-          <span className="text-gray-400 mt-6">-</span>
-          <div className="flex flex-col flex-1">
-            <input
-              type="date"
-              value={formData.end_time ? new Date(formData.end_time).toISOString().slice(0, 10) : ''}
-              onChange={e => {
-                const date = new Date(e.target.value);
-                const prev = new Date(formData.end_time ?? Date.now());
-                date.setHours(prev.getHours(), prev.getMinutes());
-                handleInputChange('end_time', date);
-              }}
-              className="border border-gray-200 rounded-md p-1.5 text-sm"
-              placeholder="End date"
-            />
-          </div>
+          {/* Đã xoá End Date ở đây */}
         </div>
         {/* Thời gian bắt đầu/kết thúc */}
         <div className="flex items-center gap-2 mb-2">
           <div className="flex flex-col flex-1">
+            <label className="text-xs text-gray-500 mb-1" htmlFor="start-time">Start Time</label>
             <input
+              id="start-time"
               type="time"
               value={(() => { try { return formData.start_time ? new Date(formData.start_time).toTimeString().slice(0, 5) : ''; } catch { return ''; } })()}
               onChange={e => {
@@ -158,7 +230,9 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
           </div>
           <span className="text-gray-400 mt-6">-</span>
           <div className="flex flex-col flex-1">
+            <label className="text-xs text-gray-500 mb-1" htmlFor="end-time">End Time</label>
             <input
+              id="end-time"
               type="time"
               value={(() => { try { return formData.end_time ? new Date(formData.end_time).toTimeString().slice(0, 5) : ''; } catch { return ''; } })()}
               onChange={e => {
@@ -239,32 +313,54 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
             </div>
           )}
         </div>
-        {/* Chọn màu */}
-        <div className="flex items-center gap-2 mb-4 mt-2">
-          {[['#3B82F6', 'Blue'], ['#F87171', 'Red'], ['#FBBF24', 'Yellow'], ['#10B981', 'Green'], ['#A78BFA', 'Purple']].map(([color, label]) => (
-            <div
-              key={color}
-              className={`w-6 h-6 rounded-full cursor-pointer border-2 border-white shadow-md flex items-center justify-center transition-transform duration-200 ${selectedColor === color ? 'ring-4 ring-blue-200 scale-110' : 'hover:scale-105'}`}
-              style={{ backgroundColor: color }}
-              onClick={() => setSelectedColor(color)}
-              title={label}
-            ></div>
-          ))}
-        </div>
-        {/* Add Guest */}
-        <textarea
-          placeholder="Add Guest"
-          value={formData.guests?.join(', ') || ''}
-          onChange={e => handleInputChange('guests', e.target.value.split(',').map(g => g.trim()))}
-          className="w-full border-0 border-b border-gray-200 py-2 focus:outline-none focus:ring-0 text-sm mb-2 resize-none min-h-[32px]"
+        {/* Chọn khoảng thời gian lặp lại */}
+        {(formData.repeat_type === 'daily' || formData.repeat_type === 'weekly' || formData.repeat_type === 'monthly' || formData.repeat_type === 'yearly') && (
+          <div className="flex gap-2 mb-2">
+            <div className="flex flex-col flex-1">
+              <label className="text-xs text-gray-500 mb-1">
+                {formData.repeat_type === 'daily' && 'To Date'}
+                {formData.repeat_type === 'weekly' && 'To Week'}
+                {formData.repeat_type === 'monthly' && 'To Month'}
+                {formData.repeat_type === 'yearly' && 'To Year'}
+              </label>
+              {formData.repeat_type === 'daily' && (
+                <input
+                  type="date"
+                  value={formData.repeat_to || ''}
+                  onChange={e => handleInputChange('repeat_to', e.target.value)}
+                  className="border border-gray-200 rounded-md p-1.5 text-sm"
+                />
+              )}
+              {formData.repeat_type === 'weekly' && (
+                <input
+                  type="week"
+                  value={formData.repeat_to || ''}
+                  onChange={e => handleInputChange('repeat_to', e.target.value)}
+                  className="border border-gray-200 rounded-md p-1.5 text-sm"
+                />
+              )}
+              {formData.repeat_type === 'monthly' && (
+                <input
+                  type="month"
+                  value={formData.repeat_to || ''}
+                  onChange={e => handleInputChange('repeat_to', e.target.value)}
+                  className="border border-gray-200 rounded-md p-1.5 text-sm"
         />
-        {/* Location/URL */}
-        <textarea
-          placeholder="https://meet.google.com/abc"
-          value={formData.location || ''}
-          onChange={e => handleInputChange('location', e.target.value)}
-          className="w-full border-0 border-b border-gray-200 py-2 focus:outline-none focus:ring-0 text-sm mb-2 resize-none min-h-[32px]"
+              )}
+              {formData.repeat_type === 'yearly' && (
+                <input
+                  type="number"
+                  min={new Date().getFullYear()}
+                  max={2100}
+                  value={formData.repeat_to || ''}
+                  onChange={e => handleInputChange('repeat_to', e.target.value)}
+                  className="border border-gray-200 rounded-md p-1.5 text-sm"
+                  placeholder="Year"
         />
+              )}
+            </div>
+          </div>
+        )}
         {/* Description */}
         <textarea
           placeholder="Add description"
