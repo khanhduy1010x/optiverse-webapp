@@ -109,42 +109,16 @@ export const UpdateTaskEventModalForm: React.FC<UpdateTaskEventModalFormProps> =
           className="w-full border-0 border-b border-gray-200 py-2 mb-2 focus:outline-none focus:ring-0 focus:border-blue-400 placeholder-gray-400 text-base bg-blue-50/30 rounded-t-xl transition-all"
           autoFocus
         />
-        {/* Ngày bắt đầu/kết thúc */}
-        <div className="flex items-center gap-2 mb-2">
-          <div className="flex flex-col flex-1">
-            <input
-              type="date"
-              value={formData.start_time ? new Date(formData.start_time).toISOString().slice(0, 10) : ''}
-              onChange={e => {
-                const date = new Date(e.target.value);
-                const prev = new Date(formData.start_time ?? Date.now());
-                date.setHours(prev.getHours(), prev.getMinutes());
-                handleInputChange('start_time', date);
-              }}
-              className="border border-gray-200 rounded-md p-1.5 text-sm"
-              placeholder="Start date"
-            />
-          </div>
-          <span className="text-gray-400 mt-6">-</span>
-          <div className="flex flex-col flex-1">
-            <input
-              type="date"
-              value={formData.end_time ? new Date(formData.end_time).toISOString().slice(0, 10) : ''}
-              onChange={e => {
-                const date = new Date(e.target.value);
-                const prev = new Date(formData.end_time ?? Date.now());
-                date.setHours(prev.getHours(), prev.getMinutes());
-                handleInputChange('end_time', date);
-              }}
-              className="border border-gray-200 rounded-md p-1.5 text-sm"
-              placeholder="End date"
-            />
-          </div>
+        {/* Hiển thị ngày của event */}
+        <div className="text-base text-gray-600 font-semibold mb-1 text-center">
+          {formData.start_time ? new Date(formData.start_time).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : ''}
         </div>
         {/* Thời gian bắt đầu/kết thúc */}
         <div className="flex items-center gap-2 mb-2">
           <div className="flex flex-col flex-1">
+            <label className="text-xs text-gray-500 mb-1" htmlFor="start-time">Start Time</label>
             <input
+              id="start-time"
               type="time"
               value={(() => { try { return formData.start_time ? new Date(formData.start_time).toTimeString().slice(0, 5) : ''; } catch { return ''; } })()}
               onChange={e => {
@@ -159,7 +133,9 @@ export const UpdateTaskEventModalForm: React.FC<UpdateTaskEventModalFormProps> =
           </div>
           <span className="text-gray-400 mt-6">-</span>
           <div className="flex flex-col flex-1">
+            <label className="text-xs text-gray-500 mb-1" htmlFor="end-time">End Time</label>
             <input
+              id="end-time"
               type="time"
               value={(() => { try { return formData.end_time ? new Date(formData.end_time).toTimeString().slice(0, 5) : ''; } catch { return ''; } })()}
               onChange={e => {
@@ -174,98 +150,6 @@ export const UpdateTaskEventModalForm: React.FC<UpdateTaskEventModalFormProps> =
             />
           </div>
         </div>
-        {/* Lặp lại */}
-        <div className="relative w-full mb-2">
-          <button
-            type="button"
-            onClick={() => setShowRepeatOptions(!showRepeatOptions)}
-            className="w-full text-left py-1 text-sm flex justify-between items-center border border-gray-200 rounded-md px-2"
-          >
-            <span>{formData.repeat_type === 'none' ? 'Does not repeat' : 
-                   formData.repeat_type === 'daily' ? 'Daily' :
-                   formData.repeat_type === 'weekly' ? 'Weekly' :
-                   formData.repeat_type === 'monthly' ? 'Monthly' :
-                   formData.repeat_type === 'yearly' ? 'Yearly' : 'Custom'}</span>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          {showRepeatOptions && (
-            <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
-              <div 
-                className="p-2 hover:bg-gray-100 cursor-pointer"
-                onClick={() => {
-                  handleInputChange('repeat_type', 'none');
-                  setShowRepeatOptions(false);
-                }}
-              >
-                Does not repeat
-              </div>
-              <div 
-                className="p-2 hover:bg-gray-100 cursor-pointer"
-                onClick={() => {
-                  handleInputChange('repeat_type', 'daily');
-                  setShowRepeatOptions(false);
-                }}
-              >
-                Daily
-              </div>
-              <div 
-                className="p-2 hover:bg-gray-100 cursor-pointer"
-                onClick={() => {
-                  handleInputChange('repeat_type', 'weekly');
-                  setShowRepeatOptions(false);
-                }}
-              >
-                Weekly
-              </div>
-              <div 
-                className="p-2 hover:bg-gray-100 cursor-pointer"
-                onClick={() => {
-                  handleInputChange('repeat_type', 'monthly');
-                  setShowRepeatOptions(false);
-                }}
-              >
-                Monthly
-              </div>
-              <div 
-                className="p-2 hover:bg-gray-100 cursor-pointer"
-                onClick={() => {
-                  handleInputChange('repeat_type', 'yearly');
-                  setShowRepeatOptions(false);
-                }}
-              >
-                Yearly
-              </div>
-            </div>
-          )}
-        </div>
-        {/* Chọn màu */}
-        <div className="flex items-center gap-2 mb-4 mt-2">
-          {[['#3B82F6', 'Blue'], ['#F87171', 'Red'], ['#FBBF24', 'Yellow'], ['#10B981', 'Green'], ['#A78BFA', 'Purple']].map(([color, label]) => (
-            <div
-              key={color}
-              className={`w-6 h-6 rounded-full cursor-pointer border-2 border-white shadow-md flex items-center justify-center transition-transform duration-200 ${selectedColor === color ? 'ring-4 ring-blue-200 scale-110' : 'hover:scale-105'}`}
-              style={{ backgroundColor: color }}
-              onClick={() => setSelectedColor(color)}
-              title={label}
-            ></div>
-          ))}
-        </div>
-        {/* Add Guest */}
-        <textarea
-          placeholder="Add Guest"
-          value={formData.guests?.join(', ') || ''}
-          onChange={e => handleInputChange('guests', e.target.value.split(',').map(g => g.trim()))}
-          className="w-full border-0 border-b border-gray-200 py-2 focus:outline-none focus:ring-0 text-sm mb-2 resize-none min-h-[32px]"
-        />
-        {/* Location/URL */}
-        <textarea
-          placeholder="https://meet.google.com/abc"
-          value={formData.location || ''}
-          onChange={e => handleInputChange('location', e.target.value)}
-          className="w-full border-0 border-b border-gray-200 py-2 focus:outline-none focus:ring-0 text-sm mb-2 resize-none min-h-[32px]"
-        />
         {/* Description */}
         <textarea
           placeholder="Add description"

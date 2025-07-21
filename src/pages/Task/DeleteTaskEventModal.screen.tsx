@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { TaskEvent } from '../../types/task-events/task-events.types';
 import { useTaskEventOperations } from '../../hooks/task-events/useTaskEventOperations.hook';
+import { useTaskEventList } from '../../hooks/task-events/useTaskEventList.hook';
 import Modal from 'react-modal';
 import { GROUP_CLASSNAMES } from '../../styles';
 
@@ -21,6 +22,7 @@ export const DeleteTaskEventModal: React.FC<DeleteTaskEventModalProps> = ({
 }) => {
   const { deleteTaskEvent, loading, error, setListOperations } = useTaskEventOperations();
   const [deleteOption, setDeleteOption] = useState<'this' | 'following' | 'all'>('this');
+  const { taskEvents, refreshTaskEvents } = useTaskEventList(taskEvent?.task_id || '');
   
   // Check if the event is part of a recurring series
   const isRecurring = taskEvent && (
@@ -42,28 +44,25 @@ export const DeleteTaskEventModal: React.FC<DeleteTaskEventModalProps> = ({
     if (!taskEvent) return;
     
     try {
-      // Delete the current event from the database
-      const success = await deleteTaskEvent(taskEvent._id);
-      
-      if (success) {
-        if (removeEvent) {
-          if (deleteOption === 'this') {
-            // Only delete this event
-            removeEvent(taskEvent._id);
-          } else if (deleteOption === 'all' && taskEvent.parent_event_id) {
-            // If deleting all events in the series, delete the parent event
-            removeEvent(taskEvent.parent_event_id);
-          } else if (deleteOption === 'all' && taskEvent.repeat_type !== 'none') {
-            // If this is the parent event and deleting all
-            removeEvent(taskEvent._id);
-          } else if (deleteOption === 'following') {
-            // Handle deleting this and following events (would need backend support)
-            removeEvent(taskEvent._id);
-          }
+      if (deleteOption === 'all') {
+        // Xóa tất cả event cùng series (cùng parent_event_id hoặc cùng repeat_type+title+task_id)
+        let eventsToDelete = [];
+        if (taskEvent.parent_event_id) {
+          eventsToDelete = taskEvents.filter(ev => ev.parent_event_id === taskEvent.parent_event_id || ev._id === taskEvent.parent_event_id);
+        } else {
+          // fallback: cùng repeat_type, title, task_id
+          eventsToDelete = taskEvents.filter(ev => ev.repeat_type === taskEvent.repeat_type && ev.title === taskEvent.title && ev.task_id === taskEvent.task_id);
         }
-        onSuccess();
-        onClose();
+        for (const ev of eventsToDelete) {
+          await deleteTaskEvent(ev._id);
+        }
+        refreshTaskEvents();
+      } else {
+        await deleteTaskEvent(taskEvent._id);
+        if (removeEvent) removeEvent(taskEvent._id);
       }
+      onSuccess();
+      onClose();
     } catch (err) {
       console.error('Error deleting event:', err);
     }
@@ -72,11 +71,11 @@ export const DeleteTaskEventModal: React.FC<DeleteTaskEventModalProps> = ({
   if (!isOpen || !taskEvent) return null;
 
   const formatEventTime = (date: Date | string) => {
-    return new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return new Date(date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
   };
 
   const formatEventDate = (date: Date | string) => {
-    return new Date(date).toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
+    return new Date(date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
   };
 
   return (
@@ -88,7 +87,7 @@ export const DeleteTaskEventModal: React.FC<DeleteTaskEventModalProps> = ({
     >
       <div className="p-6">
         <h2 className="text-xl font-medium mb-6">Delete recurring event</h2>
-        
+        {/* Luôn hiển thị lựa chọn nếu là recurring */}
         {isRecurring ? (
           <div className="mb-6">
             <div className="mb-4">
@@ -100,20 +99,8 @@ export const DeleteTaskEventModal: React.FC<DeleteTaskEventModalProps> = ({
                   onChange={() => setDeleteOption('this')}
                   className="form-radio h-5 w-5 text-blue-600"
                 />
-                <span className="text-gray-700">This event</span>
+                <span className="text-gray-700">Delete only this event</span>
               </label>
-              
-              <label className="flex items-center space-x-3 mb-3 cursor-pointer">
-                <input 
-                  type="radio" 
-                  name="deleteOption" 
-                  checked={deleteOption === 'following'} 
-                  onChange={() => setDeleteOption('following')}
-                  className="form-radio h-5 w-5 text-blue-600"
-                />
-                <span className="text-gray-700">This and following events</span>
-              </label>
-              
               <label className="flex items-center space-x-3 cursor-pointer">
                 <input 
                   type="radio" 
@@ -122,9 +109,12 @@ export const DeleteTaskEventModal: React.FC<DeleteTaskEventModalProps> = ({
                   onChange={() => setDeleteOption('all')}
                   className="form-radio h-5 w-5 text-blue-600"
                 />
-                <span className="text-gray-700">All events</span>
+                <span className="text-gray-700">Delete all events in this series</span>
               </label>
             </div>
+            <p className="text-gray-700 mt-4">
+              Are you sure you want to delete <span className="font-medium">{taskEvent.title}</span> on <span className="font-medium">{formatEventDate(taskEvent.start_time)}</span> at <span className="font-medium">{formatEventTime(taskEvent.start_time)}</span>?
+            </p>
           </div>
         ) : (
           <p className="text-gray-700 mb-6">
@@ -133,9 +123,7 @@ export const DeleteTaskEventModal: React.FC<DeleteTaskEventModalProps> = ({
             on <span className="font-medium">{formatEventDate(taskEvent.start_time)}</span> at <span className="font-medium">{formatEventTime(taskEvent.start_time)}</span>?
           </p>
         )}
-        
         {error && <p className="text-red-500 mb-4">{error}</p>}
-        
         <div className="flex justify-end space-x-3 mt-6">
           <button
             onClick={onClose}

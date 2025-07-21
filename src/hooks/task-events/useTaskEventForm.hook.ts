@@ -18,6 +18,8 @@ interface TaskEventFormState {
   location?: string;
   description?: string;
   guests: string[];
+  repeat_from?: string;
+  repeat_to?: string;
 }
 
 const initialState: TaskEventFormState = {
@@ -31,6 +33,8 @@ const initialState: TaskEventFormState = {
   repeat_days: [new Date().getDay()], // Current day of week
   repeat_end_type: 'never',
   guests: [],
+  repeat_from: undefined,
+  repeat_to: undefined,
 };
 
 export const useTaskEventForm = (taskEvent?: TaskEvent) => {
@@ -51,6 +55,8 @@ export const useTaskEventForm = (taskEvent?: TaskEvent) => {
           location: taskEvent.location,
           description: taskEvent.description,
           guests: taskEvent.guests || [],
+          repeat_from: (taskEvent as any).repeat_from || undefined,
+          repeat_to: (taskEvent as any).repeat_to || undefined,
         }
       : initialState
   );
