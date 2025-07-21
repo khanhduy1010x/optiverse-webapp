@@ -365,6 +365,13 @@ const TaskPage: React.FC = () => {
     applyFilters(filterStatus, allTags.filter(tag => tagIds.includes(tag._id)));
   };
 
+  // Đặt ngoài component TaskPage
+  const formatDateToISOString = (date: any) => {
+    if (!date) return undefined;
+    const d = typeof date === 'string' ? new Date(date) : new Date(date.getTime());
+    return d.toISOString();
+  };
+
   const handleUpdateTask = async (updatedTask: {
     title: string;
     description: string;
@@ -388,16 +395,8 @@ const TaskPage: React.FC = () => {
         description: updatedTask.description,
         status: updatedTask.status as 'pending' | 'completed' | 'overdue',
         priority: updatedTask.priority as 'low' | 'medium' | 'high',
-        start_time: updatedTask.start_time instanceof Date 
-          ? updatedTask.start_time.toISOString() 
-          : typeof updatedTask.start_time === 'string'
-            ? localDateTimeToISO(updatedTask.start_time)
-            : undefined,
-        end_time: updatedTask.end_time instanceof Date 
-          ? updatedTask.end_time.toISOString() 
-          : typeof updatedTask.end_time === 'string'
-            ? localDateTimeToISO(updatedTask.end_time)
-            : undefined
+        start_time: formatDateToISOString(updatedTask.start_time),
+        end_time: formatDateToISOString(updatedTask.end_time)
       };
 
       console.log('Updating task with formatted data:', dataToUpdate);
@@ -412,28 +411,28 @@ const TaskPage: React.FC = () => {
       });
 
       // Call API to update task
-      const response = await taskService.updateTask(taskToEdit._id, dataToUpdate);
-      
-      if (response && response.data && response.data.task) {
-        console.log('Task updated successfully:', response.data.task);
+        const response = await taskService.updateTask(taskToEdit._id, dataToUpdate);
         
+        if (response && response.data && response.data.task) {
+          console.log('Task updated successfully:', response.data.task);
+          
         // Update tags if needed
-        if (updatedTask.tags && updatedTask.tags.length > 0) {
-          const currentTags = taskTags[taskToEdit._id] || [];
-          await updateTaskTags(taskToEdit._id, updatedTask.tags, currentTags);
-        }
-        
+          if (updatedTask.tags && updatedTask.tags.length > 0) {
+            const currentTags = taskTags[taskToEdit._id] || [];
+            await updateTaskTags(taskToEdit._id, updatedTask.tags, currentTags);
+          }
+          
         // Refresh data and update task streak
-        await fetchTasksAndCheckOverdue();
+          await fetchTasksAndCheckOverdue();
         await updateTaskStreak();
         
-        return true;
-      } else {
-        console.error('API response is invalid:', response);
+          return true;
+        } else {
+          console.error('API response is invalid:', response);
         // Revert optimistic update on failure
-        await fetchTasksAndCheckOverdue();
-        throw new Error('Failed to update task: Invalid response');
-      }
+          await fetchTasksAndCheckOverdue();
+          throw new Error('Failed to update task: Invalid response');
+        }
     } catch (error: any) {
       console.error('Failed to update task:', error);
       
@@ -450,7 +449,7 @@ const TaskPage: React.FC = () => {
         } else if (error.response.status >= 500) {
           alert('Server error. Please try again later.');
         } else {
-          alert('Failed to update task. Please try again.');
+      alert('Failed to update task. Please try again.');
         }
       } else {
         alert('Network error. Please check your connection and try again.');
@@ -580,16 +579,14 @@ const TaskPage: React.FC = () => {
           onClose={() => setShowCreateTaskForm(false)}
           onSave={async (taskData) => {
             try {
-              console.log('Creating task with data:', taskData);
-
-              // Create the task first
+              
               const response = await taskService.createTask({
                 title: taskData.title || '',
                 description: taskData.description || '',
                 priority: taskData.priority as 'low' | 'medium' | 'high',
                 status: 'pending',
-                start_time: taskData.start_time instanceof Date ? taskData.start_time.toISOString() : localDateTimeToISO(taskData.start_time as string),
-                end_time: taskData.end_time instanceof Date ? taskData.end_time.toISOString() : localDateTimeToISO(taskData.end_time as string)
+                start_time: formatDateToISOString(taskData.start_time),
+                end_time: formatDateToISOString(taskData.end_time)
               });
 
               if (response && response._id) {
@@ -645,7 +642,7 @@ const TaskPage: React.FC = () => {
         <EditTaskForm
           onClose={() => setShowEditTaskForm(false)}
           onSave={async (updatedTask) => {
-            const result = await handleUpdateTask(updatedTask);
+            const result = await handleUpdateTask({...updatedTask, start_time: formatDateToISOString(updatedTask.start_time), end_time: formatDateToISOString(updatedTask.end_time)});
             if (result) {
               setShowEditTaskForm(false); // Đóng form khi lưu thành công
               return true;

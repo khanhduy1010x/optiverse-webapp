@@ -148,23 +148,23 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ tasks }) => {
       {showDropdown && (
         <div
           ref={dropdownRef}
-          className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg z-50 overflow-hidden border border-gray-200 dark:bg-gray-800 dark:border-gray-700"
+          className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg z-50 overflow-hidden border border-gray-200"
         >
-          <div className="p-3 border-b border-gray-200 dark:border-gray-700">
-            <h3 className="text-lg font-medium text-gray-800 dark:text-white">Task Notifications</h3>
+          <div className="p-4 bg-gray-100 rounded-t-md border-b-2 border-gray-300">
+            <h3 className="text-lg font-bold text-black">Task Notifications</h3>
           </div>
           <div className="max-h-96 overflow-y-auto">
             {notifications.length > 0 ? (
-              <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+              <ul className="divide-y divide-gray-200">
                 {notifications.map((notification) => (
-                  <li key={notification.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <li key={notification.id} className="p-4 hover:bg-gray-100">
                     <div className="flex items-start">
                       <div className={`flex-shrink-0 w-2 h-2 mt-2 rounded-full ${
                         notification.type === 'overdue' ? 'bg-red-500' : 'bg-yellow-500'
                       }`}></div>
                       <div className="ml-3 w-full">
                         <div className="flex justify-between items-start">
-                          <p className="text-sm font-medium text-gray-900 dark:text-white">
+                          <p className="text-sm font-medium text-black">
                             {notification.title}
                           </p>
                           <button 
@@ -182,7 +182,7 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ tasks }) => {
                         }`}>
                           {notification.message}
                         </p>
-                        <p className="text-xs text-gray-500 mt-1 flex items-center">
+                        <p className="text-xs text-gray-700 mt-1 flex items-center">
                           {notification.type === 'overdue' ? (
                             <FiAlertTriangle className="inline mr-1" />
                           ) : (
@@ -196,7 +196,7 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ tasks }) => {
                 ))}
               </ul>
             ) : (
-              <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+              <div className="p-4 text-center text-gray-500">
                 No notifications
               </div>
             )}

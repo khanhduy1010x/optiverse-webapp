@@ -95,69 +95,52 @@ export const DayView: React.FC<DayViewProps> = ({
         </div>
       </div>
 
-      {/* Lưới thời gian */}
-      <div className="flex-grow overflow-x-auto">
-        {hours.map((hour) => {
-          const isCurrentTimeHour = isCurrentHour(hour);
-          const isWorkingHour = hour >= 9 && hour <= 17; // 9 AM - 5 PM
-
-          return (
-            <div key={hour} className="flex border-b hover:bg-blue-50/30 group transition-colors min-w-[340px] md:min-w-0">
-              {/* Nhãn giờ */}
-              <div className="w-20 flex-shrink-0 border-r text-sm text-gray-600 p-2 sticky left-0 bg-white flex items-center justify-center select-none">
-                <span className="font-medium">
-                  {(() => {
-                    if (hour === 0) return '12 AM';
-                    if (hour < 12) return `${hour} AM`;
-                    if (hour === 12) return '12 PM';
-                    return `${hour - 12} PM`;
-                  })()}
-                </span>
-              </div>
-              {/* Ô cho giờ */}
-              <div 
-                className={`flex-1 h-24 relative transition-colors ${
-                  isCurrentTimeHour ? 'bg-blue-100/60' : 
-                  isWorkingHour ? 'bg-gray-50/70' : ''
-                }`}
-              >
-                {/* Đường chỉ thời gian hiện tại */}
-                {isCurrentTimeHour && (
-                  <div 
-                    className="absolute left-0 right-0 border-t-2 border-pink-500 z-10 animate-pulse"
-                    style={{
-                      top: `${(currentTime.getMinutes() / 60) * 100}%`,
-                    }}
-                  >
-                    <div className="absolute -left-1 -top-2.5 w-5 h-5 rounded-full bg-pink-500 shadow-md flex items-center justify-center">
-                      <div className="w-2 h-2 rounded-full bg-white"></div>
-                    </div>
-                  </div>
-                )}
-                {/* Container cho các sự kiện trong giờ này */}
-                <div className="absolute inset-0 p-1 flex flex-col gap-1">
-                  {taskEvents
-                    .filter(event => isEventInHour(event, hour))
-                    .map((event, eventIndex) => {
-                      try {
-                        return (
-                          <CalendarEvent
-                            key={event._id || eventIndex}
-                            event={event}
-                            onClick={() => handleEditEvent(event)}
-                            className="w-full block mb-1 rounded-xl shadow-md hover:scale-[1.03] transition-all duration-200"
-                          />
-                        );
-                      } catch (error) {
-                        console.error('Error rendering event:', error, event);
-                        return null;
-                      }
-                    })}
-                </div>
-              </div>
+      {/* Lưới thời gian dạng 1 cột, event absolute theo thời gian */}
+      <div className="flex-grow overflow-x-auto relative" style={{minWidth: 340}}>
+        {/* Cột giờ */}
+        <div className="absolute left-0 top-0 bottom-0 w-20 z-10">
+          {hours.map((hour) => (
+            <div key={hour} className="h-24 border-b border-r text-sm text-gray-600 p-2 bg-white flex items-center justify-center select-none">
+              <span className="font-medium">
+                {(() => {
+                  if (hour === 0) return '12 AM';
+                  if (hour < 12) return `${hour} AM`;
+                  if (hour === 12) return '12 PM';
+                  return `${hour - 12} PM`;
+                })()}
+              </span>
             </div>
-          );
-        })}
+          ))}
+        </div>
+        {/* Grid giờ */}
+        <div className="ml-20 relative h-[calc(24*6rem)]"> {/* 24h * 24px = 1440px, 1h=6rem=96px */}
+          {/* Các dòng giờ */}
+          {hours.map((hour) => (
+            <div key={hour} className="absolute left-0 right-0" style={{top: `${hour * 4.1667}%`, height: '96px', borderBottom: '1px solid #e5e7eb'}}></div>
+          ))}
+          {/* Render event dạng absolute */}
+          {taskEvents.map((event, idx) => {
+            const start = new Date(event.start_time);
+            const end = event.end_time ? new Date(event.end_time) : new Date(start.getTime() + 30*60000);
+            const startMinutes = start.getHours() * 60 + start.getMinutes();
+            const endMinutes = end.getHours() * 60 + end.getMinutes();
+            const top = (startMinutes / 1440) * 100; // 1440 phút 1 ngày
+            const height = Math.max(24, ((endMinutes - startMinutes) / 1440) * 100); // min 24px
+            return (
+              <div
+                key={event._id || idx}
+                className="absolute left-0 right-0 px-2"
+                style={{top: `${top}%`, height: `calc(${height}% + 1px)`, zIndex: 20}}
+              >
+                <CalendarEvent
+                  event={event}
+                  onClick={() => handleEditEvent(event)}
+                  className="w-full block mb-1 rounded-xl shadow-md hover:scale-[1.03] transition-all duration-200"
+                />
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

@@ -108,6 +108,7 @@ export const localDateTimeToISO = (dateTimeValue: string): string => {
     }
     
     // Create date object in local timezone
+    // Add seconds to ensure proper parsing
     const localDate = new Date(`${datePart}T${timePart}:00`);
     
     // Check if the date is valid
@@ -116,15 +117,23 @@ export const localDateTimeToISO = (dateTimeValue: string): string => {
       return '';
     }
     
+    // Get the timezone offset in minutes
+    const timezoneOffset = localDate.getTimezoneOffset();
+    
+    // Adjust the date to UTC by adding the timezone offset
+    const utcDate = new Date(localDate.getTime() + (timezoneOffset * 60 * 1000));
+    
     // Log for debugging
     console.log('Date conversion in localDateTimeToISO:', {
       input: dateTimeValue,
       localDate: localDate.toString(),
-      isoString: localDate.toISOString()
+      timezoneOffset,
+      utcDate: utcDate.toISOString(),
+      finalISO: utcDate.toISOString()
     });
     
-    // Convert to ISO string (will automatically handle timezone offset)
-    return localDate.toISOString();
+    // Return ISO string in UTC
+    return utcDate.toISOString();
   } catch (error) {
     console.error('Error converting date in localDateTimeToISO:', error);
     return '';
@@ -134,35 +143,15 @@ export const localDateTimeToISO = (dateTimeValue: string): string => {
 // Convert ISO string to local datetime-local input value
 export const isoToLocalDateTime = (isoString: string | Date): string => {
   if (!isoString) return '';
-  
   try {
-    // Convert to Date object if it's a string
     const date = typeof isoString === 'string' ? new Date(isoString) : isoString;
-    
-    // Check if date is valid
-    if (isNaN(date.getTime())) {
-      console.warn('Invalid date in isoToLocalDateTime:', isoString);
-      return '';
-    }
-    
-    // Format to local date-time string (YYYY-MM-DDThh:mm)
-    // This approach ensures we're using the local timezone correctly
+    if (isNaN(date.getTime())) return '';
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     const hours = String(date.getHours()).padStart(2, '0');
     const minutes = String(date.getMinutes()).padStart(2, '0');
-    
-    const formattedDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
-    
-    // Log for debugging
-    console.log('Date conversion in isoToLocalDateTime:', {
-      input: typeof isoString === 'string' ? isoString : isoString.toISOString(),
-      date: date.toString(),
-      formattedDateTime
-    });
-    
-    return formattedDateTime;
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
   } catch (error) {
     console.error('Error in isoToLocalDateTime:', error);
     return '';
@@ -339,3 +328,129 @@ export function isTaskOverdue(taskOrEndTime: any, status?: string): boolean {
   console.log("isOverdue:", isOverdue);
   return isOverdue;
 }
+
+// Format date for display in a user-friendly way
+export const formatDateForDisplay = (isoString: string | Date): string => {
+  if (!isoString) return '';
+  
+  try {
+    const date = typeof isoString === 'string' ? new Date(isoString) : isoString;
+    
+    if (isNaN(date.getTime())) {
+      return '';
+    }
+    
+    // Use Intl.DateTimeFormat for consistent formatting
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+    
+    return formatter.format(date);
+  } catch (error) {
+    console.error('Error formatting date for display:', error);
+    return '';
+  }
+};
+
+// Format date for display without time
+export const formatDateOnly = (isoString: string | Date): string => {
+  if (!isoString) return '';
+  
+  try {
+    const date = typeof isoString === 'string' ? new Date(isoString) : isoString;
+    
+    if (isNaN(date.getTime())) {
+      return '';
+    }
+    
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+    
+    return formatter.format(date);
+  } catch (error) {
+    console.error('Error formatting date only:', error);
+    return '';
+  }
+};
+
+// Format time only for display
+export const formatTimeOnly = (isoString: string | Date): string => {
+  if (!isoString) return '';
+  
+  try {
+    const date = typeof isoString === 'string' ? new Date(isoString) : isoString;
+    
+    if (isNaN(date.getTime())) {
+      return '';
+    }
+    
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+    
+    return formatter.format(date);
+  } catch (error) {
+    console.error('Error formatting time only:', error);
+    return '';
+  }
+};
+
+// Test function to validate date formatting
+export const testDateFormats = () => {
+  const testCases = [
+    '2025-07-20T08:30',
+    '2025-07-20T14:30',
+    '2025-12-31T23:59',
+    '2025-01-01T00:00'
+  ];
+  
+  console.log('=== Testing Date Format Functions ===');
+  
+  testCases.forEach(testCase => {
+    console.log(`\nTesting: ${testCase}`);
+    
+    const isoResult = localDateTimeToISO(testCase);
+    const localResult = isoToLocalDateTime(isoResult);
+    const displayResult = formatDateForDisplay(isoResult);
+    
+    console.log({
+      original: testCase,
+      toISO: isoResult,
+      backToLocal: localResult,
+      display: displayResult,
+      matches: testCase === localResult
+    });
+  });
+  
+  console.log('\n=== Date Format Test Complete ===');
+};
+
+// Validate ISO date string
+export const isValidISODate = (dateString: string): boolean => {
+  if (!dateString) return false;
+  
+  try {
+    const date = new Date(dateString);
+    return !isNaN(date.getTime()) && dateString.includes('T') && dateString.includes('Z');
+  } catch {
+    return false;
+  }
+};
+
+// Validate datetime-local format
+export const isValidDateTimeLocal = (dateString: string): boolean => {
+  if (!dateString) return false;
+  
+  const pattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
+  return pattern.test(dateString);
+};

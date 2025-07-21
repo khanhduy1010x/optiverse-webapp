@@ -55,43 +55,105 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
             newErrors.description = 'Description cannot exceed 150 characters';
         }
         
-        // Hàm helper để phân tích chuỗi ngày tháng từ input datetime-local
-        const parseDateTime = (dateTimeStr: string | Date): Date => {
-            if (!dateTimeStr) return new Date(0); // Invalid date
-            
-            if (dateTimeStr instanceof Date) return dateTimeStr;
-            
-            // Xử lý chuỗi datetime-local (YYYY-MM-DDThh:mm)
-            if (dateTimeStr.includes('T')) {
-                const [datePart, timePart] = dateTimeStr.split('T');
-                const [year, month, day] = datePart.split('-').map(Number);
-                const [hours, minutes] = timePart.split(':').map(Number);
+        // Validate times
+        if (start_time && end_time) {
+            try {
+                // Convert to Date objects, handling both string and Date types
+                const startDate = start_time instanceof Date ? start_time : new Date(start_time);
+                const endDate = end_time instanceof Date ? end_time : new Date(end_time);
                 
-                // JavaScript months are 0-based (0-11)
-                return new Date(year, month - 1, day, hours, minutes);
+                // Check if dates are valid
+                if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+                    newErrors.time = 'Invalid date format';
+                    setErrors(newErrors);
+                    return false;
+                }
+                
+                // Get current date without time (just date part) for fair comparison
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                
+                // Convert dates to date-only for comparison (ignore time)
+                const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+                const endDateOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+                
+                // Check if start date is in the past (date only)
+                if (startDateOnly < today) {
+                    newErrors.time = 'Start date cannot be in the past';
+                    setErrors(newErrors);
+                    return false;
+                }
+                
+                // Check if end date is before start date
+                if (endDate <= startDate) {
+                    newErrors.time = 'Deadline must be after start time';
+                    setErrors(newErrors);
+                    return false;
+                }
+            } catch (error) {
+                console.error('Error validating dates:', error);
+                newErrors.time = 'Invalid date format';
+                setErrors(newErrors);
+                return false;
             }
-            
-            return new Date(dateTimeStr);
-        };
-        
-        // Chuyển đổi thời gian
-        const startDate = start_time ? parseDateTime(start_time) : null;
-        const endDate = end_time ? parseDateTime(end_time) : null;
-        
-        // Kiểm tra thời gian - chỉ kiểm tra mối quan hệ giữa start_time và end_time
-        if (startDate && endDate) {
-            // Kiểm tra nếu ngày kết thúc <= ngày bắt đầu
-            if (endDate <= startDate) {
-                newErrors.time = 'Deadline must be after start time';
+        } else if (start_time) {
+            try {
+                const startDate = start_time instanceof Date ? start_time : new Date(start_time);
+                
+                if (isNaN(startDate.getTime())) {
+                    newErrors.time = 'Invalid start date format';
+                    setErrors(newErrors);
+                    return false;
+                }
+                
+                // Get current date without time
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+                
+                if (startDateOnly < today) {
+                    newErrors.time = 'Start date cannot be in the past';
+                    setErrors(newErrors);
+                    return false;
+                }
+            } catch (error) {
+                console.error('Error validating start date:', error);
+                newErrors.time = 'Invalid start date format';
+                setErrors(newErrors);
+                return false;
+            }
+        } else if (end_time) {
+            try {
+                const endDate = end_time instanceof Date ? end_time : new Date(end_time);
+                
+                if (isNaN(endDate.getTime())) {
+                    newErrors.time = 'Invalid end date format';
+                    setErrors(newErrors);
+                    return false;
+                }
+                
+                // Get current date without time
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                const endDateOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+                
+                if (endDateOnly < today) {
+                    newErrors.time = 'End date cannot be in the past';
+                    setErrors(newErrors);
+                    return false;
+                }
+            } catch (error) {
+                console.error('Error validating end date:', error);
+                newErrors.time = 'Invalid end date format';
+                setErrors(newErrors);
+                return false;
             }
         }
         
         // In ra log để debug
         console.log('Validation check:', {
             start_time,
-            startDate: startDate ? startDate.toString() : null,
             end_time,
-            endDate: endDate ? endDate.toString() : null,
             errors: newErrors
         });
         
@@ -108,13 +170,6 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
         try {
             setIsSubmitting(true);
             
-            // Log date values for debugging
-            console.log('CreateTaskForm - Date values before submission:', {
-                start_time_original: start_time,
-                start_time_formatted: start_time ? localDateTimeToISO(start_time as string) : undefined,
-                end_time_original: end_time,
-                end_time_formatted: end_time ? localDateTimeToISO(end_time as string) : undefined
-            });
             
             // Gọi hàm onSave và đợi kết quả
             const success = await onSave({

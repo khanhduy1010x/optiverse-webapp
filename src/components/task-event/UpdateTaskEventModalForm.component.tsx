@@ -1,28 +1,30 @@
 import React, { useState } from 'react';
 import Modal from 'react-modal';
+import { TaskEvent } from '../../types/task-events/task-events.types';
 import { useTaskEventForm } from '../../hooks/task-events/useTaskEventForm.hook';
 import { useTaskEventOperations } from '../../hooks/task-events/useTaskEventOperations.hook';
-import { TaskEvent } from '../../types/task-events/task-events.types';
 
-interface CreateTaskEventModalFormProps {
+interface UpdateTaskEventModalFormProps {
   isOpen: boolean;
   onClose: () => void;
   taskId: string;
+  taskEvent: TaskEvent;
   onSuccess: () => void;
-  addEvent?: (event: TaskEvent) => void;
+  updateEvent?: (eventId: string, event: TaskEvent) => void;
 }
 
-export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> = ({
+export const UpdateTaskEventModalForm: React.FC<UpdateTaskEventModalFormProps> = ({
   isOpen,
   onClose,
   taskId,
+  taskEvent,
   onSuccess,
-  addEvent
+  updateEvent
 }) => {
-  const { formData, handleInputChange, resetForm, getCreatePayload } = useTaskEventForm();
-  const { createTaskEvent, loading } = useTaskEventOperations();
+  const { formData, handleInputChange, resetForm, getUpdatePayload } = useTaskEventForm(taskEvent);
+  const { updateTaskEvent, loading } = useTaskEventOperations();
   const [showRepeatOptions, setShowRepeatOptions] = useState(false);
-  const [selectedColor, setSelectedColor] = useState('#3B82F6');
+  const [selectedColor, setSelectedColor] = useState(taskEvent.color || '#3B82F6');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,9 +58,8 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
     const guestsArr = Array.isArray(formData.guests) ? formData.guests.filter(g => !!g && g.trim()) : [];
     const locationVal = formData.location || '';
     const colorVal = selectedColor || '#3B82F6';
-    const payload = getCreatePayload();
+    const payload = getUpdatePayload();
     payload.title = formData.title.trim();
-    payload.task_id = taskId;
     payload.start_time = startTimeISO;
     payload.end_time = endTimeISO;
     payload.description = mergedDescription;
@@ -78,13 +79,13 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
     } else if (payload.repeat_end_type === 'after' && !payload.repeat_occurrences) {
       payload.repeat_occurrences = 10;
     }
-    const result = await createTaskEvent(payload);
+    const result = await updateTaskEvent(taskEvent._id, payload);
     if (result) {
       resetForm();
       onSuccess();
       onClose();
     } else {
-      alert('Could not save event. Please try again later.');
+      alert('Could not update event. Please try again later.');
     }
   };
 
