@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ViewTypeDropdown } from './ViewTypeDropdown.component';
 import { MiniCalendar } from './MiniCalendar.component';
+import { RefreshButton } from './RefreshButton.component';
 
 type ViewType = 'Day' | 'Week' | 'Month' | 'Year';
 
@@ -117,22 +118,25 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
         <select
           value={viewType}
           onChange={e => setViewType(e.target.value as any)}
-          className="px-3 py-2 rounded-lg border border-white/30 bg-white/20 backdrop-blur-sm text-white font-semibold focus:outline-none appearance-none cursor-pointer text-base md:text-lg"
-          style={{ backgroundImage: "url(\"data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 0.5rem center", backgroundSize: "1.5em 1.5em", paddingRight: "2.5rem" }}
+          className="px-4 py-2 rounded-xl border border-gray-300 bg-white text-gray-800 font-semibold shadow focus:outline-none appearance-none cursor-pointer text-base md:text-lg transition-all duration-150 hover:border-blue-400 focus:border-blue-500"
+          style={{ backgroundImage: "url(\"data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='gray' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 0.75rem center", backgroundSize: "1.5em 1.5em", paddingRight: "2.5rem" }}
         >
-          <option value="Day">Day</option>
-          <option value="Week">Week</option>
-          <option value="Month">Month</option>
+          <option value="Day" className="font-semibold">Day</option>
+          <option value="Week" className="font-semibold">Week</option>
+          <option value="Month" className="font-semibold">Month</option>
         </select>
-        <button
-          onClick={handleAddEvent}
-          className="px-6 py-3 bg-gradient-to-r from-yellow-400 to-pink-500 text-white rounded-xl font-bold shadow-lg hover:scale-105 hover:shadow-xl transition-all flex items-center gap-2 text-base md:text-lg border-2 border-white/20"
-        >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-          Add event
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleAddEvent}
+            className="px-6 py-3 bg-gradient-to-r from-yellow-400 to-pink-500 text-white rounded-xl font-bold shadow-lg hover:scale-105 hover:shadow-xl transition-all flex items-center gap-2 text-base md:text-lg border-2 border-white/20"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Add event
+          </button>
+          <RefreshButton onClick={handleToday} />
+        </div>
       </div>
     </div>
   );

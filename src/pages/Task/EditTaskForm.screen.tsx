@@ -90,6 +90,17 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
       general?: string;
     } = {};
     
+    // Debug logging
+    console.log('=== EditTaskForm Validation Debug ===');
+    console.log('Input values:', {
+      title,
+      description,
+      start_time,
+      end_time,
+      start_time_type: typeof start_time,
+      end_time_type: typeof end_time
+    });
+    
     // Validate title
     if (!title || !title.trim()) {
       newErrors.title = 'Title is required';
@@ -104,40 +115,162 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
     
     // Validate times
     if (start_time && end_time) {
-      const startDate = new Date(start_time);
-      const endDate = new Date(end_time);
+      try {
+        // Convert to Date objects, handling both string and Date types
+        const startDate = start_time instanceof Date ? start_time : new Date(start_time);
+        const endDate = end_time instanceof Date ? end_time : new Date(end_time);
+        
+        console.log('Date conversion:', {
+          start_time_original: start_time,
+          startDate: startDate.toString(),
+          startDate_valid: !isNaN(startDate.getTime()),
+          end_time_original: end_time,
+          endDate: endDate.toString(),
+          endDate_valid: !isNaN(endDate.getTime())
+        });
+        
+        // Check if dates are valid
+        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+          newErrors.time = 'Invalid date format';
+          console.log('Date validation failed: Invalid date format');
+          setErrors(newErrors);
+          return false;
+        }
+        
+        // Get current date without time (just date part) for fair comparison
       const now = new Date();
-      
-      // Check if dates are in the past
-      if (startDate < now) {
-        newErrors.time = 'Start time cannot be in the past';
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        
+        // Convert dates to date-only for comparison (ignore time)
+        const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+        const endDateOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+        
+        console.log('Date comparison:', {
+          now: now.toString(),
+          today: today.toString(),
+          startDateOnly: startDateOnly.toString(),
+          endDateOnly: endDateOnly.toString(),
+          startDateOnly_vs_today: startDateOnly < today,
+          endDateOnly_vs_today: endDateOnly < today,
+          endDate_vs_startDate: endDate <= startDate
+        });
+        
+        // Check if start date is in the past (date only)
+        if (startDateOnly < today) {
+          newErrors.time = 'Start date cannot be in the past';
+          console.log('Date validation failed: Start date in past');
+          setErrors(newErrors);
         return false;
       }
       
-      // Check if end time is after start time
+        // Check if end date is before start date
       if (endDate <= startDate) {
         newErrors.time = 'Deadline must be after start time';
+          console.log('Date validation failed: End date before start date');
+          setErrors(newErrors);
+          return false;
+        }
+        
+        console.log('Date validation passed for both dates');
+      } catch (error) {
+        console.error('Error validating dates:', error);
+        newErrors.time = 'Invalid date format';
+        setErrors(newErrors);
         return false;
       }
     } else if (start_time) {
-      const startDate = new Date(start_time);
+      try {
+        const startDate = start_time instanceof Date ? start_time : new Date(start_time);
+        
+        console.log('Start date only validation:', {
+          start_time_original: start_time,
+          startDate: startDate.toString(),
+          startDate_valid: !isNaN(startDate.getTime())
+        });
+        
+        if (isNaN(startDate.getTime())) {
+          newErrors.time = 'Invalid start date format';
+          console.log('Date validation failed: Invalid start date format');
+          setErrors(newErrors);
+          return false;
+        }
+        
+        // Get current date without time
       const now = new Date();
-      
-      // Check if start date is in the past
-      if (startDate < now) {
-        newErrors.time = 'Start time cannot be in the past';
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+        
+        console.log('Start date comparison:', {
+          now: now.toString(),
+          today: today.toString(),
+          startDateOnly: startDateOnly.toString(),
+          startDateOnly_vs_today: startDateOnly < today
+        });
+        
+        if (startDateOnly < today) {
+          newErrors.time = 'Start date cannot be in the past';
+          console.log('Date validation failed: Start date in past');
+          setErrors(newErrors);
+          return false;
+        }
+        
+        console.log('Start date validation passed');
+      } catch (error) {
+        console.error('Error validating start date:', error);
+        newErrors.time = 'Invalid start date format';
+        setErrors(newErrors);
         return false;
       }
     } else if (end_time) {
-      const endDate = new Date(end_time);
+      try {
+        const endDate = end_time instanceof Date ? end_time : new Date(end_time);
+        
+        console.log('End date only validation:', {
+          end_time_original: end_time,
+          endDate: endDate.toString(),
+          endDate_valid: !isNaN(endDate.getTime())
+        });
+        
+        if (isNaN(endDate.getTime())) {
+          newErrors.time = 'Invalid end date format';
+          console.log('Date validation failed: Invalid end date format');
+          setErrors(newErrors);
+          return false;
+        }
+        
+        // Get current date without time
       const now = new Date();
-      
-      // Check if end date is in the past
-      if (endDate < now) {
-        newErrors.time = 'Deadline cannot be in the past';
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const endDateOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+        
+        console.log('End date comparison:', {
+          now: now.toString(),
+          today: today.toString(),
+          endDateOnly: endDateOnly.toString(),
+          endDateOnly_vs_today: endDateOnly < today
+        });
+        
+        if (endDateOnly < today) {
+          newErrors.time = 'End date cannot be in the past';
+          console.log('Date validation failed: End date in past');
+          setErrors(newErrors);
+          return false;
+        }
+        
+        console.log('End date validation passed');
+      } catch (error) {
+        console.error('Error validating end date:', error);
+        newErrors.time = 'Invalid end date format';
+        setErrors(newErrors);
         return false;
       }
     }
+    
+    console.log('Final validation result:', {
+      errors: newErrors,
+      hasErrors: Object.keys(newErrors).length > 0
+    });
+    console.log('=== End Validation Debug ===');
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -145,9 +278,9 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
 
   const handleSave = async () => {
     // Validate form before submission
-    // if (!validateForm()) {
-    //   return;
-    // }
+    if (!validateForm()) {
+      return;
+    }
 
     try {
       setIsSubmitting(true);
@@ -177,7 +310,7 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
         description,
         status,
         priority,
-        tags: selectedTags,
+      tags: selectedTags,
         start_time,
         end_time
       });

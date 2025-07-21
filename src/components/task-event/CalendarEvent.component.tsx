@@ -8,47 +8,11 @@ interface CalendarEventProps {
   className?: string;
 }
 
-// Modern color schemes for events
-const EVENT_COLORS = [
-  {
-    bg: 'from-purple-500 to-purple-600',
-    border: 'border-purple-400',
-    icon: 'text-purple-200'
-  },
-  {
-    bg: 'from-blue-500 to-blue-600',
-    border: 'border-blue-400',
-    icon: 'text-blue-200'
-  },
-  {
-    bg: 'from-green-500 to-green-600',
-    border: 'border-green-400',
-    icon: 'text-green-200'
-  },
-  {
-    bg: 'from-red-500 to-red-600',
-    border: 'border-red-400',
-    icon: 'text-red-200'
-  },
-  {
-    bg: 'from-yellow-500 to-yellow-600',
-    border: 'border-yellow-400',
-    icon: 'text-yellow-200'
-  },
-  {
-    bg: 'from-teal-500 to-teal-600',
-    border: 'border-teal-400',
-    icon: 'text-teal-200'
-  }
-];
-
-// Map of color values to tailwind gradient classes
-const COLOR_MAP: Record<string, { bg: string, border: string, icon: string }> = {
-  '#3B82F6': { bg: 'from-blue-500 to-blue-600', border: 'border-blue-400', icon: 'text-blue-200' },
-  '#F87171': { bg: 'from-red-500 to-red-600', border: 'border-red-400', icon: 'text-red-200' },
-  '#FBBF24': { bg: 'from-yellow-500 to-yellow-600', border: 'border-yellow-400', icon: 'text-yellow-200' },
-  '#10B981': { bg: 'from-green-500 to-green-600', border: 'border-green-400', icon: 'text-green-200' },
-  '#A78BFA': { bg: 'from-purple-500 to-purple-600', border: 'border-purple-400', icon: 'text-purple-200' },
+// Chỉ dùng 1 màu tím cho tất cả event
+const EVENT_COLOR = {
+  bg: 'from-purple-500 to-purple-600',
+  border: 'border-purple-400',
+  icon: 'text-purple-200'
 };
 
 export const CalendarEvent: React.FC<CalendarEventProps> = ({
@@ -57,16 +21,8 @@ export const CalendarEvent: React.FC<CalendarEventProps> = ({
   style,
   className
 }) => {
-  // Use the event's color if available, otherwise use a color based on the event ID
-  let colorSet;
-  
-  if (event.color && COLOR_MAP[event.color]) {
-    colorSet = COLOR_MAP[event.color];
-  } else {
-    // Fallback to the old method if no color is specified
-    const colorIndex = event._id ? Math.abs(event._id.charCodeAt(0) % EVENT_COLORS.length) : 0;
-    colorSet = EVENT_COLORS[colorIndex];
-  }
+  // Luôn dùng màu tím cho mọi event
+  const colorSet = EVENT_COLOR;
   
   // Format time range
   const formatTimeRange = () => {
@@ -97,9 +53,6 @@ export const CalendarEvent: React.FC<CalendarEventProps> = ({
         <div className="font-bold text-white text-sm leading-tight truncate flex-1">{event.title || 'Untitled Event'}</div>
       </div>
       <div className="text-xs text-white/90 mt-1 ml-5.5">{formatTimeRange()}</div>
-      {event.description && (
-        <div className="text-xs text-white/80 mt-1 ml-5.5 line-clamp-1">{event.description}</div>
-      )}
     </div>
   );
 }; 
