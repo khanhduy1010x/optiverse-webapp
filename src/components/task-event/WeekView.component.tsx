@@ -135,24 +135,27 @@ export const WeekView: React.FC<WeekViewProps> = ({
         })}
       </div>
       {/* Lưới thời gian */}
-      <div className="flex-grow relative overflow-x-auto">
+      <div className="flex-1 flex flex-col">
         {hours.map((hour) => (
-          <div key={hour} className="flex border-b hover:bg-blue-50/30 group transition-colors min-w-[540px] md:min-w-0">
-            {/* Nhãn giờ */}
-            <div className="w-20 flex-shrink-0 border-r text-sm text-gray-600 p-2 sticky left-0 bg-white flex items-center justify-center select-none">
-              <span className="font-medium">
-                {(() => {
-                  if (hour === 0) return '12 AM';
-                  if (hour < 12) return `${hour} AM`;
-                  if (hour === 12) return '12 PM';
-                  return `${hour - 12} PM`;
-                })()}
-              </span>
+          <div key={hour} className="flex flex-1 min-h-[64px] border-b relative">
+            <div className="w-20 flex-shrink-0 border-r bg-gray-50 text-xs text-gray-500 flex items-center justify-center select-none">
+              {hour}:00
             </div>
-            {/* Ô cho mỗi ngày */}
             {weekDays.map((day, dayIndex) => {
               const isCurrentTimeCell = isCurrentHour(day, hour);
               const isWorkingHour = hour >= 9 && hour <= 17; // 9 AM - 5 PM
+              // Đếm số event trong cell này
+              const eventsInCell = taskEvents.filter(event => {
+                try {
+                  const eventDate = new Date(event.start_time);
+                  const eventHour = eventDate.getHours();
+                  return isEventInDay(event, day) && eventHour === hour;
+                } catch (error) {
+                  return false;
+                }
+              });
+              // Tính chiều cao động: mỗi event 56px, min 64px
+              const cellHeight = Math.max(64, eventsInCell.length * 56);
               return (
                 <div
                   key={dayIndex}
@@ -160,6 +163,7 @@ export const WeekView: React.FC<WeekViewProps> = ({
                     isCurrentTimeCell ? 'bg-pink-100/60' : 
                     isWorkingHour ? 'bg-gray-50/70' : ''
                   }`}
+                  style={{ minHeight: cellHeight, height: cellHeight }}
                 >
                   {/* Đường chỉ thời gian hiện tại */}
                   {isCurrentTimeCell && (
@@ -175,34 +179,20 @@ export const WeekView: React.FC<WeekViewProps> = ({
                     </div>
                   )}
                   {/* Container cho các sự kiện trong ngày và giờ này */}
-                  <div className="absolute inset-0 p-1 flex flex-col gap-1">
-                    {taskEvents
-                      .filter(event => {
-                        try {
-                          const eventDate = new Date(event.start_time);
-                          const eventHour = eventDate.getHours();
-                          return isEventInDay(event, day) && eventHour === hour;
-                        } catch (error) {
-                          console.error('Error filtering events by day and hour:', error, event, day, hour);
-                          return false;
-                        }
-                      })
-                      .map((event, eventIndex) => {
-                        try {
-                          return (
-                            <CalendarEvent
-                              key={event._id || eventIndex}
-                              event={event}
-                              onClick={() => handleEditEvent(event)}
-                              className="w-full block mb-1 rounded-xl shadow-md hover:scale-[1.03] transition-all duration-200"
-                            />
-                          );
-                        } catch (error) {
-                          console.error('Error rendering event:', error, event);
-                          return null;
-                        }
-                      })}
-                  </div>
+                  {eventsInCell.map((event, eventIndex) => {
+                    try {
+                      return (
+                        <CalendarEvent
+                          key={event._id || eventIndex}
+                          event={event}
+                          onClick={() => handleEditEvent(event)}
+                          className="w-full block mb-1 rounded-xl shadow-md hover:scale-[1.03] transition-all duration-200"
+                        />
+                      );
+                    } catch (error) {
+                      return null;
+                    }
+                  })}
                 </div>
               );
             })}
