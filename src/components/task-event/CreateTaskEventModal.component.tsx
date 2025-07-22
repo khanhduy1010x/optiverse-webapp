@@ -23,11 +23,67 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
   const { createTaskEvent, loading } = useTaskEventOperations();
   const [showRepeatOptions, setShowRepeatOptions] = useState(false);
   const [selectedColor, setSelectedColor] = useState('#3B82F6');
+  const [dateError, setDateError] = useState('');
+
+  // Validate To Date > Start Date
+  React.useEffect(() => {
+    let error = '';
+    if (
+      (formData.repeat_type === 'daily' || formData.repeat_type === 'weekly' || formData.repeat_type === 'monthly' || formData.repeat_type === 'yearly') &&
+      formData.start_time && formData.repeat_to
+    ) {
+      let start = new Date(formData.start_time);
+      let end;
+      if (formData.repeat_type === 'weekly') {
+        // repeat_to dạng yyyy-Www
+        const [yearStr, weekStr] = String(formData.repeat_to).split('-W');
+        const year = Number(yearStr);
+        const week = Number(weekStr);
+        if (year && week) {
+          const simple = new Date(year, 0, 1 + (week - 1) * 7);
+          const dow = simple.getDay();
+          const ISOweekStart = new Date(simple);
+          if (dow <= 4)
+            ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
+          else
+            ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
+          // Ngày cuối tuần (chủ nhật)
+          end = new Date(ISOweekStart);
+          end.setDate(ISOweekStart.getDate() + 6);
+        }
+      } else if (formData.repeat_type === 'monthly') {
+        // repeat_to dạng yyyy-mm
+        const [yearStr, monthStr] = String(formData.repeat_to).split('-');
+        const year = Number(yearStr);
+        const month = Number(monthStr) - 1;
+        if (year && month >= 0) {
+          end = new Date(year, month + 1, 0); // ngày cuối tháng
+        }
+      } else if (formData.repeat_type === 'yearly') {
+        // repeat_to là năm
+        const year = Number(formData.repeat_to);
+        if (year) {
+          end = new Date(year, 11, 31);
+        }
+      } else {
+        // daily
+        end = new Date(formData.repeat_to);
+      }
+      if (end && start >= end) {
+        error = 'To Date must be after Start Date.';
+      }
+    }
+    setDateError(error);
+  }, [formData.start_time, formData.repeat_to, formData.repeat_type]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title || !formData.title.trim()) {
       alert('Title is required.');
+      return;
+    }
+    if (formData.title.length > 50) {
+      alert('Title must not exceed 50 characters.');
       return;
     }
     if (!taskId || !taskId.trim()) {
@@ -40,6 +96,10 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
     }
     if (!formData.repeat_type) {
       alert('Repeat type is required.');
+      return;
+    }
+    if (formData.description && formData.description.length > 100) {
+      alert('Description must not exceed 100 characters.');
       return;
     }
 
@@ -190,6 +250,9 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
           className="w-full border-0 border-b border-gray-200 py-2 mb-2 focus:outline-none focus:ring-0 focus:border-blue-400 placeholder-gray-400 text-base bg-blue-50/30 rounded-t-xl transition-all"
           autoFocus
         />
+        {formData.title && formData.title.length > 50 && (
+          <div className="text-red-500 text-xs mb-1">Title must not exceed 50 characters.</div>
+        )}
         {/* Ngày bắt đầu/kết thúc */}
         <div className="flex items-center gap-2 mb-2">
           <div className="flex flex-col flex-1">
@@ -368,6 +431,12 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
           onChange={e => handleInputChange('description', e.target.value)}
           className="w-full border-0 border-b border-gray-200 py-2 focus:outline-none focus:ring-0 text-sm mb-2 resize-none min-h-[32px]"
         />
+        {!!formData.description && formData.description.length > 100 && (
+          <div className="text-red-500 text-xs mb-1">Description must not exceed 100 characters.</div>
+        )}
+        {dateError && (
+          <div className="text-red-500 text-xs mb-1">{dateError}</div>
+        )}
         {/* Nút lưu/hủy */}
         <div className="flex justify-end gap-2 mt-2">
           <button 
@@ -379,7 +448,13 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
           </button>
           <button
             type="submit"
-            disabled={loading || !formData.title.trim()}
+            disabled={
+              loading ||
+              !formData.title.trim() ||
+              (formData.title && formData.title.length > 50) ||
+              (!!formData.description && formData.description.length > 100)
+             || !!dateError
+            }
             className="px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-bold shadow-md hover:scale-105 hover:shadow-xl transition-all text-base disabled:bg-blue-300 disabled:opacity-60"
           >
             Save
