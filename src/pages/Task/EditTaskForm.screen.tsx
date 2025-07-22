@@ -282,6 +282,18 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
       return;
     }
 
+    // Auto-update status if overdue and new deadline is in the future
+    let newStatus = status;
+    if (
+      status === 'overdue' && end_time
+    ) {
+      const endDate = end_time instanceof Date ? end_time : new Date(end_time);
+      if (!isNaN(endDate.getTime()) && endDate > new Date()) {
+        newStatus = 'pending';
+        setStatus('pending');
+      }
+    }
+
     try {
       setIsSubmitting(true);
       setErrors({});
@@ -297,7 +309,7 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
       console.log('EditTaskForm: Saving task with data:', {
         title,
         description,
-        status,
+        status: newStatus,
         priority,
         tags: selectedTags,
         start_time,
@@ -308,7 +320,7 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
       const result = await onSave({
         title,
         description,
-        status,
+        status: newStatus,
         priority,
       tags: selectedTags,
         start_time,
@@ -387,24 +399,6 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
 
         <div className={GROUP_CLASSNAMES.taskDetailSection}>
           <div className="space-y-2">
-            {/* Status */}
-            <div className={GROUP_CLASSNAMES.flexItemsCenter + ' py-2'}>
-              <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <select
-                aria-label="Task status"
-                className="flex-grow border-0 bg-transparent focus:outline-none focus:ring-0 text-sm text-gray-700"
-                value={status}
-                onChange={(e) => setStatus(e.target.value as any)}
-                autoComplete="off"
-              >
-                <option value="pending">Pending</option>
-                <option value="completed">Completed</option>
-                <option value="overdue">Overdue</option>
-              </select>
-            </div>
-
             {/* Priority */}
             <div className={GROUP_CLASSNAMES.flexItemsCenter + ' py-2'}>
               <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
