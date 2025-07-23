@@ -49,8 +49,13 @@ const TagManagement: React.FC<TagManagementProps> = ({
                                 type="text"
                                 placeholder="Tag name"
                                 value={newTagName}
-                                onChange={(e) => setNewTagName(e.target.value)}
+                                onChange={(e) => {
+                                    if (e.target.value.length <= 25) {
+                                        setNewTagName(e.target.value);
+                                    }
+                                }}
                                 className={GROUP_CLASSNAMES.tagManagementInput}
+                                maxLength={25}
                             />
                             <input
                                 type="color"
@@ -73,6 +78,13 @@ const TagManagement: React.FC<TagManagementProps> = ({
                                 Add
                             </button>
                         </div>
+                        {/* Helper text for tag name length */}
+                        <div className="text-xs text-gray-400 mt-1">
+                            {newTagName.length}/25 characters
+                        </div>
+                        {newTagName.length === 25 && (
+                            <div className="text-red-500 text-xs mt-1">Tag name must not exceed 25 characters.</div>
+                        )}
                     </div>
 
                     {/* List of existing tags */}
