@@ -22,17 +22,19 @@ const RegisterFormScreen: React.FC<RegisterFormProps> = ({
   });
 
   return (
-    <div className="w-3/5 grid gap-10">
-      <h2 className="w-full text-2xl font-bold text-gray-800 text-center">
+    <div className="w-full max-w-sm p-10 rounded-xl bg-[#10182a] border-2 border-[#00eaff]" style={{ boxShadow: '0 0 16px #00eaff80' }}>
+      <h2 className="w-full text-2xl font-bold text-white text-center tracking-widest mb-6">
         Register
       </h2>
-      <form onSubmit={handleSubmit(onSubmit)} className="grid gap-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="grid gap-5">
         <div>
+          <label className="block text-white font-medium mb-1" htmlFor="full_name">Full name</label>
           <InputField<RegisterForm>
             name="full_name"
             control={control}
-            label="Full name"
+            label={undefined}
             placeholder="Enter your full name"
+            className="bg-[#18223a] border border-[#00eaff40] focus:border-[#00eaff] text-white placeholder:text-[#b0c4d4] rounded-md px-4 py-2 outline-none transition-all"
             rules={{
               required: 'is required',
               minLength: {
@@ -45,11 +47,13 @@ const RegisterFormScreen: React.FC<RegisterFormProps> = ({
           />
         </div>
         <div>
+          <label className="block text-white font-medium mb-1" htmlFor="email">Email</label>
           <InputField<RegisterForm>
             name="email"
             control={control}
-            label="Email"
+            label={undefined}
             placeholder="you@example.com"
+            className="bg-[#18223a] border border-[#00eaff40] focus:border-[#00eaff] text-white placeholder:text-[#b0c4d4] rounded-md px-4 py-2 outline-none transition-all"
             rules={{
               required: 'is required',
               pattern: {
@@ -61,32 +65,35 @@ const RegisterFormScreen: React.FC<RegisterFormProps> = ({
             }}
           />
         </div>
-
         <div>
+          <label className="block text-white font-medium mb-1" htmlFor="password">Password</label>
           <PasswordInputField<RegisterForm>
             control={control}
             name="password"
-            label={'Password'}
+            label={undefined}
+            placeholder="Enter password"
+            className="bg-[#18223a] border border-[#00eaff40] focus:border-[#00eaff] text-white placeholder:text-[#b0c4d4] rounded-md px-4 py-2 outline-none transition-all"
           />
         </div>
-
         <div>
+          <label className="block text-white font-medium mb-1" htmlFor="confirmPassword">Confirm Password</label>
           <PasswordInputField<RegisterForm>
             control={control}
             name="confirmPassword"
-            label={'Confirm Password'}
+            label={undefined}
+            placeholder="Enter password"
+            className="bg-[#18223a] border border-[#00eaff40] focus:border-[#00eaff] text-white placeholder:text-[#b0c4d4] rounded-md px-4 py-2 outline-none transition-all"
             rules={{
               validate: value =>
                 value === watch('password') || 'does not match password',
             }}
           />
         </div>
-        <Button title="Create Account" className="w-full" inverted />
+        <Button title="Create Account" className="w-full py-2 rounded-md bg-[#10182a] border border-[#00eaff] text-white font-bold tracking-wide hover:bg-[#00eaff20] transition-all" inverted={false} />
       </form>
       <p
         onClick={() => onSwitch('login')}
-        className={GROUP_CLASSNAMES.linkHover + ' text-center'}
-        style={{ color: COLORS.yellow700 }}
+        className="text-[#a6baff] hover:underline text-center cursor-pointer mt-6 transition-all"
       >
         Already have an account ? Login
       </p>
