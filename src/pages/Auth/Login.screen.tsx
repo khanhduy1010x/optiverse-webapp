@@ -19,8 +19,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitch }) => {
   } = useLoginForm();
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-2xl font-bold text-gray-800">Login</h2>
+    <div className="space-y-6 w-full">
+      <h2 className="text-2xl font-bold text-white text-center tracking-widest mb-6">LOGIN</h2>
       {error && (
         <div className={GROUP_CLASSNAMES.errorMessage}>
           {error}
@@ -30,10 +30,10 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitch }) => {
         <div>
           <input
             type="email"
-            placeholder="Email"
+            placeholder="Username"
             value={email}
             onChange={handleInputChange(setEmail)}
-            className={GROUP_CLASSNAMES.authInput}
+            className="w-full px-4 py-2 rounded-md bg-[#18223a] border border-[#00eaff40] focus:border-[#00eaff] text-white outline-none transition-all placeholder:text-[#b0c4d4]"
             required
             disabled={isEmailLoginLoading || isGoogleLoginLoading}
           />
@@ -44,22 +44,22 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitch }) => {
             placeholder="Password"
             value={password}
             onChange={handleInputChange(setPassword)}
-            className={GROUP_CLASSNAMES.authInput}
+            className="w-full px-4 py-2 rounded-md bg-[#18223a] border border-[#00eaff40] focus:border-[#00eaff] text-white outline-none transition-all placeholder:text-[#b0c4d4]"
             required
             disabled={isEmailLoginLoading || isGoogleLoginLoading}
           />
         </div>
         <button
           type="submit"
-          className={GROUP_CLASSNAMES.authButtonPrimary}
+          className="w-full py-2 rounded-md bg-[#10182a] border border-[#00eaff] text-white font-bold tracking-wide hover:bg-[#00eaff20] transition-all"
           disabled={isEmailLoginLoading || isGoogleLoginLoading}
         >
-          {isEmailLoginLoading ? 'Logging in...' : 'Login'}
+          {isEmailLoginLoading ? 'Logging in...' : 'LOGIN'}
         </button>
         <button
           type="button"
           onClick={handleGoogleLogin}
-          className={GROUP_CLASSNAMES.authButtonGoogle}
+          className="w-full py-2 rounded-md bg-[#10182a] border border-[#00eaff] text-white font-bold tracking-wide hover:bg-[#00eaff20] transition-all"
           disabled={isEmailLoginLoading || isGoogleLoginLoading}
         >
           {isGoogleLoginLoading ? 'Loading...' : 'Login with Google'}
@@ -72,7 +72,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitch }) => {
             onSwitch('forgot');
           }
         }}
-        className={`${GROUP_CLASSNAMES.linkHover} ${!isEmailLoginLoading && !isGoogleLoginLoading ? '' : 'opacity-50 cursor-not-allowed'} text-center`}
+        className="text-[#a6baff] hover:underline text-center cursor-pointer transition-all"
+        style={{ opacity: !isEmailLoginLoading && !isGoogleLoginLoading ? 1 : 0.5 }}
       >
         Forgot password?
       </p>
@@ -82,7 +83,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitch }) => {
             onSwitch('register');
           }
         }}
-        className={`${GROUP_CLASSNAMES.linkHover} ${!isEmailLoginLoading && !isGoogleLoginLoading ? '' : 'opacity-50 cursor-not-allowed'} text-center`}
+        className="text-[#6aafff] hover:underline text-center cursor-pointer transition-all"
+        style={{ opacity: !isEmailLoginLoading && !isGoogleLoginLoading ? 1 : 0.5 }}
       >
         Don't have an account? Register
       </p>

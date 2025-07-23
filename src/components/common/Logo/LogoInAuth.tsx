@@ -6,10 +6,12 @@ const LogoInAuth: React.FC<LoginFormProps> = ({ onSwitch }) => {
     <img
       src={logo}
       alt="Logo"
-      className="w-2/3"
+      className="w-[120%] max-w-[320px] mx-auto logo-glow"
       onClick={() => onSwitch('login')}
       style={{
         cursor: 'pointer',
+        filter: 'drop-shadow(0 0 16px #6a4cff) drop-shadow(0 0 32px #fff)',
+        padding: '8px',
       }}
     ></img>
   );
