@@ -99,6 +99,16 @@ const ChangePasswordPopup: React.FC<ExtendedChangePasswordPopupProps> = ({ onClo
                             )}
                         </button>
                     </div>
+                    
+                    <div className="text-xs text-gray-500 mt-1 mb-3">
+                        <p>Password must contain:</p>
+                        <ul className="list-disc pl-5 mt-1">
+                            <li>At least 8 characters</li>
+                            <li>At least one uppercase letter</li>
+                            <li>At least one number</li>
+                            <li>At least one special character</li>
+                        </ul>
+                    </div>
 
                     <div className="relative">
                         <input

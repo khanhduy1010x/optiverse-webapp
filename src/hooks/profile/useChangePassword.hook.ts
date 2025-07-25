@@ -30,6 +30,24 @@ export function useChangePassword(onClose: () => void, hasPassword: boolean, ref
       return false;
     }
 
+    // Check for at least one uppercase letter
+    if (!/[A-Z]/.test(newPassword)) {
+      setError('New password must contain at least one uppercase letter');
+      return false;
+    }
+
+    // Check for at least one number
+    if (!/[0-9]/.test(newPassword)) {
+      setError('New password must contain at least one number');
+      return false;
+    }
+
+    // Check for at least one special character
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(newPassword)) {
+      setError('New password must contain at least one special character');
+      return false;
+    }
+
     if (hasPassword === true && newPassword === currentPassword) {
       setError('New password must be different from current password');
       return false;
