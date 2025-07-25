@@ -19,13 +19,14 @@ class ProfileService {
       const response = await api.get('/core/profile');
       console.log('Profile response:', response.data);
       const profileData = response.data.data || response.data;
-
+      console.log('Profile data:', profileData.has_password);
       // Ensure avatar field is included in the response
       return {
         _id: profileData._id,
         email: profileData.email,
         full_name: profileData.full_name,
         avatar: profileData.avatar_url,
+        has_password: profileData.has_password,
       };
     } catch (error: any) {
       console.error('Error fetching profile:', error);

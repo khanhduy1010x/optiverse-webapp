@@ -24,6 +24,7 @@ export function useUserProfile() {
     _id: '',
     email: '',
     full_name: '',
+    has_password: false,
   });
   const [showAvatarMenu, setShowAvatarMenu] = useState(false);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
@@ -48,6 +49,7 @@ export function useUserProfile() {
       const data = await profileService.getProfile();
       setProfileData(data);
       setNewFullName(data.full_name);
+      console.log('Profile data:', data.has_password);
       if (data.avatar) {
         setAvatar(data.avatar);
       }
@@ -185,5 +187,6 @@ export function useUserProfile() {
     handleNameChange,
     handleKeyPress,
     streakData,
+    fetchProfile,
   };
 }

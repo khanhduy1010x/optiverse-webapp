@@ -6,6 +6,7 @@ export interface ProfileData {
   avatar?: string;
   createdAt?: string;
   updatedAt?: string;
+  has_password?: boolean;
 }
 
 export interface UserSession {
