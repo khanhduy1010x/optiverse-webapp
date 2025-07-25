@@ -38,6 +38,7 @@ export default function UserProfile() {
     handleNameChange,
     handleKeyPress,
     streakData,
+    fetchProfile,
   } = useUserProfile();
 
   return (
@@ -357,6 +358,8 @@ export default function UserProfile() {
       {showChangePasswordPopup && (
         <ChangePasswordPopup
           onClose={() => setShowChangePasswordPopup(false)}
+          hasPassword={profileData.has_password}
+          refreshData={fetchProfile}
         />
       )}
     </View>

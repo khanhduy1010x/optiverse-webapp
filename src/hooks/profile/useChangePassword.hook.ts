@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import profileService from '../../services/profile.service';
 
-export function useChangePassword(onClose: () => void) {
+export function useChangePassword(onClose: () => void, hasPassword: boolean, refreshData?: () => Promise<void>) {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -12,17 +12,25 @@ export function useChangePassword(onClose: () => void) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const validatePasswords = () => {
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      setError('Please fill in all fields');
+    // If user doesn't have a password set, we don't need to validate the current password
+    if (hasPassword) {
+      if (!currentPassword) {
+        setError('Please enter your current password');
+        return false;
+      }
+    }
+
+    if (!newPassword || !confirmPassword) {
+      setError('Please fill in all required fields');
       return false;
     }
 
     if (newPassword.length < 8) {
-      setError('New password must be at least 6 characters long');
+      setError('New password must be at least 8 characters long');
       return false;
     }
 
-    if (newPassword === currentPassword) {
+    if (hasPassword === true && newPassword === currentPassword) {
       setError('New password must be different from current password');
       return false;
     }
@@ -45,9 +53,15 @@ export function useChangePassword(onClose: () => void) {
 
       setIsLoading(true);
       await profileService.changePassword({
-        currentPassword,
+        currentPassword: hasPassword === true ? currentPassword : '',
         newPassword,
       });
+      
+      // Refresh profile data if callback is provided
+      if (refreshData) {
+        await refreshData();
+      }
+      
       onClose();
     } catch (error: any) {
       console.error('Failed to change password:', error);
@@ -73,5 +87,6 @@ export function useChangePassword(onClose: () => void) {
     showConfirmPassword,
     setShowConfirmPassword,
     handleSubmit,
+    hasPassword,
   };
 }
