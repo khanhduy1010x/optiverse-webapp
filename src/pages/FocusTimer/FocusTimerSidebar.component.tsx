@@ -11,9 +11,9 @@ interface FocusTimerSidebarProps {
 
 const FocusTimerSidebar: React.FC<FocusTimerSidebarProps> = ({ selectedMenu, handleNavigate }) => {
     const menuItems = [
-        { id: 'manage', label: 'Manage', path: '/manage-focus-timer', icon: 'setting' as IconName },
         { id: 'timer', label: 'Timer', path: '/focus-timer', icon: 'timer' as IconName },
-        { id: 'statistics', label: 'Statistics', path: '/statistics-timer', icon: 'trophy' as IconName },
+        { id: 'manage', label: 'Manage', path: '/focus-timer/manage', icon: 'setting' as IconName },
+        { id: 'statistics', label: 'Statistics', path: '/focus-timer/statistics', icon: 'trophy' as IconName },
     ];
 
     return (

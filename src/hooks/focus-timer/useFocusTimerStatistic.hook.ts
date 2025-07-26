@@ -71,7 +71,7 @@ export function useFocusTimerStatistic(month: number, year: number) {
     }));
 
     const averageSessionMinutes = sessions.length ? totalSeconds / 60 / sessions.length : 0;
-    const streakDays = calculateStreak([...activeDates]);
+    const streakDays = calculateStreak(Array.from(activeDates));
 
     setDayStats(dayStats);
     setSummary({

@@ -22,6 +22,7 @@ import NotificationSettingsPage from './pages/Profile/NotificationSettingsPage';
 import FocusTimer from './pages/FocusTimer/FocusTimer.page';
 import FocusTimerStatistic from './pages/FocusTimer/FocusTimerStatistic.page';
 import { ThemeProvider } from './contexts/theme.context';
+import { FocusTimerProvider } from './contexts/FocusTimer.context';
 import NoteScreen from './pages/Note/NoteScreen.page';
 import FlashcardList from './pages/Flashcard/FlashcardList.page';
 import FlashcardReview from './pages/Flashcard/FlashcardReview.page';
@@ -209,23 +210,25 @@ const AppContent: React.FC = () => {
 
           {/* Focus Timer routes with shared layout */}
           <Route
-            path="/"
+            path="/focus-timer"
             element={
               <ProtectedRoute>
-                <FocusTimerLayout />
+                <FocusTimerProvider>
+                  <FocusTimerLayout />
+                </FocusTimerProvider>
               </ProtectedRoute>
             }
           >
             <Route
-              path="focus-timer"
+              index
               element={<FocusTimer />}
             />
             <Route
-              path="manage-focus-timer"
+              path="manage"
               element={<FocusSessionList />}
             />
             <Route
-              path="statistics-timer"
+              path="statistics"
               element={<FocusTimerStatistic />}
             />
           </Route>

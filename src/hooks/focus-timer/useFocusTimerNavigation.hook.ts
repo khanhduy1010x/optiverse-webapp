@@ -9,11 +9,11 @@ export function useFocusTimerNavigation(initialMenu: string = 'timer') {
   // Xác định menu được chọn dựa trên đường dẫn hiện tại
   useEffect(() => {
     const path = location.pathname;
-    if (path === '/focus-timer') {
+    if (path === '/focus-timer' || path === '/focus-timer/') {
       setSelectedMenu('timer');
-    } else if (path === '/manage-focus-timer') {
+    } else if (path === '/focus-timer/manage') {
       setSelectedMenu('manage');
-    } else if (path === '/statistics-timer') {
+    } else if (path === '/focus-timer/statistics') {
       setSelectedMenu('statistics');
     }
   }, [location.pathname]);

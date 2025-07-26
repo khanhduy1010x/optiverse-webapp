@@ -19,20 +19,20 @@ export const NAV_SECTIONS: NavSection[] = [
     path: '/focus-timer',
     subsections: [
       {
-        label: 'Manage ',
-        path: '/manage-focus-timer',
-        icon: 'timer',
-        parentPath: '/focus-timer',
-      },
-      {
         label: 'Timer',
         path: '/focus-timer',
         icon: 'timer',
         parentPath: '/focus-timer',
       },
       {
-        label: 'Statistics ',
-        path: '/statistics-timer',
+        label: 'Manage',
+        path: '/focus-timer/manage',
+        icon: 'timer',
+        parentPath: '/focus-timer',
+      },
+      {
+        label: 'Statistics',
+        path: '/focus-timer/statistics',
         icon: 'timer',
         parentPath: '/focus-timer',
       },
@@ -146,9 +146,9 @@ export const NAV_SECTIONS: NavSection[] = [
 
 // Map các path con tới path cha để dễ dàng tìm kiếm
 const PATH_MAPPING: Record<string, string> = {
-  '/manage-focus-timer': '/focus-timer',
   '/focus-timer': '/focus-timer',
-  '/statistics-timer': '/focus-timer',
+  '/focus-timer/manage': '/focus-timer',
+  '/focus-timer/statistics': '/focus-timer',
   '/user-profile': '/user-profile',
   '/login-session': '/user-profile',
   '/notifications': '/user-profile',
