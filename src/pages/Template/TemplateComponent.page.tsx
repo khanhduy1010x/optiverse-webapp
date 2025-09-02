@@ -22,7 +22,8 @@ type FormValues = {
 export default function TemplateComponent() {
   const { theme } = useTheme();
   const { colors, fonts } = theme;
-  const { t } = useAppTranslate();
+  // Using webapp\src\locales\en\common.json so write 'common'
+  const { t } = useAppTranslate('common');
 
   // form
   const { handleSubmit, control, getValues, watch } = useForm<FormValues>();

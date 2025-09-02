@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 type Props = {
   onClose: () => void;
@@ -6,6 +7,7 @@ type Props = {
 };
 
 export default function DurationPickerModal({ onClose, onSetDuration }: Props) {
+  const { t } = useAppTranslate('focus');
   const [hours, setHours] = useState(0);
   const [minutes, setMinutes] = useState(25);
   const [seconds, setSeconds] = useState(0);
@@ -15,7 +17,10 @@ export default function DurationPickerModal({ onClose, onSetDuration }: Props) {
   // Đóng modal khi bấm bên ngoài
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+      if (
+        modalRef.current &&
+        !modalRef.current.contains(event.target as Node)
+      ) {
         onClose();
       }
     };
@@ -29,7 +34,7 @@ export default function DurationPickerModal({ onClose, onSetDuration }: Props) {
       onSetDuration(total);
       onClose();
     } else {
-      alert('Time must be greater than 0 and no more than 1 hour');
+      alert(t('time_validation_error'));
     }
   };
 
@@ -40,7 +45,9 @@ export default function DurationPickerModal({ onClose, onSetDuration }: Props) {
         className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm relative"
       >
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">Choose Your Focus Time:</h3>
+          <h3 className="text-lg font-semibold">
+            {t('choose_your_focus_time')}
+          </h3>
           {/* <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-700 text-xl font-bold"
@@ -55,27 +62,27 @@ export default function DurationPickerModal({ onClose, onSetDuration }: Props) {
             min={0}
             max={1}
             value={hours}
-            onChange={(e) => setHours(+e.target.value)}
+            onChange={e => setHours(+e.target.value)}
             className="w-16 p-2 border rounded text-center"
-            placeholder="hh"
+            placeholder={t('hours_placeholder')}
           />
           <input
             type="number"
             min={0}
             max={59}
             value={minutes}
-            onChange={(e) => setMinutes(+e.target.value)}
+            onChange={e => setMinutes(+e.target.value)}
             className="w-16 p-2 border rounded text-center"
-            placeholder="mm"
+            placeholder={t('minutes_placeholder')}
           />
           <input
             type="number"
             min={0}
             max={59}
             value={seconds}
-            onChange={(e) => setSeconds(+e.target.value)}
+            onChange={e => setSeconds(+e.target.value)}
             className="w-16 p-2 border rounded text-center"
-            placeholder="ss"
+            placeholder={t('seconds_placeholder')}
           />
         </div>
 
@@ -84,17 +91,18 @@ export default function DurationPickerModal({ onClose, onSetDuration }: Props) {
             onClick={onClose}
             className="px-4 py-2 rounded border text-gray-600 hover:bg-gray-100"
           >
-            Cancel
+            {t('cancel')}
           </button>
           <button
             onClick={handleSubmit}
             disabled={hours * 3600 + minutes * 60 + seconds === 0}
-            className={`px-4 py-2 rounded text-white ${hours * 3600 + minutes * 60 + seconds > 0
+            className={`px-4 py-2 rounded text-white ${
+              hours * 3600 + minutes * 60 + seconds > 0
                 ? 'bg-blue-600 hover:bg-blue-700'
                 : 'bg-gray-300 cursor-not-allowed'
-              }`}
+            }`}
           >
-            OK
+            {t('confirm')}
           </button>
         </div>
       </div>

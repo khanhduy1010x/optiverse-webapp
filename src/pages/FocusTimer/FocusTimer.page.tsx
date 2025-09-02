@@ -2,6 +2,7 @@ import React from 'react';
 import DurationPickerModal from './SetDurationModal';
 import ConfirmModal from './ConfirmModal';
 import { useFocusTimerContext } from '../../contexts/FocusTimer.context';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 export default function FocusTimerPage() {
   const {
@@ -28,6 +29,8 @@ export default function FocusTimerPage() {
     setShowCongratsModal,
   } = useFocusTimerContext();
 
+  const { t } = useAppTranslate('focus');
+
   const handleStart = () => {
     if (mode === 'countdown' && timeDisplay <= 0) {
       setShowDurationModal(true);
@@ -49,7 +52,7 @@ export default function FocusTimerPage() {
         <img src="logo.png" alt="Optiverse" className="w-40 h-40" />
       </div>
 
-      <h1 className="text-3xl font-bold">🎯 Focus Time</h1>
+      <h1 className="text-3xl font-bold">{t('title')}</h1>
 
       {/* Mode Toggle */}
       <div className="flex gap-2">
@@ -60,7 +63,7 @@ export default function FocusTimerPage() {
           } ${isRunning ? 'opacity-50 cursor-not-allowed' : ''}`}
           onClick={() => setMode('countup')}
         >
-          Count Up
+          {t('mode.countup')}
         </button>
         <button
           disabled={isRunning}
@@ -69,7 +72,7 @@ export default function FocusTimerPage() {
           } ${isRunning ? 'opacity-50 cursor-not-allowed' : ''}`}
           onClick={() => setMode('countdown')}
         >
-          Count Down
+          {t('mode.countdown')}
         </button>
       </div>
 
@@ -84,7 +87,7 @@ export default function FocusTimerPage() {
           onClick={() => setShowDurationModal(true)}
           className="px-4 py-2 bg-indigo-500 text-white rounded"
         >
-          ⏱ Choose Focus Time
+          {t('choose_time')}
         </button>
       )}
 
@@ -95,7 +98,7 @@ export default function FocusTimerPage() {
             className="px-4 py-2 bg-green-500 text-white rounded"
             onClick={handleStart}
           >
-            Start
+            {t('start')}
           </button>
         )}
         {isRunning && !isPaused && (
@@ -103,7 +106,7 @@ export default function FocusTimerPage() {
             className="px-4 py-2 bg-yellow-500 text-white rounded"
             onClick={pause}
           >
-            Pause
+            {t('pause')}
           </button>
         )}
         {isRunning && isPaused && (
@@ -111,7 +114,7 @@ export default function FocusTimerPage() {
             className="px-4 py-2 bg-blue-500 text-white rounded"
             onClick={resume}
           >
-            Continue
+            {t('continue')}
           </button>
         )}
         <button
@@ -119,7 +122,7 @@ export default function FocusTimerPage() {
           className={`px-4 py-2 bg-gray-500 text-white rounded ${!isRunning ? 'opacity-50 cursor-not-allowed' : ''}`}
           onClick={mode === 'countup' ? stop : reset}
         >
-          {mode === 'countup' ? 'Stop' : 'Reset'}
+          {mode === 'countup' ? t('stop') : t('reset')}
         </button>
       </div>
 
@@ -136,8 +139,8 @@ export default function FocusTimerPage() {
         <ConfirmModal
           message={
             pendingAction === 'stop'
-              ? 'Are you sure you want to stop and save this focus session?'
-              : 'Are you sure you want to reset the timer?'
+              ? t('confirm_stop')
+              : t('confirm_reset')
           }
           onConfirm={confirmAction}
           onCancel={cancelAction}
@@ -147,7 +150,7 @@ export default function FocusTimerPage() {
       {/* Modal: Thông báo khi countdown kết thúc */}
       {showCountdownEndModal && (
         <ConfirmModal
-          message="⏰ Countdown finished!"
+          message={t('countdown_finished')}
           onConfirm={closeCountdownEndModal}
           onCancel={closeCountdownEndModal}
         />
@@ -156,7 +159,7 @@ export default function FocusTimerPage() {
       {/* Modal: Chúc mừng khi dừng count up */}
       {showCongratsModal && (
         <ConfirmModal
-          message="🎉 Congratulations! Your focus session has been saved."
+          message={t('congrats_saved')}
           onConfirm={() => setShowCongratsModal(false)}
           onCancel={() => setShowCongratsModal(false)}
         />
