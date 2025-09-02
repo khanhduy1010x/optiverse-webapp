@@ -6,8 +6,10 @@ import { LoadingState } from '../../components/task-event/LoadingState.component
 import { ErrorState } from '../../components/task-event/ErrorState.component';
 import { EmptyState } from '../../components/task-event/EmptyState.component';
 import { CalendarContainer } from '../../components/task-event/CalendarContainer.component';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 const Schedule: React.FC = () => {
+  const { t } = useAppTranslate('task');
   // Custom hook to fetch the first task
   const { taskId, loading: loadingTask, error: taskError, refreshTask } = useFirstTask();
 
@@ -45,7 +47,7 @@ const Schedule: React.FC = () => {
 
   // Show loading state while fetching tasks
   if (loadingTask) {
-    return <LoadingState message="Loading tasks..." />;
+    return <LoadingState message={t('loading_tasks')} />;
   }
 
   // Show error state if there was an error fetching tasks

@@ -28,12 +28,14 @@ import type { Task } from '../../types/task/response/task.response';
 import taskService from '../../services/task.service';
 import { localDateTimeToISO } from '../../utils/date.utils';
 import { useTaskStreak } from '../../hooks/streak/useTaskStreak.hook';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 // Định nghĩa kiểu dữ liệu cho các tab
 export type TaskStatusTab = 'all' | 'pending' | 'completed' | 'overdue';
 
 const TaskPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const { t } = useAppTranslate('task');
 
   // Main state
   const {
@@ -443,16 +445,16 @@ const TaskPage: React.FC = () => {
       if (error.response) {
         console.error('Error response:', error.response.status, error.response.data);
         if (error.response.status === 404) {
-          alert('Task not found. It may have been deleted.');
+          alert(t('error_task_not_found'));
         } else if (error.response.status === 400) {
-          alert('Invalid task data. Please check your input.');
+          alert(t('error_invalid_task_data'));
         } else if (error.response.status >= 500) {
-          alert('Server error. Please try again later.');
+          alert(t('error_server_generic'));
         } else {
-      alert('Failed to update task. Please try again.');
+          alert(t('error_failed_update'));
         }
       } else {
-        alert('Network error. Please check your connection and try again.');
+        alert(t('error_network'));
       }
       
       return false;
@@ -535,8 +537,8 @@ const TaskPage: React.FC = () => {
               <TaskEvent />
             ) : (
               <div className="p-6">
-                <h2 className="text-xl font-semibold mb-4">Task Settings</h2>
-                <p className="text-gray-600 mb-6">Manage your task preferences and configurations here.</p>
+                <h2 className="text-xl font-semibold mb-4">{t('settings_title')}</h2>
+                <p className="text-gray-600 mb-6">{t('settings_desc')}</p>
                 {showTagManagement ? (
                   <TagManagement
                     allTags={allTags}
@@ -553,7 +555,7 @@ const TaskPage: React.FC = () => {
                     onClick={() => setShowTagManagement(true)}
                     className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
                   >
-                    Manage Tags
+                    {t('manage_tags')}
                   </button>
                 )}
               </div>
@@ -693,8 +695,8 @@ const TaskPage: React.FC = () => {
       {/* Delete Tag Confirmation */}
       {showDeleteTagConfirm && tagToDelete && (
         <DeleteConfirmation
-          title="Delete Tag"
-          description={`Are you sure you want to delete the tag "${tagToDelete.name}"? This will remove the tag from all tasks.`}
+          title={t('delete_tag_title')}
+          description={t('delete_tag_confirm', { name: tagToDelete.name })}
           onCancel={() => {
             setShowDeleteTagConfirm(false);
             setTagToDelete(null);
@@ -706,8 +708,8 @@ const TaskPage: React.FC = () => {
       {/* Delete Task Confirmation */}
       {showDeleteConfirm && taskToDelete && (
         <DeleteConfirmation
-          title="Delete Task"
-          description="Are you sure you want to delete this task? This action cannot be undone."
+          title={t('delete_task_title')}
+          description={t('delete_task_confirm')}
           onCancel={() => {
             setShowDeleteConfirm(false);
             setTaskToDelete(null);

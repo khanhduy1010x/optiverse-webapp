@@ -5,6 +5,7 @@ import { GOOGLE_AUTH_CONFIG } from '../../config/google-auth.config';
 import authService from '../../services/auth.service';
 import { setUser, login } from '../../store/slices/auth.slice';
 import { AppDispatch } from '../../store';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 /**
  * Thu thập thông tin về trình duyệt và hệ điều hành dưới dạng chuỗi đơn giản
@@ -97,6 +98,7 @@ export function useLoginForm() {
 
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
+  const { t } = useAppTranslate('auth');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,10 +110,9 @@ export function useLoginForm() {
       const device_info = getDeviceInfo();
       await authService.loginWithEmail(email, password, device_info);
       const userInfo = await authService.getUserInfo();
-      if (
-        userInfo.status === 'suspended' ||
-        userInfo.code === 'USER_IS_BANNED'
-      ) {
+      const isSuspended = (userInfo as any)?.status === 'suspended';
+      const isBanned = (userInfo as any)?.code === 'USER_IS_BANNED';
+      if (isSuspended || isBanned) {
         if (window.showUserBannedModal) window.showUserBannedModal();
         setIsEmailLoginLoading(false);
         return;
@@ -125,7 +126,7 @@ export function useLoginForm() {
         return;
       }
       console.error('Login error:', err);
-      setError(err.message || 'Login failed. Please try again later.');
+      setError(err.message || t('login_failed'));
     } finally {
       setIsEmailLoginLoading(false);
     }
@@ -152,7 +153,7 @@ export function useLoginForm() {
       );
 
       if (!popup)
-        throw new Error('Popup blocked. Please allow popups for this site.');
+        throw new Error(t('popup_blocked'));
 
       const messageHandler = async (event: MessageEvent) => {
         if (event.origin !== window.location.origin) return;
@@ -172,7 +173,7 @@ export function useLoginForm() {
             navigate('/dashboard', { replace: true });
             popup.close();
           } catch (err) {
-            setError('Google login failed. Please try again.');
+            setError(t('google_login_failed'));
             console.error('Google login error:', err);
           } finally {
             setIsGoogleLoginLoading(false);
@@ -185,13 +186,13 @@ export function useLoginForm() {
 
       setTimeout(() => {
         if (isGoogleLoginLoading) {
-          setError('Google login timed out. Please try again.');
+          setError(t('google_login_timeout'));
           setIsGoogleLoginLoading(false);
           window.removeEventListener('message', messageHandler);
         }
       }, 60000);
     } catch (err) {
-      setError('Failed to open Google login. Please try again.');
+      setError(t('google_login_open_failed'));
       setIsGoogleLoginLoading(false);
       console.error('Google login error:', err);
     }
