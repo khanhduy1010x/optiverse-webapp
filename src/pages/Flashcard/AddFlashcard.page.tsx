@@ -7,12 +7,14 @@ import { FlashcardForm } from '../../types/flashcard/flashcard.types';
 import { useForm } from 'react-hook-form';
 import { TextareaField } from '../../components/common/Input.component';
 import { isNotEmpty } from '../../utils/validate.util';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 export default function AddFlashcard() {
   const { deckId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const { title } = location.state;
+  const { t } = useAppTranslate('flashcard');
 
   const { handleSubmit, control, watch, reset } = useForm<FlashcardForm>();
 
@@ -53,12 +55,14 @@ export default function AddFlashcard() {
         style={{ cursor: 'pointer', color: 'blue' }}
         onClick={() => navigate(-1)}
       >
-        Back{' '}
+        {t('back')}{' '}
       </h1>
 
       {/* Deck Info */}
       <div className="mb-4">
-        <label className="block text-gray-700 font-medium mb-1">Deck</label>
+        <label className="block text-gray-700 font-medium mb-1">
+          {t('deck')}
+        </label>
         <div className="bg-gray-100 p-3 rounded-md text-gray-700">{title}</div>
       </div>
 
@@ -67,16 +71,16 @@ export default function AddFlashcard() {
         <TextareaField<FlashcardForm>
           name="front"
           control={control}
-          label="Front"
-          placeholder="Enter front..."
+          label={t('front')}
+          placeholder={t('enter_front_placeholder')}
           rules={{
-            required: 'must be required',
+            required: t('required_error'),
             minLength: {
               value: 1,
-              message: 'at least 1 characters',
+              message: t('min_length_error'),
             },
             setValueAs: v => v.trim(),
-            validate: v => isNotEmpty(v) || 'must not be only white space',
+            validate: v => isNotEmpty(v) || t('whitespace_error'),
           }}
         />
       </div>
@@ -86,21 +90,21 @@ export default function AddFlashcard() {
         <TextareaField<FlashcardForm>
           name="back"
           control={control}
-          label="Back"
-          placeholder="Enter back..."
+          label={t('back')}
+          placeholder={t('enter_back_placeholder')}
           rules={{
-            required: 'must be required',
+            required: t('required_error'),
             minLength: {
               value: 1,
-              message: 'at least 1 characters',
+              message: t('min_length_error'),
             },
             setValueAs: v => v.trim(),
-            validate: v => isNotEmpty(v) || 'must not be only white space',
+            validate: v => isNotEmpty(v) || t('whitespace_error'),
           }}
         />
       </div>
 
-      <Button title="Add flashcard" className="w-full" inverted></Button>
+      <Button title={t('add_flashcard')} className="w-full" inverted></Button>
     </form>
   );
 }

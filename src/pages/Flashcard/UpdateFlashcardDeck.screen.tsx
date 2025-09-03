@@ -4,6 +4,7 @@ import { FlashcardDeckResponse } from '../../types/flashcard/response/flashcard.
 import { TextareaField } from '../../components/common/Input.component';
 import { isNotEmpty } from '../../utils/validate.util';
 import { FlashcardDeckForm } from '../../types/flashcard/flashcard.types';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 export default function UpdateFlashcardDeck({
   item,
@@ -12,6 +13,7 @@ export default function UpdateFlashcardDeck({
   item: FlashcardDeckResponse;
   clear: () => Promise<void>;
 }) {
+  const { t } = useAppTranslate('flashcard');
   const { control, onSubmit, handleSubmit } = useUpdateFlashcardDeck(
     item,
     clear
@@ -26,21 +28,21 @@ export default function UpdateFlashcardDeck({
         <TextareaField<FlashcardDeckForm>
           name="title"
           control={control}
-          label="Title"
-          placeholder="Enter title..."
+          label={t('title_label')}
+          placeholder={t('enter_title_placeholder')}
           rules={{
-            required: 'must be required',
+            required: t('required_error'),
             minLength: {
               value: 1,
-              message: 'at least 1 characters',
+              message: t('min_length_error'),
             },
             setValueAs: v => v.trim(),
-            validate: v => isNotEmpty(v) || 'must not be only white space',
+            validate: v => isNotEmpty(v) || t('whitespace_error'),
           }}
         />
       </div>
 
-      <Button title="Update deck" className="w-full" inverted />
+      <Button title={t('update_deck')} className="w-full" inverted />
     </form>
   );
 }

@@ -25,8 +25,10 @@ import {
   ReviewStatistics,
 } from '../../types/flashcard/props/component.props';
 import flashcardService from '../../services/flashcard.service';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 const FlashcardStatistic: React.FC = () => {
+  const { t } = useAppTranslate('flashcard');
   const [stats, setStats] = useState<ReviewStatistics | null>(null);
   const [deckDue, setDeckDue] = useState<DeckDueItem[]>([]);
   const [reviewsEachDay, setReviewsEachDay] = useState<any[]>([]);
@@ -49,9 +51,9 @@ const FlashcardStatistic: React.FC = () => {
     setDeckDue(dueTodayPerDeck);
     setReviewsEachDay(reviewsByDay);
     setLearningLevel([
-      { name: 'New', value: statsOverview.newCount },
-      { name: 'Learning', value: statsOverview.learningCount },
-      { name: 'Reviewing', value: statsOverview.reviewingCount },
+      { name: t('new'), value: statsOverview.newCount },
+      { name: t('learning'), value: statsOverview.learningCount },
+      { name: t('reviewing'), value: statsOverview.reviewingCount },
     ]);
   };
 
@@ -68,32 +70,35 @@ const FlashcardStatistic: React.FC = () => {
           <div className="flex-1 p-8">
             <div className="flex justify-between items-center mb-6">
               <h1 className="text-2xl font-bold text-gray-900">
-                Flashcard Statistics
+                {t('flashcard_statistics')}
               </h1>
             </div>
 
-            {!stats && <div className="p-6">Loading...</div>}
+            {!stats && <div className="p-6">{t('loading')}</div>}
 
             {stats && (
               <div className="flex flex-col gap-4">
                 {/* Top panel */}
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-4 bg-white rounded-2xl shadow">
-                  <StatItem label="Decks" value={stats.totalDeckCount} />
+                  <StatItem label={t('decks')} value={stats.totalDeckCount} />
                   <StatItem
-                    label="Flashcards"
+                    label={t('flashcards')}
                     value={stats.totalFlashcardCount}
                   />
                   <StatItem
-                    label="Review Sessions"
+                    label={t('review_sessions')}
                     value={stats.reviewedCount}
                   />
-                  <StatItem label="Due Today" value={stats.dueTodayCount} />
                   <StatItem
-                    label="Reviewed Percent"
+                    label={t('due_today')}
+                    value={stats.dueTodayCount}
+                  />
+                  <StatItem
+                    label={t('reviewed_percent')}
                     value={`${stats.percentReviewed.toFixed(2)}%`}
                   />
                   <StatItem
-                    label="Week Reviewed"
+                    label={t('week_reviewed')}
                     value={stats.reviewsThisWeekCount}
                   />
                 </div>
@@ -101,7 +106,7 @@ const FlashcardStatistic: React.FC = () => {
                 {/* Pie Chart */}
                 <div className="bg-white rounded-2xl shadow p-4">
                   <h2 className="text-lg font-semibold mb-2">
-                    Flashcard Status
+                    {t('flashcard_status')}
                   </h2>
                   <ResponsiveContainer width="100%" height={250}>
                     <PieChart>
@@ -128,7 +133,7 @@ const FlashcardStatistic: React.FC = () => {
 
                 <div className="bg-white rounded-2xl shadow p-4">
                   <h2 className="text-lg font-semibold mb-2">
-                    Daily Reviews Calendar
+                    {t('daily_reviews_calendar')}
                   </h2>
                   <CalendarHeatmap
                     startDate={
@@ -159,8 +164,8 @@ const FlashcardStatistic: React.FC = () => {
                         },
                         'data-tooltip-id': 'heatmap-tooltip',
                         'data-tooltip-content': value
-                          ? `${value.date} : ${value.count || 0} reviews`
-                          : '0 reviews',
+                          ? `${value.date} : ${value.count || 0} ${t('reviews')}`
+                          : `0 ${t('reviews')}`,
                       });
                     }}
                   />
@@ -169,7 +174,7 @@ const FlashcardStatistic: React.FC = () => {
                 {/* Bar Chart */}
                 <div className="bg-white rounded-2xl shadow p-4">
                   <h2 className="text-lg font-semibold mb-2">
-                    Due Today per Deck
+                    {t('due_today_per_deck')}
                   </h2>
                   <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={deckDue}>

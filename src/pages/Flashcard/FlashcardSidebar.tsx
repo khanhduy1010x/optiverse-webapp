@@ -3,6 +3,7 @@ import View from '../../components/common/View.component';
 import Icon from '../../components/common/Icon/Icon.component';
 import { IconName } from '../../assets/icons';
 import { useNavigate } from 'react-router-dom';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 interface FlashcardSidebarProps {
   currentSelected: 'flashcard-deck' | 'flashcard-statistic';
@@ -12,16 +13,17 @@ const FlashcardSidebar: React.FC<FlashcardSidebarProps> = ({
   currentSelected,
 }) => {
   const navigate = useNavigate();
+  const { t } = useAppTranslate('flashcard');
   const menuItems = [
     {
       id: 'flashcard-deck',
-      label: 'Flashcard',
+      label: t('flashcard'),
       path: '/flashcard-deck',
       icon: 'flashcard' as IconName,
     },
     {
       id: 'flashcard-statistic',
-      label: 'Statistic',
+      label: t('statistic'),
       path: '/flashcard-statistic',
       icon: 'statistic' as IconName,
     },
@@ -32,8 +34,12 @@ const FlashcardSidebar: React.FC<FlashcardSidebarProps> = ({
       <div className="h-full flex flex-col">
         {/* Header section */}
         <div className="p-6 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-800">Flashcard Menu</h2>
-          <p className="text-sm text-gray-500 mt-1">Flashcard Management</p>
+          <h2 className="text-lg font-semibold text-gray-800">
+            {t('flashcard_menu')}
+          </h2>
+          <p className="text-sm text-gray-500 mt-1">
+            {t('flashcard_management')}
+          </p>
         </div>
 
         {/* Navigation items */}
@@ -63,7 +69,9 @@ const FlashcardSidebar: React.FC<FlashcardSidebarProps> = ({
 
         {/* Footer section */}
         <div className="p-6 border-t border-gray-200">
-          <div className="text-xs text-gray-500 text-center">Flashcard Settings</div>
+          <div className="text-xs text-gray-500 text-center">
+            {t('flashcard_settings')}
+          </div>
         </div>
       </div>
     </View>

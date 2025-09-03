@@ -8,6 +8,7 @@ import { useFlashcardDeckList } from '../../hooks/flashcard/useFlashcardDeckList
 import { flashcardDeckMock } from '../../types/flashcard/response/flashcard.response';
 import { SearchInputField } from '../../components/common/Input.component';
 import FlashcardSidebar from './FlashcardSidebar';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 export default function FlashcardDeckList() {
   const navigate = useNavigate();
@@ -29,6 +30,8 @@ export default function FlashcardDeckList() {
     closePopupAndRefresh,
   } = useFlashcardDeckList();
 
+  
+
   return (
     <div className="flex h-screen">
       <FlashcardSidebar currentSelected="flashcard-deck" />
@@ -36,7 +39,7 @@ export default function FlashcardDeckList() {
         <div className="p-8">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold text-gray-900">
-              Flashcard decks
+              {t('flashcard_decks')}
             </h1>
           </div>
 
@@ -45,12 +48,12 @@ export default function FlashcardDeckList() {
               <SearchInputField
                 name="search"
                 control={control}
-                placeholder="Enter title..."
+                placeholder={t('enter_title_placeholder')}
               ></SearchInputField>
             </form>
 
             <Button
-              title="Refresh"
+              title={t('refresh')}
               className="flex-1/12"
               inverted
               onClick={refresh}
@@ -58,9 +61,9 @@ export default function FlashcardDeckList() {
           </div>
 
           {loading ? (
-            <p className="text-gray-500">Loading decks...</p>
+            <p className="text-gray-500">{t('loading_decks')}</p>
           ) : decks.length === 0 ? (
-            <p className="text-gray-500">No flashcard decks found.</p>
+            <p className="text-gray-500">{t('no_flashcard_decks_found')}</p>
           ) : (
             <div className="space-y-4">
               {decks.map(item => (
@@ -123,7 +126,9 @@ export default function FlashcardDeckList() {
 
                 {popupType === 'add' && (
                   <>
-                    <h3 className="text-lg font-semibold mb-2">Create deck</h3>
+                    <h3 className="text-lg font-semibold mb-2">
+                      {t('create_deck')}
+                    </h3>
                     <AddFlashcardDeck
                       clear={closePopupAndRefresh}
                     ></AddFlashcardDeck>
@@ -132,7 +137,9 @@ export default function FlashcardDeckList() {
 
                 {popupType === 'edit' && (
                   <>
-                    <h3 className="text-lg font-semibold mb-2">Update deck</h3>
+                    <h3 className="text-lg font-semibold mb-2">
+                      {t('update_deck')}
+                    </h3>
                     <UpdateFlashcardDeck
                       item={popupItem}
                       clear={closePopupAndRefresh}
@@ -143,23 +150,21 @@ export default function FlashcardDeckList() {
                 {popupType === 'delete' && (
                   <>
                     <h3 className="text-lg font-semibold mb-4 text-red-600">
-                      Delete this deck ?
+                      {t('delete_this_deck')}
                     </h3>
-                    <p className="text-sm mb-4">
-                      Do you want to delete this deck ?
-                    </p>
+                    <p className="text-sm mb-4">{t('confirm_delete_deck')}</p>
                     <div className="flex justify-end gap-2">
                       <Button
                         onClick={() => handleDelete(popupItem)}
                         className="bg-red-500 text-white px-3 py-1 rounded"
-                        title="Delete"
+                        title={t('delete')}
                       ></Button>
                       <Button
                         onClick={() => {
                           closePopup();
                         }}
                         className="bg-gray-200 px-3 py-1 rounded"
-                        title="Cancel"
+                        title={t('cancel')}
                       ></Button>
                     </div>
                   </>
