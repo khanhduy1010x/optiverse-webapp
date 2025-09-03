@@ -16,10 +16,10 @@ import {
   cancelFriendRequest,
   removeFriend,
 } from '../../store/slices/friend.slice';
-import { useTranslation } from 'react-i18next';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 export function useFriendList() {
-  const { t } = useTranslation();
+  const { t } = useAppTranslate('friend');
   const dispatch = useDispatch<AppDispatch>();
 
   const {
@@ -41,7 +41,7 @@ export function useFriendList() {
   const [fetchAttempts, setFetchAttempts] = useState(0);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const MAX_FETCH_ATTEMPTS = 3;
-  
+
   // Tracking refreshes
   const refreshInterval = useRef<NodeJS.Timeout | null>(null);
 
@@ -120,8 +120,8 @@ export function useFriendList() {
       dispatch(
         setError(
           fetchAttempts >= MAX_FETCH_ATTEMPTS - 1
-            ? t('Failed to fetch data after multiple attempts')
-            : t('Failed to fetch data, retrying...')
+            ? t('failed_to_fetch_data_after_multiple_attempts')
+            : t('failed_to_fetch_data_retrying')
         )
       );
     } finally {
@@ -132,7 +132,7 @@ export function useFriendList() {
   // Các hàm xử lý hành động
   const handleAddFriend = async (friendId: string) => {
     if (!friendId || friendId === 'undefined') {
-      dispatch(setError(t('Invalid friend ID')));
+      dispatch(setError(t('invalid_friend_id')));
       return;
     }
 
@@ -152,7 +152,7 @@ export function useFriendList() {
       setActiveTab('sent');
       await fetchSentRequests(); // Gọi API để lấy dữ liệu mới từ backend
     } catch (err) {
-      dispatch(setError(t('Failed to add friend')));
+      dispatch(setError(t('failed_to_add_friend')));
     } finally {
       dispatch(setLoading(false));
     }
@@ -167,14 +167,14 @@ export function useFriendList() {
         // Sau khi chấp nhận, cập nhật dữ liệu mới từ backend
         await fetchPendingRequests();
         dispatch(setError(null));
-        
+
         // Kiểm tra thành tựu bạn bè sau khi chấp nhận lời mời
         await achievementService.checkFriendAchievements();
       }
       setActiveTab('friends');
       await fetchData(); // Tải lại tất cả dữ liệu
     } catch (err) {
-      dispatch(setError(t('Failed to accept friend')));
+      dispatch(setError(t('failed_to_accept_friend')));
     } finally {
       dispatch(setLoading(false));
     }
@@ -191,7 +191,7 @@ export function useFriendList() {
         dispatch(setError(null));
       }
     } catch (err) {
-      dispatch(setError(t('Failed to cancel friend request')));
+      dispatch(setError(t('failed_to_cancel_friend_request')));
     } finally {
       dispatch(setLoading(false));
     }
@@ -207,7 +207,7 @@ export function useFriendList() {
       }
       await fetchData(); // Tải lại dữ liệu bạn bè
     } catch (err) {
-      dispatch(setError(t('Failed to remove friend')));
+      dispatch(setError(t('failed_to_remove_friend')));
     } finally {
       dispatch(setLoading(false));
     }
@@ -226,7 +226,7 @@ export function useFriendList() {
         dispatch(setSearchedUsers([]));
       }
     } catch (err) {
-      dispatch(setError(t('Failed to search user')));
+      dispatch(setError(t('failed_to_search_user')));
     } finally {
       dispatch(setLoading(false));
     }
@@ -235,91 +235,91 @@ export function useFriendList() {
   const forceRefreshAllData = async () => {
     try {
       dispatch(setLoading(true));
-      
+
       // Xóa cache để đảm bảo lấy dữ liệu mới
       FriendService.clearCache();
-    setFetchAttempts(0);
-      
+      setFetchAttempts(0);
+
       console.log('Force refreshing data for tab:', activeTab);
-      
+
       // Gọi API dựa trên tab hiện tại
       if (activeTab === 'friends') {
         const friendList = await FriendService.viewAllFriends();
-        
+
         // Kiểm tra xem có thay đổi không
-        const hasChanges = JSON.stringify(friendList) !== JSON.stringify(friends);
-        
+        const hasChanges =
+          JSON.stringify(friendList) !== JSON.stringify(friends);
+
         dispatch(setFriends(friendList || []));
         await fetchUserBatch(friendList.map(f => f.friend_id));
-        
+
         return {
           tab: 'friends',
           hasChanges,
-          count: friendList.length
+          count: friendList.length,
         };
-      } 
-      else if (activeTab === 'pending') {
+      } else if (activeTab === 'pending') {
         const pendingList = await FriendService.viewAllPending();
-        
+
         // Kiểm tra xem có thay đổi không
-        const hasChanges = JSON.stringify(pendingList) !== JSON.stringify(pendingRequests);
-        
+        const hasChanges =
+          JSON.stringify(pendingList) !== JSON.stringify(pendingRequests);
+
         dispatch(setPendingRequests(pendingList || []));
         await fetchUserBatch(pendingList.map(p => p.user_id));
-        
+
         return {
           tab: 'pending',
           hasChanges,
-          count: pendingList.length
+          count: pendingList.length,
         };
-      } 
-      else if (activeTab === 'sent') {
+      } else if (activeTab === 'sent') {
         const sentList = await FriendService.viewAllSent();
-        
+
         // Kiểm tra xem có thay đổi không
-        const hasChanges = JSON.stringify(sentList) !== JSON.stringify(sentRequests);
-        
+        const hasChanges =
+          JSON.stringify(sentList) !== JSON.stringify(sentRequests);
+
         dispatch(setSentRequests(sentList || []));
         await fetchUserBatch(sentList.map(s => s.friend_id));
-        
+
         return {
           tab: 'sent',
           hasChanges,
-          count: sentList.length
+          count: sentList.length,
         };
-      } 
-      else if (activeTab === 'search' && searchedUsers?.length > 0) {
+      } else if (activeTab === 'search' && searchedUsers?.length > 0) {
         // Nếu đang ở tab search và có kết quả tìm kiếm, cập nhật trạng thái của các người dùng
         const [friendList, sentList, pendingList] = await Promise.all([
           FriendService.viewAllFriends(),
           FriendService.viewAllSent(),
           FriendService.viewAllPending(),
         ]);
-        
+
         // Kiểm tra xem có thay đổi không
-        const hasChanges = 
+        const hasChanges =
           JSON.stringify(friendList) !== JSON.stringify(friends) ||
           JSON.stringify(sentList) !== JSON.stringify(sentRequests) ||
           JSON.stringify(pendingList) !== JSON.stringify(pendingRequests);
-        
+
         dispatch(setFriends(friendList || []));
         dispatch(setSentRequests(sentList || []));
         dispatch(setPendingRequests(pendingList || []));
-        
+
         return {
           tab: 'search',
           hasChanges,
           friendsCount: friendList.length,
           sentCount: sentList.length,
-          pendingCount: pendingList.length
+          pendingCount: pendingList.length,
         };
       }
-      
+
       dispatch(setError(null));
       return { tab: activeTab, hasChanges: false };
     } catch (error) {
       console.error('Error refreshing data:', error);
-      dispatch(setError(t('Failed to refresh data')));
+      dispatch(setError(t('failed_to_refresh_data')));
       throw error;
     } finally {
       dispatch(setLoading(false));

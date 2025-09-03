@@ -1,1 +1,17 @@
-{}
+{
+  "friend_list_updated": "Danh sách bạn bè đã cập nhật. Bạn có {{count}} bạn bè.",
+  "friend_list_up_to_date": "Danh sách bạn bè của bạn đã được cập nhật.",
+  "pending_requests_updated": "Yêu cầu đang chờ đã cập nhật. Bạn có {{count}} yêu cầu đang chờ.",
+  "pending_requests_up_to_date": "Danh sách yêu cầu đang chờ của bạn đã được cập nhật.",
+  "sent_requests_updated": "Yêu cầu đã gửi đã cập nhật. Bạn có {{count}} yêu cầu đã gửi.",
+  "sent_requests_up_to_date": "Danh sách yêu cầu đã gửi của bạn đã được cập nhật.",
+  "search_results_updated": "Kết quả tìm kiếm đã cập nhật với dữ liệu bạn bè mới nhất.",
+  "search_results_up_to_date": "Kết quả tìm kiếm của bạn đã được cập nhật.",
+  "failed_to_refresh": "Không thể làm mới. Vui lòng thử lại sau.",
+  "id_label": "ID: {{id}}",
+  "no_friends_yet": "Chưa có bạn bè",
+  "no_friends_description": "Bạn chưa thêm bạn bè nào. Bắt đầu bằng cách tìm kiếm người dùng để thêm.",
+  "remove_friend": "Xóa bạn bè",
+  "start_conversation": "Bắt đầu trò chuyện",
+  "friend": "Bạn bè"
+}

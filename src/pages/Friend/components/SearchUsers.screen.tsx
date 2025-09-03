@@ -6,10 +6,11 @@ import {
   useSearchUser,
 } from '../../../hooks/friend/useSearchUser.hook';
 import FriendService from '../../../services/friend.service';
+import { useAppTranslate } from '../../../hooks/useAppTranslate';
 
 const SearchUsers: React.FC<SearchUsersProps> = props => {
+  const { t } = useAppTranslate('friend');
   const {
-    t,
     username,
     selectedDomain,
     customDomain,
@@ -23,7 +24,7 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
     handleSearch,
     handleClearSearch,
     checkFriendStatus,
-    refreshFriendData
+    refreshFriendData,
   } = useSearchUser(props);
 
   const {
@@ -33,7 +34,7 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
     onAddFriend,
     onCancelRequest,
     onRemoveFriend,
-    onAcceptRequest = () => { },
+    onAcceptRequest = () => {},
     friends,
     sentRequests,
     pendingRequests = [],
@@ -43,30 +44,33 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
   // State để lưu trữ trạng thái và thông tin quan hệ của user
   const [userStatuses, setUserStatuses] = useState<Record<string, string>>({});
   const [userRelations, setUserRelations] = useState<Record<string, any>>({});
-  const [isProcessingAction, setIsProcessingAction] = useState<Record<string, boolean>>({});
+  const [isProcessingAction, setIsProcessingAction] = useState<
+    Record<string, boolean>
+  >({});
 
   // Làm mới trạng thái của users khi có thay đổi
   useEffect(() => {
     const updateUserStatuses = async () => {
       if (!searchedUsers?.length) return;
-      
+
       try {
         const statuses: Record<string, string> = {};
         const relations: Record<string, any> = {};
-        
+
         // Xử lý từng người dùng được search
         for (const user of searchedUsers) {
           const userId = user.userId || user._id;
-          
+
           // Kiểm tra xem có phải chính mình không
           if (user.is_self) {
             statuses[userId] = 'self';
             continue;
           }
-          
+
           // Lấy dữ liệu mối quan hệ từ backend cho user này
-          const relationshipData = await FriendService.getAllRelationshipsWithUser(userId);
-          
+          const relationshipData =
+            await FriendService.getAllRelationshipsWithUser(userId);
+
           if (relationshipData.isFriend && relationshipData.friendRelation) {
             // Là bạn bè - cả hai chiều
             statuses[userId] = 'friend';
@@ -84,45 +88,48 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
             statuses[userId] = 'none';
           }
         }
-        
-        console.log("Updated user statuses from backend:", statuses);
-        console.log("Updated user relations from backend:", relations);
-        
+
+        console.log('Updated user statuses from backend:', statuses);
+        console.log('Updated user relations from backend:', relations);
+
         setUserStatuses(statuses);
         setUserRelations(relations);
-        
       } catch (error) {
         console.error('Error updating user statuses from backend:', error);
-        
+
         // Fallback to local state if backend call fails
         const statuses: Record<string, string> = {};
         const relations: Record<string, any> = {};
-        
+
         for (const user of searchedUsers) {
           const userId = user.userId || user._id;
-          
+
           // Check if this is the current user
           if (user.is_self) {
             statuses[userId] = 'self';
             continue;
           }
-          
+
           // Check friendship status from props
-          const friendRelation = friends.find(f => f.friend_id === userId || f.user_id === userId);
+          const friendRelation = friends.find(
+            f => f.friend_id === userId || f.user_id === userId
+          );
           if (friendRelation) {
             statuses[userId] = 'friend';
             relations[userId] = friendRelation;
             continue;
           }
-          
+
           // Check pending requests
-          const pendingIncoming = pendingRequests.find(r => r.user_id === userId);
+          const pendingIncoming = pendingRequests.find(
+            r => r.user_id === userId
+          );
           if (pendingIncoming) {
             statuses[userId] = 'pending_incoming';
             relations[userId] = pendingIncoming;
             continue;
           }
-          
+
           // Check sent requests
           const sentRequest = sentRequests.find(r => r.friend_id === userId);
           if (sentRequest) {
@@ -130,18 +137,18 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
             relations[userId] = sentRequest;
             continue;
           }
-          
+
           // Default case - no relationship yet
           statuses[userId] = 'none';
         }
-        
+
         setUserStatuses(statuses);
         setUserRelations(relations);
       }
     };
-    
+
     updateUserStatuses();
-    
+
     // Auto refresh status every 10 seconds
     const intervalId = setInterval(() => {
       if (searchedUsers?.length) {
@@ -149,37 +156,47 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
         updateUserStatuses();
       }
     }, 10000);
-    
+
     return () => clearInterval(intervalId);
-  }, [searchedUsers, friends, sentRequests, pendingRequests, refreshFriendData]);
+  }, [
+    searchedUsers,
+    friends,
+    sentRequests,
+    pendingRequests,
+    refreshFriendData,
+  ]);
 
   // Hàm wrapper để xử lý friend actions và refresh data
   const handleAddFriendWithRefresh = async (userId: string) => {
     if (isProcessingAction[userId]) return;
     setIsProcessingAction(prev => ({ ...prev, [userId]: true }));
-    
+
     try {
       // Cập nhật UI trước khi gọi API
       setUserStatuses(prev => ({ ...prev, [userId]: 'sent' }));
-      
+
       // Tạo một relation tạm thời cho UI
-      const tempRelation = { 
-        _id: `temp_${Date.now()}`, 
+      const tempRelation = {
+        _id: `temp_${Date.now()}`,
         friend_id: userId,
-        status: 'pending'
+        status: 'pending',
       };
       setUserRelations(prev => ({ ...prev, [userId]: tempRelation }));
-      
+
       // Sau đó gọi API
       await onAddFriend(userId);
-      
+
       // Lấy thông tin mới từ backend
-      const relationshipData = await FriendService.getAllRelationshipsWithUser(userId);
-      
+      const relationshipData =
+        await FriendService.getAllRelationshipsWithUser(userId);
+
       if (relationshipData.sentRequest) {
-        setUserRelations(prev => ({ ...prev, [userId]: relationshipData.sentRequest }));
+        setUserRelations(prev => ({
+          ...prev,
+          [userId]: relationshipData.sentRequest,
+        }));
       }
-      
+
       // Refresh global data
       refreshFriendData();
     } catch (error) {
@@ -197,46 +214,53 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
   };
 
   const handleAcceptFriendWithRefresh = async (requestId: string) => {
-    const relation = userRelations[Object.keys(userRelations).find(
-      key => userRelations[key]?._id === requestId
-    ) || ''] || pendingRequests.find(r => r._id === requestId);
-    
+    const relation =
+      userRelations[
+        Object.keys(userRelations).find(
+          key => userRelations[key]?._id === requestId
+        ) || ''
+      ] || pendingRequests.find(r => r._id === requestId);
+
     if (!relation) {
       console.error('Cannot find pending request with ID:', requestId);
       return;
     }
-    
+
     const userId = relation.user_id;
-    
+
     if (isProcessingAction[userId]) return;
     setIsProcessingAction(prev => ({ ...prev, [userId]: true }));
-    
+
     try {
       // Cập nhật UI trước khi gọi API
       setUserStatuses(prev => ({ ...prev, [userId]: 'friend' }));
-      
+
       // Tạo một friend relation tạm thời cho UI
       const tempFriendRelation = {
         _id: `temp_${Date.now()}`,
         user_id: relation.user_id,
         friend_id: relation.friend_id,
-        status: 'accepted'
+        status: 'accepted',
       };
       setUserRelations(prev => ({ ...prev, [userId]: tempFriendRelation }));
-      
+
       // Sau đó gọi API
       console.log('Accepting friend request:', relation);
       await onAcceptRequest(requestId);
-      
+
       // Lấy dữ liệu mới từ backend
-      const relationshipData = await FriendService.getAllRelationshipsWithUser(userId);
-      
+      const relationshipData =
+        await FriendService.getAllRelationshipsWithUser(userId);
+
       // Cập nhật UI với dữ liệu mới
       if (relationshipData.isFriend && relationshipData.friendRelation) {
         setUserStatuses(prev => ({ ...prev, [userId]: 'friend' }));
-        setUserRelations(prev => ({ ...prev, [userId]: relationshipData.friendRelation }));
+        setUserRelations(prev => ({
+          ...prev,
+          [userId]: relationshipData.friendRelation,
+        }));
       }
-      
+
       // Refresh global data
       refreshFriendData();
     } catch (error) {
@@ -250,20 +274,23 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
   };
 
   const handleCancelRequestWithRefresh = async (requestId: string) => {
-    const relation = userRelations[Object.keys(userRelations).find(
-      key => userRelations[key]?._id === requestId
-    ) || ''] || sentRequests.find(r => r._id === requestId);
-    
+    const relation =
+      userRelations[
+        Object.keys(userRelations).find(
+          key => userRelations[key]?._id === requestId
+        ) || ''
+      ] || sentRequests.find(r => r._id === requestId);
+
     if (!relation) {
       console.error('Cannot find sent request with ID:', requestId);
       return;
     }
-    
+
     const userId = relation.friend_id;
-    
+
     if (isProcessingAction[userId]) return;
     setIsProcessingAction(prev => ({ ...prev, [userId]: true }));
-    
+
     try {
       // Cập nhật UI trước khi gọi API
       setUserStatuses(prev => ({ ...prev, [userId]: 'none' }));
@@ -272,25 +299,35 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
         delete newRelations[userId];
         return newRelations;
       });
-      
+
       // Sau đó gọi API
       await onCancelRequest(requestId);
-      
+
       // Lấy dữ liệu mới từ backend để đảm bảo cập nhật
-      const relationshipData = await FriendService.getAllRelationshipsWithUser(userId);
-      
+      const relationshipData =
+        await FriendService.getAllRelationshipsWithUser(userId);
+
       // Nếu vẫn còn bất kỳ mối quan hệ nào, cập nhật UI tương ứng
       if (relationshipData.isFriend && relationshipData.friendRelation) {
         setUserStatuses(prev => ({ ...prev, [userId]: 'friend' }));
-        setUserRelations(prev => ({ ...prev, [userId]: relationshipData.friendRelation }));
+        setUserRelations(prev => ({
+          ...prev,
+          [userId]: relationshipData.friendRelation,
+        }));
       } else if (relationshipData.pendingIncoming) {
         setUserStatuses(prev => ({ ...prev, [userId]: 'pending_incoming' }));
-        setUserRelations(prev => ({ ...prev, [userId]: relationshipData.pendingIncoming }));
+        setUserRelations(prev => ({
+          ...prev,
+          [userId]: relationshipData.pendingIncoming,
+        }));
       } else if (relationshipData.sentRequest) {
         setUserStatuses(prev => ({ ...prev, [userId]: 'sent' }));
-        setUserRelations(prev => ({ ...prev, [userId]: relationshipData.sentRequest }));
+        setUserRelations(prev => ({
+          ...prev,
+          [userId]: relationshipData.sentRequest,
+        }));
       }
-      
+
       // Refresh global data
       refreshFriendData();
     } catch (error) {
@@ -304,23 +341,27 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
   };
 
   const handleRemoveFriendWithRefresh = async (friendId: string) => {
-    const relation = userRelations[Object.keys(userRelations).find(
-      key => userRelations[key]?._id === friendId
-    ) || ''] || friends.find(f => f._id === friendId);
-    
+    const relation =
+      userRelations[
+        Object.keys(userRelations).find(
+          key => userRelations[key]?._id === friendId
+        ) || ''
+      ] || friends.find(f => f._id === friendId);
+
     if (!relation) {
       console.error('Cannot find friend relation with ID:', friendId);
       return;
     }
-    
-    const userId = relation.user_id === props.userId ? relation.friend_id : relation.user_id;
-    
+
+    const userId =
+      relation.user_id === props.userId ? relation.friend_id : relation.user_id;
+
     if (isProcessingAction[userId]) return;
     setIsProcessingAction(prev => ({ ...prev, [userId]: true }));
-    
+
     try {
       console.log('Removing friend relation:', relation);
-      
+
       // Cập nhật UI trước khi gọi API
       setUserStatuses(prev => ({ ...prev, [userId]: 'none' }));
       setUserRelations(prev => {
@@ -328,25 +369,35 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
         delete newRelations[userId];
         return newRelations;
       });
-      
+
       // Sau đó gọi API
       await onRemoveFriend(friendId);
-      
+
       // Lấy dữ liệu mới từ backend để đảm bảo cập nhật
-      const relationshipData = await FriendService.getAllRelationshipsWithUser(userId);
-      
+      const relationshipData =
+        await FriendService.getAllRelationshipsWithUser(userId);
+
       // Nếu vẫn còn bất kỳ mối quan hệ nào, cập nhật UI tương ứng
       if (relationshipData.isFriend && relationshipData.friendRelation) {
         setUserStatuses(prev => ({ ...prev, [userId]: 'friend' }));
-        setUserRelations(prev => ({ ...prev, [userId]: relationshipData.friendRelation }));
+        setUserRelations(prev => ({
+          ...prev,
+          [userId]: relationshipData.friendRelation,
+        }));
       } else if (relationshipData.pendingIncoming) {
         setUserStatuses(prev => ({ ...prev, [userId]: 'pending_incoming' }));
-        setUserRelations(prev => ({ ...prev, [userId]: relationshipData.pendingIncoming }));
+        setUserRelations(prev => ({
+          ...prev,
+          [userId]: relationshipData.pendingIncoming,
+        }));
       } else if (relationshipData.sentRequest) {
         setUserStatuses(prev => ({ ...prev, [userId]: 'sent' }));
-        setUserRelations(prev => ({ ...prev, [userId]: relationshipData.sentRequest }));
+        setUserRelations(prev => ({
+          ...prev,
+          [userId]: relationshipData.sentRequest,
+        }));
       }
-      
+
       // Refresh global data
       refreshFriendData();
     } catch (error) {
@@ -363,19 +414,25 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
     // Kiểm tra xem có đang xử lý hành động nào không
     if (isProcessingAction[userId]) {
       return (
-        <button className="px-4 py-2 bg-gray-300 text-white rounded-lg cursor-wait" disabled>
+        <button
+          className="px-4 py-2 bg-gray-300 text-white rounded-lg cursor-wait"
+          disabled
+        >
           <div className="w-5 h-5 border-t-2 border-blue-500 border-solid rounded-full animate-spin"></div>
         </button>
       );
     }
-    
+
     // Sử dụng trạng thái đã lưu trong state
     const status = userStatuses[userId] || 'loading';
-    
+
     // Nếu đang loading, hiển thị nút loading
     if (status === 'loading') {
       return (
-        <button className="px-4 py-2 bg-gray-300 text-white rounded-lg cursor-wait" disabled>
+        <button
+          className="px-4 py-2 bg-gray-300 text-white rounded-lg cursor-wait"
+          disabled
+        >
           <div className="w-5 h-5 border-t-2 border-blue-500 border-solid rounded-full animate-spin"></div>
         </button>
       );
@@ -383,57 +440,86 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
 
     // Lấy thông tin quan hệ từ state đã lưu
     const relation = userRelations[userId];
-    console.log(`Rendering button for user ${userId} with status: ${status}, relation:`, relation);
+    console.log(
+      `Rendering button for user ${userId} with status: ${status}, relation:`,
+      relation
+    );
 
     switch (status) {
       case 'self':
         return null;
-        
+
       case 'friend':
         // Nếu không tìm thấy relation nhưng status là friend, hiển thị nút Add Friend thay vì loading
         if (!relation) {
-          console.warn(`Friend relation not found for user ${userId} but status is 'friend'. Showing Add Friend button.`);
+          console.warn(
+            `Friend relation not found for user ${userId} but status is 'friend'. Showing Add Friend button.`
+          );
           return (
             <button
               onClick={() => handleAddFriendWithRefresh(userId)}
               className="px-4 py-2 bg-[#21b4ca] text-white rounded-lg hover:bg-[#1c9eb1] transition-colors duration-300 flex items-center gap-2"
               disabled={loading}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
               </svg>
-              {t('Add Friend')}
+              {t('add_friend')}
             </button>
           );
         }
-        
+
         return (
           <button
             onClick={() => handleRemoveFriendWithRefresh(relation._id)}
             className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-300 flex items-center gap-1"
             disabled={loading}
           >
-            {t('Remove Friend')}
+            {t('remove_friend')}
           </button>
         );
-        
+
       case 'pending_incoming':
         if (!relation) {
-          console.warn(`Pending relation not found for user ${userId} but status is 'pending_incoming'. Showing Add Friend button.`);
+          console.warn(
+            `Pending relation not found for user ${userId} but status is 'pending_incoming'. Showing Add Friend button.`
+          );
           return (
             <button
               onClick={() => handleAddFriendWithRefresh(userId)}
               className="px-4 py-2 bg-[#21b4ca] text-white rounded-lg hover:bg-[#1c9eb1] transition-colors duration-300 flex items-center gap-2"
               disabled={loading}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
               </svg>
-              {t('Add Friend')}
+              {t('add_friend')}
             </button>
           );
         }
-        
+
         return (
           <button
             onClick={() => handleAcceptFriendWithRefresh(relation._id)}
@@ -453,40 +539,64 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
                 d="M5 13l4 4L19 7"
               />
             </svg>
-            {t('Accept Request')}
+            {t('accept_request')}
           </button>
         );
-        
+
       case 'sent':
         if (!relation) {
-          console.warn(`Sent relation not found for user ${userId} but status is 'sent'. Showing Add Friend button.`);
+          console.warn(
+            `Sent relation not found for user ${userId} but status is 'sent'. Showing Add Friend button.`
+          );
           return (
             <button
               onClick={() => handleAddFriendWithRefresh(userId)}
               className="px-4 py-2 bg-[#21b4ca] text-white rounded-lg hover:bg-[#1c9eb1] transition-colors duration-300 flex items-center gap-2"
               disabled={loading}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
               </svg>
-              {t('Add Friend')}
+              {t('add_friend')}
             </button>
           );
         }
-        
+
         return (
           <button
             onClick={() => handleCancelRequestWithRefresh(relation._id)}
             className="px-4 py-2 bg-[#607D8B] text-white rounded-lg hover:bg-red-500 transition-colors duration-300 flex items-center gap-2 cursor-pointer"
             disabled={loading}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
-            {t('Cancel Request')}
+            {t('cancel_request')}
           </button>
         );
-        
+
       default:
         return (
           <button
@@ -494,8 +604,19 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
             className="px-4 py-2 bg-[#21b4ca] cursor-pointer text-white rounded-lg hover:bg-[#1c9eb1] transition-colors duration-300 flex items-center gap-2"
             disabled={loading}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
             </svg>
             {t('Add Friend')}
           </button>
@@ -507,7 +628,7 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
     <div>
       <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 mb-6">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">
-          {t('Search for Friends')}
+          {t('search_for_friends')}
         </h3>
 
         {/* Inputs and buttons in one row */}
@@ -531,7 +652,7 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
             </div>
             <input
               type="text"
-              placeholder={t('Enter username')}
+              placeholder={t('enter_username')}
               value={username}
               onChange={handleUsernameChange}
               onKeyPress={handleKeyPress}
@@ -572,7 +693,7 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
                 <input
                   ref={customDomainInputRef}
                   type="text"
-                  placeholder={t('@example.com')}
+                  placeholder={t('example_domain')}
                   value={customDomain}
                   onChange={e => setCustomDomain(e.target.value)}
                   className="p-3 w-1/2 border border-gray-200 rounded-r-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
@@ -592,7 +713,7 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
                 username === '' ||
                 (showCustomDomain && customDomain === '@')
               }
-              title={t('Search')}
+              title={t('search')}
             >
               <svg
                 className="h-5 w-5"
@@ -614,7 +735,7 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
                 onClick={handleClearSearch}
                 className="px-3 py-2 bg-[#607D8B] cursor-pointer text-white rounded-lg hover:bg-red-600 transition-colors duration-300 flex items-center justify-center"
                 disabled={loading}
-                title={t('Clear')}
+                title={t('clear')}
               >
                 <svg
                   className="h-5 w-5"
@@ -636,9 +757,7 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
       </div>
 
       <p className="mt-3 text-xs text-gray-500 mb-4">
-        {t(
-          'Enter a username and select an email domain to find users. You can then send them friend requests.'
-        )}
+        {t('search_description')}
       </p>
 
       {loading && (
@@ -660,7 +779,7 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold text-gray-800">
-              {t('Search Results')}
+              {t('search_results')}
             </h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -675,28 +794,28 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
                       {user.avatar_url ? (
-                        <img 
+                        <img
                           src={user.avatar_url}
                           alt={user.full_name || user.email || 'User'}
                           className="w-14 h-14 rounded-full object-cover mr-4"
-                          onError={(e) => {
-                            e.currentTarget.onerror = null; 
-                            const initial = user.email ? user.email.charAt(0).toUpperCase() : 'U';
+                          onError={e => {
+                            e.currentTarget.onerror = null;
+                            const initial = user.email
+                              ? user.email.charAt(0).toUpperCase()
+                              : 'U';
                             e.currentTarget.src = `https://ui-avatars.com/api/?name=${initial}&background=random&color=fff`;
                           }}
                         />
                       ) : (
-                      <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 text-xl font-medium mr-4">
-                        {user.email ? user.email.charAt(0).toUpperCase() : 'U'}
-                      </div>
+                        <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 text-xl font-medium mr-4">
+                          {user.email
+                            ? user.email.charAt(0).toUpperCase()
+                            : 'U'}
+                        </div>
                       )}
-                      <div>
-                        {renderUserInfo(actualUserId, true)}
-                      </div>
+                      <div>{renderUserInfo(actualUserId, true)}</div>
                     </div>
-                    <div>
-                      {renderActionButton(actualUserId)}
-                    </div>
+                    <div>{renderActionButton(actualUserId)}</div>
                   </div>
                 </div>
               );
@@ -723,11 +842,9 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
               </svg>
             </div>
             <h3 className="text-xl font-semibold text-gray-800 mb-2">
-              {t('No Results Found')}
+              {t('no_results_found')}
             </h3>
-            <p className="text-gray-500">
-              {t('We could not find a user with that email address. Please check the email and try again.')}
-            </p>
+            <p className="text-gray-500">{t('no_results_description')}</p>
           </div>
         )
       )}

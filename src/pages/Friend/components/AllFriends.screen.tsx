@@ -2,6 +2,7 @@ import React from 'react';
 import { AllFriendsProps } from '../../../types/friend/props/component.props';
 import { GROUP_CLASSNAMES } from '../../../styles/group-class-name.style';
 import { useAllFriend } from '../../../hooks/friend/useAllFriend.hook';
+import { useAppTranslate } from '../../../hooks/useAppTranslate';
 
 const AllFriends: React.FC<AllFriendsProps> = ({
   friends,
@@ -9,9 +10,10 @@ const AllFriends: React.FC<AllFriendsProps> = ({
   onRemoveFriend,
   renderUserInfo,
   onRefresh,
-  onStartChat
+  onStartChat,
 }) => {
-  const { t, getColorFromString, totalFriends, hasNoFriends } = useAllFriend({
+  const { t } = useAppTranslate('friend');
+  const { getColorFromString, totalFriends, hasNoFriends } = useAllFriend({
     friends,
     loading,
   });
@@ -60,11 +62,9 @@ const AllFriends: React.FC<AllFriendsProps> = ({
           </svg>
         </div>
         <h3 className="text-xl font-semibold text-gray-800 mb-2">
-          {t('No Friends Yet')}
+          {t('no_friends_yet')}
         </h3>
-        <p className="text-gray-500 mb-6">
-          {t('You have not added any friends yet. Start by searching for users to add.')}
-        </p>
+        <p className="text-gray-500 mb-6">{t('no_friends_description')}</p>
       </div>
     );
   }
@@ -78,27 +78,27 @@ const AllFriends: React.FC<AllFriendsProps> = ({
           friend.friend_id[0]?.toUpperCase();
 
         return (
-          <div 
-            key={friend._id} 
+          <div
+            key={friend._id}
             className="bg-white rounded-lg p-5 shadow-sm border border-gray-200 transition-all hover:shadow-md cursor-pointer"
             onClick={() => onStartChat && onStartChat(friend.friend_id)}
           >
             <div className="flex items-start justify-between">
               <div className="flex items-center">
                 {friend.friendInfo?.avatar_url ? (
-                  <img 
+                  <img
                     src={friend.friendInfo.avatar_url}
-                    alt={friend.friendInfo.full_name || 'Friend'}
+                    alt={friend.friendInfo.full_name || t('friend')}
                     className="w-16 h-16 rounded-full object-cover mr-4"
-                    onError={(e) => {
-                      e.currentTarget.onerror = null; 
+                    onError={e => {
+                      e.currentTarget.onerror = null;
                       e.currentTarget.src = `https://ui-avatars.com/api/?name=${initial}&background=random&color=fff`;
                     }}
                   />
                 ) : (
-                <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 text-2xl font-medium mr-4">
-                  {initial}
-                </div>
+                  <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 text-2xl font-medium mr-4">
+                    {initial}
+                  </div>
                 )}
                 <div>
                   {friend.friendInfo ? (
@@ -130,10 +130,10 @@ const AllFriends: React.FC<AllFriendsProps> = ({
                   ) : (
                     renderUserInfo(friend.friend_id)
                   )}
-                  
-                  <button 
+
+                  <button
                     className="mt-2 inline-flex items-center text-blue-600 hover:text-blue-800 text-sm"
-                    onClick={(e) => {
+                    onClick={e => {
                       e.stopPropagation();
                       onStartChat && onStartChat(friend.friend_id);
                     }}
@@ -152,17 +152,17 @@ const AllFriends: React.FC<AllFriendsProps> = ({
                         d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
                       />
                     </svg>
-                    Bắt đầu trò chuyện
+                    {t('start_conversation')}
                   </button>
                 </div>
               </div>
               <button
-                onClick={(e) => {
+                onClick={e => {
                   e.stopPropagation();
                   onRemoveFriend(friend._id);
                 }}
                 className="p-2 bg-white text-gray-600 rounded-lg hover:bg-red-50 hover:text-red-600 transition-all duration-200 border border-gray-200"
-                title={t('Remove Friend')}
+                title={t('remove_friend')}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"

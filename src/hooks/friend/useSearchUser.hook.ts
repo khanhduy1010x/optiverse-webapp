@@ -1,14 +1,8 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
 import { SearchUsersProps } from '../../types/friend/props/component.props';
 import FriendService from '../../services/friend.service';
 import achievementService from '../../services/achievement.service';
-
-export const EMAIL_DOMAINS = [
-  { value: '@gmail.com', label: '@gmail.com' },
-  { value: '@fpt.edu.vn', label: '@fpt.edu.vn' },
-  { value: 'custom', label: 'Other' },
-];
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 export const useSearchUser = (props: SearchUsersProps) => {
   const {
@@ -20,7 +14,13 @@ export const useSearchUser = (props: SearchUsersProps) => {
     sentRequests,
     pendingRequests,
   } = props;
-  const { t } = useTranslation();
+  const { t } = useAppTranslate('friend');
+
+  const EMAIL_DOMAINS = [
+    { value: '@gmail.com', label: '@gmail.com' },
+    { value: '@fpt.edu.vn', label: '@fpt.edu.vn' },
+    { value: 'custom', label: t('other') },
+  ];
 
   const [username, setUsername] = useState('');
   const [selectedDomain, setSelectedDomain] = useState(EMAIL_DOMAINS[0].value);
@@ -28,7 +28,9 @@ export const useSearchUser = (props: SearchUsersProps) => {
   const [showCustomDomain, setShowCustomDomain] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [friendStatusCache, setFriendStatusCache] = useState<Record<string, string>>({});
+  const [friendStatusCache, setFriendStatusCache] = useState<
+    Record<string, string>
+  >({});
   const customDomainInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch friend data
@@ -39,14 +41,14 @@ export const useSearchUser = (props: SearchUsersProps) => {
       const [friendsList, sentList, pendingList] = await Promise.all([
         FriendService.viewAllFriends(),
         FriendService.viewAllSent(),
-        FriendService.viewAllPending()
+        FriendService.viewAllPending(),
       ]);
-      
+
       // Check for friend achievements if we have friends
       if (friendsList && friendsList.length > 0) {
         await achievementService.checkFriendAchievements();
       }
-      
+
       // Trigger lại hàm kiểm tra trạng thái với key mới
       setRefreshKey(prev => prev + 1);
     } catch (error) {
@@ -100,24 +102,24 @@ export const useSearchUser = (props: SearchUsersProps) => {
       // Làm sạch dữ liệu trước khi tìm kiếm
       const cleanedUsername = username.trim();
       setUsername(cleanedUsername);
-      
+
       handleSearch();
     }
   };
 
   const handleSearch = () => {
     setHasSearched(true);
-    
+
     // Tạo email được làm sạch để cập nhật lại
     const cleanedUsername = username.trim();
     setUsername(cleanedUsername);
-    
+
     // Đảm bảo email đã được làm sạch đúng cách
     const email = showCustomDomain
       ? cleanedUsername + customDomain
       : cleanedUsername + selectedDomain;
     onSearchEmailChange(email);
-    
+
     // Thực hiện tìm kiếm
     onSearch();
   };
@@ -132,74 +134,101 @@ export const useSearchUser = (props: SearchUsersProps) => {
   };
 
   // Kiểm tra trạng thái bạn bè với data mới nhất từ backend
-  const checkFriendStatus = useCallback(async (userId: string) => {
-    // Trước tiên, kiểm tra cache
-    const cachedStatus = friendStatusCache[userId];
-    
-    // Nếu có trong cache và chưa quá cũ, trả về kết quả từ cache
-    if (cachedStatus) {
-      return cachedStatus;
-    }
-    
-    // Kiểm tra xem có phải là chính mình không
-    const isSelf = searchedUsers.find(
-      u => (u.userId || (u as any)._id) === userId && u.is_self
-    );
-    
-    if (isSelf) {
-      setFriendStatusCache(prev => ({ ...prev, [userId]: 'self' }));
-      return 'self';
-    }
+  const checkFriendStatus = useCallback(
+    async (userId: string) => {
+      // Trước tiên, kiểm tra cache
+      const cachedStatus = friendStatusCache[userId];
 
-    try {
-      // Lấy dữ liệu bạn bè mới nhất từ backend
-      const allFriends = await FriendService.viewAllFriends();
-      const allSentRequests = await FriendService.viewAllSent();
-      const allPendingRequests = await FriendService.viewAllPending();
-      
-      // Kiểm tra trạng thái bạn bè - cả hai chiều
-      if (allFriends.some(f => f.friend_id === userId || f.user_id === userId)) {
-        setFriendStatusCache(prev => ({ ...prev, [userId]: 'friend' }));
-        return 'friend';
+      // Nếu có trong cache và chưa quá cũ, trả về kết quả từ cache
+      if (cachedStatus) {
+        return cachedStatus;
       }
-      
-      // Kiểm tra trạng thái pending request - cả hai chiều
-      if (allPendingRequests && allPendingRequests.some(r => r.user_id === userId)) {
-        setFriendStatusCache(prev => ({ ...prev, [userId]: 'pending_incoming' }));
-        return 'pending_incoming';
+
+      // Kiểm tra xem có phải là chính mình không
+      const isSelf = searchedUsers.find(
+        u => (u.userId || (u as any)._id) === userId && u.is_self
+      );
+
+      if (isSelf) {
+        setFriendStatusCache(prev => ({ ...prev, [userId]: 'self' }));
+        return 'self';
       }
-      
-      // Kiểm tra nếu có lời mời từ người này gửi đến cho mình
-      if (allSentRequests && allSentRequests.some(r => r.user_id === userId)) {
-        setFriendStatusCache(prev => ({ ...prev, [userId]: 'pending_incoming' })); 
-      return 'pending_incoming';
+
+      try {
+        // Lấy dữ liệu bạn bè mới nhất từ backend
+        const allFriends = await FriendService.viewAllFriends();
+        const allSentRequests = await FriendService.viewAllSent();
+        const allPendingRequests = await FriendService.viewAllPending();
+
+        // Kiểm tra trạng thái bạn bè - cả hai chiều
+        if (
+          allFriends.some(f => f.friend_id === userId || f.user_id === userId)
+        ) {
+          setFriendStatusCache(prev => ({ ...prev, [userId]: 'friend' }));
+          return 'friend';
+        }
+
+        // Kiểm tra trạng thái pending request - cả hai chiều
+        if (
+          allPendingRequests &&
+          allPendingRequests.some(r => r.user_id === userId)
+        ) {
+          setFriendStatusCache(prev => ({
+            ...prev,
+            [userId]: 'pending_incoming',
+          }));
+          return 'pending_incoming';
+        }
+
+        // Kiểm tra nếu có lời mời từ người này gửi đến cho mình
+        if (
+          allSentRequests &&
+          allSentRequests.some(r => r.user_id === userId)
+        ) {
+          setFriendStatusCache(prev => ({
+            ...prev,
+            [userId]: 'pending_incoming',
+          }));
+          return 'pending_incoming';
+        }
+
+        // Kiểm tra trạng thái sent request
+        if (allSentRequests.some(r => r.friend_id === userId)) {
+          setFriendStatusCache(prev => ({ ...prev, [userId]: 'sent' }));
+          return 'sent';
+        }
+
+        // Nếu không thuộc trường hợp nào
+        setFriendStatusCache(prev => ({ ...prev, [userId]: 'none' }));
+        return 'none';
+      } catch (error) {
+        console.error('Error checking friend status:', error);
+
+        // Fallback về state local nếu có lỗi
+        if (friends.some(f => f.friend_id === userId || f.user_id === userId)) {
+          return 'friend';
+        }
+        if (
+          pendingRequests &&
+          pendingRequests.some(r => r.user_id === userId)
+        ) {
+          return 'pending_incoming';
+        }
+        if (sentRequests.some(r => r.friend_id === userId)) {
+          return 'sent';
+        }
+        return 'none';
       }
-      
-      // Kiểm tra trạng thái sent request
-      if (allSentRequests.some(r => r.friend_id === userId)) {
-        setFriendStatusCache(prev => ({ ...prev, [userId]: 'sent' }));
-        return 'sent';
-      }
-      
-      // Nếu không thuộc trường hợp nào
-      setFriendStatusCache(prev => ({ ...prev, [userId]: 'none' }));
-    return 'none';
-    } catch (error) {
-      console.error('Error checking friend status:', error);
-      
-      // Fallback về state local nếu có lỗi
-      if (friends.some(f => f.friend_id === userId || f.user_id === userId)) {
-        return 'friend';
-      }
-      if (pendingRequests && pendingRequests.some(r => r.user_id === userId)) {
-        return 'pending_incoming';
-      }
-      if (sentRequests.some(r => r.friend_id === userId)) {
-        return 'sent';
-      }
-      return 'none';
-    }
-  }, [friends, pendingRequests, sentRequests, searchedUsers, friendStatusCache, refreshKey]);
+    },
+    [
+      friends,
+      pendingRequests,
+      sentRequests,
+      searchedUsers,
+      friendStatusCache,
+      refreshKey,
+    ]
+  );
 
   // Xóa cache khi refreshKey thay đổi
   useEffect(() => {
@@ -208,6 +237,7 @@ export const useSearchUser = (props: SearchUsersProps) => {
 
   return {
     t,
+    EMAIL_DOMAINS,
     username,
     selectedDomain,
     customDomain,
@@ -221,6 +251,6 @@ export const useSearchUser = (props: SearchUsersProps) => {
     handleSearch,
     handleClearSearch,
     checkFriendStatus,
-    refreshFriendData
+    refreshFriendData,
   };
 };
