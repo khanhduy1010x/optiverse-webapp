@@ -10,6 +10,7 @@ import {
   ThisDeviceCard,
 } from '../../components/common/SessionCard.component';
 import ProfileSidebar from './ProfileSidebar.component';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 export default function LoginSessions() {
   const {
@@ -29,6 +30,8 @@ export default function LoginSessions() {
     handleLogoutSession,
   } = useLoginSessions();
 
+  const { t } = useAppTranslate('profile');
+
   return (
     <View className="w-full h-screen flex">
       <ConfirmationModal
@@ -40,18 +43,19 @@ export default function LoginSessions() {
       />
       <View className="flex flex-1 overflow-hidden">
         {/* Using the shared ProfileSidebar component */}
-        <ProfileSidebar selectedMenu={selectedMenu} handleNavigate={handleNavigate} />
+        <ProfileSidebar
+          selectedMenu={selectedMenu}
+          handleNavigate={handleNavigate}
+        />
 
         {/* Main Content */}
         <View className={GROUP_CLASSNAMES.profileMainContent}>
           <div className="p-8">
-            <span
-              className=" text-gray-800 text-[22px] text:bold"
-            >
-              Login Sessions
+            <span className=" text-gray-800 text-[22px] text:bold">
+              {t('login_sessions')}
             </span>
             <div className="mb-2 text-[14px] text-gray-400  text:bold">
-              Manage your login sessions and devices
+              {t('manage_login_sessions_devices')}
             </div>
             <hr className="mb-6 border-gray-200" />
 
@@ -63,13 +67,13 @@ export default function LoginSessions() {
 
             {isLoading ? (
               <div className="flex justify-center items-center h-40">
-                <Text>Loading login sessions...</Text>
+                <Text>{t('loading_login_sessions')}</Text>
               </div>
             ) : (
               <div className="space-y-8">
                 <section>
                   <h3 className={GROUP_CLASSNAMES.profileSection}>
-                    This device
+                    {t('this_device')}
                   </h3>
                   {currentSession && (
                     <ThisDeviceCard session={currentSession} />
@@ -79,14 +83,14 @@ export default function LoginSessions() {
                 <section>
                   <div className="flex justify-between items-center mb-4">
                     <h3 className={GROUP_CLASSNAMES.profileSection}>
-                      Other active sessions
+                      {t('other_active_sessions')}
                     </h3>
                     {getDisplayedActiveSessions().length > 0 && (
                       <button
                         onClick={handleLogoutAllSessions}
                         className={GROUP_CLASSNAMES.sessionLogoutAllButton}
                       >
-                        Log out all other sessions
+                        {t('log_out_all_other_sessions')}
                       </button>
                     )}
                   </div>
@@ -105,8 +109,10 @@ export default function LoginSessions() {
                         className={GROUP_CLASSNAMES.sessionShowMoreButton}
                       >
                         {showAllActiveSessions
-                          ? 'Show less'
-                          : `Show ${activeSessions.length - 2} more`}
+                          ? t('show_less')
+                          : t('show_more', {
+                              count: activeSessions.length - 2,
+                            })}
                       </button>
                     )}
                   </div>
@@ -115,7 +121,7 @@ export default function LoginSessions() {
                 {previousSessions.length > 0 && (
                   <section>
                     <h3 className={GROUP_CLASSNAMES.profileSection}>
-                      Previously logged-out sessions
+                      {t('previously_logged_out_sessions')}
                     </h3>
                     <div className="space-y-4">
                       {previousSessions.map(session => (

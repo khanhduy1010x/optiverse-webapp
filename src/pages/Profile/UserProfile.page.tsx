@@ -8,6 +8,7 @@ import ChangePasswordPopup from './ChangePasswordPopup.screen';
 import { GROUP_CLASSNAMES } from '../../styles/group-class-name.style';
 import ProfileSidebar from './ProfileSidebar.component';
 import StreakDisplay from '../../components/streak/StreakDisplay';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 export default function UserProfile() {
   const { theme, toggleTheme } = useTheme();
@@ -41,6 +42,8 @@ export default function UserProfile() {
     fetchProfile,
   } = useUserProfile();
 
+  const { t } = useAppTranslate('profile');
+
   return (
     <View className="w-full dark:border-gray-700 rounded-lg  overflow-hidden">
       {/* Avatar View Modal */}
@@ -70,7 +73,10 @@ export default function UserProfile() {
               </svg>
             </button>
             <img
-              src={avatar || "https://cdn.vectorstock.com/i/500p/44/01/default-avatar-photo-placeholder-icon-grey-vector-38594401.jpg"}
+              src={
+                avatar ||
+                'https://cdn.vectorstock.com/i/500p/44/01/default-avatar-photo-placeholder-icon-grey-vector-38594401.jpg'
+              }
               alt="User Avatar"
               className="max-w-[90vw] max-h-[80vh] object-contain rounded-lg"
               onClick={e => e.stopPropagation()}
@@ -82,7 +88,10 @@ export default function UserProfile() {
       {/* Sidebar and Main Content */}
       <View className="flex flex-1 overflow-hidden min-h-screen">
         {/* Sidebar - Now using the shared ProfileSidebar component */}
-        <ProfileSidebar selectedMenu={selectedMenu} handleNavigate={handleNavigate} />
+        <ProfileSidebar
+          selectedMenu={selectedMenu}
+          handleNavigate={handleNavigate}
+        />
 
         {/* Main Content */}
         <View className={GROUP_CLASSNAMES.profileMainContent}>
@@ -90,19 +99,19 @@ export default function UserProfile() {
             <div className="flex justify-between items-center mb-4">
               <div>
                 <span className="text-[22px] text-gray-800 text:bold">
-                  My Profile
+                  {t('my_profile')}
                 </span>
                 <div className="text-[14px] text-gray-400 text:bold">
-                  Manage your profile information
+                  {t('manage_profile_information')}
                 </div>
               </div>
-              
+
               {/* Streak Display Component - Positioned at the top right */}
               <div className="flex-1 flex justify-end">
                 <StreakDisplay streakData={streakData} />
               </div>
             </div>
-            
+
             <hr className="mb-6 border-gray-200" />
 
             {error && (
@@ -125,7 +134,7 @@ export default function UserProfile() {
 
             {isLoading ? (
               <div className="flex justify-center items-center h-40">
-                <Text>Loading profile data...</Text>
+                <Text>{t('loading_profile_data')}</Text>
               </div>
             ) : (
               <View className="max-w-2xl">
@@ -137,7 +146,7 @@ export default function UserProfile() {
                   >
                     <img
                       src={avatar}
-                      alt="User Avatar"
+                      alt={t('user_avatar')}
                       className="w-full h-full object-cover"
                     />
 
@@ -168,7 +177,7 @@ export default function UserProfile() {
                               d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                             />
                           </svg>
-                          View
+                          {t('view')}
                         </button>
 
                         <label
@@ -189,7 +198,7 @@ export default function UserProfile() {
                               d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12"
                             />
                           </svg>
-                          Change
+                          {t('change')}
                         </label>
                       </div>
                     )}
@@ -223,7 +232,7 @@ export default function UserProfile() {
                               onChange={handleNameChange}
                               onKeyDown={handleKeyPress}
                               className="flex-1 px-4 py-2.5 bg-transparent border-none focus:outline-none text-gray-700  placeholder-gray-400"
-                              placeholder="Enter your full name"
+                              placeholder={t('enter_your_full_name')}
                               autoFocus
                               disabled={isSaving}
                             />
@@ -234,19 +243,34 @@ export default function UserProfile() {
                                 className="px-4 py-1.5 bg-[#21b4ca] text-white text-sm font-medium rounded-md hover:bg-[#1c9eb1] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                               >
                                 {isSaving && (
-                                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                  <svg
+                                    className="animate-spin h-4 w-4"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <circle
+                                      className="opacity-25"
+                                      cx="12"
+                                      cy="12"
+                                      r="10"
+                                      stroke="currentColor"
+                                      strokeWidth="4"
+                                      fill="none"
+                                    ></circle>
+                                    <path
+                                      className="opacity-75"
+                                      fill="currentColor"
+                                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                    ></path>
                                   </svg>
                                 )}
-                                {isSaving ? 'Saving...' : 'Save'}
+                                {isSaving ? t('saving') : t('save')}
                               </button>
                               <button
                                 onClick={cancelEditingName}
                                 disabled={isSaving}
                                 className="px-4 py-1.5 bg-gray-100 text-gray-600 text-sm font-medium rounded-md hover:bg-gray-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                               >
-                                Cancel
+                                {t('cancel')}
                               </button>
                             </div>
                           </div>
@@ -258,7 +282,7 @@ export default function UserProfile() {
                             value={profileData.full_name}
                             readOnly
                             className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg cursor-default focus:outline-none text-gray-700 dark:text-gray-200 dark:bg-gray-800 dark:border-gray-700"
-                            placeholder="Full Name"
+                            placeholder={t('full_name')}
                           />
                           <button
                             onClick={startEditingName}
@@ -290,7 +314,7 @@ export default function UserProfile() {
                         value={profileData.email}
                         readOnly
                         className="w-full p-2.5 border border-gray-200 rounded-md cursor-default focus:outline-none text-gray-700"
-                        placeholder="Email"
+                        placeholder={t('email')}
                       />
                     </View>
                   </View>
@@ -299,26 +323,26 @@ export default function UserProfile() {
                     onClick={() => setShowChangePasswordPopup(true)}
                     className="px-4 py-2 bg-white border border-gray-200 rounded-md text-sm text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
                   >
-                    Change Password
+                    {t('change_password')}
                   </button>
                 </View>
               </View>
             )}
 
             <Text textStyle="regular20" className="mb-4 font-semibold">
-              Others settings
+              {t('others_settings')}
             </Text>
             <hr className="mb-6 border-gray-300 dark:border-gray-600" />
 
             <View className="space-y-6">
               <View className="flex items-center justify-between">
-                <Text>Language</Text>
+                <Text>{t('language')}</Text>
                 <select className="w-32 p-1 border border-gray-300 rounded dark:bg-gray-800 dark:text-gray-200">
-                  <option>Dropdown</option>
+                  <option>{t('dropdown')}</option>
                 </select>
               </View>
               <View className="flex items-center justify-between">
-                <Text>Theme</Text>
+                <Text>{t('theme')}</Text>
                 <button
                   onClick={toggleTheme}
                   className="w-32 p-1 border border-dark-300 rounded dark:bg-dark-800 dark:text-dark-200 hover:bg-dark-300 dark:hover:bg-dark-600"
@@ -328,17 +352,16 @@ export default function UserProfile() {
               </View>
               <View className="flex items-center justify-between">
                 <View>
-                  <Text>Delete my account</Text>
+                  <Text>{t('delete_my_account')}</Text>
                   <Text
                     textStyle="regular12"
                     className="block text-sm text-gray-500 dark:text-gray-400"
                   >
-                    Permanently delete the account and remove access from all
-                    workspaces.
+                    {t('permanently_delete_account_description')}
                   </Text>
                 </View>
                 <button className="bg-red-500 text-white py-1 px-4 rounded hover:bg-red-600">
-                  Delete
+                  {t('delete')}
                 </button>
               </View>
               <View className="flex justify-end mt-2">
@@ -347,7 +370,7 @@ export default function UserProfile() {
                   disabled={isLoggingOut}
                   className="bg-[#21b4ca] text-white py-1 px-4 rounded hover:bg-[#1c9eb1] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isLoggingOut ? 'Logging out...' : 'Logout'}
+                  {isLoggingOut ? t('logging_out') : t('logout')}
                 </button>
               </View>
             </View>
