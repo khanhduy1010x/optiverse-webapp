@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { SearchUsersProps } from '../../../types/friend/props/component.props';
 import { GROUP_CLASSNAMES } from '../../../styles/group-class-name.style';
 import {
-  EMAIL_DOMAINS,
   useSearchUser,
 } from '../../../hooks/friend/useSearchUser.hook';
 import FriendService from '../../../services/friend.service';
@@ -25,6 +24,7 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
     handleClearSearch,
     checkFriendStatus,
     refreshFriendData,
+    EMAIL_DOMAINS
   } = useSearchUser(props);
 
   const {

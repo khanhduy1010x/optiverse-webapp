@@ -335,7 +335,10 @@ export function useFriendList() {
     } else if (activeTab === 'friends') {
       fetchData();
     }
-  }, [activeTab, fetchPendingRequests, fetchSentRequests, fetchData]);
+  }, [activeTab
+    // , fetchPendingRequests, fetchSentRequests, fetchData
+    // bug loop refresh, please fix it
+  ]);
 
   // Thiết lập polling để làm mới dữ liệu định kỳ
   useEffect(() => {

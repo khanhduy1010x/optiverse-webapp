@@ -80,26 +80,26 @@ const FlashcardStatistic: React.FC = () => {
               <div className="flex flex-col gap-4">
                 {/* Top panel */}
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-4 bg-white rounded-2xl shadow">
-                  <StatItem label={t('decks')} value={stats.totalDeckCount} />
+                  <StatItem label={t('decks')} value={stats.totalDeckCount ?? 0} />
                   <StatItem
                     label={t('flashcards')}
-                    value={stats.totalFlashcardCount}
+                    value={stats.totalFlashcardCount ?? 0}
                   />
                   <StatItem
                     label={t('review_sessions')}
-                    value={stats.reviewedCount}
+                    value={stats.reviewedCount ?? 0}
                   />
                   <StatItem
                     label={t('due_today')}
-                    value={stats.dueTodayCount}
+                    value={stats.dueTodayCount ?? 0}
                   />
                   <StatItem
                     label={t('reviewed_percent')}
-                    value={`${stats.percentReviewed.toFixed(2)}%`}
+                    value={stats.percentReviewed ? `${stats.percentReviewed.toFixed(2)}%` : 0}
                   />
                   <StatItem
                     label={t('week_reviewed')}
-                    value={stats.reviewsThisWeekCount}
+                    value={stats.reviewsThisWeekCount ?? 0}
                   />
                 </div>
 
