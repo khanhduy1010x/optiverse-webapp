@@ -12,6 +12,7 @@ import notification from './notification.json';
 import dashboard from './dashboard.json';
 import tag from "./tag.json";
 import admin from "./admin.json";
+import chat from "./chat.json";
 import error from './error.json';
 
 export default {
@@ -29,5 +30,6 @@ export default {
   dashboard,
   tag,
   admin,
+  chat,
   error,
 };
