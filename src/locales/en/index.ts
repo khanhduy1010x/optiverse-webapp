@@ -11,6 +11,7 @@ import achievement from './achievement.json';
 import notification from './notification.json';
 import dashboard from './dashboard.json';
 import tag from "./tag.json";
+import admin from "./admin.json";
 import error from './error.json';
 
 export default {
@@ -27,5 +28,6 @@ export default {
   notification,
   dashboard,
   tag,
+  admin,
   error,
 };

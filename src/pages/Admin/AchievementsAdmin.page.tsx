@@ -7,7 +7,7 @@ import { Achievement, ConditionTypeEnum } from '../../types/achievement/achievem
 import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 const AchievementsAdminPage: React.FC = () => {
-  const { t } = useAppTranslate('achievement');
+  const { t } = useAppTranslate('admin');
   const [previewImageEdit, setPreviewImageEdit] = useState<string | null>(null);
   const [previewImageCreate, setPreviewImageCreate] = useState<string | null>(null);
   const [networkError, setNetworkError] = useState<string | null>(null);
