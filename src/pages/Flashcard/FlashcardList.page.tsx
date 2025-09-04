@@ -46,7 +46,8 @@ export default function FlashcardList() {
         <div className="w-1/4 flex flex-col flex-wrap gap-4">
           <Button
             title={t('spaced_repetition')}
-            fontType="bold12"
+            textType='bold'
+            textSize={12}
             inverted
             onClick={() =>
               navigate(`/flashcard-deck/${deck._id}/learn`, {
@@ -56,7 +57,8 @@ export default function FlashcardList() {
           ></Button>
           <Button
             title={t('unlimited_study')}
-            fontType="bold12"
+            textType='bold'
+            textSize={12}
             inverted
             onClick={() =>
               navigate(`/flashcard-deck/${deck._id}/learn`, {
@@ -85,7 +87,7 @@ export default function FlashcardList() {
                 h-full"
               >
                 <Button
-                  leftComponent={<Icon name="brush"></Icon>}
+                  leftIcon='brush'
                   onClick={() => {
                     setPopupType('edit');
                     setPopupItem(item);
@@ -94,10 +96,10 @@ export default function FlashcardList() {
                     justifyContent: 'center',
                     borderColor: 'transparent',
                   }}
-                  rightStyle={{ display: 'none' }}
+                  displayRight={false}
                 />
                 <Button
-                  leftComponent={<Icon name="delete"></Icon>}
+                  leftIcon='delete'
                   onClick={() => {
                     setPopupType('delete');
                     setPopupItem(item);
@@ -106,7 +108,7 @@ export default function FlashcardList() {
                     justifyContent: 'center',
                     borderColor: 'transparent',
                   }}
-                  rightStyle={{ display: 'none' }}
+                  displayRight={false}
                 />
               </div>
             </div>

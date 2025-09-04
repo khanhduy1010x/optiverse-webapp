@@ -1,3 +1,9 @@
+export enum SystemStyle {
+  Default = 'default',
+  Neubrutalism = 'neubrutalism',
+  Pixel = 'pixel',
+}
+
 export interface AppTheme {
   colors: {
     primary: string;
@@ -28,9 +34,5 @@ export interface AppTheme {
         text: string;
       };
     };
-  };
-  fonts: {
-    regular: string;
-    bold: string;
   };
 }

@@ -12,6 +12,7 @@ import InputField, {
 import { isNotEmpty } from '../../utils/validate.util';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
 import { DropdownChangeLanguage } from '../../components/common/Dropdown.component';
+import { SystemStyle } from '../../types/theme.type';
 
 type FormValues = {
   email: string;
@@ -20,8 +21,8 @@ type FormValues = {
 };
 
 export default function TemplateComponent() {
-  const { theme } = useTheme();
-  const { colors, fonts } = theme;
+  const { theme, setUIStyle } = useTheme();
+  const { colors } = theme;
   // Using webapp\src\locales\en\common.json so write 'common'
   const { t } = useAppTranslate('common');
 
@@ -43,14 +44,14 @@ export default function TemplateComponent() {
           backgroundColor: colors.background,
           color: colors.text,
           padding: 24,
-          fontFamily: fonts.regular,
+          fontWeight: 900,
           minHeight: '100vh',
           display: 'flex',
           flexDirection: 'column',
           gap: 20,
         }}
       >
-        <h2 style={{ fontFamily: fonts.bold }}>Theme Preview</h2>
+        <h2 className='font-notoBold'>Theme Preview</h2>
 
         <h3>
           Primary: <strong>{colors.primary}</strong>
@@ -58,64 +59,33 @@ export default function TemplateComponent() {
 
         <h3>Button Sample</h3>
         <div className="flex gap-20">
-          <Button title="Sample button 1"></Button>
-          <Button title="Sample button 2" inverted={true}></Button>
+          <Button title="Default UI" onClick={() => setUIStyle(SystemStyle.Default)}></Button>
+          <Button title="Neubrutalism UI" inverted={true}
+            onClick={() => setUIStyle(SystemStyle.Neubrutalism)}></Button>
           <Button
-            title="Sample button 3"
-            leftComponent={<Icon name="note"></Icon>}
-            rightComponent={<Icon name="note"></Icon>}
+            title="Pixel UI"
+            leftIcon={"note"}
+            rightIcon={"note"}
+            onClick={() => setUIStyle(SystemStyle.Pixel)}
           ></Button>
           <Button
-            title="Sample button 4"
-            leftComponent={<Icon name="note"></Icon>}
+            title="日本語"
+            leftIcon={"note"}
           ></Button>
           <Button
-            title="Sample button 5"
-            rightComponent={<Icon name="note" inverted></Icon>}
+            title="Trường hợp 5"
+            rightIcon={"note"}
             inverted
           ></Button>
           <CircleButton name="add"></CircleButton>
         </div>
         <h3>Text Sample</h3>
         <div className="flex gap-20">
-          <h3
-            style={{
-              fontFamily: fonts.regular,
-            }}
-          >
-            NotoSans-Regular
-          </h3>
-          <h3
-            style={{
-              fontFamily: fonts.bold,
-            }}
-          >
-            NotoSans-Bold
-          </h3>
-          <div
-            style={{
-              fontFamily: fonts.bold,
-              fontSize: 16,
-            }}
-          >
-            NotoSans-Bold 16px
-          </div>
-          <div
-            style={{
-              fontFamily: fonts.bold,
-              fontSize: 24,
-            }}
-          >
-            NotoSans-Bold 24px
-          </div>
-          <div
-            style={{
-              fontFamily: fonts.bold,
-              fontSize: 32,
-            }}
-          >
-            NotoSans-Bold 32px
-          </div>
+          <p style={{fontWeight: 'normal'}}>
+            {`
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque fermentum odio eu sollicitudin accumsan. Aliquam et lectus mattis, aliquet magna in, tempor quam. Maecenas efficitur est ut fermentum rutrum. Aenean vel pulvinar turpis. Aliquam quis mi sed nunc venenatis venenatis. Sed sed erat ut nibh elementum ultrices at tempus arcu. Phasellus vel nibh quis leo vulputate blandit. Suspendisse efficitur fringilla magna sed pulvinar. Suspendisse leo magna, vehicula non convallis in, aliquet nec metus. Pellentesque arcu nisl, dictum a convallis a, consequat tincidunt tortor. Integer sapien metus, facilisis et diam sit amet, dapibus fringilla erat. Nulla ut facilisis dolor. Sed accumsan purus sed augue vestibulum commodo. Nam odio enim, ornare vel ultricies interdum, elementum sed dolor.
+          `}
+          </p>
         </div>
         <h3>Input Sample</h3>
         <div className="flex gap-20">

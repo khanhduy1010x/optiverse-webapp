@@ -14,7 +14,7 @@ const { t } = useAppTranslate('auth');
 
 <h3>{t('welcome_back')}</h3>
 <p>{t('please_sign_in')}</p>
-<Button title={t('login_google')} aria-label={t('login_google')} />
+<Button title={t('login_google')} />
 <Input placeholder={t('enter_email')} />
 toast.success(t('profile_updated'));
 ```

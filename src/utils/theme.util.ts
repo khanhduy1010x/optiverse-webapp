@@ -2,7 +2,9 @@ import tinycolor from 'tinycolor2';
 import { AppTheme } from '../types/theme.type';
 import COLORS from '../constants/colors.constant';
 
-export function generateThemeFromPrimary(primaryColor: string): AppTheme {
+export function generateThemeFromPrimary(
+  primaryColor: string,
+): AppTheme {
   const primary = tinycolor(primaryColor).toHexString();
   const onPrimary = tinycolor(primary).isLight()
     ? COLORS.black500
@@ -48,9 +50,22 @@ export function generateThemeFromPrimary(primaryColor: string): AppTheme {
         },
       },
     },
-    fonts: {
-      regular: 'NotoSans-Regular',
-      bold: 'NotoSans-Bold',
-    },
   };
+}
+
+export function makeCircleShadow({ n = 16, s = 6, t = 1, color = '#000', spread = 0.25 }) {
+  const c = (n - 1) / 2;
+  const r = c;
+  const cells = [];
+
+  for (let y = 0; y < n; y++) {
+    for (let x = 0; x < n; x++) {
+      const d = Math.hypot(x - c, y - c);
+      if (Math.abs(d - r) <= t / 2) cells.push([x, y]);
+    }
+  }
+
+  const shadow = cells.map(([x, y]) => `${x * s}px ${y * s}px 0 ${spread}px ${color}`).join(', ');
+
+  return shadow;
 }

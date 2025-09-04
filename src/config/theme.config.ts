@@ -14,9 +14,4 @@ export const darkTheme = {
   buttonText: COLORS.black500,
 };
 
-export const FONTS = {
-  regular: 'NotoSans-Regular',
-  bold: 'NotoSans-Bold',
-} as const;
 
-export type FontKeys = keyof typeof FONTS;

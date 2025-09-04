@@ -30,7 +30,7 @@ export default function FlashcardDeckList() {
     closePopupAndRefresh,
   } = useFlashcardDeckList();
 
-  
+
 
   return (
     <div className="flex h-screen">
@@ -81,19 +81,19 @@ export default function FlashcardDeckList() {
                   {selectedId === item._id && (
                     <div className="absolute right-4 top-4 z-10 bg-white border shadow-md rounded px-3 py-2 text-sm flex flex-col space-y-1">
                       <Button
-                        leftComponent={<Icon name="brush" inverted></Icon>}
+                        leftIcon='brush'
                         onClick={() => openPopup('edit', item)}
                         style={{ justifyContent: 'center' }}
-                        rightStyle={{ display: 'none' }}
+                        displayRight={false}
                         inverted
                       ></Button>
                       <Button
-                        leftComponent={<Icon name="delete" inverted></Icon>}
+                        leftIcon='delete'
                         onClick={() => {
                           openPopup('delete', item);
                         }}
                         style={{ justifyContent: 'center' }}
-                        rightStyle={{ display: 'none' }}
+                        displayRight={false}
                         inverted
                       ></Button>
                     </div>
