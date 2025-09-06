@@ -1,9 +1,9 @@
 import React from 'react';
 import { ErrorDisplayProps } from '../../../types/friend/props/component.props';
-import { useTranslation } from 'react-i18next';
+import { useAppTranslate } from '../../../hooks/useAppTranslate';
 
 const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ error, loading }) => {
-  const { t } = useTranslation();
+  const { t } = useAppTranslate('friend');
 
   if (!error) return null;
 
@@ -23,11 +23,11 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ error, loading }) => {
             d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
           />
         </svg>
-        <span className="font-medium">{t('Error')}</span>
+        <span className="font-medium">{t('error')}</span>
       </div>
       <p className="mt-2 ml-7">{error}</p>
     </div>
   );
 };
 
-export default ErrorDisplay; 
+export default ErrorDisplay;

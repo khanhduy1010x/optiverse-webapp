@@ -5,6 +5,7 @@ import { FlashcardResponse } from '../../types/flashcard/response/flashcard.resp
 import { TextareaField } from '../../components/common/Input.component';
 import { FlashcardForm } from '../../types/flashcard/flashcard.types';
 import { isNotEmpty } from '../../utils/validate.util';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 export default function UpdateFlashcard({
   item,
@@ -13,6 +14,7 @@ export default function UpdateFlashcard({
   item: FlashcardResponse;
   clear: () => Promise<void>;
 }) {
+  const { t } = useAppTranslate('flashcard');
   const { onSubmit, control, handleSubmit } = useUpdateFlashcard(item, clear);
 
   return (
@@ -24,16 +26,16 @@ export default function UpdateFlashcard({
         <TextareaField<FlashcardForm>
           name="front"
           control={control}
-          label="Front"
-          placeholder="Enter front..."
+          label={t('front')}
+          placeholder={t('enter_front_placeholder')}
           rules={{
-            required: 'must be required',
+            required: t('required_error'),
             minLength: {
               value: 1,
-              message: 'at least 1 characters',
+              message: t('min_length_error'),
             },
             setValueAs: v => v.trim(),
-            validate: v => isNotEmpty(v) || 'must not be only white space',
+            validate: v => isNotEmpty(v) || t('whitespace_error'),
           }}
         />
       </div>
@@ -42,21 +44,21 @@ export default function UpdateFlashcard({
         <TextareaField<FlashcardForm>
           name="back"
           control={control}
-          label="Back"
-          placeholder="Enter back..."
+          label={t('back_label')}
+          placeholder={t('enter_back_placeholder')}
           rules={{
-            required: 'must be required',
+            required: t('required_error'),
             minLength: {
               value: 1,
-              message: 'at least 1 characters',
+              message: t('min_length_error'),
             },
             setValueAs: v => v.trim(),
-            validate: v => isNotEmpty(v) || 'must not be only white space',
+            validate: v => isNotEmpty(v) || t('whitespace_error'),
           }}
         />
       </div>
 
-      <Button title="Update flashcard" className="w-full" inverted />
+      <Button title={t('update_flashcard')} className="w-full" inverted />
     </form>
   );
 }

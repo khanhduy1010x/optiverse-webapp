@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 export function useFlashcardDeckList() {
   const navigate = useNavigate();
 
-  const { t } = useAppTranslate();
+  const { t } = useAppTranslate('flashcard');
   const { handleSubmit, control, watch, reset } = useForm<SearchForm>({
     values: {
       search: '',

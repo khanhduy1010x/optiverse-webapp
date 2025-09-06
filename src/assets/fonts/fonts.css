@@ -11,3 +11,11 @@
   font-weight: bold;
   font-style: normal;
 }
+
+
+@font-face {
+  font-family: 'Pixel';
+  src: url('./VT323-Regular.ttf') format('truetype');
+  font-weight: '800';
+  font-style: normal;
+}

@@ -1,42 +1,39 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { TEXT } from '../../constants/typography.constant';
 import { useTheme } from '../../contexts/theme.context';
 import { GROUP_CLASSNAMES } from '../../styles';
+import { getTypo } from '../../constants/typography.constant';
 
 interface CustomTextProps {
-  title?: string;
-  translate?: boolean;
+  title: string;
   className?: string;
   style?: React.CSSProperties;
-  textStyle?: keyof typeof TEXT;
+  textType?: 'regular' | 'bold';
+  textSize?: number;
   children?: React.ReactNode;
 }
 
 const Text: React.FC<CustomTextProps> = ({
   title,
-  translate = true,
   className = '',
   style,
-  textStyle = 'regular20',
+  textType = 'regular',
+  textSize = 20,
   children,
   ...props
 }) => {
   const { t } = useTranslation();
   const { theme } = useTheme();
 
-  const defaultStyles: React.CSSProperties = {
-    ...TEXT[textStyle],
-    color: theme.colors.text,
-  };
+  const defaultCSS = `${getTypo(textSize, textType === 'regular')}`;
 
   return (
     <div
-      className={`break-words ${GROUP_CLASSNAMES.transitionColors} ${className}`}
-      style={{ ...defaultStyles, ...style }}
+      className={`break-words ${GROUP_CLASSNAMES.transitionColors} ${defaultCSS} ${className}`}
+      style={{ color: theme.colors.text,...style }}
       {...props}
     >
-      {title ? (translate ? t(`${title}`, { defaultValue: title }) : title) : null}
+      {title}
       {children}
     </div>
   );

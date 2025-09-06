@@ -26,9 +26,10 @@ import {
   Close as CloseIcon,
   Reply as ReplyIcon,
   Done as DoneIcon,
-  DoneAll as DoneAllIcon
+  DoneAll as DoneAllIcon,
 } from '@mui/icons-material';
 import DeleteModal from '../Note/DeleteModal.screen';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 // CSS cho hiệu ứng đang nhập
 const typingAnimationCSS = `
@@ -64,14 +65,18 @@ interface LocationState {
 }
 
 const ChatPage: React.FC = () => {
+  const { t } = useAppTranslate('chat');
   const location = useLocation();
   const state = location.state as LocationState | null;
 
   // Get conversation list and user information
-  const { conversations, users, loading, getOrCreateConversation } = useConversation();
+  const { conversations, users, loading, getOrCreateConversation } =
+    useConversation();
 
   // State to manage active conversation
-  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const [activeConversationId, setActiveConversationId] = useState<
+    string | null
+  >(null);
 
   // State to manage message content
   const [messageText, setMessageText] = useState('');
@@ -98,7 +103,9 @@ const ChatPage: React.FC = () => {
 
   // Thêm state cho tìm kiếm tổng
   const [globalSearchQuery, setGlobalSearchQuery] = useState('');
-  const [globalSearchResults, setGlobalSearchResults] = useState<MessageType[]>([]);
+  const [globalSearchResults, setGlobalSearchResults] = useState<MessageType[]>(
+    []
+  );
   const [isGlobalSearching, setIsGlobalSearching] = useState(false);
   const [showGlobalSearch, setShowGlobalSearch] = useState(false);
 
@@ -124,7 +131,9 @@ const ChatPage: React.FC = () => {
   const emojiPickerRef = useRef<HTMLDivElement>(null);
 
   // Get messages for current conversation
-  const { messages, loading: messagesLoading } = useMessages(activeConversationId || '');
+  const { messages, loading: messagesLoading } = useMessages(
+    activeConversationId || ''
+  );
 
   // Hook to send new messages
   const {
@@ -132,16 +141,21 @@ const ChatPage: React.FC = () => {
     sendMessageWithImages,
     sendAudioMessage,
     sendReplyMessage,
-    sendReplyWithImages
+    sendReplyWithImages,
   } = useSendMessage(activeConversationId || '');
 
   // Hook to manage typing status with focus handling
-  const { isTyping, setTyping, handleFocus, handleBlur, registerInputRef } = useTypingStatus(
-    activeConversationId
-  );
+  const { isTyping, setTyping, handleFocus, handleBlur, registerInputRef } =
+    useTypingStatus(activeConversationId);
 
   // Hook to mark messages as read
-  const { unreadCount, markAsRead, incrementUnread, handleInputFocus, handleInputBlur } = useUnreadCount(activeConversationId || '');
+  const {
+    unreadCount,
+    markAsRead,
+    incrementUnread,
+    handleInputFocus,
+    handleInputBlur,
+  } = useUnreadCount(activeConversationId || '');
 
   // Hook to manage pinned conversations
   const {
@@ -149,16 +163,12 @@ const ChatPage: React.FC = () => {
     pinConversation,
     unpinConversation,
     isConversationPinned,
-    getPinOrder
+    getPinOrder,
   } = usePinConversation();
 
   // Hook to manage pinned messages
-  const {
-    pinnedMessages,
-    pinMessage,
-    unpinMessage,
-    isMessagePinned
-  } = usePinMessage(activeConversationId || '');
+  const { pinnedMessages, pinMessage, unpinMessage, isMessagePinned } =
+    usePinMessage(activeConversationId || '');
 
   // Hook to search messages
   const {
@@ -166,7 +176,7 @@ const ChatPage: React.FC = () => {
     loading: searchLoading,
     error: searchError,
     searchMessages,
-    clearSearch
+    clearSearch,
   } = useSearchMessages();
 
   // State to track if we should scroll to bottom
@@ -177,23 +187,31 @@ const ChatPage: React.FC = () => {
   const [isScrolledUp, setIsScrolledUp] = useState(false);
 
   // State for reply
-  const [replyToMessage, setReplyToMessage] = useState<MessageType | null>(null);
+  const [replyToMessage, setReplyToMessage] = useState<MessageType | null>(
+    null
+  );
 
   // Thêm state và ref cho highlight message
-  const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
+  const [highlightedMessageId, setHighlightedMessageId] = useState<
+    string | null
+  >(null);
   const messageRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   // Get other user info in chat from friends list instead of users
   const getOtherUserInChat = useCallback((): UserResponse | undefined => {
     if (!activeConversationId) return undefined;
 
-    const conversation = conversations.find(conv => conv.id === activeConversationId);
+    const conversation = conversations.find(
+      conv => conv.id === activeConversationId
+    );
     if (!conversation) return undefined;
 
     const currentUserId = localStorage.getItem('user_id');
     if (!currentUserId) return undefined;
 
-    const otherUserId = Object.keys(conversation.members).find(id => id !== currentUserId);
+    const otherUserId = Object.keys(conversation.members).find(
+      id => id !== currentUserId
+    );
     if (!otherUserId) return undefined;
 
     // Find user info from friends list
@@ -203,7 +221,7 @@ const ChatPage: React.FC = () => {
         user_id: otherUserId,
         email: friend.friendInfo.email || '',
         full_name: friend.friendInfo.full_name || '',
-        avatar_url: friend.friendInfo.avatar_url || ''
+        avatar_url: friend.friendInfo.avatar_url || '',
       };
     }
 
@@ -217,18 +235,24 @@ const ChatPage: React.FC = () => {
       user_id: otherUserId,
       email: '',
       full_name: otherUserId,
-      avatar_url: ''
+      avatar_url: '',
     };
   }, [activeConversationId, conversations, friends, users]);
 
   // Handle click outside search results to close dropdown
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(event.target as Node)
+      ) {
         setShowFriendsList(false);
       }
 
-      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
+      if (
+        emojiPickerRef.current &&
+        !emojiPickerRef.current.contains(event.target as Node)
+      ) {
         setShowEmojiPicker(false);
       }
     }
@@ -308,7 +332,8 @@ const ChatPage: React.FC = () => {
   // Handle scroll event to detect if user has scrolled up
   const handleScroll = () => {
     if (messageContainerRef.current) {
-      const { scrollTop, scrollHeight, clientHeight } = messageContainerRef.current;
+      const { scrollTop, scrollHeight, clientHeight } =
+        messageContainerRef.current;
       // Consider scrolled up if not at the bottom (with a small buffer)
       const scrolledUp = scrollTop < scrollHeight - clientHeight - 50;
       setIsScrolledUp(scrolledUp);
@@ -322,8 +347,13 @@ const ChatPage: React.FC = () => {
       // 1. We explicitly set shouldScrollToBottom flag
       // 2. New message arrived (messages.length > prevMessagesLengthRef.current)
       // 3. First load of conversation (prevMessagesLengthRef.current === 0)
-      if (shouldScrollToBottom || messages.length > prevMessagesLengthRef.current || prevMessagesLengthRef.current === 0) {
-        messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
+      if (
+        shouldScrollToBottom ||
+        messages.length > prevMessagesLengthRef.current ||
+        prevMessagesLengthRef.current === 0
+      ) {
+        messageContainerRef.current.scrollTop =
+          messageContainerRef.current.scrollHeight;
         setShouldScrollToBottom(false);
       }
 
@@ -394,13 +424,13 @@ const ChatPage: React.FC = () => {
     Array.from(files).forEach(file => {
       // Check if file is an image
       if (!file.type.startsWith('image/')) {
-        toast.error(`${file.name} is not an image.`);
+        toast.error(t('file_not_image'));
         return;
       }
 
       // Check file size
       if (file.size > maxSize) {
-        toast.error(`${file.name} exceeds the maximum size (5MB).`);
+        toast.error(t('file_too_large'));
         return;
       }
 
@@ -445,7 +475,11 @@ const ChatPage: React.FC = () => {
 
   // Handle send message
   const handleSendMessage = () => {
-    if ((!messageText.trim() && selectedImages.length === 0) || !activeConversationId) return;
+    if (
+      (!messageText.trim() && selectedImages.length === 0) ||
+      !activeConversationId
+    )
+      return;
 
     const currentUserId = localStorage.getItem('user_id');
     if (!currentUserId) return;
@@ -455,7 +489,7 @@ const ChatPage: React.FC = () => {
       const replyInfo = {
         messageId: replyToMessage.id,
         text: replyToMessage.text,
-        senderId: replyToMessage.senderId
+        senderId: replyToMessage.senderId,
       };
 
       // Nếu có hình ảnh, gửi tin nhắn trả lời kèm hình ảnh
@@ -475,7 +509,7 @@ const ChatPage: React.FC = () => {
           })
           .catch(error => {
             console.error('Error sending reply with images:', error);
-            toast.error('An error occurred while sending reply message.');
+            toast.error(t('error_sending_reply'));
           });
       } else {
         // Gửi tin nhắn trả lời văn bản
@@ -493,7 +527,7 @@ const ChatPage: React.FC = () => {
           })
           .catch(error => {
             console.error('Error sending reply message:', error);
-            toast.error('An error occurred while sending reply message.');
+            toast.error(t('error_sending_reply'));
           });
       }
     } else {
@@ -513,13 +547,13 @@ const ChatPage: React.FC = () => {
           })
           .catch(error => {
             console.error('Error sending message with images:', error);
-            toast.error('An error occurred while sending message.');
+            toast.error(t('error_sending_message'));
           });
       } else {
         // Gửi tin nhắn văn bản thông thường
         sendTextMessage({
           senderId: currentUserId,
-          text: messageText.trim()
+          text: messageText.trim(),
         })
           .then(() => {
             setMessageText('');
@@ -533,7 +567,7 @@ const ChatPage: React.FC = () => {
           })
           .catch(error => {
             console.error('Error sending message:', error);
-            toast.error('An error occurred while sending message.');
+            toast.error(t('error_sending_message'));
           });
       }
     }
@@ -575,7 +609,9 @@ const ChatPage: React.FC = () => {
   };
 
   // Handle message search input change
-  const handleMessageSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMessageSearchChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setMessageSearchQuery(e.target.value);
   };
 
@@ -606,7 +642,9 @@ const ChatPage: React.FC = () => {
   };
 
   // Format date for message timestamp
-  const formatMessageTime = (timestamp: number): { time: string; date: string } => {
+  const formatMessageTime = (
+    timestamp: number
+  ): { time: string; date: string } => {
     if (!timestamp) return { time: '', date: '' };
 
     const date = new Date(timestamp);
@@ -615,31 +653,45 @@ const ChatPage: React.FC = () => {
     let dateStr = '';
 
     // Định dạng thời gian luôn ngắn gọn
-    timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    timeStr = date.toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
 
-    // If same day, show "Hôm nay"
+    // If same day, show "Today"
     if (date.toDateString() === now.toDateString()) {
-      dateStr = 'Today';
+      dateStr = t('today');
     }
-    // If yesterday, show "Hôm qua"
+    // If yesterday, show "Yesterday"
     else {
       const yesterday = new Date();
       yesterday.setDate(now.getDate() - 1);
       if (date.toDateString() === yesterday.toDateString()) {
-        dateStr = 'Yesterday';
+        dateStr = t('yesterday');
       }
       // If within 7 days, show day name
       else {
         const weekAgo = new Date();
         weekAgo.setDate(now.getDate() - 7);
         if (date > weekAgo) {
-          // Chỉ hiển thị tên ngày trong tuần
-          const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+          // Show short day name
+          const days = [
+            t('sunday_short'),
+            t('monday_short'),
+            t('tuesday_short'),
+            t('wednesday_short'),
+            t('thursday_short'),
+            t('friday_short'),
+            t('saturday_short'),
+          ];
           dateStr = days[date.getDay()];
         }
         // Otherwise show short date
         else {
-          dateStr = date.toLocaleDateString([], { day: '2-digit', month: '2-digit' });
+          dateStr = date.toLocaleDateString([], {
+            day: '2-digit',
+            month: '2-digit',
+          });
         }
       }
     }
@@ -695,15 +747,21 @@ const ChatPage: React.FC = () => {
         if (snapshot.exists()) {
           const messagesData = snapshot.val();
 
-          Object.entries(messagesData).forEach(([id, messageData]: [string, any]) => {
-            if (messageData.text.toLowerCase().includes(globalSearchQuery.toLowerCase())) {
-              results.push({
-                id,
-                ...messageData,
-                conversationId: conversation.id
-              });
+          Object.entries(messagesData).forEach(
+            ([id, messageData]: [string, any]) => {
+              if (
+                messageData.text
+                  .toLowerCase()
+                  .includes(globalSearchQuery.toLowerCase())
+              ) {
+                results.push({
+                  id,
+                  ...messageData,
+                  conversationId: conversation.id,
+                });
+              }
             }
-          });
+          );
         }
       }
 
@@ -737,14 +795,18 @@ const ChatPage: React.FC = () => {
   // Render messages
   const renderMessages = () => {
     if (messagesLoading) {
-      return <div className="flex justify-center items-center h-full">Loading messages...</div>;
+      return (
+        <div className="flex justify-center items-center h-full">
+          {t('loading_messages')}
+        </div>
+      );
     }
 
     if (messages.length === 0) {
       return (
         <div className="flex flex-col justify-center items-center h-full text-gray-500">
-          <p>Start the conversation!</p>
-          <p className="text-sm mt-2">Type a message...</p>
+          <p>{t('start_conversation')}</p>
+          <p className="text-sm mt-2">{t('type_message')}</p>
         </div>
       );
     }
@@ -752,7 +814,7 @@ const ChatPage: React.FC = () => {
     const currentUserId = localStorage.getItem('user_id');
     if (!currentUserId) return null;
 
-    return messages.map((message) => (
+    return messages.map(message => (
       <MessageItem
         key={message.id}
         message={message}
@@ -761,7 +823,9 @@ const ChatPage: React.FC = () => {
         onPin={handleTogglePinMessage}
         onReply={handleReplyToMessage}
         users={users}
-        messageRef={el => { messageRefs.current[message.id] = el; }}
+        messageRef={el => {
+          messageRefs.current[message.id] = el;
+        }}
         highlight={highlightedMessageId === message.id}
       />
     ));
@@ -771,16 +835,17 @@ const ChatPage: React.FC = () => {
   const renderReplyPreview = () => {
     if (!replyToMessage) return null;
 
-    const isCurrentUser = replyToMessage.senderId === localStorage.getItem('user_id');
+    const isCurrentUser =
+      replyToMessage.senderId === localStorage.getItem('user_id');
     const senderName = isCurrentUser
-      ? 'You'
-      : users[replyToMessage.senderId]?.full_name || 'User';
+      ? t('you')
+      : users[replyToMessage.senderId]?.full_name || t('user');
 
     return (
       <div className="reply-preview flex items-center bg-gray-100 p-2 rounded-t-lg">
         <div className="flex-1 overflow-hidden">
           <div className="text-xs font-medium text-blue-500 mb-1">
-            Replying to {senderName}
+            {t('replying_to', { senderName })}
           </div>
           <div className="text-sm truncate text-gray-600">
             {replyToMessage.text}
@@ -827,9 +892,9 @@ const ChatPage: React.FC = () => {
       if (activeConversationId === selectedConversation.id) {
         setActiveConversationId(null);
       }
-      toast.success('Conversation deleted.');
+      toast.success(t('conversation_deleted'));
     } catch (error) {
-      toast.error('Failed to delete conversation.');
+      toast.error(t('failed_delete_conversation'));
     } finally {
       setShowDeleteModal(false);
       setSelectedConversation(null);
@@ -838,8 +903,9 @@ const ChatPage: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-white">
-      <style dangerouslySetInnerHTML={{
-        __html: `
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
         .typing-animation span {
           animation: typingDot 1.4s infinite;
           animation-fill-mode: both;
@@ -927,10 +993,12 @@ const ChatPage: React.FC = () => {
           min-height: 0;
           position: relative;
         }
-      `}} />
+      `,
+        }}
+      />
       {/* Sidebar */}
       <div className="w-80 p-4 border-r border-gray-200 bg-white overflow-y-auto custom-scrollbar-3">
-        <h2 className="text-xl font-semibold mb-4">Messages</h2>
+        <h2 className="text-xl font-semibold mb-4">{t('messages')}</h2>
 
         {/* Global search */}
         <div className="mb-3">
@@ -938,8 +1006,8 @@ const ChatPage: React.FC = () => {
             <input
               type="text"
               value={globalSearchQuery}
-              onChange={(e) => setGlobalSearchQuery(e.target.value)}
-              placeholder="Search in all conversations..."
+              onChange={e => setGlobalSearchQuery(e.target.value)}
+              placeholder={t('search_all_conversations')}
               className="flex-1 border border-gray-300 rounded-l-lg px-3 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-[#21b4ca]"
             />
             <button
@@ -947,7 +1015,7 @@ const ChatPage: React.FC = () => {
               className="bg-[#21b4ca] text-white px-3 py-1 rounded-r-lg text-sm"
               disabled={isGlobalSearching}
             >
-              {isGlobalSearching ? 'Searching...' : 'Search'}
+              {isGlobalSearching ? t('searching') : t('search')}
             </button>
           </form>
         </div>
@@ -956,12 +1024,14 @@ const ChatPage: React.FC = () => {
         {globalSearchResults.length > 0 && (
           <div className="mb-4 border border-gray-200 rounded-lg p-2 bg-[#e6f7f9]">
             <div className="flex justify-between items-center mb-2">
-              <p className="text-sm font-medium">Search results ({globalSearchResults.length})</p>
+              <p className="text-sm font-medium">
+                {t('search_results', { count: globalSearchResults.length })}
+              </p>
               <button
                 onClick={clearGlobalSearch}
                 className="text-xs text-[#21b4ca] hover:underline"
               >
-                Close
+                {t('close')}
               </button>
             </div>
             <div className="max-h-40 overflow-y-auto custom-scrollbar-3">
@@ -971,10 +1041,14 @@ const ChatPage: React.FC = () => {
 
                 // Tìm thông tin người gửi
                 const currentUserId = localStorage.getItem('user_id');
-                const conversation = conversations.find(conv => conv.id === message.conversationId);
+                const conversation = conversations.find(
+                  conv => conv.id === message.conversationId
+                );
                 if (!conversation) return null;
 
-                const otherUserId = Object.keys(conversation.members).find(id => id !== currentUserId);
+                const otherUserId = Object.keys(conversation.members).find(
+                  id => id !== currentUserId
+                );
                 const otherUser = otherUserId ? users[otherUserId] : null;
 
                 return (
@@ -987,7 +1061,10 @@ const ChatPage: React.FC = () => {
                         setHighlightedMessageId(message.id);
                         const ref = messageRefs.current[message.id];
                         if (ref && ref.scrollIntoView) {
-                          ref.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          ref.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center',
+                          });
                         }
                         setTimeout(() => setHighlightedMessageId(null), 2000);
                       }, 300); // Đợi chuyển conversation xong mới scroll
@@ -999,8 +1076,14 @@ const ChatPage: React.FC = () => {
                         {otherUser?.full_name?.charAt(0) || '?'}
                       </div>
                       <div>
-                        <p className="text-xs font-medium">{otherUser?.full_name || otherUser?.email || 'User'}</p>
-                        <p className="text-xs text-gray-500 truncate">{message.text}</p>
+                        <p className="text-xs font-medium">
+                          {otherUser?.full_name ||
+                            otherUser?.email ||
+                            t('user')}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {message.text}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -1012,13 +1095,15 @@ const ChatPage: React.FC = () => {
 
         {/* Friends list */}
         <div className="mb-6 relative" ref={searchContainerRef}>
-          <h3 className="text-sm font-medium text-gray-500 mb-2">Friends</h3>
+          <h3 className="text-sm font-medium text-gray-500 mb-2">
+            {t('friends')}
+          </h3>
 
           {/* Search input */}
           <div className="mb-1">
             <input
               type="text"
-              placeholder="Search friends..."
+              placeholder={t('search_friends')}
               value={searchQuery}
               onChange={handleSearchChange}
               onFocus={handleSearchFocus}
@@ -1030,17 +1115,23 @@ const ChatPage: React.FC = () => {
           {showFriendsList && (
             <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto custom-scrollbar-3 overflow-x-hidden">
               {friendsLoading ? (
-                <p className="text-sm text-gray-400 p-3">Loading...</p>
+                <p className="text-sm text-gray-400 p-3">{t('loading')}</p>
               ) : uniqueFriends.length > 0 ? (
                 <div className="py-1">
                   {uniqueFriends.map(friend => {
-                    const isActive = activeConversationId && conversations.some(conv =>
-                      conv.id === activeConversationId &&
-                      conv.members[friend.friend_id]
-                    );
+                    const isActive =
+                      activeConversationId &&
+                      conversations.some(
+                        conv =>
+                          conv.id === activeConversationId &&
+                          conv.members[friend.friend_id]
+                      );
 
                     // Get display info
-                    const displayName = friend.friendInfo?.full_name || friend.friendInfo?.email || friend.friend_id;
+                    const displayName =
+                      friend.friendInfo?.full_name ||
+                      friend.friendInfo?.email ||
+                      friend.friend_id;
                     const initial = getInitials(displayName);
                     const avatarUrl = friend.friendInfo?.avatar_url;
 
@@ -1048,8 +1139,9 @@ const ChatPage: React.FC = () => {
                       <div
                         key={friend.friend_id}
                         onClick={() => handleStartChat(friend.friend_id)}
-                        className={`flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-50 ${isActive ? 'bg-blue-50' : ''
-                          }`}
+                        className={`flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-50 ${
+                          isActive ? 'bg-blue-50' : ''
+                        }`}
                       >
                         {avatarUrl ? (
                           <img
@@ -1058,12 +1150,19 @@ const ChatPage: React.FC = () => {
                             className="w-8 h-8 rounded-full object-cover"
                           />
                         ) : (
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${isActive ? 'bg-blue-100 text-blue-600' : 'bg-gray-200 text-gray-700'
-                            }`}>
+                          <div
+                            className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                              isActive
+                                ? 'bg-blue-100 text-blue-600'
+                                : 'bg-gray-200 text-gray-700'
+                            }`}
+                          >
                             {initial}
                           </div>
                         )}
-                        <span className="text-sm truncate flex-1">{displayName}</span>
+                        <span className="text-sm truncate flex-1">
+                          {displayName}
+                        </span>
                         {/* Chat icon */}
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -1085,7 +1184,7 @@ const ChatPage: React.FC = () => {
                 </div>
               ) : (
                 <p className="text-sm text-gray-400 p-3">
-                  No matching friends found
+                  {t('no_matching_friends')}
                 </p>
               )}
             </div>
@@ -1094,7 +1193,7 @@ const ChatPage: React.FC = () => {
           {/* Placeholder text when empty */}
           {!showFriendsList && (
             <p className="text-sm text-gray-400 mb-3 mt-1">
-              Type to search friends
+              {t('type_to_search_friends')}
             </p>
           )}
         </div>
@@ -1111,11 +1210,17 @@ const ChatPage: React.FC = () => {
       </div>
 
       {/* Main chat area */}
-      <div className="flex-1 flex flex-col h-full " style={{ color: textColor }}>
+      <div
+        className="flex-1 flex flex-col h-full "
+        style={{ color: textColor }}
+      >
         {activeConversationId ? (
           <>
             {/* Header */}
-            <div className="p-4 border-b border-gray-200 bg-white" style={{ color: textColor }}>
+            <div
+              className="p-4 border-b border-gray-200 bg-white"
+              style={{ color: textColor }}
+            >
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   {(() => {
@@ -1130,7 +1235,9 @@ const ChatPage: React.FC = () => {
                           />
                         ) : (
                           <div className="w-10 h-10 rounded-full bg-[#21b4ca] text-white flex items-center justify-center font-medium">
-                            {getInitials(otherUser?.full_name || otherUser?.email || '')}
+                            {getInitials(
+                              otherUser?.full_name || otherUser?.email || ''
+                            )}
                           </div>
                         )}
                         <div className="ml-3">
@@ -1138,7 +1245,9 @@ const ChatPage: React.FC = () => {
                             {otherUser?.full_name || otherUser?.email}
                           </h3>
                           {otherUser?.email && (
-                            <span className="text-xs text-gray-500">{otherUser.email}</span>
+                            <span className="text-xs text-gray-500">
+                              {otherUser.email}
+                            </span>
                           )}
                         </div>
                       </>
@@ -1149,12 +1258,27 @@ const ChatPage: React.FC = () => {
                 <div className="flex items-center space-x-2">
                   {/* Pin conversation button */}
                   <button
-                    onClick={() => handleTogglePinConversation(activeConversationId)}
+                    onClick={() =>
+                      handleTogglePinConversation(activeConversationId)
+                    }
                     className={`p-2 rounded-full hover:bg-gray-100 ${isConversationPinned(activeConversationId) ? 'text-[#21b4ca]' : 'text-gray-500'}`}
-                    title={isConversationPinned(activeConversationId) ? "Unpin conversation" : "Pin conversation"}
+                    title={
+                      isConversationPinned(activeConversationId)
+                        ? t('unpin_conversation')
+                        : t('pin_conversation')
+                    }
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clipRule="evenodd" />
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z"
+                        clipRule="evenodd"
+                      />
                     </svg>
                   </button>
 
@@ -1162,10 +1286,19 @@ const ChatPage: React.FC = () => {
                   <button
                     onClick={() => setShowMessageSearch(!showMessageSearch)}
                     className={`p-2 rounded-full hover:bg-gray-100 ${showMessageSearch ? 'text-[#21b4ca]' : 'text-gray-500'}`}
-                    title="Search messages"
+                    title={t('search_messages')}
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                        clipRule="evenodd"
+                      />
                     </svg>
                   </button>
 
@@ -1173,9 +1306,14 @@ const ChatPage: React.FC = () => {
                   <button
                     onClick={() => setShowPinnedMessages(!showPinnedMessages)}
                     className={`p-2 rounded-full hover:bg-gray-100 ${showPinnedMessages ? 'text-[#21b4ca]' : 'text-gray-500'}`}
-                    title="Xem tin nhắn đã ghim"
+                    title={t('view_pinned_messages')}
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
                       <path d="M9.6 3.54l1.4 1.4-3.53 3.53a2 2 0 001.41 3.42h4.12a2 2 0 001.41-3.42L10.4 4.94l1.4-1.4a1 1 0 000-1.42 1 1 0 00-1.4 0L8.4 3.4l-2-2a1 1 0 00-1.4 0 1 1 0 000 1.42l2 2-2.76 2.76a2 2 0 000 2.82 2 2 0 002.83 0L8.4 8.4l1.2 1.2v6.4a1 1 0 002 0v-6.4l1.2-1.2 1.33 1.33a2 2 0 002.83 0 2 2 0 000-2.82L14.2 4.6l2-2a1 1 0 000-1.42 1 1 0 00-1.4 0l-2 2-1.2-1.2a1 1 0 00-1.4 0 1 1 0 00-.6 1.56z" />
                     </svg>
                   </button>
@@ -1184,10 +1322,19 @@ const ChatPage: React.FC = () => {
                   <button
                     onClick={() => setShowThemeSelector(!showThemeSelector)}
                     className={`p-2 rounded-full hover:bg-gray-100 ${showThemeSelector ? 'text-[#21b4ca]' : 'text-gray-500'}`}
-                    title="Thay đổi theme"
+                    title={t('change_theme')}
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v11a3 3 0 106 0V4a2 2 0 00-2-2H4zm1 14a1 1 0 100-2 1 1 0 000 2zm5-1.757l4.9-4.9a2 2 0 000-2.828L13.485 5.1a2 2 0 00-2.828 0L10 5.757v8.486zM16 18H9.071l6-6H16a2 2 0 012 2v2a2 2 0 01-2 2z" clipRule="evenodd" />
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M4 2a2 2 0 00-2 2v11a3 3 0 106 0V4a2 2 0 00-2-2H4zm1 14a1 1 0 100-2 1 1 0 000 2zm5-1.757l4.9-4.9a2 2 0 000-2.828L13.485 5.1a2 2 0 00-2.828 0L10 5.757v8.486zM16 18H9.071l6-6H16a2 2 0 012 2v2a2 2 0 01-2 2z"
+                        clipRule="evenodd"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -1201,7 +1348,7 @@ const ChatPage: React.FC = () => {
                       type="text"
                       value={messageSearchQuery}
                       onChange={handleMessageSearchChange}
-                      placeholder="Tìm kiếm tin nhắn..."
+                      placeholder={t('search_messages_placeholder')}
                       className="flex-1 border border-gray-300 rounded-l-lg px-3 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-[#21b4ca]"
                     />
                     <button
@@ -1209,7 +1356,7 @@ const ChatPage: React.FC = () => {
                       className="bg-[#21b4ca] text-white px-3 py-1 rounded-r-lg text-sm"
                       disabled={searchLoading}
                     >
-                      {searchLoading ? 'Đang tìm...' : 'Tìm'}
+                      {searchLoading ? t('searching_messages') : t('find')}
                     </button>
                   </form>
                   {searchError && (
@@ -1221,47 +1368,86 @@ const ChatPage: React.FC = () => {
 
             {/* Pinned messages */}
             {pinnedMessages.length > 0 && (
-              <div className={`border-b border-gray-200 bg-[#e6f7f9] transition-all duration-300 ${showPinnedMessages ? 'max-h-60 overflow-y-auto' : 'max-h-12 overflow-hidden'}`}>
-                <div className="p-2 flex items-center justify-between cursor-pointer" onClick={() => setShowPinnedMessages(!showPinnedMessages)}>
+              <div
+                className={`border-b border-gray-200 bg-[#e6f7f9] transition-all duration-300 ${showPinnedMessages ? 'max-h-60 overflow-y-auto' : 'max-h-12 overflow-hidden'}`}
+              >
+                <div
+                  className="p-2 flex items-center justify-between cursor-pointer"
+                  onClick={() => setShowPinnedMessages(!showPinnedMessages)}
+                >
                   <div className="flex items-center text-sm text-gray-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 text-[#21b4ca]" viewBox="0 0 20 20" fill="currentColor">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4 mr-1 text-[#21b4ca]"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
                       <path d="M9.6 3.54l1.4 1.4-3.53 3.53a2 2 0 001.41 3.42h4.12a2 2 0 001.41-3.42L10.4 4.94l1.4-1.4a1 1 0 000-1.42 1 1 0 00-1.4 0L8.4 3.4l-2-2a1 1 0 00-1.4 0 1 1 0 000 1.42l2 2-2.76 2.76a2 2 0 000 2.82 2 2 0 002.83 0L8.4 8.4l1.2 1.2v6.4a1 1 0 002 0v-6.4l1.2-1.2 1.33 1.33a2 2 0 002.83 0 2 2 0 000-2.82L14.2 4.6l2-2a1 1 0 000-1.42 1 1 0 00-1.4 0l-2 2-1.2-1.2a1 1 0 00-1.4 0 1 1 0 00-.6 1.56z" />
                     </svg>
-                    {showPinnedMessages ? `${pinnedMessages.length} tin nhắn đã ghim` : 'Tin nhắn đã ghim'}
+                    {showPinnedMessages
+                      ? t('pinned_messages')
+                      : t('pinned_messages')}
                   </div>
-                  <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 text-gray-500 transition-transform duration-300 ${showPinnedMessages ? 'transform rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className={`h-4 w-4 text-gray-500 transition-transform duration-300 ${showPinnedMessages ? 'transform rotate-180' : ''}`}
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 </div>
 
                 {showPinnedMessages && (
                   <div className="px-3 pb-2 space-y-2">
                     {pinnedMessages.map(message => {
-                      const isCurrentUser = message.senderId === localStorage.getItem('user_id');
+                      const isCurrentUser =
+                        message.senderId === localStorage.getItem('user_id');
                       return (
-                        <div key={message.id} className="bg-white rounded-lg p-2 shadow-sm">
+                        <div
+                          key={message.id}
+                          className="bg-white rounded-lg p-2 shadow-sm"
+                        >
                           <div className="flex justify-between items-start">
                             <div className="text-xs font-medium text-gray-700">
-                              {message.senderId === localStorage.getItem('user_id') ? 'Bạn' : getOtherUserInChat()?.full_name || getOtherUserInChat()?.email || 'Người dùng khác'}
+                              {message.senderId ===
+                              localStorage.getItem('user_id')
+                                ? t('you')
+                                : getOtherUserInChat()?.full_name ||
+                                  getOtherUserInChat()?.email ||
+                                  t('user')}
                             </div>
                             <button
                               onClick={() => unpinMessage(message.id)}
                               className="text-gray-400 hover:text-red-500"
-                              title="Bỏ ghim"
+                              title={t('unpin')}
                             >
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-3 w-3"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                  clipRule="evenodd"
+                                />
                               </svg>
                             </button>
                           </div>
-                          <p className="text-sm my-1 break-words">{message.text}</p>
+                          <p className="text-sm my-1 break-words">
+                            {message.text}
+                          </p>
                           <div className="flex justify-end items-center gap-1">
                             <span className="text-xs text-gray-500">
                               {formatMessageTime(message.createdAt).time}
                             </span>
-                            <span className="text-xs text-gray-400">
-                              •
-                            </span>
+                            <span className="text-xs text-gray-400">•</span>
                             <span className="text-xs text-gray-500">
                               {formatMessageTime(message.createdAt).date}
                             </span>
@@ -1279,8 +1465,19 @@ const ChatPage: React.FC = () => {
                 className={`scroll-to-bottom-btn ${isScrolledUp ? 'visible' : ''}`}
                 onClick={scrollToBottom}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                  />
                 </svg>
               </div>
               {/* Chat content */}
@@ -1292,7 +1489,9 @@ const ChatPage: React.FC = () => {
                   onScroll={handleScroll}
                   style={{
                     backgroundColor: theme?.backgroundColor || 'transparent',
-                    backgroundImage: theme?.backgroundUrl ? `url(${theme.backgroundUrl})` : 'none',
+                    backgroundImage: theme?.backgroundUrl
+                      ? `url(${theme.backgroundUrl})`
+                      : 'none',
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                     color: textColor,
@@ -1300,22 +1499,25 @@ const ChatPage: React.FC = () => {
                 >
                   {messagesLoading ? (
                     <div className="flex justify-center items-center h-full">
-                      <p className="text-gray-500">Loading messages...</p>
+                      <p className="text-gray-500">{t('loading_messages')}</p>
                     </div>
                   ) : searchResults.length > 0 ? (
                     // Hiển thị kết quả tìm kiếm
                     <div className="space-y-3">
                       <div className="flex justify-between items-center mb-2">
-                        <p className="text-sm text-gray-500">Tìm thấy {searchResults.length} kết quả</p>
+                        <p className="text-sm text-gray-500">
+                          {t('found_results', { count: searchResults.length })}
+                        </p>
                         <button
                           onClick={clearSearch}
                           className="text-xs text-[#21b4ca] hover:underline"
                         >
-                          Xóa kết quả tìm kiếm
+                          {t('clear_search_results')}
                         </button>
                       </div>
                       {searchResults.map(message => {
-                        const isCurrentUser = message.senderId === localStorage.getItem('user_id');
+                        const isCurrentUser =
+                          message.senderId === localStorage.getItem('user_id');
                         return (
                           <div
                             key={message.id}
@@ -1323,20 +1525,27 @@ const ChatPage: React.FC = () => {
                             style={{ cursor: 'pointer' }}
                           >
                             <div
-                              className={`max-w-xs rounded-lg px-4 py-2 ${isCurrentUser
-                                ? 'bg-[#21b4ca] text-white'
-                                : 'bg-gray-200 text-gray-800'
-                                }`}
+                              className={`max-w-xs rounded-lg px-4 py-2 ${
+                                isCurrentUser
+                                  ? 'bg-[#21b4ca] text-white'
+                                  : 'bg-gray-200 text-gray-800'
+                              }`}
                             >
                               <p className="break-words">{message.text}</p>
                               <div className="flex justify-end items-center mt-1 gap-1">
-                                <span className={`text-xs ${isCurrentUser ? 'text-white opacity-70' : 'text-gray-500'}`}>
+                                <span
+                                  className={`text-xs ${isCurrentUser ? 'text-white opacity-70' : 'text-gray-500'}`}
+                                >
                                   {formatMessageTime(message.createdAt).time}
                                 </span>
-                                <span className={`text-xs ${isCurrentUser ? 'text-white opacity-60' : 'text-gray-400'}`}>
+                                <span
+                                  className={`text-xs ${isCurrentUser ? 'text-white opacity-60' : 'text-gray-400'}`}
+                                >
                                   •
                                 </span>
-                                <span className={`text-xs ${isCurrentUser ? 'text-white opacity-70' : 'text-gray-500'}`}>
+                                <span
+                                  className={`text-xs ${isCurrentUser ? 'text-white opacity-70' : 'text-gray-500'}`}
+                                >
                                   {formatMessageTime(message.createdAt).date}
                                 </span>
                                 {/* Icon kính lúp để đi đến tin nhắn gốc */}
@@ -1348,11 +1557,22 @@ const ChatPage: React.FC = () => {
                                     }, 100);
                                   }}
                                   className="ml-2 p-1 rounded-full hover:bg-blue-100"
-                                  title="Đi đến tin nhắn gốc"
+                                  title={t('go_to_original_message')}
                                   type="button"
                                 >
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" />
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-4 w-4 text-blue-500"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"
+                                    />
                                   </svg>
                                 </button>
                               </div>
@@ -1363,16 +1583,13 @@ const ChatPage: React.FC = () => {
                     </div>
                   ) : messages.length === 0 ? (
                     <div className="flex justify-center items-center h-full">
-                      <p className="text-gray-500">Start chatting now!</p>
+                      <p className="text-gray-500">{t('start_chatting_now')}</p>
                     </div>
                   ) : (
-                    <>
-                      {renderMessages()}
-                    </>
+                    <>{renderMessages()}</>
                   )}
 
                   {/* Nút cuộn xuống */}
-
                 </div>
 
                 {/* Hiển thị trạng thái đang nhập - đặt trước input */}
@@ -1383,7 +1600,10 @@ const ChatPage: React.FC = () => {
                         <span className="w-6 h-6 rounded-full bg-[#21b4ca] text-white flex items-center justify-center text-xs mr-2">
                           {getInitials(getOtherUserInChat()?.full_name || 'U')}
                         </span>
-                        <span className="mr-2">{getOtherUserInChat()?.full_name || 'Người dùng'} đang nhập</span>
+                        <span className="mr-2">
+                          {getOtherUserInChat()?.full_name || t('user')}{' '}
+                          {t('is_typing')}
+                        </span>
                         <span className="typing-animation">
                           <span>.</span>
                           <span>.</span>
@@ -1398,20 +1618,29 @@ const ChatPage: React.FC = () => {
                     {/* Hiển thị xem trước hình ảnh */}
                     {selectedImages.length > 0 && (
                       <div className="p-2">
-                        <ImagePreview images={selectedImages} onRemove={handleRemoveImage} />
+                        <ImagePreview
+                          images={selectedImages}
+                          onRemove={handleRemoveImage}
+                        />
                       </div>
                     )}
 
                     {/* Hiển thị trả lời nhỏ nhỏ bên trên input */}
                     {renderReplyPreview()}
 
-                    <form className="flex items-center p-3 bg-white shadow-sm rounded-lg m-2" onSubmit={e => { e.preventDefault(); handleSendMessage(); }}>
+                    <form
+                      className="flex items-center p-3 bg-white shadow-sm rounded-lg m-2"
+                      onSubmit={e => {
+                        e.preventDefault();
+                        handleSendMessage();
+                      }}
+                    >
                       {/* Nút chọn file */}
                       <button
                         onClick={handleOpenFileDialog}
                         type="button"
                         className="p-2 rounded-full hover:bg-gray-100 text-gray-500 transition-colors duration-200"
-                        title="Đính kèm hình ảnh"
+                        title={t('attach_image')}
                       >
                         <AttachFileIcon />
                       </button>
@@ -1452,20 +1681,34 @@ const ChatPage: React.FC = () => {
                         onChange={handleMessageChange}
                         onFocus={handleInputFocusEvent}
                         onBlur={handleInputBlurEvent}
-                        placeholder="Nhập tin nhắn..."
+                        placeholder={t('enter_message')}
                         className="flex-1 p-3 mx-2 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-[#21b4ca] bg-gray-50 hover:bg-white transition-all duration-200"
                       />
 
                       <button
                         type="submit"
-                        disabled={!messageText.trim() && selectedImages.length === 0}
-                        className={`p-2.5 rounded-full transition-all duration-200 ${!messageText.trim() && selectedImages.length === 0
-                          ? 'bg-gray-200 text-gray-400'
-                          : 'bg-[#21b4ca] text-white hover:bg-[#1a9db0] shadow-sm'
-                          }`}
+                        disabled={
+                          !messageText.trim() && selectedImages.length === 0
+                        }
+                        className={`p-2.5 rounded-full transition-all duration-200 ${
+                          !messageText.trim() && selectedImages.length === 0
+                            ? 'bg-gray-200 text-gray-400'
+                            : 'bg-[#21b4ca] text-white hover:bg-[#1a9db0] shadow-sm'
+                        }`}
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-6 w-6"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                          />
                         </svg>
                       </button>
                     </form>
@@ -1484,8 +1727,10 @@ const ChatPage: React.FC = () => {
         ) : (
           <div className="flex justify-center items-center h-full">
             <div className="text-center">
-              <p className="text-gray-500">Select a conversation to start chatting</p>
-              <p className="text-gray-400 text-sm mt-2">Or search for a friend to create a new conversation</p>
+              <p className="text-gray-500">{t('select_conversation')}</p>
+              <p className="text-gray-400 text-sm mt-2">
+                {t('search_friend_new_conversation')}
+              </p>
             </div>
           </div>
         )}
@@ -1495,17 +1740,21 @@ const ChatPage: React.FC = () => {
       <DeleteModal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
-        selectedItem={selectedConversation ? {
-          type: 'file',
-          title: 'This conversion',
-          content: '',
-          _id: selectedConversation.id,
-          user_id: '',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        } : null}
+        selectedItem={
+          selectedConversation
+            ? {
+                type: 'file',
+                title: t('this_conversation'),
+                content: '',
+                _id: selectedConversation.id,
+                user_id: '',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              }
+            : null
+        }
         onDelete={confirmDeleteConversation}
-        onOpenActionModal={() => { }}
+        onOpenActionModal={() => {}}
       />
     </div>
   );

@@ -1,5 +1,9 @@
 body {
-  font-family: 'NotoSans-Regular', 'Inter', sans-serif;
+  font-family: var(--theme-font), 'NotoSans-Regular', 'Inter', sans-serif;
+}
+
+body.font-pixel {
+  letter-spacing: 0.2px;
 }
 
 /* Custom scrollbar cho FolderNote */

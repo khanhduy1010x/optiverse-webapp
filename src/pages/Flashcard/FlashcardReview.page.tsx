@@ -7,9 +7,11 @@ import {
 import COLORS from '../../constants/colors.constant';
 import { useNavigate } from 'react-router-dom';
 import Text from '../../components/common/Text.component';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 export default function FlashcardReview() {
   const navigate = useNavigate();
+  const { t } = useAppTranslate('flashcard');
   const {
     title,
     flashcardDeck,
@@ -25,7 +27,7 @@ export default function FlashcardReview() {
         className="w-1/2 text-xl mb-6 text-blue-600 cursor-pointer"
         onClick={() => navigate(-1)}
       >
-        Back
+        {t('back')}
       </h1>
 
       <h1 className="text-2xl font-bold">{title}</h1>
@@ -40,9 +42,7 @@ export default function FlashcardReview() {
 
       <div className="w-full flex flex-col justify-center items-center">
         {flashcardDeck.flashcards?.length === 0 && (
-          <div className="w-1/2 mb-4">
-            Congratulations, you have completed all the flashcards!
-          </div>
+          <div className="w-1/2 mb-4">{t('congratulations_completed')}</div>
         )}
 
         {flashcardDeck.flashcards?.length !== 0 && (
@@ -54,7 +54,7 @@ export default function FlashcardReview() {
               borderRadius: 8,
             }}
           >
-            <label className="block text-gray-700">Front</label>
+            <label className="block text-gray-700">{t('front')}</label>
             <Text className="w-full p-3 border rounded-md">
               {flashcard.front}
             </Text>
@@ -72,7 +72,7 @@ export default function FlashcardReview() {
               }}
             >
               <label className="block text-gray-700 font-medium mb-1">
-                Back
+                {t('back_label')}
               </label>
               <Text className="w-full p-3 border rounded-md">
                 {flashcard.back}
@@ -86,28 +86,28 @@ export default function FlashcardReview() {
             {showAnswer && (
               <div className="flex flex-col justify-center items-center gap-4">
                 <FlashcardButton
-                  difficulty="Again"
+                  difficulty={t('again')}
                   minutes={1}
                   onClick={() => handleReview(0)}
                   style={{ backgroundColor: COLORS.red500 }}
                   textStyle={{ color: COLORS.white900 }}
                 />
                 <FlashcardButton
-                  difficulty="Hard"
+                  difficulty={t('hard')}
                   minutes={6}
                   onClick={() => handleReview(1)}
                   style={{ backgroundColor: COLORS.yellow500 }}
                   textStyle={{ color: COLORS.white900 }}
                 />
                 <FlashcardButton
-                  difficulty="Good"
+                  difficulty={t('good')}
                   minutes={20}
                   onClick={() => handleReview(2)}
                   style={{ backgroundColor: COLORS.green500 }}
                   textStyle={{ color: COLORS.white900 }}
                 />
                 <FlashcardButton
-                  difficulty="Easy"
+                  difficulty={t('easy')}
                   minutes={60}
                   onClick={() => handleReview(3)}
                   style={{ backgroundColor: COLORS.white900 }}
@@ -117,9 +117,9 @@ export default function FlashcardReview() {
             )}
 
             {!showAnswer && (
-              <div className='ml-4'>
+              <div className="ml-4">
                 <Button
-                  title="Show Answer"
+                  title={t('show_answer')}
                   className="w-full"
                   onClick={() => setShowAnswer(true)}
                   inverted

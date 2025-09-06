@@ -1,0 +1,13 @@
+{
+  "manage_tags": "Manage Tags",
+  "close_tag_management": "Close tag management",
+  "add_new_tag": "Add New Tag",
+  "tag_name_placeholder": "Tag name",
+  "choose_tag_color": "Choose tag color",
+  "add": "Add",
+  "characters": "characters",
+  "tag_name_exceed_limit": "Tag name must not exceed 25 characters.",
+  "your_tags": "Your Tags",
+  "no_tags_available_create_first": "No tags available. Create your first tag!",
+  "delete_tag": "Delete tag"
+}

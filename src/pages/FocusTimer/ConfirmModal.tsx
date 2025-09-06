@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 type Props = {
   message: string;
@@ -7,6 +8,7 @@ type Props = {
 };
 
 export default function ConfirmModal({ message, onConfirm, onCancel }: Props) {
+  const { t } = useAppTranslate('focus');
   const modalRef = useRef<HTMLDivElement>(null);
 
   // Đóng modal nếu click bên ngoài
@@ -31,7 +33,7 @@ export default function ConfirmModal({ message, onConfirm, onCancel }: Props) {
       >
         {/* Header */}
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">Confirm Action</h3>
+          <h3 className="text-lg font-semibold">{t('confirm_action_title')}</h3>
           <button
             onClick={onCancel}
             className="text-gray-400 hover:text-gray-700 text-xl font-bold"
@@ -49,13 +51,13 @@ export default function ConfirmModal({ message, onConfirm, onCancel }: Props) {
             onClick={onCancel}
             className="px-4 py-2 rounded border text-gray-600 hover:bg-gray-100"
           >
-            Cancel
+            {t('cancel')}
           </button>
           <button
             onClick={onConfirm}
             className="px-4 py-2 rounded text-white bg-red-600 hover:bg-red-700"
           >
-            Confirm
+            {t('confirm')}
           </button>
         </div>
       </div>

@@ -1,14 +1,17 @@
 import React from 'react';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 const AdminDashboard: React.FC = () => {
-    return (
-        <div className="p-6">
-            <h1 className="text-2xl font-bold mb-4">System Management</h1>
-            <div className="bg-white rounded-lg shadow p-4">
-                <p>Admin Dashboard Screen</p>
-            </div>
-        </div>
-    );
+  const { t } = useAppTranslate('admin');
+
+  return (
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">{t('system_management')}</h1>
+      <div className="bg-white rounded-lg shadow p-4">
+        <p>{t('admin_dashboard_screen')}</p>
+      </div>
+    </div>
+  );
 };
 
-export default AdminDashboard; 
+export default AdminDashboard;

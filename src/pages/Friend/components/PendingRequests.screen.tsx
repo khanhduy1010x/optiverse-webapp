@@ -1,5 +1,5 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
+import { useAppTranslate } from '../../../hooks/useAppTranslate';
 import { GROUP_CLASSNAMES } from '../../../styles/group-class-name.style';
 import { PendingRequestsProps } from '../../../types/friend/props/component.props';
 
@@ -9,7 +9,7 @@ const PendingRequests: React.FC<PendingRequestsProps> = ({
   onAcceptFriend,
   renderUserInfo,
 }) => {
-  const { t } = useTranslation();
+  const { t } = useAppTranslate('friend');
 
   // Hàm tạo màu gradient cho avatar dựa trên chuỗi
   const getColorFromString = (str: string) => {
@@ -65,12 +65,10 @@ const PendingRequests: React.FC<PendingRequestsProps> = ({
           </svg>
         </div>
         <h3 className="text-xl font-semibold text-gray-800 mb-2">
-          {t('No Pending Requests')}
+          {t('no_pending_requests')}
         </h3>
         <p className="text-gray-500 mb-6">
-          {t(
-            'You have no pending friend requests at the moment. When someone adds you as a friend, you will see their request here.'
-          )}
+          {t('no_pending_requests_description')}
         </p>
       </div>
     );
@@ -85,16 +83,19 @@ const PendingRequests: React.FC<PendingRequestsProps> = ({
           request.user_id[0]?.toUpperCase();
 
         return (
-          <div key={request._id} className="bg-white rounded-lg p-5 shadow-sm border border-gray-200">
+          <div
+            key={request._id}
+            className="bg-white rounded-lg p-5 shadow-sm border border-gray-200"
+          >
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 {request.friendInfo?.avatar_url ? (
-                  <img 
+                  <img
                     src={request.friendInfo.avatar_url}
                     alt={request.friendInfo.full_name || 'User'}
                     className="w-16 h-16 rounded-lg object-cover mr-4 shadow-sm"
-                    onError={(e) => {
-                      e.currentTarget.onerror = null; 
+                    onError={e => {
+                      e.currentTarget.onerror = null;
                       e.currentTarget.src = `https://ui-avatars.com/api/?name=${initial}&background=random&color=fff`;
                     }}
                   />
@@ -150,7 +151,7 @@ const PendingRequests: React.FC<PendingRequestsProps> = ({
                           d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
-                      {t('Pending')}
+                      {t('pending')}
                     </span>
                   </div>
                 </div>
@@ -173,7 +174,7 @@ const PendingRequests: React.FC<PendingRequestsProps> = ({
                     d="M5 13l4 4L19 7"
                   />
                 </svg>
-                {t('Accept')}
+                {t('accept')}
               </button>
             </div>
           </div>

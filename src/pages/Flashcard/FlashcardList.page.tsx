@@ -6,8 +6,10 @@ import { Button, CircleButton } from '../../components/common/Button.component';
 import Icon from '../../components/common/Icon/Icon.component';
 import UpdateFlashcard from './UpdateFlashcard.screen';
 import { useFlashcardList } from '../../hooks/flashcard/useFlashcardList.hook';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 export default function FlashcardList() {
+  const { t } = useAppTranslate('flashcard');
   const {
     navigate,
     deck,
@@ -26,7 +28,7 @@ export default function FlashcardList() {
           className="text-xl mb-6 text-blue-600 cursor-pointer"
           onClick={() => navigate(-1)}
         >
-          Back
+          {t('back')}
         </h1>
       </div>
 
@@ -43,8 +45,9 @@ export default function FlashcardList() {
         />
         <div className="w-1/4 flex flex-col flex-wrap gap-4">
           <Button
-            title="Spaced repetition"
-            fontType="bold12"
+            title={t('spaced_repetition')}
+            textType='bold'
+            textSize={12}
             inverted
             onClick={() =>
               navigate(`/flashcard-deck/${deck._id}/learn`, {
@@ -53,8 +56,9 @@ export default function FlashcardList() {
             }
           ></Button>
           <Button
-            title="Unlimited study"
-            fontType="bold12"
+            title={t('unlimited_study')}
+            textType='bold'
+            textSize={12}
             inverted
             onClick={() =>
               navigate(`/flashcard-deck/${deck._id}/learn`, {
@@ -66,7 +70,7 @@ export default function FlashcardList() {
       </div>
 
       <div className="flex-col flex gap-8">
-        <h3 className="text-lg">Flashcards</h3>
+        <h3 className="text-lg">{t('flashcards')}</h3>
         {deck.flashcards &&
           deck.flashcards.map((item, index) => (
             <div key={item._id} className="relative">
@@ -83,7 +87,7 @@ export default function FlashcardList() {
                 h-full"
               >
                 <Button
-                  leftComponent={<Icon name="brush"></Icon>}
+                  leftIcon='brush'
                   onClick={() => {
                     setPopupType('edit');
                     setPopupItem(item);
@@ -92,10 +96,10 @@ export default function FlashcardList() {
                     justifyContent: 'center',
                     borderColor: 'transparent',
                   }}
-                  rightStyle={{ display: 'none' }}
+                  displayRight={false}
                 />
                 <Button
-                  leftComponent={<Icon name="delete"></Icon>}
+                  leftIcon='delete'
                   onClick={() => {
                     setPopupType('delete');
                     setPopupItem(item);
@@ -104,7 +108,7 @@ export default function FlashcardList() {
                     justifyContent: 'center',
                     borderColor: 'transparent',
                   }}
-                  rightStyle={{ display: 'none' }}
+                  displayRight={false}
                 />
               </div>
             </div>
@@ -139,7 +143,9 @@ export default function FlashcardList() {
 
             {popupType === 'edit' && (
               <>
-                <h3 className="text-lg font-semibold mb-2">Update Flashcard</h3>
+                <h3 className="text-lg font-semibold mb-2">
+                  {t('update_flashcard')}
+                </h3>
                 <UpdateFlashcard
                   item={popupItem}
                   clear={closePopupAndRefresh}
@@ -150,11 +156,9 @@ export default function FlashcardList() {
             {popupType === 'delete' && (
               <>
                 <h3 className="text-lg font-semibold mb-4 text-red-600">
-                  Delete this flashcard?
+                  {t('delete_this_flashcard')}
                 </h3>
-                <p className="text-sm mb-4">
-                  Do you want to delete this flashcard?
-                </p>
+                <p className="text-sm mb-4">{t('confirm_delete_flashcard')}</p>
                 <div className="flex justify-end gap-2">
                   <Button
                     onClick={() => {
@@ -162,15 +166,15 @@ export default function FlashcardList() {
                       setPopupItem(null);
                     }}
                     className="bg-gray-200 px-3 py-1 rounded"
-                    title="Cancel"
+                    title={t('cancel')}
                     style={{
-                      borderColor: 'transparent'
+                      borderColor: 'transparent',
                     }}
                   />
                   <Button
                     onClick={() => handleDelete(popupItem)}
                     className="bg-red-500 text-white px-3 py-1 rounded"
-                    title="Delete"
+                    title={t('delete')}
                     inverted
                   />
                 </div>

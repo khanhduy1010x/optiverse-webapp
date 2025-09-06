@@ -1,1 +1,16 @@
-{}
+{
+  "flashcard_statistics": "Flashcard Statistics",
+  "loading": "Loading...",
+  "decks": "Decks",
+  "review_sessions": "Review Sessions",
+  "due_today": "Due Today",
+  "reviewed_percent": "Reviewed Percent",
+  "week_reviewed": "Week Reviewed",
+  "flashcard_status": "Flashcard Status",
+  "new": "New",
+  "learning": "Learning",
+  "reviewing": "Reviewing",
+  "daily_reviews_calendar": "Daily Reviews Calendar",
+  "due_today_per_deck": "Due Today per Deck",
+  "reviews": "reviews"
+}

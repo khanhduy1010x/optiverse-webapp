@@ -1,9 +1,11 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { AppTheme } from '../types/theme.type';
+import { AppTheme, SystemStyle } from '../types/theme.type';
 import { generateThemeFromPrimary } from '../utils/theme.util';
 import COLORS from '../constants/colors.constant';
+import { useTranslation } from 'react-i18next';
 
 const THEME_COLOR_KEY = 'appTheme';
+const SYSTEM_STYLE_KEY = 'systemStyle';
 const defaultPrimaryColor = COLORS.white900;
 
 interface ThemeContextProps {
@@ -12,6 +14,9 @@ interface ThemeContextProps {
   setPrimaryColor: (color?: string) => void;
   resetTheme: () => void;
   toggleTheme: () => void;
+
+  UIStyle: SystemStyle;
+  setUIStyle: (style: SystemStyle) => void;
 }
 
 export const ThemeContext = createContext<ThemeContextProps | undefined>(
@@ -26,12 +31,20 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   const [theme, setTheme] = useState<AppTheme>(
     generateThemeFromPrimary(defaultPrimaryColor)
   );
+  const [UIStyle, setUIStyleState] = useState<SystemStyle>(SystemStyle.Default);
+  const { i18n } = useTranslation();
 
   useEffect(() => {
-    const saved = localStorage.getItem(THEME_COLOR_KEY);
-    if (saved) {
-      setPrimaryColor(saved);
+    const savedThemed = localStorage.getItem(THEME_COLOR_KEY);
+    const savedSystemStyle = localStorage.getItem(SYSTEM_STYLE_KEY);
+    if (savedThemed) {
+      setPrimaryColor(savedThemed);
     }
+    if (savedSystemStyle && Object.values(SystemStyle).includes(savedSystemStyle as SystemStyle)) {
+      setUIStyle(savedSystemStyle as SystemStyle);
+    }
+
+
   }, []);
 
   const setPrimaryColor = (color?: string) => {
@@ -61,9 +74,24 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     setPrimaryColor(COLORS.black500);
   };
 
+  const setUIStyle = (style: SystemStyle) => {
+    const safeStyle = style ?? SystemStyle.Default;
+    localStorage.setItem(SYSTEM_STYLE_KEY, safeStyle);
+    const isPixel = safeStyle == SystemStyle.Pixel;
+    // const isJapanese = i18n.language === 'jp';
+    if (isPixel){
+      document.documentElement.style.setProperty('--theme-font', `"Pixel"`);
+      document.body.classList.add('font-pixel');
+    } else {
+      document.documentElement.style.removeProperty('--theme-font');
+      document.body.classList.remove('font-pixel');
+    }
+    setUIStyleState(safeStyle);
+  };
+
   return (
     <ThemeContext.Provider
-      value={{ theme, primaryColor, setPrimaryColor, resetTheme, toggleTheme }}
+      value={{ theme, primaryColor, setPrimaryColor, resetTheme, toggleTheme, UIStyle, setUIStyle }}
     >
       {children}
     </ThemeContext.Provider>

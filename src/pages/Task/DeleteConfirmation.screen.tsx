@@ -2,6 +2,7 @@ import React from 'react';
 import { GROUP_CLASSNAMES } from '../../styles';
 import { DeleteConfirmationProps } from '../../types/task/props/component.props';
 import Modal from 'react-modal';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 
 const DeleteConfirmation: React.FC<DeleteConfirmationProps> = ({
@@ -10,6 +11,7 @@ const DeleteConfirmation: React.FC<DeleteConfirmationProps> = ({
     onCancel,
     onConfirm
 }) => {
+    const { t } = useAppTranslate('task');
     return (
         <Modal isOpen={true}
             className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[450px] max-w-[90vw] bg-white rounded-2xl shadow-2xl z-[2000] outline-none"
@@ -31,13 +33,13 @@ const DeleteConfirmation: React.FC<DeleteConfirmationProps> = ({
                         onClick={onCancel}
                         className={GROUP_CLASSNAMES.deleteConfirmCancelButton}
                     >
-                        Cancel
+                        {t('cancel')}
                     </button>
                     <button
                         onClick={onConfirm}
                         className={GROUP_CLASSNAMES.deleteConfirmDeleteButton}
                     >
-                        Delete
+                        {t('delete')}
                     </button>
                 </div>
             </div>

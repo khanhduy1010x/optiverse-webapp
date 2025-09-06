@@ -3,12 +3,14 @@ import { TaskEvent } from '../../types/task-events/task-events.types';
 import { useTaskEventList } from '../../hooks/task-events/useTaskEventList.hook';
 import { TaskEventModal } from './TaskEventModal.screen';
 import { DeleteTaskEventModal } from './DeleteTaskEventModal.screen';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 interface TaskEventListProps {
   taskId: string;
 }
 
 export const TaskEventList: React.FC<TaskEventListProps> = ({ taskId }) => {
+  const { t } = useAppTranslate('task');
   const { taskEvents, loading, error, refreshTaskEvents } = useTaskEventList(taskId);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -59,7 +61,9 @@ export const TaskEventList: React.FC<TaskEventListProps> = ({ taskId }) => {
   };
   
   const formatDayName = (date: Date) => {
-    const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+    const days = [
+      t('day_sun'), t('day_mon'), t('day_tue'), t('day_wed'), t('day_thu'), t('day_fri'), t('day_sat')
+    ];
     return days[date.getDay()];
   };
 
@@ -145,7 +149,7 @@ export const TaskEventList: React.FC<TaskEventListProps> = ({ taskId }) => {
               }}
               className="px-4 py-2 text-red-500 hover:bg-red-50 rounded"
             >
-              Delete
+              {t('delete')}
             </button>
             <button
               onClick={() => {
@@ -154,7 +158,7 @@ export const TaskEventList: React.FC<TaskEventListProps> = ({ taskId }) => {
               }}
               className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
             >
-              Edit
+              {t('edit')}
             </button>
           </div>
         </div>
@@ -162,19 +166,19 @@ export const TaskEventList: React.FC<TaskEventListProps> = ({ taskId }) => {
     );
   };
 
-  if (loading) return <div className="p-4">Loading task events...</div>;
+  if (loading) return <div className="p-4">{t('loading_task_events')}</div>;
   if (error) return <div className="p-4 text-red-500">{error}</div>;
 
   return (
     <div className="mt-4">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold">Schedules</h3>
+        <h3 className="text-lg font-semibold">{t('schedules_title')}</h3>
         <div className="flex items-center space-x-2">
           <button
             onClick={handleToday}
             className="px-3 py-1 bg-gray-100 text-gray-700 rounded text-sm"
           >
-            Today
+            {t('today')}
           </button>
           <button
             onClick={handlePrevWeek}
@@ -199,7 +203,7 @@ export const TaskEventList: React.FC<TaskEventListProps> = ({ taskId }) => {
             onClick={handleAddEvent}
             className="ml-4 px-3 py-1 bg-blue-500 text-white rounded text-sm"
           >
-            Add Schedule
+            {t('add_schedule')}
           </button>
         </div>
       </div>
@@ -221,7 +225,7 @@ export const TaskEventList: React.FC<TaskEventListProps> = ({ taskId }) => {
           
           {/* Time zone indicator */}
           <div className="flex border-b py-1">
-            <div className="w-20 flex-shrink-0 text-xs text-gray-500 pl-2">GMT+07</div>
+            <div className="w-20 flex-shrink-0 text-xs text-gray-500 pl-2">{t('timezone_gmt7')}</div>
             <div className="flex-1"></div>
           </div>
           
@@ -229,7 +233,7 @@ export const TaskEventList: React.FC<TaskEventListProps> = ({ taskId }) => {
           {timeSlots.map((hour) => (
             <div key={hour} className="flex border-b">
               <div className="w-20 flex-shrink-0 py-4 text-right pr-2 text-sm">
-                {hour} AM
+                {hour} {t('am')}
               </div>
               
               {daysOfWeek.map((day, dayIndex) => {
@@ -242,7 +246,7 @@ export const TaskEventList: React.FC<TaskEventListProps> = ({ taskId }) => {
                         className="bg-blue-400 text-white p-1 rounded text-sm mb-1 cursor-pointer"
                         onClick={() => handleViewEventDetail(event)}
                       >
-                        <div className="font-medium">{event.title || 'No title'}</div>
+                        <div className="font-medium">{event.title || t('no_title')}</div>
                         <div className="text-xs">
                           {new Date(event.start_time).getHours()}:00 - 
                           {event.end_time ? new Date(event.end_time).getHours() : (new Date(event.start_time).getHours() + 1)}:00

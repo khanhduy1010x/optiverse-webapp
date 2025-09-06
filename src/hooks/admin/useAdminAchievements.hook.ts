@@ -3,8 +3,10 @@ import achievementService from '../../services/achievement.service';
 import { Achievement, ConditionTypeEnum, AchievementType } from '../../types/achievement/achievement.type';
 import { validateAchievement } from '../../utils/achievement.util';
 import { achievementTypeService } from '../../services/achievementType.service';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 export function useAdminAchievements() {
+  const { t } = useAppTranslate('achievement');
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [achievementTypes, setAchievementTypes] = useState<AchievementType[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -39,7 +41,7 @@ export function useAdminAchievements() {
       const response = await achievementService.getAllAchievements?.();
       setAchievements(response || []);
     } catch (err: any) {
-      setError('Failed to fetch achievements');
+      setError(t('failed_to_fetch_achievements'));
     } finally {
       setLoading(false);
     }
@@ -72,7 +74,7 @@ export function useAdminAchievements() {
     if (!editingId) return;
     const validation = validateAchievement({ title: editTitle, description: editDescription });
     if (!validation.valid) {
-      setValidationError(validation.error);
+      setValidationError(validation.error || null);
       return;
     }
     
@@ -81,7 +83,7 @@ export function useAdminAchievements() {
       (a) => a.title.toLowerCase() === editTitle.toLowerCase() && a._id !== editingId
     );
     if (duplicateTitleAchievement) {
-      setValidationError(`An achievement with the title "${editTitle}" already exists.`);
+      setValidationError(t('duplicate_title', { title: editTitle }));
       return;
     }
     
@@ -116,16 +118,16 @@ export function useAdminAchievements() {
     } catch (err: any) {
       console.error('Update achievement error:', err);
       if (err.message?.includes('EAI_AGAIN') || err.code === 'EAI_AGAIN') {
-        setError('Network error: Cannot connect to image upload service. Please check your internet connection and try again.');
+        setError(t('network_error_upload'));
       } else if (err.response?.data?.message) {
         // Ensure we're passing a string to setValidationError
         setValidationError(String(err.response.data.message));
       } else if (err.response?.status === 400 && err.response?.data?.error?.includes('duplicate key')) {
-        setValidationError(`An achievement with the title "${editTitle}" already exists.`);
+        setValidationError(t('duplicate_title', { title: editTitle }));
       } else if (err.response?.data?.code === 11000 || (err.response?.data?.error && err.response?.data?.error.includes('E11000'))) {
-        setValidationError(`An achievement with the title "${editTitle}" already exists.`);
+        setValidationError(t('duplicate_title', { title: editTitle }));
       } else {
-        setValidationError('Failed to update achievement. Please try again later.');
+        setValidationError(t('failed_to_update'));
       }
     } finally {
       setSaving(false);
@@ -152,11 +154,11 @@ export function useAdminAchievements() {
   const handleCreate = async () => {
     const validation = validateAchievement({ title: createTitle, description: createDescription });
     if (!validation.valid) {
-      setCreateValidationError(validation.error);
+      setCreateValidationError(validation.error || null);
       return;
     }
     if (!createConditionType || !createConditionValue || createConditionValue < 1) {
-      setCreateValidationError('Please select a valid condition type and value.');
+      setCreateValidationError(t('invalid_condition_type_value'));
       return;
     }
     
@@ -165,7 +167,7 @@ export function useAdminAchievements() {
       (a) => a.title.toLowerCase() === createTitle.toLowerCase()
     );
     if (duplicateTitleAchievement) {
-      setCreateValidationError(`An achievement with the title "${createTitle}" already exists.`);
+      setCreateValidationError(t('duplicate_title', { title: createTitle }));
       return;
     }
     
@@ -179,7 +181,7 @@ export function useAdminAchievements() {
       const achievementTitle = duplicateAchievement ? duplicateAchievement.title : 'another achievement';
       
       setCreateValidationError(
-        `An achievement with the same condition type "${createConditionType}" and value ${createConditionValue} already exists (${achievementTitle}). Please use a different condition type or value.`
+        t('duplicate_condition', { type: createConditionType, value: createConditionValue, title: achievementTitle })
       );
       return;
     }
@@ -215,18 +217,18 @@ export function useAdminAchievements() {
     } catch (err: any) {
       console.error('Create achievement error:', err);
       if (err.message?.includes('EAI_AGAIN') || err.code === 'EAI_AGAIN') {
-        setCreateValidationError('Network error: Cannot connect to image upload service. Please check your internet connection and try again.');
+        setCreateValidationError(t('network_error_upload'));
       } else if (err.response?.data?.message) {
         // Ensure we're passing a string to setCreateValidationError
         setCreateValidationError(String(err.response.data.message));
       } else if (err.response?.status === 400 && err.response?.data?.error?.includes('duplicate key')) {
-        setCreateValidationError(`An achievement with the title "${createTitle}" already exists.`);
+        setCreateValidationError(t('duplicate_title', { title: createTitle }));
       } else if (err.response?.data?.code === 11000 || (err.response?.data?.error && err.response?.data?.error.includes('E11000'))) {
-        setCreateValidationError(`An achievement with the title "${createTitle}" already exists.`);
+        setCreateValidationError(t('duplicate_title', { title: createTitle }));
       } else if (err.response?.status === 400 && err.response?.data?.message?.includes('condition')) {
-        setCreateValidationError(`Duplicate condition: ${err.response.data.message}`);
+        setCreateValidationError(t('duplicate_condition_prefix', { message: err.response.data.message }));
       } else {
-        setCreateValidationError('Failed to create achievement or achievement type. Please try again later.');
+        setCreateValidationError(t('failed_to_create'));
       }
     } finally {
       setCreateLoading(false);

@@ -18,12 +18,13 @@ import {
 } from './components';
 import { useFriendList } from '../../hooks/friend/useFriendList.hook';
 import { toast } from 'react-toastify';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 const FriendList: React.FC = () => {
   const navigate = useNavigate();
-  
+  const { t } = useAppTranslate('friend');
+
   const {
-    t,
     userId,
     friends,
     sentRequests,
@@ -67,7 +68,11 @@ const FriendList: React.FC = () => {
         ) : (
           <span className="font-medium">{user.email}</span>
         )}
-        {showId && <span className="text-xs text-gray-400">ID: {userId}</span>}
+        {showId && (
+          <span className="text-xs text-gray-400">
+            {t('id_label', { id: userId })}
+          </span>
+        )}
       </span>
     );
   };
@@ -90,37 +95,34 @@ const FriendList: React.FC = () => {
   const handleRefresh = async () => {
     try {
       const result = await forceRefreshAllData();
-      
+
       if (result.tab === 'friends') {
         if (result.hasChanges) {
-          toast.success(`Friend list updated. You have ${result.count} friends.`);
+          toast.success(t('friend_list_updated', { count: result.count }));
         } else {
-          toast.info('Your friend list is already up-to-date.');
+          toast.info(t('friend_list_up_to_date'));
         }
-      }
-      else if (result.tab === 'pending') {
+      } else if (result.tab === 'pending') {
         if (result.hasChanges) {
-          toast.success(`Pending requests updated. You have ${result.count} pending requests.`);
+          toast.success(t('pending_requests_updated', { count: result.count }));
         } else {
-          toast.info('Your pending requests list is already up-to-date.');
+          toast.info(t('pending_requests_up_to_date'));
         }
-      }
-      else if (result.tab === 'sent') {
+      } else if (result.tab === 'sent') {
         if (result.hasChanges) {
-          toast.success(`Sent requests updated. You have ${result.count} sent requests.`);
+          toast.success(t('sent_requests_updated', { count: result.count }));
         } else {
-          toast.info('Your sent requests list is already up-to-date.');
+          toast.info(t('sent_requests_up_to_date'));
         }
-      }
-      else if (result.tab === 'search') {
+      } else if (result.tab === 'search') {
         if (result.hasChanges) {
-          toast.success('Search results updated with the latest friend data.');
+          toast.success(t('search_results_updated'));
         } else {
-          toast.info('Your search results are already up-to-date.');
+          toast.info(t('search_results_up_to_date'));
         }
       }
     } catch (e) {
-      toast.error('Failed to refresh. Please try again later.');
+      toast.error(t('failed_to_refresh'));
       console.error('Refresh error:', e);
     }
   };

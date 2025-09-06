@@ -4,8 +4,10 @@ import Loader from '../../components/achievement/Loader.component';
 import ErrorDisplay from '../../components/achievement/ErrorDisplay.component';
 import { useAdminAchievements } from '../../hooks/admin/useAdminAchievements.hook';
 import { Achievement, ConditionTypeEnum } from '../../types/achievement/achievement.type';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 const AchievementsAdminPage: React.FC = () => {
+  const { t } = useAppTranslate('admin');
   const [previewImageEdit, setPreviewImageEdit] = useState<string | null>(null);
   const [previewImageCreate, setPreviewImageCreate] = useState<string | null>(null);
   const [networkError, setNetworkError] = useState<string | null>(null);
@@ -128,7 +130,7 @@ const AchievementsAdminPage: React.FC = () => {
       await handleSave();
     } catch (err: any) {
       if (err.message?.includes('EAI_AGAIN') || err.code === 'EAI_AGAIN') {
-        setNetworkError('Network connectivity issue with image upload service. Please check your internet connection and try again.');
+        setNetworkError(t('network_connectivity_issue_upload'));
       }
     }
   };
@@ -140,7 +142,7 @@ const AchievementsAdminPage: React.FC = () => {
       await handleCreate();
     } catch (err: any) {
       if (err.message?.includes('EAI_AGAIN') || err.code === 'EAI_AGAIN') {
-        setNetworkError('Network connectivity issue with image upload service. Please check your internet connection and try again.');
+        setNetworkError(t('network_connectivity_issue_upload'));
       }
     }
   };
@@ -154,12 +156,12 @@ const AchievementsAdminPage: React.FC = () => {
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold">Achievements Management</h1>
+        <h1 className="text-2xl font-bold">{t('achievements_management')}</h1>
         <button
           className="bg-blue-500 text-white rounded px-4 py-2 text-sm font-medium hover:bg-blue-600 shadow"
           onClick={onOpenCreateModal}
         >
-          + Create Achievement
+          {t('create_achievement_button')}
         </button>
       </div>
       <div className="bg-white rounded-lg shadow p-4">
@@ -172,14 +174,14 @@ const AchievementsAdminPage: React.FC = () => {
               onClick={handleRetry}
               className="mt-4 bg-blue-500 text-white rounded px-4 py-2 text-sm hover:bg-blue-600"
             >
-              Retry
+              {t('retry')}
             </button>
           </div>
         ) : (
           <>
             {achievements.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
-                No achievements found. Create your first achievement using the button above.
+                {t('empty_list_message')}
               </div>
             ) : (
               <div className="flex flex-wrap">
@@ -190,7 +192,7 @@ const AchievementsAdminPage: React.FC = () => {
                       className="absolute top-2 right-2 bg-blue-500 text-white rounded px-2 py-1 text-xs hover:bg-blue-600"
                       onClick={() => onEditAchievement(achievement)}
                     >
-                      Edit
+                      {t('edit')}
                     </button>
                   </div>
                 ))}
@@ -208,7 +210,7 @@ const AchievementsAdminPage: React.FC = () => {
               <svg className="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
-              Edit Achievement
+              {t('edit_achievement_title')}
             </h2>
             
             <div className="grid grid-cols-2 gap-4 mt-4">
@@ -218,9 +220,9 @@ const AchievementsAdminPage: React.FC = () => {
                     className="w-full border-0 px-0 py-1 text-sm focus:ring-0 focus:outline-none bg-transparent"
                     value={editTitle}
                     onChange={e => setEditTitle(e.target.value)}
-                    placeholder="Enter achievement title"
+                    placeholder={t('enter_achievement_title')}
                   />
-                  <label className="absolute -top-5 left-0 text-xs text-blue-500 font-medium tracking-wider">Title</label>
+                  <label className="absolute -top-5 left-0 text-xs text-blue-500 font-medium tracking-wider">{t('title_label')}</label>
                 </div>
               </div>
               
@@ -230,16 +232,16 @@ const AchievementsAdminPage: React.FC = () => {
                     className="w-full border-0 px-0 py-1 text-sm focus:ring-0 focus:outline-none bg-transparent resize-none"
                     value={editDescription}
                     onChange={e => setEditDescription(e.target.value)}
-                    placeholder="Enter achievement description"
+                    placeholder={t('enter_achievement_description')}
                     rows={1}
                   />
-                  <label className="absolute -top-5 left-0 text-xs text-blue-500 font-medium tracking-wider">Description</label>
+                  <label className="absolute -top-5 left-0 text-xs text-blue-500 font-medium tracking-wider">{t('description_label')}</label>
                 </div>
               </div>
               
               <div className="col-span-2 flex items-center mb-2">
                 <div className="relative mr-3">
-                  <label className="text-xs text-blue-500 font-medium tracking-wider mb-1 block">Icon</label>
+                  <label className="text-xs text-blue-500 font-medium tracking-wider mb-1 block">{t('icon_label')}</label>
                   {!previewImageEdit ? (
                     <div className="mt-1 flex items-center">
                       <label className="flex items-center justify-center w-20 h-20 border border-dashed border-gray-400 cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
@@ -276,7 +278,7 @@ const AchievementsAdminPage: React.FC = () => {
                   )}
                 </div>
                 <div className="flex-1 text-xs text-gray-500 tracking-wider pl-2">
-                  Square image recommended.
+                  {t('square_image_recommended')}
                 </div>
               </div>
             </div>
@@ -286,7 +288,7 @@ const AchievementsAdminPage: React.FC = () => {
                 <svg className="w-4 h-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                {validationError.includes('already exists') ? validationError : validationError}
+                {validationError}
               </div>
             )}
 
@@ -305,7 +307,7 @@ const AchievementsAdminPage: React.FC = () => {
                 onClick={resetModals}
                 disabled={saving}
               >
-                Cancel
+                {t('cancel')}
               </button>
               <button
                 className="px-4 py-1.5 text-xs font-medium bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors shadow-sm"
@@ -318,9 +320,9 @@ const AchievementsAdminPage: React.FC = () => {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Saving
+                    {t('saving')}
                   </span> 
-                  : 'Save Changes'
+                  : t('save_changes')
                 }
               </button>
             </div>
@@ -347,7 +349,7 @@ const AchievementsAdminPage: React.FC = () => {
               <svg className="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              New Achievement
+              {t('new_achievement_title')}
             </h2>
             
             <div className="grid grid-cols-2 gap-4 mt-4">
@@ -357,9 +359,9 @@ const AchievementsAdminPage: React.FC = () => {
                     className="w-full border-0 px-0 py-1 text-sm focus:ring-0 focus:outline-none bg-transparent"
                     value={createTitle}
                     onChange={e => setCreateTitle(e.target.value)}
-                    placeholder="Enter achievement title"
+                    placeholder={t('enter_achievement_title')}
                   />
-                  <label className="absolute -top-5 left-0 text-xs text-blue-500 font-medium tracking-wider">Title</label>
+                  <label className="absolute -top-5 left-0 text-xs text-blue-500 font-medium tracking-wider">{t('title_label')}</label>
                 </div>
               </div>
               
@@ -374,7 +376,7 @@ const AchievementsAdminPage: React.FC = () => {
                       <option key={type} value={type}>{type.replace(/_/g, ' ')}</option>
                     ))}
                   </select>
-                  <label className="absolute -top-5 left-0 text-xs text-blue-500 font-medium tracking-wider">Condition Type</label>
+                  <label className="absolute -top-5 left-0 text-xs text-blue-500 font-medium tracking-wider">{t('condition_type_label')}</label>
                 </div>
               </div>
               
@@ -384,10 +386,10 @@ const AchievementsAdminPage: React.FC = () => {
                     className="w-full border-0 px-0 py-1 text-sm focus:ring-0 focus:outline-none bg-transparent resize-none"
                     value={createDescription}
                     onChange={e => setCreateDescription(e.target.value)}
-                    placeholder="Enter achievement description"
+                    placeholder={t('enter_achievement_description')}
                     rows={1}
                   />
-                  <label className="absolute -top-5 left-0 text-xs text-blue-500 font-medium tracking-wider">Description</label>
+                  <label className="absolute -top-5 left-0 text-xs text-blue-500 font-medium tracking-wider">{t('description_label')}</label>
                 </div>
               </div>
               
@@ -399,15 +401,15 @@ const AchievementsAdminPage: React.FC = () => {
                     className="w-full border-0 px-0 py-1 text-sm focus:ring-0 focus:outline-none bg-transparent"
                     value={createConditionValue}
                     onChange={e => setCreateConditionValue(Number(e.target.value))}
-                    placeholder="Enter numeric value"
+                    placeholder={t('enter_numeric_value')}
                   />
-                  <label className="absolute -top-5 left-0 text-xs text-blue-500 font-medium tracking-wider">Value</label>
+                  <label className="absolute -top-5 left-0 text-xs text-blue-500 font-medium tracking-wider">{t('value_label')}</label>
                 </div>
               </div>
               
               <div className="col-span-2 flex items-center mb-2">
                 <div className="relative mr-3">
-                  <label className="text-xs text-blue-500 font-medium tracking-wider mb-1 block">Icon</label>
+                  <label className="text-xs text-blue-500 font-medium tracking-wider mb-1 block">{t('icon_label')}</label>
                   {!previewImageCreate ? (
                     <div className="mt-1 flex items-center">
                       <label className="flex items-center justify-center w-20 h-20 border border-dashed border-gray-400 cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
@@ -444,7 +446,7 @@ const AchievementsAdminPage: React.FC = () => {
                   )}
                 </div>
                 <div className="flex-1 text-xs text-gray-500 tracking-wider pl-2">
-                  Square image recommended.
+                  {t('square_image_recommended')}
                 </div>
               </div>
             </div>
@@ -454,7 +456,7 @@ const AchievementsAdminPage: React.FC = () => {
                 <svg className="w-4 h-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                {createValidationError.includes('already exists') ? createValidationError : createValidationError}
+                {createValidationError}
               </div>
             )}
 
@@ -473,7 +475,7 @@ const AchievementsAdminPage: React.FC = () => {
                 onClick={resetModals}
                 disabled={createLoading}
               >
-                Cancel
+                {t('cancel')}
               </button>
               <button
                 className="px-4 py-1.5 text-xs font-medium bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors shadow-sm"
@@ -486,9 +488,9 @@ const AchievementsAdminPage: React.FC = () => {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Creating
+                    {t('creating')}
                   </span> 
-                  : 'Create Achievement'
+                  : t('create_achievement_cta')
                 }
               </button>
             </div>

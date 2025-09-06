@@ -3,6 +3,7 @@ import { GROUP_CLASSNAMES } from '../../styles';
 import Modal from 'react-modal';
 import { CreateTaskFormProps } from '../../types/task/props/component.props';
 import { isoToLocalDateTime, localDateTimeToISO } from '../../utils/date.utils';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
     title,
@@ -29,6 +30,7 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
     handleCreateNewTag
 }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const { t } = useAppTranslate('task');
     // Add errors state object for validation
     const [errors, setErrors] = useState<{
         title?: string;
@@ -45,14 +47,14 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
         
         // Validate title
         if (!title || !title.trim()) {
-            newErrors.title = 'Title is required';
+            newErrors.title = t('create_required_title');
         } else if (title.length > 50) {
-            newErrors.title = 'Title cannot exceed 50 characters';
+            newErrors.title = t('create_title_max');
         }
         
         // Validate description
         if (description && description.length > 150) {
-            newErrors.description = 'Description cannot exceed 150 characters';
+            newErrors.description = t('create_desc_max');
         }
         
         // Validate times
@@ -64,7 +66,7 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                 
                 // Check if dates are valid
                 if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-                    newErrors.time = 'Invalid date format';
+                    newErrors.time = t('create_invalid_date');
                     setErrors(newErrors);
                     return false;
                 }
@@ -79,20 +81,20 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                 
                 // Check if start date is in the past (date only)
                 if (startDateOnly < today) {
-                    newErrors.time = 'Start date cannot be in the past';
+                    newErrors.time = t('create_start_in_past');
                     setErrors(newErrors);
                     return false;
                 }
                 
                 // Check if end date is before start date
                 if (endDate <= startDate) {
-                    newErrors.time = 'Deadline must be after start time';
+                    newErrors.time = t('create_deadline_after_start');
                     setErrors(newErrors);
                     return false;
                 }
             } catch (error) {
                 console.error('Error validating dates:', error);
-                newErrors.time = 'Invalid date format';
+                newErrors.time = t('create_invalid_date');
                 setErrors(newErrors);
                 return false;
             }
@@ -101,7 +103,7 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                 const startDate = start_time instanceof Date ? start_time : new Date(start_time);
                 
                 if (isNaN(startDate.getTime())) {
-                    newErrors.time = 'Invalid start date format';
+                    newErrors.time = t('create_invalid_start_date');
                     setErrors(newErrors);
                     return false;
                 }
@@ -112,13 +114,13 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                 const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
                 
                 if (startDateOnly < today) {
-                    newErrors.time = 'Start date cannot be in the past';
+                    newErrors.time = t('create_start_in_past');
                     setErrors(newErrors);
                     return false;
                 }
             } catch (error) {
                 console.error('Error validating start date:', error);
-                newErrors.time = 'Invalid start date format';
+                newErrors.time = t('create_invalid_start_date');
                 setErrors(newErrors);
                 return false;
             }
@@ -127,7 +129,7 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                 const endDate = end_time instanceof Date ? end_time : new Date(end_time);
                 
                 if (isNaN(endDate.getTime())) {
-                    newErrors.time = 'Invalid end date format';
+                    newErrors.time = t('create_invalid_end_date');
                     setErrors(newErrors);
                     return false;
                 }
@@ -138,13 +140,13 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                 const endDateOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
                 
                 if (endDateOnly < today) {
-                    newErrors.time = 'End date cannot be in the past';
+                    newErrors.time = t('create_end_in_past');
                     setErrors(newErrors);
                     return false;
                 }
             } catch (error) {
                 console.error('Error validating end date:', error);
-                newErrors.time = 'Invalid end date format';
+                newErrors.time = t('create_invalid_end_date');
                 setErrors(newErrors);
                 return false;
             }
@@ -187,7 +189,7 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
             }
         } catch (error) {
             console.error('Error creating task:', error);
-            alert('Failed to create task. Please try again.');
+            alert(t('create_failed'));
         } finally {
             setIsSubmitting(false);
         }
@@ -204,7 +206,7 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                     <input
                         className={`w-full text-xl font-medium border-0 p-0 mb-2 focus:outline-none focus:ring-0 placeholder-gray-400 ${errors.title ? 'border-b border-red-500' : ''}`}
                         type="text"
-                        placeholder="Task name"
+                        placeholder={t('create_task_name_placeholder')}
                         value={title}
                         onChange={(e) => {
                             setTitle(e.target.value);
@@ -219,14 +221,14 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                     {errors.title && (
                         <div className="text-red-500 text-xs mt-1">{errors.title}</div>
                     )}
-                    <div className="text-xs text-gray-400 mt-1">{title.length}/50 characters</div>
+                    <div className="text-xs text-gray-400 mt-1">{title.length}/50 {t('characters')}</div>
                 </div>
 
                 {/* Description */}
                 <div className={GROUP_CLASSNAMES.taskDetailDescription}>
                     <textarea
                         className={`w-full text-sm border-0 p-0 focus:outline-none focus:ring-0 placeholder-gray-400 resize-none ${errors.description ? 'border border-red-500' : ''}`}
-                        placeholder="Description"
+                        placeholder={t('create_description_placeholder')}
                         value={description}
                         onChange={(e) => {
                             setDescription(e.target.value);
@@ -241,7 +243,7 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                     {errors.description && (
                         <div className="text-red-500 text-xs mt-1">{errors.description}</div>
                     )}
-                    <div className="text-xs text-gray-400 mt-1">{description.length}/150 characters</div>
+                    <div className="text-xs text-gray-400 mt-1">{description.length}/150 {t('characters')}</div>
                 </div>
 
                 <div className={GROUP_CLASSNAMES.taskDetailSection}>
@@ -253,15 +255,15 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
                             </svg>
                             <select
-                                aria-label="Task priority"
+                                aria-label={t('create_priority_aria')}
                                 className="flex-grow border-0 bg-transparent focus:outline-none focus:ring-0 text-sm text-gray-700"
                                 value={priority}
                                 onChange={(e) => setPriority(e.target.value as any)}
                                 autoComplete="off"
                             >
-                                <option value="low">Low (P3)</option>
-                                <option value="medium">Medium (P2)</option>
-                                <option value="high">High (P1)</option>
+                                <option value="low">{t('priority_low')}</option>
+                                <option value="medium">{t('priority_medium')}</option>
+                                <option value="high">{t('priority_high')}</option>
                             </select>
                         </div>
 
@@ -271,7 +273,7 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
                             <div className="flex-grow">
-                                <label className="text-sm text-gray-500 block mb-1">Start Time</label>
+                                <label className="text-sm text-gray-500 block mb-1">{t('create_start_time_label')}</label>
                                 <input
                                     type="datetime-local"
                                     className={`w-full border border-gray-200 rounded px-2 py-1 text-sm ${errors.time ? 'border-red-500' : ''}`}
@@ -293,7 +295,7 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             <div className="flex-grow">
-                                <label className="text-sm text-gray-500 block mb-1">Deadline</label>
+                                <label className="text-sm text-gray-500 block mb-1">{t('create_deadline_label')}</label>
                                 <input
                                     type="datetime-local"
                                     className={`w-full border border-gray-200 rounded px-2 py-1 text-sm ${errors.time ? 'border-red-500' : ''}`}
@@ -336,7 +338,7 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                                                     type="button"
                                                     onClick={() => handleTagSelect(tag)}
                                                     className="ml-1 focus:outline-none"
-                                                    aria-label="Remove tag"
+                                                    aria-label={t('create_remove_tag')}
                                                 >
                                                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -352,13 +354,13 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                                         onClick={() => setShowNewTagForm(!showNewTagForm)}
                                         className="text-xs text-blue-500 hover:text-blue-700 focus:outline-none"
                                     >
-                                        + Select tags
+                                        + {t('create_select_tags')}
                                     </button>
 
                                     {showNewTagForm && (
                                         <div className="fixed top-1/3 left-1/3 transform -translate-x-1/2 -translate-y-1/2 w-64 bg-white rounded-md shadow-xl z-50 max-h-96 overflow-y-auto border border-gray-200">
                                             <div className="sticky top-0 bg-white px-4 py-3 border-b border-gray-200 flex justify-between items-center">
-                                                <span className="font-medium">Select Tags</span>
+                                                <span className="font-medium">{t('create_select_tags')}</span>
                                                 <button
                                                     onClick={() => setShowNewTagForm(false)}
                                                     className="text-gray-500 hover:text-gray-700"
@@ -370,7 +372,7 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                                             </div>
 
                                             {allTags.length === 0 ? (
-                                                <div className="px-4 py-3 text-sm text-gray-500">No tags available. Please create tags in the tag management section.</div>
+                                                <div className="px-4 py-3 text-sm text-gray-500">{t('create_no_tags_available')}</div>
                                             ) : (
                                                 <div className="py-2">
                                                     {allTags.map(tag => {
@@ -417,7 +419,7 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                         className="text-sm text-gray-500 hover:text-gray-700"
                         disabled={isSubmitting}
                     >
-                        Cancel
+                        {t('cancel')}
                     </button>
                     <button
                         type="button"
@@ -433,10 +435,10 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
-                                Creating...
+                                {t('creating')}
                             </>
                         ) : (
-                            'Create Task'
+                            t('create_task_cta')
                         )}
                     </button>
                 </div>
@@ -446,8 +448,8 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                     type="button"
                     onClick={onClose}
                     className={GROUP_CLASSNAMES.taskModalCloseButton}
-                    aria-label="Close task creation form"
-                    title="Close task creation form"
+                    aria-label={t('create_close_aria')}
+                    title={t('create_close_title')}
                 >
                     <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />

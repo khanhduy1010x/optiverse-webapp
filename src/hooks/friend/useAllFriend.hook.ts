@@ -1,4 +1,3 @@
-import { useTranslation } from 'react-i18next';
 import { useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../store';
@@ -18,12 +17,13 @@ import {
 } from '../../store/slices/friend.slice';
 import FriendService from '../../services/friend.service';
 import achievementService from '../../services/achievement.service';
+import { useAppTranslate } from '../useAppTranslate';
 
 export const useAllFriend = ({
   friends,
   loading,
 }: Pick<AllFriendsProps, 'friends' | 'loading'>) => {
-  const { t } = useTranslation();
+  const { t } = useAppTranslate('friend');
   const dispatch = useDispatch<AppDispatch>();
 
   useEffect(() => {

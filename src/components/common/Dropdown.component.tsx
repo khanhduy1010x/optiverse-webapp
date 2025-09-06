@@ -11,6 +11,7 @@ export const DropdownChangeLanguage = () => {
     >
       <option value={'en'}>English</option>
       <option value={'vi'}>Tiếng Việt</option>
+      <option value={'jp'}>日本語</option>
     </select>
   );
 };

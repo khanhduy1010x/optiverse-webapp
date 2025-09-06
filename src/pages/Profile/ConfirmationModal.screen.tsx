@@ -1,5 +1,7 @@
+import React from 'react';
 import { ConfirmationModalProps } from '../../types/profile/props/component.props';
 import { GROUP_CLASSNAMES } from '../../styles/group-class-name.style';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   isOpen,
@@ -8,6 +10,8 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   title,
   message,
 }) => {
+  const { t } = useAppTranslate('profile');
+
   if (!isOpen) return null;
 
   return (
@@ -20,7 +24,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
             onClick={onClose}
             className={GROUP_CLASSNAMES.modalButtonCancel}
           >
-            Cancel
+            {t('cancel')}
           </button>
           <button
             onClick={() => {
@@ -29,7 +33,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
             }}
             className={GROUP_CLASSNAMES.modalButtonConfirm}
           >
-            Confirm
+            {t('confirm')}
           </button>
         </div>
       </div>

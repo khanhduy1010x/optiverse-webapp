@@ -4,6 +4,7 @@ import { useTaskEventForm } from '../../hooks/task-events/useTaskEventForm.hook'
 import { useTaskEventOperations } from '../../hooks/task-events/useTaskEventOperations.hook';
 import Modal from 'react-modal';
 import { GROUP_CLASSNAMES } from '../../styles';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 interface TaskEventModalProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
   addEvent,
   updateEvent
 }) => {
+  const { t } = useAppTranslate('task');
   const isEditMode = Boolean(taskEvent);
   const { formData, handleInputChange, resetForm, getCreatePayload, getUpdatePayload } = useTaskEventForm(taskEvent);
   const { createTaskEvent, updateTaskEvent, loading, error, setListOperations } = useTaskEventOperations();
@@ -48,19 +50,19 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
     try {
       // Validate required fields
       if (!formData.title || !formData.title.trim()) {
-        alert('Title is required.');
+        alert(t('validation_title_required'));
         return;
       }
       if (!taskId || !taskId.trim()) {
-        alert('Task ID is required.');
+        alert(t('validation_task_id_required'));
         return;
       }
       if (!formData.start_time) {
-        alert('Start time is required.');
+        alert(t('validation_start_time_required'));
         return;
       }
       if (!formData.repeat_type) {
-        alert('Repeat type is required.');
+        alert(t('validation_repeat_type_required'));
         return;
       }
       // Chuẩn hóa ngày giờ về ISO string
@@ -138,11 +140,11 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
         onClose();
       } else {
         console.error('Operation failed but no error was thrown');
-        alert('Could not save event. Please try again later.');
+        alert(t('save_failed_try_again'));
       }
     } catch (err: any) {
       console.error('Error in handleSubmit:', err);
-      alert(`Error: ${err?.message || 'Could not save event'}`);
+      alert(t('error_generic_with_message', { message: err?.message || t('save_failed_short') }));
     }
   };
 
@@ -217,7 +219,7 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
         {/* Tiêu đề */}
         <input
           type="text"
-          placeholder="Add schedule title"
+          placeholder={t('event_title_placeholder')}
           value={formData.title}
           onChange={(e) => handleInputChange('title', e.target.value)}
           className="w-full border-0 border-b border-gray-200 py-2 mb-2 focus:outline-none focus:ring-0 focus:border-blue-400 placeholder-gray-400 text-base bg-blue-50/30 rounded-t-xl transition-all"
@@ -236,7 +238,7 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
                 handleInputChange('start_time', date);
               }}
             className="border border-gray-200 rounded-md p-1.5 text-sm"
-              placeholder="Start date"
+              placeholder={t('start_date_placeholder')}
           />
           </div>
           <span className="text-gray-400 mt-6">-</span>
@@ -251,7 +253,7 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
                 handleInputChange('end_time', date);
               }}
             className="border border-gray-200 rounded-md p-1.5 text-sm"
-              placeholder="End date"
+              placeholder={t('end_date_placeholder')}
           />
           </div>
         </div>
@@ -263,7 +265,7 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
               value={formatTimeForInput(formData.start_time)}
               onChange={e => handleStartTimeChange(e.target.value)}
               className="border border-gray-200 rounded-md p-1.5 text-sm"
-              placeholder="Start time"
+              placeholder={t('start_time_placeholder')}
           />
         </div>
           <span className="text-gray-400 mt-6">-</span>
@@ -273,7 +275,7 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
               value={formData.end_time ? formatTimeForInput(formData.end_time) : ''}
               onChange={e => handleEndTimeChange(e.target.value)}
               className="border border-gray-200 rounded-md p-1.5 text-sm"
-              placeholder="End time"
+              placeholder={t('end_time_placeholder')}
           />
         </div>
         </div>
@@ -284,11 +286,11 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
               onClick={() => setShowRepeatOptions(!showRepeatOptions)}
             className="w-full text-left py-1 text-sm flex justify-between items-center border border-gray-200 rounded-md px-2"
             >
-              <span>{formData.repeat_type === 'none' ? 'Does not repeat' : 
-                     formData.repeat_type === 'daily' ? 'Daily' :
-                     formData.repeat_type === 'weekly' ? 'Weekly' :
-                     formData.repeat_type === 'monthly' ? 'Monthly' :
-                     formData.repeat_type === 'yearly' ? 'Yearly' : 'Custom'}</span>
+              <span>{formData.repeat_type === 'none' ? t('repeat_none') : 
+                     formData.repeat_type === 'daily' ? t('repeat_daily') :
+                     formData.repeat_type === 'weekly' ? t('repeat_weekly') :
+                     formData.repeat_type === 'monthly' ? t('repeat_monthly') :
+                     formData.repeat_type === 'yearly' ? t('repeat_yearly') : t('repeat_custom')}</span>
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
@@ -302,7 +304,7 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
                     setShowRepeatOptions(false);
                   }}
                 >
-                  Does not repeat
+                  {t('repeat_none')}
                 </div>
                 <div 
                   className="p-2 hover:bg-gray-100 cursor-pointer"
@@ -311,7 +313,7 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
                     setShowRepeatOptions(false);
                   }}
                 >
-                  Daily
+                  {t('repeat_daily')}
                 </div>
                 <div 
                   className="p-2 hover:bg-gray-100 cursor-pointer"
@@ -320,7 +322,7 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
                     setShowRepeatOptions(false);
                   }}
                 >
-                  Weekly
+                  {t('repeat_weekly')}
                 </div>
                 <div 
                   className="p-2 hover:bg-gray-100 cursor-pointer"
@@ -329,7 +331,7 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
                     setShowRepeatOptions(false);
                   }}
                 >
-                  Monthly
+                  {t('repeat_monthly')}
                 </div>
                 <div 
                   className="p-2 hover:bg-gray-100 cursor-pointer"
@@ -338,7 +340,7 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
                     setShowRepeatOptions(false);
                   }}
                 >
-                  Yearly
+                  {t('repeat_yearly')}
                 </div>
               </div>
             )}
@@ -357,21 +359,21 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
           </div>
         {/* Add Guest */}
         <textarea
-          placeholder="Add Guest"
+          placeholder={t('add_guest_placeholder')}
           value={formData.guests?.join(', ') || ''}
           onChange={e => handleInputChange('guests', e.target.value.split(',').map(g => g.trim()))}
           className="w-full border-0 border-b border-gray-200 py-2 focus:outline-none focus:ring-0 text-sm mb-2 resize-none min-h-[32px]"
         />
         {/* Location/URL */}
         <textarea
-          placeholder="https://meet.google.com/abc"
+          placeholder={t('location_placeholder')}
           value={formData.location || ''}
           onChange={e => handleInputChange('location', e.target.value)}
           className="w-full border-0 border-b border-gray-200 py-2 focus:outline-none focus:ring-0 text-sm mb-2 resize-none min-h-[32px]"
         />
         {/* Description */}
         <textarea
-          placeholder="Add description"
+          placeholder={t('add_description_placeholder')}
           value={formData.description || ''}
           onChange={e => handleInputChange('description', e.target.value)}
           className="w-full border-0 border-b border-gray-200 py-2 focus:outline-none focus:ring-0 text-sm mb-2 resize-none min-h-[32px]"
@@ -383,14 +385,14 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
               onClick={handleCancel}
               className="px-5 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl text-base font-semibold transition-all"
             >
-              Cancel
+              {t('cancel')}
             </button>
             <button
               type="submit"
               disabled={loading || !formData.title.trim()}
               className="px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-bold shadow-md hover:scale-105 hover:shadow-xl transition-all text-base disabled:bg-blue-300 disabled:opacity-60"
             >
-              Save
+              {t('save')}
             </button>
         </div>
       </form>

@@ -1,15 +1,15 @@
 import React from 'react';
 import COLORS from '../../constants/colors.constant';
-import { TEXT } from '../../constants/typography.constant';
 import View from './View.component';
 import Text from './Text.component';
 interface ChipProps {
   title: string;
-  fontType?: keyof typeof TEXT;
+  textType?: 'regular' | 'bold';
+  textSize?: number;
   bgColor?: string;
 }
 
-const Chip: React.FC<ChipProps> = ({ title, fontType = 'bold12', bgColor }) => {
+const Chip: React.FC<ChipProps> = ({ title, textType = 'bold', textSize = 12, bgColor }) => {
   const containerStyles: React.CSSProperties = {
     paddingLeft: 8,
     paddingRight: 8,
@@ -25,7 +25,8 @@ const Chip: React.FC<ChipProps> = ({ title, fontType = 'bold12', bgColor }) => {
     <View style={containerStyles}>
       <Text
         title={title}
-        textStyle={fontType}
+        textType={textType}
+        textSize={textSize}
         style={{ color: COLORS.white900 }}
         translate={true}
       />
