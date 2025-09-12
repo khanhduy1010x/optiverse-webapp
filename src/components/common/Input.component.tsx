@@ -132,6 +132,7 @@ export const PasswordInputField = <T extends FieldValues>({
   label,
   control,
   rules,
+  className,
 }: FieldProps<T>) => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
 
@@ -142,6 +143,7 @@ export const PasswordInputField = <T extends FieldValues>({
       label={label}
       type={showPassword ? 'text' : 'password'}
       placeholder="Enter password"
+      className={className}
       rules={{
         required: 'is required',
         setValueAs: v => v.trim(),
