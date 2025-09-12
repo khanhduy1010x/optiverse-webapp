@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Button } from '../../components/common/Button.component';
-import COLORS from '../../constants/colors.constant';
 import { VerifyCodeFormProps } from '../../types/auth/props/component.props';
 import { OTPInputField } from '../../components/common/Input.component';
 import { useVerifyForm } from '../../hooks/auth/useVerify.hook';
@@ -26,20 +25,17 @@ const VerifyCodeFormRegister: React.FC<VerifyCodeFormProps> = ({
   });
 
   return (
-    <div className="w-1/2 space-y-4">
-      <h2 className="text-2xl font-bold text-gray-800">Verification Code</h2>
+    <div className="space-y-6 w-full">
+      <h2 className="text-2xl font-bold text-white text-center tracking-widest mb-6">Verification Code</h2>
       <p
-        className="text-gray-600"
-        style={{
-          ...(message.type == 'error' && {
-            color: COLORS.red500,
-          }),
-        }}
+        className={`text-center mb-4 ${
+          message.type === 'error' ? 'text-red-400' : 'text-white'
+        }`}
       >
         {message.message}
       </p>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="flex gap-2 justify-center">
+        <div className="flex gap-3 justify-center mb-6">
           <OTPInputField<RegisterForm>
             name="code"
             control={control}
@@ -51,14 +47,17 @@ const VerifyCodeFormRegister: React.FC<VerifyCodeFormProps> = ({
             otpLength={6}
           />
         </div>
-        <Button title="Verify" className="w-full" inverted></Button>
+        <Button
+          title="Verify"
+          className="w-full"
+          inverted
+        />
       </form>
-      <p className="text-center">
-        Didn’t receive the code?{' '}
+      <p className="text-center text-white">
+        Didn't receive the code?{' '}
         <span
           onClick={handleResend}
-          className="hover:underline cursor-pointer"
-          style={{ color: COLORS.yellow700 }}
+          className="text-[#a6baff] hover:underline cursor-pointer transition-all"
         >
           Resend
         </span>
