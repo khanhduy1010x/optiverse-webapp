@@ -34,7 +34,7 @@ const RegisterFormScreen: React.FC<RegisterFormProps> = ({
             control={control}
             label={undefined}
             placeholder="Enter your full name"
-            className="bg-[#18223a] border border-[#00eaff40] focus:border-[#00eaff] text-white placeholder:text-white rounded-md px-4 py-2 outline-none transition-all"
+            className="w-full px-4 py-2 !rounded-md !bg-[#18223a] !border !border-[#00eaff40] !focus:border-[#00eaff] text-white outline-none transition-all placeholder:text-white"
             rules={{
               required: 'is required',
               minLength: {
@@ -53,7 +53,7 @@ const RegisterFormScreen: React.FC<RegisterFormProps> = ({
             control={control}
             label={undefined}
             placeholder="you@example.com"
-            className="bg-[#18223a] border border-[#00eaff40] focus:border-[#00eaff] text-white placeholder:text-white rounded-md px-4 py-2 outline-none transition-all"
+            className="w-full px-4 py-2 !rounded-md !bg-[#18223a] !border !border-[#00eaff40] !focus:border-[#00eaff] text-white outline-none transition-all placeholder:text-white"
             rules={{
               required: 'is required',
               pattern: {
@@ -72,7 +72,7 @@ const RegisterFormScreen: React.FC<RegisterFormProps> = ({
             name="password"
             label={undefined}
             placeholder="Enter password"
-            className="bg-[#18223a] border border-[#00eaff40] focus:border-[#00eaff] text-white placeholder:text-white rounded-md px-4 py-2 outline-none transition-all"
+            className="w-full px-4 py-2 !rounded-md !bg-[#18223a] !border !border-[#00eaff40] !focus:border-[#00eaff] text-white outline-none transition-all placeholder:text-white"
           />
         </div>
         <div>
@@ -82,7 +82,7 @@ const RegisterFormScreen: React.FC<RegisterFormProps> = ({
             name="confirmPassword"
             label={undefined}
             placeholder="Enter password"
-            className="bg-[#18223a] border border-[#00eaff40] focus:border-[#00eaff] text-white placeholder:text-white rounded-md px-4 py-2 outline-none transition-all"
+            className="w-full px-4 py-2 !rounded-md !bg-[#18223a] !border !border-[#00eaff40] !focus:border-[#00eaff] text-white outline-none transition-all placeholder:text-white"
             rules={{
               validate: value =>
                 value === watch('password') || 'does not match password',
