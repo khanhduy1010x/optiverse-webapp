@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 import '../../styles/note/MarkdownEditor.style.css';
 import { setShowWarningModal } from '../../store/slices/ui.slice';
 import { formatDateTimeFull } from '../../utils/date.utils';

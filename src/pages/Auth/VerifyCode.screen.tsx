@@ -6,6 +6,7 @@ import {
 } from '../../utils/keyboard/keyboard-handler.util';
 import authService from '../../services/auth.service';
 import { VerifyCodeResponse } from '../../types/auth/response/auth.reponse';
+import { Button } from '../../components/common/Button.component';
 
 const VerifyCodeForm: React.FC<VerifyCodeFormProps> = ({
   data,
@@ -59,14 +60,14 @@ const VerifyCodeForm: React.FC<VerifyCodeFormProps> = ({
   };
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-2xl font-bold text-gray-800">Verification Code</h2>
-      <p className="text-gray-600">
-        We sent a 6-digit code to <strong>{data}</strong>. Please enter it
+    <div className="space-y-6 w-full">
+      <h2 className="text-2xl font-bold text-white text-center tracking-widest mb-6">Verification Code</h2>
+      <p className="text-white text-center mb-4">
+        We sent a 6-digit code to <strong className="text-[#00eaff]">{data}</strong>. Please enter it
         below:
       </p>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="flex gap-2 justify-center">
+        <div className="flex gap-3 justify-center mb-6">
           {code.map((digit, i) => (
             <input
               key={i}
@@ -86,27 +87,27 @@ const VerifyCodeForm: React.FC<VerifyCodeFormProps> = ({
               ref={el => {
                 inputRefs.current[i] = el;
               }}
-              className="w-10 h-10 text-center border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-12 h-12 text-center text-white bg-[#18223a] border border-[#00eaff40] focus:border-[#00eaff] rounded-md outline-none transition-all text-lg font-bold"
               required
             />
           ))}
         </div>
-        <button
+        <Button
           type="submit"
           disabled={loading}
-          className="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50"
-        >
-          {loading ? 'Verifying...' : 'Verify'}
-        </button>
+          title={loading ? 'Verifying...' : 'Verify'}
+          className="w-full"
+          inverted
+        />
         {message && (
-          <p className="text-center text-sm text-gray-700">{message}</p>
+          <p className="text-center text-sm text-white">{message}</p>
         )}
       </form>
-      <p className="text-center">
+      <p className="text-center text-white">
         Did not receive the code?{' '}
         <span
           onClick={handleResend}
-          className="text-blue-500 hover:underline cursor-pointer"
+          className="text-[#a6baff] hover:underline cursor-pointer transition-all"
         >
           Resend
         </span>

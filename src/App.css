@@ -1,1 +1,10 @@
 @import "tailwindcss";
+.blur-layer-1 {
+    width: min(300px, 50vw);
+    flex-shrink: 0;
+    filter: blur(750px);
+    height: 504px;
+    border-radius: 771px;
+    opacity: .3;
+    background: linear-gradient(180deg, #16b6a6 -16.8%, #0b5b47 117.58%);
+}

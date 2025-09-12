@@ -3,6 +3,7 @@ import { LoginFormProps } from '../../types/auth/props/component.props';
 import { GROUP_CLASSNAMES } from '../../styles';
 import { useLoginForm } from '../../hooks/auth/useLogin.hook';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
+import { Button } from '../../components/common/Button.component';
 
 const LoginForm: React.FC<LoginFormProps> = ({ onSwitch }) => {
   const { t } = useAppTranslate('auth');
@@ -35,7 +36,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitch }) => {
             placeholder={t('username_placeholder')}
             value={email}
             onChange={handleInputChange(setEmail)}
-            className="w-full px-4 py-2 rounded-md bg-[#18223a] border border-[#00eaff40] focus:border-[#00eaff] text-white outline-none transition-all placeholder:text-[#b0c4d4]"
+            className="w-full px-4 py-2 rounded-md bg-[#18223a] border border-[#00eaff40] focus:border-[#00eaff] text-white outline-none transition-all placeholder:text-white"
             required
             disabled={isEmailLoginLoading || isGoogleLoginLoading}
           />
@@ -46,26 +47,24 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitch }) => {
             placeholder={t('password_placeholder')}
             value={password}
             onChange={handleInputChange(setPassword)}
-            className="w-full px-4 py-2 rounded-md bg-[#18223a] border border-[#00eaff40] focus:border-[#00eaff] text-white outline-none transition-all placeholder:text-[#b0c4d4]"
+            className="w-full px-4 py-2 rounded-md bg-[#18223a] border border-[#00eaff40] focus:border-[#00eaff] text-white outline-none transition-all placeholder:text-white"
             required
             disabled={isEmailLoginLoading || isGoogleLoginLoading}
           />
         </div>
-        <button
-          type="submit"
-          className="w-full py-2 rounded-md bg-[#10182a] border border-[#00eaff] text-white font-bold tracking-wide hover:bg-[#00eaff20] transition-all"
+        <Button
+          title={isEmailLoginLoading ? t('logging_in') : t('login_button')}
+          className="w-full"
           disabled={isEmailLoginLoading || isGoogleLoginLoading}
-        >
-          {isEmailLoginLoading ? t('logging_in') : t('login_button')}
-        </button>
-        <button
-          type="button"
+          inverted
+        />
+        <Button
+          title={isGoogleLoginLoading ? t('google_loading') : t('login_with_google')}
+          className="w-full"
           onClick={handleGoogleLogin}
-          className="w-full py-2 rounded-md bg-[#10182a] border border-[#00eaff] text-white font-bold tracking-wide hover:bg-[#00eaff20] transition-all"
           disabled={isEmailLoginLoading || isGoogleLoginLoading}
-        >
-          {isGoogleLoginLoading ? t('google_loading') : t('login_with_google')}
-        </button>
+          inverted
+        />
       </form>
 
       <p

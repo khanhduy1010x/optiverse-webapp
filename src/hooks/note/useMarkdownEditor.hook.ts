@@ -8,7 +8,7 @@ import {
 } from '../../store/slices/items.slice';
 import noteService from '../../services/note.service';
 import SocketService from '../../services/socket.service';
-import ReactQuill, { Quill } from 'react-quill';
+import ReactQuill, { Quill } from 'react-quill-new';
 import { toast } from 'react-toastify';
 
 const Delta = Quill.import('delta');

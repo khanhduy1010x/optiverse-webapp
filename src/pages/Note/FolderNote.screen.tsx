@@ -84,7 +84,7 @@ const FolderNote: React.FC = () => {
     cancelLeave,
   } = useFolderNote();
 
-  const handleShareItem = async (userIds: string[], permission: 'view' | 'edit') => {
+  const handleShareItem = async () => {
     if (!selectedItem) return;
     setShareModalVisible(false);
   };
