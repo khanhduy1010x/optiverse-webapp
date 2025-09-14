@@ -41,7 +41,7 @@ const AuthContainer: React.FC<AuthContainerProps> = ({
     <div className="flex flex-row w-full h-screen relative bg-[url('/Background2.png')] bg-cover  bg-center" style={{ minHeight: '100vh' }}>
       {/* 3D Section (Left) */}
       <div className="relative flex flex-col justify-center items-center w-1/2 z-10 ">
-        <div className="inline-block ">
+        <div className="inline-block">
           <GLBModel 
             modelPath="/model3D/logo_optiverse.glb" 
             autoRotate={true}

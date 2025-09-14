@@ -2,40 +2,33 @@ import React from 'react';
 import Modal from 'react-modal';
 import { CreateModalProps } from '../../types/note/props/component.props';
 import { GROUP_CLASSNAMES } from '../../styles';
+import { useCreateModal } from '../../hooks/note/useCreateModal.hook';
 
 const CreateModal: React.FC<CreateModalProps> = ({
   isOpen,
   onClose,
-  itemName,
-  setItemName,
+  itemName: externalItemName,
+  setItemName: externalSetItemName,
   createType,
   onCreate,
   loading,
-  errorMessage,
+  errorMessage: externalErrorMessage,
 }) => {
-  const [isFocused, setIsFocused] = React.useState(false);
-  const [localLoading, setLocalLoading] = React.useState(false);
+  const {
+    itemName,
+    isFocused,
+    errorMessage,
+    isButtonLoading,
+    remainingChars,
+    isMaxLength,
+    handleCreate,
+    handleInputChange,
+    handleFocus,
+    handleBlur
+  } = useCreateModal({ onCreate, loading });
 
-  const handleCreate = async () => {
-    setLocalLoading(true);
-    try {
-      await onCreate();
-    } finally {
-      setLocalLoading(false);
-    }
-  };
-
-  const isButtonLoading = loading || localLoading;
-  const remainingChars = 30 - itemName.length;
-
-  const isMaxLength = remainingChars <= -1;
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    if (value.length <= 30) {
-      setItemName(value);
-    }
-  };
+  const displayItemName = externalItemName !== undefined ? externalItemName : itemName;
+  const displayErrorMessage = externalErrorMessage || errorMessage;
 
   return (
     <Modal
@@ -69,28 +62,33 @@ const CreateModal: React.FC<CreateModalProps> = ({
           <label
             htmlFor="create-input"
             className={`absolute select-none outline-none pointer-events-none duration-300 left-3 text-xs z-10 block transition-all bg-white px-1
-              ${errorMessage ? 'text-red-500 -top-2' : (isFocused || itemName ? 'text-[#21b4ca] -top-2' : 'text-gray-500 top-[38%] text-[16px] bg-transparent px-0')}
-              ${isFocused || itemName || errorMessage ? '' : '-translate-y-1/2'}`}
+              ${displayErrorMessage ? 'text-red-500 -top-2' : (isFocused || displayItemName ? 'text-[#21b4ca] -top-2' : 'text-gray-500 top-[38%] text-[16px] bg-transparent px-0')}
+              ${isFocused || displayItemName || displayErrorMessage ? '' : '-translate-y-1/2'}`}
           >
             {createType === 'folder' ? 'Folder' : 'Note'} Name
           </label>
 
-          <div className={`relative w-full h-14 border-2 rounded-xl transition-colors duration-200 ${errorMessage ? 'border-red-500' : isMaxLength ? 'border-red-500' : 'border-gray-200 focus-within:border-[#21b4ca]'}`}>
+          <div className={`relative w-full h-14 border-2 rounded-xl transition-colors duration-200 ${displayErrorMessage ? 'border-red-500' : isMaxLength ? 'border-red-500' : 'border-gray-200 focus-within:border-[#21b4ca]'}`}>
             <input
               id="create-input"
               type="text"
-              value={itemName}
-              onChange={handleInputChange}
+              value={displayItemName}
+              onChange={externalSetItemName ? (e) => {
+                const value = e.target.value;
+                if (value.length <= 30) {
+                  externalSetItemName(value);
+                }
+              } : handleInputChange}
               className={GROUP_CLASSNAMES.inputTransparent}
               autoFocus
               disabled={isButtonLoading}
-              onFocus={() => setIsFocused(true)}
-              onBlur={() => setIsFocused(false)}
-              onKeyPress={e => {
-                if (e.key === 'Enter' && itemName.trim() && !isButtonLoading && !isMaxLength) {
-                  handleCreate();
-                }
-              }}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
+              onKeyPress={(e) => {
+                 if (e.key === 'Enter' && displayItemName.trim() && !isButtonLoading && !isMaxLength) {
+                   handleCreate();
+                 }
+               }}
             />
 
             {isButtonLoading && (
@@ -101,8 +99,8 @@ const CreateModal: React.FC<CreateModalProps> = ({
           </div>
 
           <div className="flex justify-between items-center mt-1">
-            {errorMessage && (
-              <p className="text-sm text-red-500 animate-in slide-in-from-top-1 duration-200">{errorMessage}</p>
+            {displayErrorMessage && (
+              <p className="text-sm text-red-500 animate-in slide-in-from-top-1 duration-200">{displayErrorMessage}</p>
             )}
             <div className={`text-xs ${remainingChars <= 0 ? 'text-red-500 font-medium' : remainingChars <= 5 ? 'text-yellow-500' : 'text-gray-400'}`}>
               {remainingChars} characters left
@@ -120,7 +118,7 @@ const CreateModal: React.FC<CreateModalProps> = ({
           </button>
           <button
             onClick={handleCreate}
-            disabled={!itemName.trim() || isButtonLoading || isMaxLength}
+            disabled={!displayItemName.trim() || isButtonLoading || isMaxLength}
             className={GROUP_CLASSNAMES.buttonPrimary + " flex-1 bg-[#21b4ca] flex items-center justify-center gap-2 cursor-pointer"}
           >
             {isButtonLoading ? (

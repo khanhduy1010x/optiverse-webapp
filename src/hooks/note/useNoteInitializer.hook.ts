@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState, AppDispatch } from '../../store';
+import { useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import {  AppDispatch } from '../../store';
 import { fetchItems } from '../../store/slices/items.slice';
 
 export function useNoteInitializer() {
