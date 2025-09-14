@@ -180,7 +180,6 @@ export const useSharedItems = () => {
     shouldRefreshShared?: boolean;
     eventType?: 'my_note' | 'shared_note';
   }) => {
-    // Chỉ xử lý sự kiện shared_note
     if (data?.eventType === 'my_note') {
       console.log(
         'Skipping permission_changed in useSharedItems hook because eventType=my_note'
@@ -234,7 +233,6 @@ export const useSharedItems = () => {
       const newIsSharedView = !isSharedView;
       setIsSharedView(newIsSharedView);
 
-      // Cập nhật view type trong NoteManager
       setCurrentViewType(newIsSharedView ? 'shared_note' : 'my_note');
 
       SocketService.setViewingSharedItems(newIsSharedView);

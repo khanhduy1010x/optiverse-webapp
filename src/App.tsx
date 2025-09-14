@@ -53,6 +53,7 @@ import { GROUP_CLASSNAMES } from './styles';
 import BannedModal from './components/BannedModal';
 import AchievementsAdminPage from './pages/Admin/AchievementsAdmin.page';
 
+
 declare global {
   interface Window {
     showUserBannedModal?: () => void;

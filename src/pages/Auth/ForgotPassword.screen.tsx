@@ -1,6 +1,7 @@
 import React from 'react';
 import { ForgotPasswordFormProps } from '../../types/auth/props/component.props';
 import { useForgotPassword } from '../../hooks/auth/useForgotPassword.hook';
+import { Button } from '../../components/common/Button.component';
 
 const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
   onSwitch = () => {},
@@ -16,34 +17,34 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
   );
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-2xl font-bold text-gray-800">Forgot Password</h2>
-      <p className="text-gray-600">Please enter your email to receive a code</p>
+    <div className="space-y-6 w-full">
+      <h2 className="text-2xl font-bold text-white text-center tracking-widest mb-6">Forgot Password</h2>
+      <p className="text-white text-center mb-4">Please enter your email to receive a code</p>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
+          <label className="block text-white font-medium mb-1" htmlFor="email">Email</label>
           <input
             type="email"
             placeholder="Enter your email"
             value={email}
             onChange={e => setEmail(e.target.value)}
-            className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-2 rounded-md bg-[#18223a] border border-[#00eaff40] focus:border-[#00eaff] text-white outline-none transition-all placeholder:text-white"
             required
           />
         </div>
-        <button
-          type="submit"
+        <Button
+          title={loading ? 'Sending...' : 'Send OTP'}
+          className="w-full"
           disabled={loading}
-          className="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50"
-        >
-          {loading ? 'Sending...' : 'Send OTP'}
-        </button>
+          inverted
+        />
         {message && (
-          <p className="text-sm text-center text-gray-700">{message}</p>
+          <p className="text-sm text-center text-white">{message}</p>
         )}
       </form>
       <p
         onClick={() => onSwitch('login')}
-        className="text-blue-500 hover:underline cursor-pointer text-center"
+        className="text-[#a6baff] hover:underline cursor-pointer text-center mt-6 transition-all"
       >
         Back to login
       </p>
