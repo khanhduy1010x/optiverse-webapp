@@ -103,126 +103,112 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
       return;
     }
 
-    // Lấy thời gian bắt đầu/kết thúc mẫu
+    // Lấy thời gian bắt đầu/kết thúc mẫu - xử lý đúng timezone
+    // formData.start_time có dạng "YYYY-MM-DDTHH:mm" từ datetime-local input
     const startTime = new Date(formData.start_time);
     const endTime = formData.end_time ? new Date(formData.end_time) : null;
     const mergedDescription = (formData.description || '').trim();
     const colorVal = selectedColor || '#3B82F6';
 
     // Lấy khoảng lặp lại
-    // const repeatFrom = formData.repeat_from;
     const repeatTo = formData.repeat_to;
     const repeatType = formData.repeat_type;
 
-    // Helper tạo event
-    const createEvent = async (date: Date) => {
-      const eventStart = new Date(date);
-      eventStart.setHours(startTime.getHours(), startTime.getMinutes(), 0, 0);
-      let eventEnd: Date | undefined = undefined;
-      if (endTime) {
-        eventEnd = new Date(date);
-        eventEnd.setHours(endTime.getHours(), endTime.getMinutes(), 0, 0);
-      }
-      const payload = {
-        task_id: taskId,
-        title: formData.title.trim(),
-        start_time: eventStart,
-        end_time: eventEnd,
-        description: mergedDescription,
-        repeat_type: repeatType as import('../../types/task-events/task-events.types').RepeatType,
-        color: colorVal
-      };
-      await createTaskEvent(payload);
-    };
-
-    // Helper: chuyển repeat_to dạng week (YYYY-Www) thành ngày cuối tuần (chủ nhật)
-    function getDateOfISOWeek(isoWeekString: string) {
-      if (!isoWeekString) return undefined;
-      const [yearStr, weekStr] = isoWeekString.split('-W');
-      const year = Number(yearStr);
-      const week = Number(weekStr);
-      if (!year || !week) return undefined;
-      const simple = new Date(year, 0, 1 + (week - 1) * 7);
-      const dow = simple.getDay();
-      const ISOweekStart = new Date(simple);
-      if (dow <= 4)
-        ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
-      else
-        ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
-      // Ngày cuối tuần (chủ nhật)
-      const ISOweekEnd = new Date(ISOweekStart);
-      ISOweekEnd.setDate(ISOweekStart.getDate() + 6);
-      return ISOweekEnd;
+    // Tạo event gốc duy nhất với thông tin recurring
+    // Virtual instances sẽ được tạo tự động bởi generateRecurringEvents
+    const eventStart = startTime;
+    let eventEnd: Date | undefined = undefined;
+    if (endTime) {
+      eventEnd = endTime;
     }
-
-    // Xử lý từng loại lặp lại
-    if (repeatType !== 'none' && formData.start_time && repeatTo) {
+    
+    console.log('Event times - start:', eventStart.toISOString(), 'end:', eventEnd?.toISOString());
+    
+    // Xử lý repeat_end_date dựa trên repeat_type và repeatTo
+    let repeatEndDate: Date | undefined = undefined;
+    if (repeatTo && repeatType !== 'none') {
       if (repeatType === 'daily') {
-        let cur = new Date(formData.start_time);
-        let end = new Date(repeatTo);
-        cur.setHours(0,0,0,0);
-        end.setHours(0,0,0,0);
-        while (cur <= end) {
-          let eventDate = new Date(cur);
-          eventDate.setHours(startTime.getHours(), startTime.getMinutes(), 0, 0);
-          await createEvent(eventDate);
-          cur.setDate(cur.getDate() + 1);
-        }
+        // Xử lý date input để tránh vấn đề timezone
+        // repeatTo có dạng "YYYY-MM-DD", tạo Date object với local timezone
+        const [year, month, day] = repeatTo.split('-').map(Number);
+        repeatEndDate = new Date(year, month - 1, day, 23, 59, 59, 999); // Cuối ngày
+        console.log('Daily repeat - repeatTo:', repeatTo, 'parsed to:', repeatEndDate.toISOString());
       } else if (repeatType === 'weekly') {
-        let cur = new Date(formData.start_time);
-        let end = getDateOfISOWeek(repeatTo) || new Date(formData.start_time);
-        cur.setHours(0,0,0,0);
-        end.setHours(0,0,0,0);
-        const targetDay = startTime.getDay();
-        if (cur <= end && cur.getDay() === targetDay) {
-          let eventDate = new Date(cur);
-          eventDate.setHours(startTime.getHours(), startTime.getMinutes(), 0, 0);
-          await createEvent(eventDate);
-        }
-        cur.setDate(cur.getDate() + ((7 + targetDay - cur.getDay()) % 7 || 7));
-        while (cur <= end) {
-          let eventDate = new Date(cur);
-          eventDate.setHours(startTime.getHours(), startTime.getMinutes(), 0, 0);
-          await createEvent(eventDate);
-          cur.setDate(cur.getDate() + 7);
+        // repeatTo dạng yyyy-Www, chuyển thành ngày cuối tuần
+        const [yearStr, weekStr] = String(repeatTo).split('-W');
+        const year = Number(yearStr);
+        const week = Number(weekStr);
+        if (year && week) {
+          const simple = new Date(year, 0, 1 + (week - 1) * 7);
+          const dow = simple.getDay();
+          const ISOweekStart = new Date(simple);
+          if (dow <= 4)
+            ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
+          else
+            ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
+          repeatEndDate = new Date(ISOweekStart);
+          repeatEndDate.setDate(ISOweekStart.getDate() + 6);
         }
       } else if (repeatType === 'monthly') {
-        let cur = new Date(formData.start_time);
-        let end = new Date(repeatTo);
-        cur.setHours(0,0,0,0);
-        end.setHours(0,0,0,0);
-        const targetDate = startTime.getDate();
-        let month = cur.getMonth();
-        let year = cur.getFullYear();
-        while (true) {
-          let eventDate = new Date(year, month, targetDate, startTime.getHours(), startTime.getMinutes(), 0, 0);
-          if (eventDate > end) break;
-          if (eventDate.getDate() === targetDate && eventDate >= cur && eventDate <= end) {
-            await createEvent(eventDate);
-          }
-          month++;
-          if (month > 11) { month = 0; year++; }
+        // repeatTo dạng yyyy-mm, chuyển thành ngày cuối tháng
+        const [yearStr, monthStr] = String(repeatTo).split('-');
+        const year = Number(yearStr);
+        const month = Number(monthStr) - 1;
+        if (year && month >= 0) {
+          repeatEndDate = new Date(year, month + 1, 0);
         }
       } else if (repeatType === 'yearly') {
-        let cur = new Date(formData.start_time);
-        let end = new Date(repeatTo);
-        cur.setHours(0,0,0,0);
-        end.setHours(0,0,0,0);
-        const month = startTime.getMonth();
-        const date = startTime.getDate();
-        let year = cur.getFullYear();
-        const endYear = end.getFullYear();
-        while (year <= endYear) {
-          let eventDate = new Date(year, month, date, startTime.getHours(), startTime.getMinutes(), 0, 0);
-          if (eventDate.getDate() === date && eventDate >= cur && eventDate <= end) {
-            await createEvent(eventDate);
-          }
-          year++;
+        // repeatTo là năm
+        const year = Number(repeatTo);
+        if (year) {
+          repeatEndDate = new Date(year, 11, 31);
         }
       }
+    }
+    
+    // Chuẩn bị payload cho event gốc với đầy đủ thông tin recurring
+    const payload: TaskEvent = {
+      _id: '', // Sẽ được tạo bởi backend
+      task_id: taskId,
+      title: formData.title.trim(),
+      start_time: eventStart.toISOString(),
+      end_time: eventEnd ? eventEnd.toISOString() : undefined,
+      description: mergedDescription,
+      repeat_type: repeatType as import('../../types/task-events/task-events.types').RepeatType,
+      repeat_interval: 1, // Mặc định là 1
+      repeat_end_type: repeatEndDate ? 'on' : 'never',
+      repeat_end_date: repeatEndDate ? repeatEndDate.toISOString() : undefined,
+      exclusion_dates: [], // Khởi tạo exclusion_dates rỗng
+      color: colorVal,
+      location: '',
+      guests: []
+    };
+    
+    console.log('Creating single original event with recurring info:', payload);
+    console.log('repeatTo value:', repeatTo);
+    console.log('repeatEndDate calculated:', repeatEndDate);
+    console.log('repeatEndDate ISO:', repeatEndDate ? repeatEndDate.toISOString() : 'undefined');
+    
+    // Sử dụng addEvent nếu có, nếu không thì dùng createTaskEvent
+    if (addEvent) {
+      await addEvent(payload);
     } else {
-      // Không lặp hoặc custom, tạo 1 event
-      await createEvent(startTime);
+      // Convert Date objects to ISO strings for API
+      await createTaskEvent({
+        task_id: taskId,
+        title: formData.title.trim(),
+        start_time: eventStart.toISOString(),
+        end_time: eventEnd ? eventEnd.toISOString() : undefined,
+        description: mergedDescription,
+        repeat_type: repeatType as import('../../types/task-events/task-events.types').RepeatType,
+        repeat_interval: 1,
+        repeat_end_type: repeatEndDate ? 'on' : 'never',
+        repeat_end_date: repeatEndDate ? repeatEndDate.toISOString() : undefined,
+        exclusion_dates: [], // Khởi tạo exclusion_dates rỗng
+        color: colorVal,
+        location: '',
+        guests: []
+      });
     }
 
       resetForm();
@@ -463,4 +449,4 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
       </form>
     </Modal>
   );
-}; 
+};

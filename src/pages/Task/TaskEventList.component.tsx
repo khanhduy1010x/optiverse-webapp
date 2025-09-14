@@ -2,8 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { TaskEvent } from '../../types/task-events/task-events.types';
 import { useTaskEventList } from '../../hooks/task-events/useTaskEventList.hook';
 import { TaskEventModal } from './TaskEventModal.screen';
-import { DeleteTaskEventModal } from './DeleteTaskEventModal.screen';
+
+// Removed unused operations hook
+// import { useTaskEventOperations } from '../../hooks/task-events/useTaskEventOperations.hook';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
+// Remove unused import since formatTime is not exported
+// import { handleRecurringEventDelete } from '../../utils/recurring-event.utils';
+import { isRecurringEvent, isRecurringInstance } from '../../utils/recurring-event.utils';
+import DeleteConfirmation from './DeleteConfirmation.screen';
+import Modal from 'react-modal';
+import { GROUP_CLASSNAMES } from '../../styles';
+import { formatDateOnly, formatTimeOnly } from '../../utils/date.utils';
 
 interface TaskEventListProps {
   taskId: string;
@@ -11,14 +20,19 @@ interface TaskEventListProps {
 
 export const TaskEventList: React.FC<TaskEventListProps> = ({ taskId }) => {
   const { t } = useAppTranslate('task');
-  const { taskEvents, loading, error, refreshTaskEvents } = useTaskEventList(taskId);
+  const { taskEvents, loading, error, refreshTaskEvents, removeEvent } = useTaskEventList(taskId);
+  // const { deleteTaskEvent } = useTaskEventOperations();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedTaskEvent, setSelectedTaskEvent] = useState<TaskEvent | undefined>(undefined);
-  const [taskEventToDelete, setTaskEventToDelete] = useState<TaskEvent | null>(null);
+
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isEventDetailOpen, setIsEventDetailOpen] = useState(false);
   const [selectedEventDetail, setSelectedEventDetail] = useState<TaskEvent | null>(null);
+
+  // New states for delete confirmation
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [isRecurringDeleteOpen, setIsRecurringDeleteOpen] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState<TaskEvent | null>(null);
 
   // Get current date for the week view
   const today = new Date();
@@ -47,8 +61,14 @@ export const TaskEventList: React.FC<TaskEventListProps> = ({ taskId }) => {
   };
 
   const handleDeleteEvent = (taskEvent: TaskEvent) => {
-    setTaskEventToDelete(taskEvent);
-    setIsDeleteModalOpen(true);
+    // Replace native confirm helper with custom modals
+    setSelectedEventDetail(null); // close detail if open
+    setEventToDelete(taskEvent);
+    if (isRecurringEvent(taskEvent) || isRecurringInstance(taskEvent)) {
+      setIsRecurringDeleteOpen(true);
+    } else {
+      setIsDeleteConfirmOpen(true);
+    }
   };
 
   const handleViewEventDetail = (taskEvent: TaskEvent) => {
@@ -269,14 +289,103 @@ export const TaskEventList: React.FC<TaskEventListProps> = ({ taskId }) => {
         onSuccess={refreshTaskEvents}
       />
 
-      <DeleteTaskEventModal
-        isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
-        taskEvent={taskEventToDelete}
-        onSuccess={refreshTaskEvents}
-      />
+      {/* Delete Confirmation for non-recurring event */}
+      {isDeleteConfirmOpen && eventToDelete && !isRecurringEvent(eventToDelete) && !isRecurringInstance(eventToDelete) && (
+        <DeleteConfirmation
+          title={t('delete_task_title')}
+          description={t('event_delete_confirm_with_datetime', {
+            title: eventToDelete.title || t('no_title'),
+            date: formatDateOnly(eventToDelete.start_time as any),
+            time: formatTimeOnly(eventToDelete.start_time as any)
+          })}
+          onCancel={() => {
+            setIsDeleteConfirmOpen(false);
+            setEventToDelete(null);
+          }}
+          onConfirm={() => {
+            if (eventToDelete?._id) {
+              removeEvent(eventToDelete._id, 'this');
+              refreshTaskEvents();
+            }
+            setIsDeleteConfirmOpen(false);
+            setEventToDelete(null);
+          }}
+        />
+      )}
+
+      {/* Recurring Delete Confirmation with scope options */}
+      {isRecurringDeleteOpen && eventToDelete && (
+        <Modal
+          isOpen={true}
+          ariaHideApp={false}
+          className={GROUP_CLASSNAMES.modalContainer}
+          overlayClassName={GROUP_CLASSNAMES.modalOverlay}
+        >
+          <div className="p-6">
+            <div className="flex flex-col items-center mb-5">
+              <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-7 h-7 text-red-600">
+                  <path fillRule="evenodd" d="M12 2a10 10 0 100 20 10 10 0 000-20zm-1 6a1 1 0 112 0v6a1 1 0 11-2 0V8zm1 10a1.5 1.5 0 110-3 1.5 1.5 0 010 3z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 text-center">{t('event_delete_recurring_title')}</h3>
+              <p className="text-sm text-gray-600 text-center mt-1">
+                {t('event_delete_confirm_with_datetime', {
+                  title: eventToDelete.title || t('no_title'),
+                  date: formatDateOnly(eventToDelete.start_time as any),
+                  time: formatTimeOnly(eventToDelete.start_time as any)
+                })}
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-2 mb-5">
+              <button
+                type="button"
+                onClick={() => {
+                  if (eventToDelete?._id) {
+                    removeEvent(eventToDelete._id, 'this');
+                    refreshTaskEvents();
+                  }
+                  setIsRecurringDeleteOpen(false);
+                  setEventToDelete(null);
+                }}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+              >
+                {t('event_delete_only_this')}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (eventToDelete?._id) {
+                    removeEvent(eventToDelete._id, 'all');
+                    refreshTaskEvents();
+                  }
+                  setIsRecurringDeleteOpen(false);
+                  setEventToDelete(null);
+                }}
+                className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+              >
+                {t('event_delete_all_in_series')}
+              </button>
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsRecurringDeleteOpen(false);
+                  setEventToDelete(null);
+                }}
+                className={GROUP_CLASSNAMES.modalButtonCancel}
+              >
+                {t('cancel')}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
 
       {isEventDetailOpen && <EventDetailModal />}
     </div>
   );
-}; 
+};
