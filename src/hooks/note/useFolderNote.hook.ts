@@ -16,7 +16,6 @@ import {
 import {
   setFilterType,
   setSelectedItem,
-  setShowWarningModal,
 } from '../../store/slices/ui.slice';
 import { FilterType, RootItem } from '../../types/note/note.types';
 import { NoteItem } from '../../types/note/response/note.response';
@@ -24,7 +23,6 @@ import { FolderItem } from '../../types/note/response/folder.response';
 
 import SocketService from '../../services/socket.service';
 import ShareService from '../../services/share.service';
-import { toast } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
 import { useSharedItems } from './useSharedItems.hook';
 
@@ -52,7 +50,6 @@ export const useFolderNote = () => {
     item: RootItem;
     isSharedView: boolean;
   } | null>(null);
-
   const [contextMenu, setContextMenu] = useState<{
     x: number;
     y: number;
@@ -65,9 +62,7 @@ export const useFolderNote = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [createErrorMessage, setCreateErrorMessage] = useState('');
 
-  const { t } = useTranslation();
 
-  const { isSharedView } = useSharedItems();
 
   const handleFolderDeleted = (data: any) => {
     const currentFolder =
@@ -604,13 +599,13 @@ export const useFolderNote = () => {
       const resourceType = item.type === 'folder' ? 'folder' : 'note';
       await ShareService.leaveSharedResource(resourceType, item._id);
 
-      // Cập nhật lại danh sách folder sau khi rời
+      
       if (item.type === 'folder' && folderStack.length > 0) {
-        // Nếu đang ở trong folder con, quay về root
+        
         dispatch(setFolderStack([]));
       }
 
-      // Gọi API lấy danh sách shared items thay vì fetchItems
+      
       if (isSharedView) {
         const items = await ShareService.getSharedWithMe();
         dispatch(setItems(items));

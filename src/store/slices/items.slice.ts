@@ -145,9 +145,7 @@ const itemsSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchItems.fulfilled, (state, action) => {
-        console.log(
-          `Dòng 125 File items.slice.ts - Đã cập nhật data my notes (fetchItems.fulfilled)`
-        );
+       
         state.items = normalizeItems(action.payload);
         state.loading = false;
         state.currentViewType = 'my_note';
@@ -161,9 +159,7 @@ const itemsSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchSharedItems.fulfilled, (state, action) => {
-        console.log(
-          `Dòng 135 File items.slice.ts - Đã cập nhật data shared notes (fetchSharedItems.fulfilled)`
-        );
+     
         state.items = normalizeSharedItems(action.payload);
         state.loading = false;
         state.currentViewType = 'shared_note';
@@ -174,9 +170,7 @@ const itemsSlice = createSlice({
       })
       .addCase(createFolder.fulfilled, (state, action) => {
         const { folder, parentId } = action.payload;
-        console.log(
-          `Dòng 145 File items.slice.ts - Đã cập nhật data note (createFolder: ${folder._id})`
-        );
+        
         if (!parentId) {
           state.items.push(folder);
         } else {
@@ -204,9 +198,7 @@ const itemsSlice = createSlice({
       })
       .addCase(deleteItem.fulfilled, (state, action) => {
         const { _id, parentId } = action.payload;
-        console.log(
-          `Dòng 169 File items.slice.ts - Đã cập nhật data note (deleteItem: ${_id})`
-        );
+     
         if (!parentId) {
           state.items = state.items.filter(item => item._id !== _id);
         } else {
@@ -227,9 +219,7 @@ const itemsSlice = createSlice({
       .addCase(deleteItem.rejected, (state, action) => {})
       .addCase(renameItem.fulfilled, (state, action) => {
         const { _id, name, parentId } = action.payload;
-        console.log(
-          `Dòng 187 File items.slice.ts - Đã cập nhật data note (renameItem: ${_id} -> ${name})`
-        );
+      
         if (!parentId) {
           const item = state.items.find(item => item._id === _id);
           if (item) {

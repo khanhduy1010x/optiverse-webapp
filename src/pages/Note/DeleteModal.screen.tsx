@@ -11,14 +11,6 @@ const DeleteModal: React.FC<DeleteModalProps> = ({
 }) => {
   const [localLoading, setLocalLoading] = React.useState(false);
 
-  const handleDelete = async () => {
-    setLocalLoading(true);
-    try {
-      await onDelete();
-    } finally {
-      setLocalLoading(false);
-    }
-  };
 
   const isButtonLoading = loading || localLoading;
 
@@ -54,7 +46,14 @@ const DeleteModal: React.FC<DeleteModalProps> = ({
         </div>
         <div className="space-y-3 px-6 pb-6">
           <button
-            onClick={handleDelete}
+            onClick={async () => {
+              setLocalLoading(true);
+              try {
+                await onDelete();
+              } finally {
+                setLocalLoading(false);
+              }
+            }}
             disabled={isButtonLoading}
             className="w-full px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 disabled:bg-red-300"
           >

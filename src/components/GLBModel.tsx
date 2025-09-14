@@ -144,7 +144,7 @@ function Model({ url, ...opts }: ModelProps) {
 
   if (!model) return null;
   return (
-    <group scale={[2, 2, 2]}>
+    <group scale={[3, 3, 3]}>
       <primitive object={model} />
     </group>
   );
@@ -160,7 +160,7 @@ interface GLBModelProps {
 const GLBModel: React.FC<GLBModelProps> = ({
   modelPath,
   width = '100%',
-  height = '400px',
+  height = '250px',
   autoRotate = true,
 }) => {
   return (

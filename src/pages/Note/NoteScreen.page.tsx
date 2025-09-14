@@ -8,7 +8,6 @@ import { NoteScreenProps } from '../../types/note/props/component.props';
 
 const NoteScreen: React.FC<NoteScreenProps> = () => {
   useNoteInitializer();
-
   useNote();
   useSharedItems();
 

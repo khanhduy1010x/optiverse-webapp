@@ -130,3 +130,7 @@ export interface MarkdownEditorProps {
 export interface NoteScreenProps {
   // NoteScreen doesn't have props as it uses hooks internally
 }
+export interface UseCreateModalProps {
+    onCreate: () => Promise<void>;
+    loading?: boolean;
+}
