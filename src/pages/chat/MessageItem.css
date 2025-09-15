@@ -1,0 +1,18 @@
+.highlight-animate {
+  animation: highlight-scale 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes highlight-scale {
+  0% {
+    transform: scale(1);
+  }
+  20% {
+    transform: scale(1.15);
+  }
+  60% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
