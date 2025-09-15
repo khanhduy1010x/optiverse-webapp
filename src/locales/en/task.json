@@ -124,5 +124,16 @@
   "task": "Task",
   "schedule": "Schedule",
   "task_menu": "Task Menu",
-  "task_management": "Task Management"
+  "task_management": "Task Management",
+  
+  "recurring_update_title": "Update recurring event",
+  "recurring_update_desc": "\"{{title}}\" is a recurring event.",
+  "recurring_update_all": "Choose Update All to apply changes to every event in this series.",
+  "recurring_update_this": "Choose Update This to apply changes only to this occurrence.",
+  "update_this": "Update This",
+  "update_all": "Update All",
+
+  "start_time_label": "Start Time",
+  "end_time_label": "End Time",
+  "time_range_sep": "-"
 }

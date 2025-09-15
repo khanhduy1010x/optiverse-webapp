@@ -18,6 +18,7 @@ export interface TaskEvent {
   repeat_end_type?: RepeatEndType;
   repeat_end_date?: Date | string;
   repeat_occurrences?: number;
+  exclusion_dates?: (Date | string)[]; // Dates to exclude from recurring series
   location?: string;
   guests?: string[];
   color?: string; // Event color (hex code)
@@ -33,4 +34,4 @@ export interface TaskEvent {
   width?: number;
   column?: number;
   totalColumns?: number;
-} 
+}

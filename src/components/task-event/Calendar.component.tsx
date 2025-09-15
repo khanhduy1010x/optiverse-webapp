@@ -7,7 +7,8 @@ import { WeekView } from './WeekView.component';
 import { MonthView } from './MonthView.component';
 import { CreateTaskEventModalForm } from './CreateTaskEventModal.component';
 import { UpdateTaskEventModalForm } from './UpdateTaskEventModalForm.component';
-import { DeleteTaskEventModal } from '../../components/task-event/DeleteTaskEventModal.component';
+
+
 import { TaskOverdueNotifier } from './TaskOverdueNotifier.component';
 import { TaskEventDetail } from './TaskEventDetail.component';
 import { TimePickerDropdown } from './TimePickerDropdown.component';
@@ -18,7 +19,13 @@ import { MiniCalendar } from './MiniCalendar.component';
 import { taskEventService } from '../../services/task-event.service';
 import { useCalendarEventLayout } from '../../hooks/task-events/useCalendarEventLayout.hook';
 import { CreateTaskEventRequest } from '../../types/task-events/request/create-task-event.request';
-
+import { isRecurringEvent, isRecurringInstance } from '../../utils/recurring-event.utils';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
+import { formatDateOnly, formatTimeOnly } from '../../utils/date.utils';
+import { toast } from 'react-toastify';
+import Modal from 'react-modal';
+import { GROUP_CLASSNAMES } from '../../styles';
+import DeleteConfirmation from '../../pages/Task/DeleteConfirmation.screen';
 type ViewType = 'Day' | 'Week' | 'Month' | 'Year';
 
 interface CalendarProps {
@@ -27,8 +34,8 @@ interface CalendarProps {
   loading: boolean;
   error: string | null;
   addEvent: (event: TaskEvent) => void;
-  removeEvent: (eventId: string) => void;
-  updateEvent: (eventId: string, event: TaskEvent) => void;
+  removeEvent: (eventId: string, deleteOption?: 'all' | 'this') => void;
+  updateEvent: (eventId: string, event: TaskEvent, updateOption?: 'all' | 'this') => void;
   refreshTaskEvents: () => void;
 }
 
@@ -42,14 +49,13 @@ export const Calendar: React.FC<CalendarProps> = ({
   updateEvent,
   refreshTaskEvents
 }) => {
+  const { t } = useAppTranslate('task');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewType, setViewType] = useState<ViewType>('Week');
   const [showSidebar, setShowSidebar] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<TaskEvent | undefined>(undefined);
-  const [eventToDelete, setEventToDelete] = useState<TaskEvent | null>(null);
   const [task, setTask] = useState<any>(null);
   const [isAddScheduleOpen, setIsAddScheduleOpen] = useState(false);
   const [newEventTitle, setNewEventTitle] = useState('');
@@ -63,6 +69,9 @@ export const Calendar: React.FC<CalendarProps> = ({
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [eventDetail, setEventDetail] = useState<TaskEvent | null>(null);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [isRecurringDeleteOpen, setIsRecurringDeleteOpen] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState<TaskEvent | null>(null);
   const [showRepeatOptions, setShowRepeatOptions] = useState(false);
   
   // Thêm state cho chức năng All day
@@ -79,6 +88,8 @@ export const Calendar: React.FC<CalendarProps> = ({
   const [repeatEndDate, setRepeatEndDate] = useState<Date | null>(null);
   const [repeatOccurrences, setRepeatOccurrences] = useState(10);
   const [showCustomRepeatModal, setShowCustomRepeatModal] = useState(false);
+  
+  const [pendingUpdateData, setPendingUpdateData] = useState<TaskEvent | null>(null);
   
   // Tính toán khoảng thời gian hiển thị dựa trên loại view và ngày hiện tại
   const dateRange = useMemo(() => {
@@ -448,10 +459,9 @@ export const Calendar: React.FC<CalendarProps> = ({
   };
 
   const handleEditEvent = (event: TaskEvent) => {
-    // Đóng chi tiết sự kiện nếu đang mở
+    // Close detail popup if it is open
     setIsDetailOpen(false);
-    
-    // Mở modal chỉnh sửa
+    // Open edit modal directly; confirmation for recurring updates is handled inside UpdateTaskEventModalForm
     setSelectedEvent(event);
     setIsModalOpen(true);
   };
@@ -459,11 +469,15 @@ export const Calendar: React.FC<CalendarProps> = ({
   const handleDeleteEvent = (event: TaskEvent) => {
     // Đóng chi tiết sự kiện nếu đang mở
     setIsDetailOpen(false);
-    
-    // Mở modal xóa
     setEventToDelete(event);
-    setIsDeleteModalOpen(true);
+    if (isRecurringEvent(event) || isRecurringInstance(event)) {
+      setIsRecurringDeleteOpen(true);
+    } else {
+      setIsDeleteConfirmOpen(true);
+    }
   };
+
+
 
   // Hàm mới để hiển thị chi tiết sự kiện
   const handleViewEventDetail = (event: TaskEvent) => {
@@ -766,158 +780,81 @@ export const Calendar: React.FC<CalendarProps> = ({
       setNewEventTitle('');
       setIsAddScheduleOpen(false);
       
-      // Nếu là sự kiện kéo dài nhiều ngày (có eventEndDate)
-      if (eventEndDate) {
-        console.log('Creating multi-day event from', selectedDate, 'to', eventEndDate);
-        
-        // Tạo danh sách các ngày từ selectedDate đến endDate
-        const dates: Date[] = [];
-        let currentDay = new Date(selectedDate);
-        const lastDay = new Date(eventEndDate);
-        
-        // Đặt giờ về 0 để so sánh chỉ theo ngày
-        currentDay.setHours(0, 0, 0, 0);
-        lastDay.setHours(23, 59, 59, 999);
-        
-        // Tạo array các ngày
-        while (currentDay <= lastDay) {
-          dates.push(new Date(currentDay));
-          currentDay.setDate(currentDay.getDate() + 1);
-        }
-        
-        console.log('Will create events for these dates:', dates.map(d => d.toDateString()));
-        
-        // Tạo event cho mỗi ngày
-        for (const date of dates) {
-          // Parse time strings like "9:30am" to hours and minutes
-          const [startHours, startMinutes] = parseTimeString(newEventStartTime);
-          const [endHours, endMinutes] = parseTimeString(newEventEndTime);
-          
-          const startTime = new Date(date);
-          startTime.setHours(startHours, startMinutes);
-          
-          const endTime = new Date(date);
-          endTime.setHours(endHours, endMinutes);
-          
-          const newEventData: CreateTaskEventRequest = {
-            task_id: taskId,
-            title: savedTitle,
-            start_time: startTime,
-            end_time: endTime,
-            all_day: isAllDay,
-            repeat_type: 'none', // Sử dụng kiểu RepeatType
-            location: '', // Thêm location trống để tương thích với backend
-            guests: [] // Thêm guests trống để tương thích với backend
-          };
-          
-          console.log('Creating task event for date:', date.toDateString(), newEventData);
-          
-          // Gọi API để lưu event vào database
-          try {
-            const response = await taskEventService.createTaskEvent(newEventData);
-            console.log('API response for date', date.toDateString(), ':', response);
-            
-            if (response && response.data && response.data.data) {
-              // Nếu API trả về thành công
-              const createdEvent = response.data.data;
-              console.log('Event created successfully for date', date.toDateString(), ':', createdEvent);
-            }
-          } catch (err: any) {
-            console.error('Error creating event for date', date.toDateString(), ':', err);
-            // Hiển thị thông báo lỗi cho người dùng
-            alert(`Không thể tạo sự kiện: ${err?.message || 'Lỗi không xác định'}`);
-          }
-        }
-        
-        // Refresh danh sách sau một khoảng thời gian ngắn để đảm bảo API đã cập nhật
-        setTimeout(() => {
-          console.log('Refreshing task events after create multi-day events');
-          refreshTaskEvents();
-        }, 500);
+      // Xử lý tạo event - chỉ tạo 1 event gốc, virtual instances sẽ được tạo tự động
+      // Parse time strings like "9:30am" to hours and minutes
+      const [startHours, startMinutes] = parseTimeString(newEventStartTime);
+      const [endHours, endMinutes] = parseTimeString(newEventEndTime);
+      
+      // Sử dụng selectedDate làm ngày bắt đầu
+      const startTime = new Date(selectedDate);
+      startTime.setHours(startHours, startMinutes);
+      
+      // Xử lý end time - luôn sử dụng cùng ngày với selectedDate cho single event
+      // eventEndDate sẽ được sử dụng cho repeat_end_date thay vì end_time
+      let endTime: Date;
+      if (isAllDay) {
+        // Nếu là all day, end time cũng là cùng ngày
+        endTime = new Date(selectedDate);
+        endTime.setHours(23, 59, 59, 999);
       } else {
-        // Xử lý tạo event đơn lẻ
-        // Parse time strings like "9:30am" to hours and minutes
-        const [startHours, startMinutes] = parseTimeString(newEventStartTime);
-        const [endHours, endMinutes] = parseTimeString(newEventEndTime);
-        
-        // Sử dụng selectedDate thay vì today
-        const startTime = new Date(selectedDate);
-        startTime.setHours(startHours, startMinutes);
-        
-        const endTime = new Date(selectedDate);
+        // Sử dụng cùng ngày với selectedDate cho end_time
+        endTime = new Date(selectedDate);
         endTime.setHours(endHours, endMinutes);
+      }
+      
+      // Chuẩn bị dữ liệu event gốc với đầy đủ thông tin recurring
+      const newEventData: TaskEvent = {
+        _id: '', // Sẽ được tạo bởi backend
+        task_id: taskId,
+        title: savedTitle,
+        description: '',
+        start_time: startTime,
+        end_time: endTime,
+        all_day: isAllDay,
+        repeat_type: repeatType,
+        repeat_interval: repeatType === 'custom' ? customRepeatFrequency : 1,
+        repeat_days: (repeatType === 'weekly' || repeatType === 'custom') ? 
+          (customRepeatDays.length > 0 ? customRepeatDays : [selectedDate.getDay()]) : 
+          [],
+        repeat_end_type: repeatEndType,
+        repeat_end_date: repeatEndType === 'on' && (repeatEndDate || eventEndDate) ? (repeatEndDate || eventEndDate) || undefined : undefined,
+        repeat_occurrences: repeatEndType === 'after' ? repeatOccurrences : undefined,
+        location: '',
+        guests: []
+      };
+      
+      // Thêm thông tin chi tiết nếu là custom repeat
+      if (repeatType === 'custom') {
+        console.log('Creating custom recurring event with:');
+        console.log('- Frequency:', customRepeatFrequency);
+        console.log('- Unit:', customRepeatUnit);
+        console.log('- Days:', customRepeatDays);
+        console.log('- End type:', repeatEndType);
+        console.log('- End date:', repeatEndDate);
+        console.log('- Occurrences:', repeatOccurrences);
         
-        // Chuẩn bị dữ liệu cho API với đầy đủ các trường
-        const newEventData: CreateTaskEventRequest = {
-          task_id: taskId,
-          title: savedTitle,
-          description: '',
-          start_time: startTime,
-          end_time: endTime,
-          all_day: isAllDay,
-          repeat_type: repeatType,
-          repeat_interval: repeatType === 'custom' ? customRepeatFrequency : 1,
-          repeat_days: (repeatType === 'weekly' || repeatType === 'custom') ? 
-            (customRepeatDays.length > 0 ? customRepeatDays : [selectedDate.getDay()]) : 
-            [],
-          repeat_end_type: repeatEndType,
-          repeat_end_date: repeatEndType === 'on' && repeatEndDate ? repeatEndDate : undefined,
-          repeat_occurrences: repeatEndType === 'after' ? repeatOccurrences : undefined,
-          location: '', // Thêm location trống để tương thích với backend
-          guests: [] // Thêm guests trống để tương thích với backend
-        };
-        
-        // Thêm thông tin chi tiết nếu là custom repeat
-        if (repeatType === 'custom') {
-          console.log('Creating custom recurring event with:');
-          console.log('- Frequency:', customRepeatFrequency);
-          console.log('- Unit:', customRepeatUnit);
-          console.log('- Days:', customRepeatDays);
-          console.log('- End type:', repeatEndType);
-          console.log('- End date:', repeatEndDate);
-          console.log('- Occurrences:', repeatOccurrences);
-          
-          // Đảm bảo có repeat_days nếu là custom với đơn vị tuần
-          if (customRepeatUnit === 'week' && (!newEventData.repeat_days || newEventData.repeat_days.length === 0)) {
-            newEventData.repeat_days = [selectedDate.getDay()];
-          }
-        }
-        
-        console.log('Creating single task event:', newEventData);
-        
-        // Gọi API để lưu event vào database
-        try {
-          const response = await taskEventService.createTaskEvent(newEventData);
-          console.log('API response:', response);
-          
-          if (response && response.data && response.data.data) {
-            // Nếu API trả về thành công
-            const createdEvent = response.data.data;
-            console.log('Event created successfully:', createdEvent);
-            
-            // Không thêm event vào state local để tránh trùng lặp
-            // addEvent sẽ được gọi thông qua refreshTaskEvents
-            
-            // Refresh danh sách sau một khoảng thời gian ngắn để đảm bảo API đã cập nhật
-            setTimeout(() => {
-              console.log('Refreshing task events after create');
-              refreshTaskEvents();
-            }, 500);
-          } else {
-            console.error('Failed to create event, invalid response:', response);
-            // Hiển thị thông báo lỗi cho người dùng
-            alert('Không thể tạo sự kiện: Phản hồi từ máy chủ không hợp lệ');
-          }
-        } catch (err: any) {
-          console.error('Error creating single event:', err);
-          // Hiển thị thông báo lỗi cho người dùng
-          alert(`Không thể tạo sự kiện: ${err?.message || 'Lỗi không xác định'}`);
+        // Đảm bảo có repeat_days nếu là custom với đơn vị tuần
+        if (customRepeatUnit === 'week' && (!newEventData.repeat_days || newEventData.repeat_days.length === 0)) {
+          newEventData.repeat_days = [selectedDate.getDay()];
         }
       }
+      
+      console.log('Creating single task event (original):', newEventData);
+      
+      // Sử dụng addEvent từ useTaskEventList để tạo event gốc
+      // Virtual instances sẽ được tạo tự động bởi generateRecurringEvents
+      try {
+        await addEvent(newEventData);
+        console.log('Event created successfully via addEvent');
+      } catch (err: any) {
+        console.error('Error creating event via addEvent:', err);
+        toast.error(t('error_generic_with_message', { message: err?.message || t('error_server_generic') }));
+      }
+
     } catch (error: any) {
       console.error('Error creating task event:', error);
       // Hiển thị thông báo lỗi cho người dùng
-      alert(`Đã xảy ra lỗi: ${error?.message || 'Lỗi không xác định'}`);
+      toast.error(t('error_generic_with_message', { message: error?.message || t('error_server_generic') }));
     }
   };
   
@@ -1213,23 +1150,14 @@ export const Calendar: React.FC<CalendarProps> = ({
           setIsModalOpen(false);
           refreshTaskEvents();
         }}
-        updateEvent={updateEvent}
+        updateEvent={(eventId: string, event: TaskEvent, option: 'all' | 'this' = 'this') => {
+          // Forward the option selected in UpdateTaskEventModalForm
+          updateEvent(eventId, event, option);
+        }}
       />
       )}
       
-      {/* Delete Event Modal */}
-      {isDeleteModalOpen && eventToDelete && (
-      <DeleteTaskEventModal
-        isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
-        taskEvent={eventToDelete}
-        onSuccess={() => {
-          setIsDeleteModalOpen(false);
-          refreshTaskEvents();
-        }}
-        removeEvent={removeEvent}
-      />
-      )}
+
 
       {/* Event Detail Modal */}
       {isDetailOpen && eventDetail && (
@@ -1241,6 +1169,106 @@ export const Calendar: React.FC<CalendarProps> = ({
           onDelete={() => handleDeleteEvent(eventDetail)}
         />
       )}
+
+      {/* Delete Confirmation for non-recurring event */}
+      {isDeleteConfirmOpen && eventToDelete && !isRecurringEvent(eventToDelete) && !isRecurringInstance(eventToDelete) && (
+        <DeleteConfirmation
+          title={t('delete_task_title')}
+          description={t('event_delete_confirm_with_datetime', {
+            title: eventToDelete.title || t('no_title'),
+            date: formatDateOnly(eventToDelete.start_time as any),
+            time: formatTimeOnly(eventToDelete.start_time as any)
+          })}
+          onCancel={() => {
+            setIsDeleteConfirmOpen(false);
+            setEventToDelete(null);
+          }}
+          onConfirm={() => {
+            if (eventToDelete?._id) {
+              removeEvent(eventToDelete._id, 'this');
+              refreshTaskEvents();
+            }
+            setIsDeleteConfirmOpen(false);
+            setEventToDelete(null);
+          }}
+        />
+      )}
+
+      {/* Recurring Delete Confirmation with scope options */}
+      {isRecurringDeleteOpen && eventToDelete && (
+        <Modal
+          isOpen={true}
+          ariaHideApp={false}
+          className={GROUP_CLASSNAMES.modalContainer}
+          overlayClassName={GROUP_CLASSNAMES.modalOverlay}
+        >
+          <div className="p-6">
+            <div className="flex flex-col items-center mb-5">
+              <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-7 h-7 text-red-600">
+                  <path fillRule="evenodd" d="M12 2a10 10 0 100 20 10 10 0 000-20zm-1 6a1 1 0 112 0v6a1 1 0 11-2 0V8zm1 10a1.5 1.5 0 110-3 1.5 1.5 0 010 3z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 text-center">{t('event_delete_recurring_title')}</h3>
+              <p className="text-sm text-gray-600 text-center mt-1">
+                {t('event_delete_confirm_with_datetime', {
+                  title: eventToDelete.title || t('no_title'),
+                  date: formatDateOnly(eventToDelete.start_time as any),
+                  time: formatTimeOnly(eventToDelete.start_time as any)
+                })}
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-2 mb-5">
+              <button
+                type="button"
+                onClick={() => {
+                  if (eventToDelete?._id) {
+                    removeEvent(eventToDelete._id, 'this');
+                    refreshTaskEvents();
+                  }
+                  setIsRecurringDeleteOpen(false);
+                  setEventToDelete(null);
+                }}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+              >
+                {t('event_delete_only_this')}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (eventToDelete?._id) {
+                    removeEvent(eventToDelete._id, 'all');
+                    refreshTaskEvents();
+                  }
+                  setIsRecurringDeleteOpen(false);
+                  setEventToDelete(null);
+                }}
+                className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+              >
+                {t('event_delete_all_in_series')}
+              </button>
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsRecurringDeleteOpen(false);
+                  setEventToDelete(null);
+                }}
+                className={GROUP_CLASSNAMES.modalButtonCancel}
+              >
+                {t('cancel')}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Debug Test Component - Remove in production */}
+      <div className="mt-4">
+              </div>
     </div>
   );
-}; 
+};

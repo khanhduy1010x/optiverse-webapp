@@ -4,6 +4,9 @@ import { TaskEvent } from '../../types/task-events/task-events.types';
 import { useTaskEventForm } from '../../hooks/task-events/useTaskEventForm.hook';
 import { useTaskEventOperations } from '../../hooks/task-events/useTaskEventOperations.hook';
 import { useTaskEventList } from '../../hooks/task-events/useTaskEventList.hook';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
+import { GROUP_CLASSNAMES } from '../../styles';
+
 
 interface UpdateTaskEventModalFormProps {
   isOpen: boolean;
@@ -11,7 +14,7 @@ interface UpdateTaskEventModalFormProps {
   taskId: string;
   taskEvent: TaskEvent;
   onSuccess: () => void;
-  updateEvent?: (eventId: string, event: TaskEvent) => void;
+  updateEvent?: (eventId: string, event: TaskEvent, updateOption?: 'all' | 'this') => void;
 }
 
 export const UpdateTaskEventModalForm: React.FC<UpdateTaskEventModalFormProps> = ({
@@ -22,15 +25,19 @@ export const UpdateTaskEventModalForm: React.FC<UpdateTaskEventModalFormProps> =
   onSuccess,
   updateEvent
 }) => {
+  const { t } = useAppTranslate('task');
   const { formData, handleInputChange, resetForm, getUpdatePayload } = useTaskEventForm(taskEvent);
   const { updateTaskEvent, loading } = useTaskEventOperations();
   const [showRepeatOptions, setShowRepeatOptions] = useState(false);
   const [selectedColor, setSelectedColor] = useState(taskEvent.color || '#3B82F6');
   const [titleError, setTitleError] = useState('');
   const [descError, setDescError] = useState('');
-  const [updateOption, setUpdateOption] = useState<'this' | 'all'>('this');
+
   const { taskEvents, refreshTaskEvents } = useTaskEventList(taskId);
-  const [showUpdateConfirm, setShowUpdateConfirm] = useState(false);
+
+  // Xác nhận cập nhật cho sự kiện lặp lại (UI đẹp mắt, đồng bộ design)
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [pendingPayload, setPendingPayload] = useState<any | null>(null);
 
   // Chuẩn bị payload dùng chung cho cả submit và confirm
   const buildPayload = () => {
@@ -67,239 +74,253 @@ export const UpdateTaskEventModalForm: React.FC<UpdateTaskEventModalFormProps> =
   };
 
   React.useEffect(() => {
-    setTitleError(formData.title && formData.title.length > 50 ? 'Title must not exceed 50 characters.' : '');
-    setDescError(formData.description && formData.description.length > 100 ? 'Description must not exceed 100 characters.' : '');
-  }, [formData.title, formData.description]);
+    setTitleError(formData.title && formData.title.length > 50 ? t('create_title_max') : '');
+    setDescError(formData.description && formData.description.length > 100 ? t('edit_desc_max') : '');
+  }, [formData.title, formData.description, t]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title || !formData.title.trim()) {
-      alert('Title is required.');
+      alert(t('validation_title_required'));
       return;
     }
     if (formData.title.length > 50) {
-      alert('Title must not exceed 50 characters.');
+      alert(t('create_title_max'));
       return;
     }
     if (!taskId || !taskId.trim()) {
-      alert('Task ID is required.');
+      alert(t('validation_task_id_required'));
       return;
     }
     if (!formData.start_time) {
-      alert('Start time is required.');
+      alert(t('validation_start_time_required'));
       return;
     }
     if (!formData.repeat_type) {
-      alert('Repeat type is required.');
+      alert(t('validation_repeat_type_required'));
       return;
     }
     if (formData.description && formData.description.length > 100) {
-      alert('Description must not exceed 100 characters.');
+      alert(t('edit_desc_max'));
       return;
     }
     const payload = buildPayload();
-    if (taskEvent.repeat_type !== 'none' || taskEvent.parent_event_id) {
-      setShowUpdateConfirm(true);
+    const isRecurring = taskEvent.repeat_type && taskEvent.repeat_type !== 'none';
+    const isRecurringInstance = taskEvent._id?.includes('::recurrence::') || taskEvent.parent_event_id;
+    if (isRecurring || isRecurringInstance) {
+      setPendingPayload(payload);
+      setIsConfirmOpen(true);
       return;
     }
     let success = false;
     const result = await updateTaskEvent(taskEvent._id, payload);
     success = !!result;
     if (success) {
+      if (updateEvent) updateEvent(taskEvent._id, { ...taskEvent, ...payload }, 'this');
       resetForm();
       onSuccess();
       onClose();
     } else {
-      alert('Could not update event. Please try again later.');
+      alert(t('save_failed_try_again'));
     }
   };
 
   // Hàm xử lý xác nhận update 1 hoặc tất cả
-  const handleConfirmUpdate = async () => {
+  const handleConfirmUpdate = async (option: 'this' | 'all', payload: any) => {
     let success = false;
-    const payload = buildPayload();
-    if (updateOption === 'all' && (taskEvent.repeat_type !== 'none' || taskEvent.parent_event_id)) {
-      let eventsToUpdate = [];
-      if (taskEvent.parent_event_id) {
-        eventsToUpdate = taskEvents.filter(ev => ev.parent_event_id === taskEvent.parent_event_id || ev._id === taskEvent.parent_event_id);
-      } else {
-        eventsToUpdate = taskEvents.filter(ev => ev.repeat_type === taskEvent.repeat_type && ev.title === taskEvent.title && ev.task_id === taskEvent.task_id);
+
+    try {
+      if (!updateEvent) {
+        // Nếu không có hàm updateEvent từ props, không thực hiện logic cập nhật thủ công để tránh cập nhật sai phạm vi
+        // Thông báo lỗi nhẹ cho người dùng
+        alert(t('save_failed_try_again'));
+        return;
       }
-      for (const ev of eventsToUpdate) {
-        // Giữ nguyên ngày tháng năm, chỉ đổi giờ/phút
-        const originalStart = new Date(ev.start_time);
-        const originalEnd = ev.end_time ? new Date(ev.end_time) : null;
-        const newStart = new Date(originalStart);
-        const [newStartHour, newStartMinute] = [new Date(formData.start_time).getHours(), new Date(formData.start_time).getMinutes()];
-        newStart.setHours(newStartHour, newStartMinute, 0, 0);
-        let newEnd = null;
-        if (originalEnd && formData.end_time) {
-          newEnd = new Date(originalEnd);
-          const [newEndHour, newEndMinute] = [new Date(formData.end_time).getHours(), new Date(formData.end_time).getMinutes()];
-          newEnd.setHours(newEndHour, newEndMinute, 0, 0);
-        }
-        await updateTaskEvent(ev._id, {
-          ...payload,
-          start_time: newStart.toISOString(),
-          end_time: newEnd ? newEnd.toISOString() : undefined
-        });
-      }
+
+      // Ủy quyền toàn bộ xử lý cập nhật cho hook useTaskEventList thông qua prop updateEvent
+      // Hook sẽ tự xử lý logic: 'this' => exclusion + tạo event single, 'all' => cập nhật event gốc và regenerate
+      updateEvent(taskEvent._id, { ...taskEvent, ...payload } as TaskEvent, option);
+
+      // Làm tươi danh sách sự kiện sau cập nhật
       refreshTaskEvents();
       success = true;
-    } else {
-      const result = await updateTaskEvent(taskEvent._id, payload);
-      success = !!result;
+    } catch (e) {
+      console.error('handleConfirmUpdate error:', e);
+      success = false;
     }
-    setShowUpdateConfirm(false);
+
     if (success) {
       resetForm();
       onSuccess();
       onClose();
     } else {
-      alert('Could not update event. Please try again later.');
+      alert(t('save_failed_try_again'));
     }
   };
 
   if (!isOpen) return null;
 
   return (
-    <Modal isOpen={isOpen}
-      className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[350px] md:w-[400px] max-w-[95vw] bg-white rounded-xl shadow-2xl z-[2000] outline-none"
-      overlayClassName="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000]"
-      onRequestClose={() => { resetForm(); onClose(); }}
-      shouldCloseOnOverlayClick={false}
-      ariaHideApp={false}
-    >
-      <form onSubmit={handleSubmit} className="p-4 md:p-6 flex flex-col gap-3">
-        {/* Tiêu đề */}
-        <input
-          type="text"
-          placeholder="Add schedule title"
-          value={formData.title}
-          onChange={(e) => handleInputChange('title', e.target.value)}
-          className="w-full border-0 border-b border-gray-200 py-2 mb-2 focus:outline-none focus:ring-0 focus:border-blue-400 placeholder-gray-400 text-base bg-blue-50/30 rounded-t-xl transition-all"
-          autoFocus
-        />
-        {titleError && (
-          <div className="text-red-500 text-xs mb-1">{titleError}</div>
-        )}
-        {/* Hiển thị ngày của event */}
-        <div className="text-base text-gray-600 font-semibold mb-1 text-center">
-          {formData.start_time ? new Date(formData.start_time).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : ''}
-        </div>
-        {/* Thời gian bắt đầu/kết thúc */}
-        <div className="flex items-center gap-2 mb-2">
-          <div className="flex flex-col flex-1">
-            <label className="text-xs text-gray-500 mb-1" htmlFor="start-time">Start Time</label>
-            <input
-              id="start-time"
-              type="time"
-              value={(() => { try { return formData.start_time ? new Date(formData.start_time).toTimeString().slice(0, 5) : ''; } catch { return ''; } })()}
-              onChange={e => {
-                const newDate = new Date(formData.start_time);
-                const [hours, minutes] = e.target.value.split(':').map(Number);
-                newDate.setHours(hours, minutes);
-                handleInputChange('start_time', newDate);
-              }}
-              className="border border-gray-200 rounded-md p-1.5 text-sm"
-              placeholder="Start time"
-            />
-          </div>
-          <span className="text-gray-400 mt-6">-</span>
-          <div className="flex flex-col flex-1">
-            <label className="text-xs text-gray-500 mb-1" htmlFor="end-time">End Time</label>
-            <input
-              id="end-time"
-              type="time"
-              value={(() => { try { return formData.end_time ? new Date(formData.end_time).toTimeString().slice(0, 5) : ''; } catch { return ''; } })()}
-              onChange={e => {
-                if (!formData.end_time) return;
-                const newDate = new Date(formData.end_time);
-                const [hours, minutes] = e.target.value.split(':').map(Number);
-                newDate.setHours(hours, minutes);
-                handleInputChange('end_time', newDate);
-              }}
-              className="border border-gray-200 rounded-md p-1.5 text-sm"
-              placeholder="End time"
-            />
-          </div>
-        </div>
-        {/* Description */}
-        <textarea
-          placeholder="Add description"
-          value={formData.description || ''}
-          onChange={e => handleInputChange('description', e.target.value)}
-          className="w-full border-0 border-b border-gray-200 py-2 focus:outline-none focus:ring-0 text-sm mb-2 resize-none min-h-[32px]"
-        />
-        {descError && (
-          <div className="text-red-500 text-xs mb-1">{descError}</div>
-        )}
-        {/* Nút lưu/hủy */}
-        <div className="flex justify-end gap-2 mt-2">
-          <button 
-            type="button"
-            onClick={() => { resetForm(); onClose(); }}
-            className="px-5 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl text-base font-semibold transition-all"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={loading || !formData.title.trim() || (formData.title && formData.title.length > 50) || (!!formData.description && formData.description.length > 100)}
-            className="px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-bold shadow-md hover:scale-105 hover:shadow-xl transition-all text-base disabled:bg-blue-300 disabled:opacity-60"
-          >
-            Save
-          </button>
-        </div>
-      </form>
-      {/* Modal xác nhận update 1 hay tất cả */}
-      <Modal
-        isOpen={showUpdateConfirm}
-        onRequestClose={() => setShowUpdateConfirm(false)}
-        className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[350px] max-w-[90vw] bg-white rounded-lg shadow-2xl z-[2000] outline-none"
+    <>
+      <Modal isOpen={isOpen}
+        className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[350px] md:w-[400px] max-w-[95vw] bg-white rounded-xl shadow-2xl z-[2000] outline-none"
         overlayClassName="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000]"
+        onRequestClose={() => { resetForm(); onClose(); }}
+        shouldCloseOnOverlayClick={false}
         ariaHideApp={false}
       >
-        <div className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Update recurring event</h2>
-          <div className="mb-4">
-            <label className="flex items-center space-x-3 mb-2 cursor-pointer">
-              <input
-                type="radio"
-                name="updateOption"
-                checked={updateOption === 'this'}
-                onChange={() => setUpdateOption('this')}
-                className="form-radio h-4 w-4 text-blue-600"
-              />
-              <span className="text-gray-700">Update only this event</span>
-            </label>
-            <label className="flex items-center space-x-3 cursor-pointer">
-              <input
-                type="radio"
-                name="updateOption"
-                checked={updateOption === 'all'}
-                onChange={() => setUpdateOption('all')}
-                className="form-radio h-4 w-4 text-blue-600"
-              />
-              <span className="text-gray-700">Update all events in this series</span>
-            </label>
+        <form onSubmit={handleSubmit} className="p-4 md:p-6 flex flex-col gap-3">
+          {/* Tiêu đề */}
+          <input
+            type="text"
+            placeholder={t('event_title_placeholder')}
+            value={formData.title}
+            onChange={(e) => handleInputChange('title', e.target.value)}
+            className="w-full border-0 border-b border-gray-200 py-2 mb-2 focus:outline-none focus:ring-0 focus:border-blue-400 placeholder-gray-400 text-base bg-blue-50/30 rounded-t-xl transition-all"
+            autoFocus
+          />
+          {titleError && (
+            <div className="text-red-500 text-xs mb-1">{titleError}</div>
+          )}
+          {/* Hiển thị ngày của event */}
+          <div className="text-base text-gray-600 font-semibold mb-1 text-center">
+            {formData.start_time ? new Date(formData.start_time).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : ''}
           </div>
-          <div className="flex justify-end gap-2 mt-4">
-            <button
-              onClick={() => setShowUpdateConfirm(false)}
+          {/* Thời gian bắt đầu/kết thúc */}
+          <div className="flex items-center gap-2 mb-2">
+            <div className="flex flex-col flex-1">
+              <label className="text-xs text-gray-500 mb-1" htmlFor="start-time">{t('start_time_label')}</label>
+              <input
+                id="start-time"
+                type="time"
+                value={(() => { try { return formData.start_time ? new Date(formData.start_time).toTimeString().slice(0, 5) : ''; } catch { return ''; } })()}
+                onChange={e => {
+                  const newDate = new Date(formData.start_time);
+                  const [hours, minutes] = e.target.value.split(':').map(Number);
+                  newDate.setHours(hours, minutes);
+                  handleInputChange('start_time', newDate);
+                }}
+                className="border border-gray-200 rounded-md p-1.5 text-sm"
+                placeholder={t('start_time_placeholder')}
+              />
+            </div>
+            <span className="text-gray-400 mt-6">{t('time_range_sep')}</span>
+            <div className="flex flex-col flex-1">
+              <label className="text-xs text-gray-500 mb-1" htmlFor="end-time">{t('end_time_label')}</label>
+              <input
+                id="end-time"
+                type="time"
+                value={(() => { try { return formData.end_time ? new Date(formData.end_time).toTimeString().slice(0, 5) : ''; } catch { return ''; } })()}
+                onChange={e => {
+                  if (!formData.end_time) return;
+                  const newDate = new Date(formData.end_time);
+                  const [hours, minutes] = e.target.value.split(':').map(Number);
+                  newDate.setHours(hours, minutes);
+                  handleInputChange('end_time', newDate);
+                }}
+                className="border border-gray-200 rounded-md p-1.5 text-sm"
+                placeholder={t('end_time_placeholder')}
+              />
+            </div>
+          </div>
+          {/* Description */}
+          <textarea
+            placeholder={t('add_description_placeholder')}
+            value={formData.description || ''}
+            onChange={e => handleInputChange('description', e.target.value)}
+            className="w-full border-0 border-b border-gray-200 py-2 focus:outline-none focus:ring-0 text-sm mb-2 resize-none min-h-[32px]"
+          />
+          {descError && (
+            <div className="text-red-500 text-xs mb-1">{descError}</div>
+          )}
+          {/* Nút lưu/hủy */}
+          <div className="flex justify-end gap-2 mt-2">
+            <button 
+              type="button"
+              onClick={() => { resetForm(); onClose(); }}
               className="px-5 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl text-base font-semibold transition-all"
             >
-              Cancel
+              {t('cancel')}
             </button>
             <button
-              onClick={handleConfirmUpdate}
-              className="px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-bold shadow-md hover:scale-105 hover:shadow-xl transition-all text-base"
+              type="submit"
+              disabled={loading || !formData.title.trim() || (formData.title && formData.title.length > 50) || (!!formData.description && formData.description.length > 100)}
+              className="px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-bold shadow-md hover:scale-105 hover:shadow-xl transition-all text-base disabled:bg-blue-300 disabled:opacity-60"
             >
-              OK
+              {t('save')}
+            </button>
+          </div>
+        </form>
+
+      </Modal>
+
+      {/* Recurring Update Confirmation Modal */}
+      <Modal
+        isOpen={isConfirmOpen}
+        onRequestClose={() => setIsConfirmOpen(false)}
+        ariaHideApp={false}
+        className={GROUP_CLASSNAMES.modalContainer}
+        overlayClassName={GROUP_CLASSNAMES.modalOverlay}
+      >
+        <div className="p-6">
+          <div className="flex flex-col items-center mb-5">
+            <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center mb-3">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-7 h-7 text-blue-600">
+                <path fillRule="evenodd" d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 10.59V7a1 1 0 10-2 0v6a1 1 0 00.293.707l3 3a1 1 0 101.414-1.414L13 12.59z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 text-center">{t('recurring_update_title')}</h3>
+            <p className="text-sm text-gray-600 text-center mt-1">
+              {t('recurring_update_desc', { title: taskEvent.title || t('no_title') })}
+            </p>
+          </div>
+
+          <div className="space-y-2 mb-5">
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50">
+              <span className="mt-1 inline-flex h-2.5 w-2.5 rounded-full bg-blue-500"></span>
+              <p className="text-sm text-gray-700">{t('recurring_update_all')}</p>
+            </div>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50">
+              <span className="mt-1 inline-flex h-2.5 w-2.5 rounded-full bg-gray-400"></span>
+              <p className="text-sm text-gray-700">{t('recurring_update_this')}</p>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setIsConfirmOpen(false)}
+              className={GROUP_CLASSNAMES.modalButtonCancel}
+            >
+              {t('cancel')}
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                if (!pendingPayload) return;
+                setIsConfirmOpen(false);
+                await handleConfirmUpdate('this', pendingPayload);
+                setPendingPayload(null);
+              }}
+              className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-black transition-colors"
+            >
+              {t('update_this')}
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                if (!pendingPayload) return;
+                setIsConfirmOpen(false);
+                await handleConfirmUpdate('all', pendingPayload);
+                setPendingPayload(null);
+              }}
+              className={GROUP_CLASSNAMES.modalButtonConfirm}
+            >
+              {t('update_all')}
             </button>
           </div>
         </div>
       </Modal>
-    </Modal>
+    </>
   );
-}; 
+};

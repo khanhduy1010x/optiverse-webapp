@@ -9,8 +9,8 @@ interface CalendarContainerProps {
   loading: boolean;
   error: string | null;
   addEvent: (event: TaskEvent) => void;
-  removeEvent: (eventId: string) => void;
-  updateEvent: (eventId: string, updatedEvent: TaskEvent) => void;
+  removeEvent: (eventId: string, deleteOption?: 'all' | 'this') => void;
+  updateEvent: (eventId: string, updatedEvent: TaskEvent, updateOption?: 'all' | 'this') => void;
   refreshTaskEvents: () => void;
   onRefresh: () => void;
 }
@@ -48,4 +48,4 @@ export const CalendarContainer: React.FC<CalendarContainerProps> = ({
       </div>
     </div>
   );
-}; 
+};

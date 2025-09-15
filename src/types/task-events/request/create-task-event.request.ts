@@ -14,9 +14,10 @@ export interface CreateTaskEventRequest {
   repeat_end_type?: RepeatEndType;
   repeat_end_date?: Date | string;
   repeat_occurrences?: number;
+  exclusion_dates?: (Date | string)[]; // Dates to exclude from recurring series
   location?: string;
   description?: string;
   guests?: string[];
   parent_event_id?: string; // ID của sự kiện gốc (nếu đây là sự kiện lặp lại)
   color?: string; // Event color (hex code)
-} 
+}
