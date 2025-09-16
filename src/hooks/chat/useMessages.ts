@@ -23,10 +23,12 @@ export function useMessages(conversationId: string, limit: number = 50) {
 
   useEffect(() => {
     if (!conversationId) {
+      console.log('useMessages: No conversationId provided');
       setLoading(false);
       return;
     }
 
+    console.log('useMessages: Loading messages for conversation:', conversationId);
     setMessages([]);
     setLoading(true);
 
@@ -42,9 +44,12 @@ export function useMessages(conversationId: string, limit: number = 50) {
       messagesRef,
       (snapshot: DataSnapshot) => {
         const message = { id: snapshot.key!, ...snapshot.val() } as MessageType;
+        console.log('useMessages: New message added:', message);
         setMessages(prev => {
           if (prev.find(m => m.id === message.id)) return prev;
-          return [...prev, message];
+          const newMessages = [...prev, message];
+          console.log('useMessages: Updated messages array:', newMessages);
+          return newMessages;
         });
         setLoading(false);
       }

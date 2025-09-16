@@ -18,13 +18,19 @@ export function useConversation() {
 
   // Lấy danh sách hội thoại từ Firebase
   useEffect(() => {
-    if (!currentUserId) return;
+    if (!currentUserId) {
+      console.log('useConversation: No currentUserId found');
+      return;
+    }
     
+    console.log('useConversation: Starting to load conversations for user:', currentUserId);
     const conversationsRef = ref(db, "conversations");
     
     const unsubscribe = onValue(conversationsRef, async (snapshot) => {
       const data = snapshot.val();
+      console.log('useConversation: Firebase data received:', data);
       if (!data) {
+        console.log('useConversation: No conversations data found');
         setLoading(false);
         return;
       }
@@ -134,4 +140,4 @@ export function useConversation() {
   }, [conversations, currentUserId]);
 
   return { conversations, users, loading, getOrCreateConversation };
-} 
+}
