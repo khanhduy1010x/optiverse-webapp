@@ -166,13 +166,15 @@ export const useTaskEventOperations = () => {
     try {
       console.log('Deleting task event:', taskEventId);
       
-      // Check if this is a recurring event instance
-      const isRecurrenceInstance = taskEventId.includes('-recurrence-');
+      // Check if this is a recurring event instance (support both legacy and new patterns)
+      const isRecurrenceInstance = taskEventId.includes('::recurrence::') || taskEventId.includes('-recurrence-');
       
       // If it's a recurring instance, we need to extract the original ID
-      const originalId = isRecurrenceInstance 
-        ? taskEventId.split('-recurrence-')[0] 
-        : taskEventId;
+      const originalId = taskEventId.includes('::recurrence::')
+        ? taskEventId.split('::recurrence::')[0]
+        : (taskEventId.includes('-recurrence-')
+            ? taskEventId.split('-recurrence-')[0]
+            : taskEventId);
       
       // For recurring instances, we don't call the API since they only exist on the frontend
       if (isRecurrenceInstance) {
@@ -211,4 +213,4 @@ export const useTaskEventOperations = () => {
     loading,
     error
   };
-}; 
+};

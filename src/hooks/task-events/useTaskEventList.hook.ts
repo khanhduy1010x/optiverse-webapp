@@ -83,6 +83,8 @@ const generateRecurringInstances = (originalEvent: TaskEvent): TaskEvent[] => {
     
     let currentDate = new Date(startDate);
     let occurrenceCount = 0;
+   // Đánh dấu vòng lặp đầu tiên để luôn tạo instance cho ngày base
+   let firstIteration = true;
     
     // Tính toán maxOccurrences dựa trên repeat_end_type với giới hạn an toàn
     let maxOccurrences = 10; // Mặc định
@@ -212,6 +214,8 @@ const generateRecurringInstances = (originalEvent: TaskEvent): TaskEvent[] => {
       // Với các loại khác, đơn giản là tăng ngày theo khoảng lặp
       currentDate = incrementDate(currentDate, repeatType, repeatInterval);
     }
+    // KHÔNG pre-shift sang lần lặp thứ 2. Bắt đầu tạo instance từ ngày base trước
+    currentDate = new Date(startDate);
     
     // Tạo các recurring instances
      while (occurrenceCount < maxOccurrences) {
@@ -236,7 +240,7 @@ const generateRecurringInstances = (originalEvent: TaskEvent): TaskEvent[] => {
        }
       
       // Đối với weekly repeat với repeat_days, xử lý các ngày được chọn trong tuần
-      if (repeatType === 'weekly' && repeatDays.length > 0) {
+      if (repeatType === 'weekly' && repeatDays.length > 0 && !firstIteration) {
         const dayOfWeek = currentDate.getDay();
         
         // Nếu ngày hiện tại không nằm trong danh sách repeat_days
@@ -265,7 +269,7 @@ const generateRecurringInstances = (originalEvent: TaskEvent): TaskEvent[] => {
       }
       
       // Đối với custom repeat với repeat_days
-      if (repeatType === 'custom' && repeatUnit === 'week' && repeatDays.length > 0) {
+      if (repeatType === 'custom' && repeatUnit === 'week' && repeatDays.length > 0 && !firstIteration) {
         const dayOfWeek = currentDate.getDay();
         
         if (!repeatDays.includes(dayOfWeek)) {
@@ -303,7 +307,30 @@ const generateRecurringInstances = (originalEvent: TaskEvent): TaskEvent[] => {
       
       // Nếu ngày này bị loại trừ, bỏ qua và tiếp tục (KHÔNG tăng occurrenceCount)
       if (isExcluded) {
-        currentDate = incrementDate(currentDate, repeatType, repeatInterval);
+        // Với weekly/custom-week có danh sách repeat_days, đừng nhảy cả tuần ngay,
+        // hãy thử chuyển sang ngày hợp lệ kế tiếp trong cùng tuần trước.
+        if ((repeatType === 'weekly' || (repeatType === 'custom' && repeatUnit === 'week')) && repeatDays.length > 0) {
+          const dayOfWeek = currentDate.getDay();
+          const daysSorted = [...repeatDays].sort((a, b) => a - b);
+          const nextDayInSameWeek = daysSorted.find(d => d > dayOfWeek);
+          if (nextDayInSameWeek !== undefined) {
+            const daysToAdd = nextDayInSameWeek - dayOfWeek;
+            currentDate.setDate(currentDate.getDate() + daysToAdd);
+          } else {
+            // Không còn ngày hợp lệ trong tuần hiện tại -> sang block tuần tiếp theo theo interval
+            const weekStart = new Date(currentDate);
+            weekStart.setHours(0, 0, 0, 0);
+            weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+            const nextBlockStart = new Date(weekStart);
+            nextBlockStart.setDate(nextBlockStart.getDate() + 7 * repeatInterval);
+            const nextCandidate = new Date(nextBlockStart);
+            nextCandidate.setDate(nextCandidate.getDate() + daysSorted[0]);
+            currentDate = nextCandidate;
+          }
+        } else {
+          // Các loại repeat khác giữ nguyên hành việc tăng theo interval
+          currentDate = incrementDate(currentDate, repeatType, repeatInterval);
+        }
         continue;
       }
       
@@ -352,6 +379,8 @@ const generateRecurringInstances = (originalEvent: TaskEvent): TaskEvent[] => {
       } else {
         currentDate = incrementDate(currentDate, repeatType, repeatInterval);
       }
+      // Sau khi đã thêm instance đầu tiên (base), các vòng tiếp theo không còn là lần đầu nữa
+      firstIteration = false;
     }
   } catch (error) {
     console.error('Error generating recurring instances:', error);
@@ -529,80 +558,44 @@ export const useTaskEventList = (taskId: string) => {
         } else {
           // Xóa chỉ instance này - thêm ngày vào exclusion_dates
           console.log('Deleting single instance - adding to exclusion_dates');
-          
-          // Lấy ngày của instance này từ eventId
-          const instanceIndex = parseInt(eventId.split('::recurrence::')[1]);
-          
-          // Tìm event gốc
+
           const parentEvent = taskEvents.find(e => e._id === parentEventId && !e.isRecurrence);
           if (parentEvent) {
-            // Tính toán ngày của instance này dựa trên index
-            const startDate = new Date(parentEvent.start_time);
-            const repeatType = parentEvent.repeat_type;
-            const repeatInterval = parentEvent.repeat_interval || 1;
-            
-            let instanceDate = new Date(startDate);
-            
-            // Tính toán ngày của instance dựa trên index
-            for (let i = 0; i < instanceIndex; i++) {
-              // Increment date based on repeat type
-              const newDate = new Date(instanceDate);
-              switch (repeatType) {
-                case 'daily':
-                  newDate.setDate(newDate.getDate() + repeatInterval);
-                  break;
-                case 'weekly':
-                  newDate.setDate(newDate.getDate() + (7 * repeatInterval));
-                  break;
-                case 'monthly':
-                  newDate.setMonth(newDate.getMonth() + repeatInterval);
-                  break;
-                case 'yearly':
-                  newDate.setFullYear(newDate.getFullYear() + repeatInterval);
-                  break;
-                case 'weekday':
-                  do {
-                    newDate.setDate(newDate.getDate() + 1);
-                  } while (newDate.getDay() === 0 || newDate.getDay() === 6);
-                  break;
-                case 'custom':
-                  if (parentEvent.repeat_unit === 'day') {
-                    newDate.setDate(newDate.getDate() + repeatInterval);
-                  } else if (parentEvent.repeat_unit === 'week') {
-                    newDate.setDate(newDate.getDate() + (7 * repeatInterval));
-                  } else if (parentEvent.repeat_unit === 'month') {
-                    newDate.setMonth(newDate.getMonth() + repeatInterval);
-                  } else if (parentEvent.repeat_unit === 'year') {
-                    newDate.setFullYear(newDate.getFullYear() + repeatInterval);
+            // Xác định đúng ngày của instance thông qua generateRecurringInstances
+            const instances = generateRecurringInstances(parentEvent);
+            const targetInstance = instances.find(inst => inst._id === eventId);
+            const instanceDateSrc = targetInstance ? new Date(targetInstance.start_time) : null;
+
+            if (instanceDateSrc) {
+              const instanceDateOnly = new Date(
+                instanceDateSrc.getFullYear(),
+                instanceDateSrc.getMonth(),
+                instanceDateSrc.getDate()
+              );
+
+              const updatedExclusionDates = [...(parentEvent.exclusion_dates || []), instanceDateOnly];
+
+              const parentEventUpdate: UpdateTaskEventRequest = {
+                exclusion_dates: updatedExclusionDates
+              };
+
+              await taskEventService.updateTaskEvent(parentEventId, parentEventUpdate);
+
+              setTaskEvents(prev => {
+                const updatedEvents = prev.filter(e => !e.isRecurrence).map(event => {
+                  if (event._id === parentEventId) {
+                    return { ...event, exclusion_dates: updatedExclusionDates };
                   }
-                  break;
-              }
-              instanceDate = newDate;
-            }
-            
-            // Thêm ngày vào exclusion_dates của event gốc
-            const updatedExclusionDates = [...(parentEvent.exclusion_dates || []), instanceDate];
-            
-            const parentEventUpdate: UpdateTaskEventRequest = {
-              exclusion_dates: updatedExclusionDates
-            };
-            
-            // Cập nhật event gốc với exclusion_dates mới
-            await taskEventService.updateTaskEvent(parentEventId, parentEventUpdate);
-            
-            // Cập nhật state với event gốc đã có exclusion_dates mới
-            setTaskEvents(prev => {
-              const updatedEvents = prev.filter(e => !e.isRecurrence).map(event => {
-                if (event._id === parentEventId) {
-                  return { ...event, exclusion_dates: updatedExclusionDates };
-                }
-                return event;
+                  return event;
+                });
+
+                const allEventsWithRecurring = generateRecurringEvents(updatedEvents);
+                console.log('Regenerated events after single instance deletion:', allEventsWithRecurring.length, 'total events');
+                return allEventsWithRecurring;
               });
-              
-              const allEventsWithRecurring = generateRecurringEvents(updatedEvents);
-              console.log('Regenerated events after single instance deletion:', allEventsWithRecurring.length, 'total events');
-              return allEventsWithRecurring;
-            });
+            } else {
+              console.warn('Could not resolve instance date for deletion, skipping exclusion update.');
+            }
           }
         }
       } else {
@@ -818,8 +811,10 @@ export const useTaskEventList = (taskId: string) => {
     fetchTaskEvents();
   }, [taskId, refreshKey, fetchTaskEvents]);
 
+  // Chỉ trả ra danh sách hiển thị: tất cả instance ảo + các event không lặp (repeat_type === 'none')
+  const visibleEvents = taskEvents.filter(e => e.isRecurrence || !e.repeat_type || e.repeat_type === 'none');
   return {
-    taskEvents,
+    taskEvents: visibleEvents,
     loading,
     error,
     refreshTaskEvents,
