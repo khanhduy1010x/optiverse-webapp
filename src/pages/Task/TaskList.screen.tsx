@@ -154,28 +154,7 @@ const TaskList: React.FC<TaskListComponentProps> = ({
             : t('get_started_create_task')}
         </p>
         <div className={GROUP_CLASSNAMES.taskEmptyAction}>
-          <button
-            onClick={() => setShowPopup(true)}
-            className={
-              GROUP_CLASSNAMES.buttonAddTask +
-              ' inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md'
-            }
-          >
-            <svg
-              className="-ml-1 mr-2 h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-              />
-            </svg>
-            {t('add_a_task')}
-          </button>
+          {/* Removed inline Add a task button in favor of global CircleButton FAB */}
         </div>
       </div>
     );

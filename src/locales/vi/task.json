@@ -134,5 +134,46 @@
 
   "start_time_label": "Giờ bắt đầu",
   "end_time_label": "Giờ kết thúc",
-  "time_range_sep": "-"
+  "time_range_sep": "-",
+  "add_event": "Thêm sự kiện",
+
+
+  "previous": "Trước",
+  "next": "Sau",
+  "change_date": "Đổi ngày",
+  "view_type": "Chế độ xem",
+  "day": "Ngày",
+  "week": "Tuần",
+  "month": "Tháng",
+
+  "import_events": "Nhập sự kiện",
+  "download_event_template": "Tải mẫu sự kiện",
+  "import_excel": "Nhập từ Excel",
+  "choose_file": "Chọn file",
+  "template_columns": "Các cột trong mẫu:",
+  "template_sheet_name": "Mẫu Sự kiện",
+  "parsing_file": "Đang phân tích file...",
+  "processing": "Đang xử lý...",
+  "start_import": "Bắt đầu nhập",
+  "row_error": "Dòng {{index}}: {{message}}",
+  "import_success": "Đã nhập thành công {{count}} dòng",
+  "invalid_file_type": "Định dạng file không hợp lệ. Vui lòng tải lên file .xlsx.",
+  "no_rows_found": "Không tìm thấy dòng dữ liệu trong sheet.",
+  "import_failed": "Nhập thất bại. Vui lòng thử lại.",
+  "missing_title": "Thiếu tiêu đề",
+  "unknown_error": "Lỗi không xác định",
+
+  "column_title": "Tiêu đề",
+  "column_start_date": "Ngày bắt đầu (dd/mm/yyyy)",
+  "column_start_time": "Giờ bắt đầu (hh:mm SA/CH)",
+  "column_end_time": "Giờ kết thúc (hh:mm SA/CH)",
+  "column_repeat": "Lặp (none/daily/weekly/monthly/yearly/custom)",
+  "column_to_date": "Đến ngày (dd/mm/yyyy)",
+  "column_description": "Mô tả",
+  "task_statistics": "Thống kê công việc",
+  "loading": "Đang tải...",
+  "completion_rate": "Tỉ lệ hoàn thành",
+  "by_status": "Theo trạng thái",
+  "tasks_by_day": "Số nhiệm vụ theo ngày",
+  "statistic": "Thống kê"
 }

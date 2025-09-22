@@ -154,6 +154,7 @@ const PATH_MAPPING: Record<string, string> = {
   '/notifications': '/user-profile',
   '/flashcard-statistic': '/flashcard-deck',
   '/flashcard-deck': '/flashcard-deck',
+  '/task-statistic': '/task',
   '/achievements': '/user-profile',
   '/admin/dashboard': '/admin/dashboard',
   '/admin/users': '/admin/dashboard',

@@ -4,6 +4,7 @@ import { GROUP_CLASSNAMES } from '../../styles/group-class-name.style';
 import Icon from '../../components/common/Icon/Icon.component';
 import { IconName } from '../../assets/icons';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
+import { useNavigate } from 'react-router-dom';
 
 interface TaskSidebarProps {
   selectedMenu: string;
@@ -14,7 +15,8 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
   selectedMenu,
   handleNavigate,
 }) => {
-  const { t } = useAppTranslate();
+  const { t } = useAppTranslate('task');
+  const navigate = useNavigate();
   const menuItems = [
     { id: 'task', label: t('task'), path: '/task', icon: 'task' as IconName },
     {
@@ -22,6 +24,12 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
       label: t('schedule'),
       path: '/task-event',
       icon: 'calendar' as IconName,
+    },
+    {
+      id: 'task-statistic',
+      label: t('statistic'),
+      path: '/task-statistic',
+      icon: 'statistic' as IconName,
     },
   ];
 
@@ -41,7 +49,13 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
           {menuItems.map(menu => (
             <button
               key={menu.id}
-              onClick={() => handleNavigate(menu.id, menu.path)}
+              onClick={() => {
+                if (menu.id === 'task-statistic') {
+                  navigate(menu.path);
+                } else {
+                  handleNavigate(menu.id, menu.path);
+                }
+              }}
               className={`
                 px-6 py-3 rounded-lg text-left cursor-pointer transition-all duration-200 flex items-center
                 ${

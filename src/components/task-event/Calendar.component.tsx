@@ -7,8 +7,7 @@ import { WeekView } from './WeekView.component';
 import { MonthView } from './MonthView.component';
 import { CreateTaskEventModalForm } from './CreateTaskEventModal.component';
 import { UpdateTaskEventModalForm } from './UpdateTaskEventModalForm.component';
-
-
+import { CircleButton } from '../common/Button.component';
 import { TaskOverdueNotifier } from './TaskOverdueNotifier.component';
 import { TaskEventDetail } from './TaskEventDetail.component';
 import { TimePickerDropdown } from './TimePickerDropdown.component';
@@ -26,6 +25,8 @@ import { toast } from 'react-toastify';
 import Modal from 'react-modal';
 import { GROUP_CLASSNAMES } from '../../styles';
 import DeleteConfirmation from '../../pages/Task/DeleteConfirmation.screen';
+import * as XLSX from 'xlsx';
+import { EventExcelImportModal } from './EventExcelImportModal.component';
 type ViewType = 'Day' | 'Week' | 'Month' | 'Year';
 
 interface CalendarProps {
@@ -78,8 +79,23 @@ export const Calendar: React.FC<CalendarProps> = ({
   const [isAllDay, setIsAllDay] = useState(false);
   const [eventEndDate, setEventEndDate] = useState<Date | null>(null);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
-  
-  // Thêm mới các state để quản lý chức năng lặp lại sự kiện
+ 
+ // Event import modal state
+ const [isEventImportOpen, setIsEventImportOpen] = useState(false);
+ const openEventImport = () => setIsEventImportOpen(true);
+ const closeEventImport = () => setIsEventImportOpen(false);
+ 
+ // Download Event Template
+ const eventTemplateHeaders = ['title','start_date','start_time','end_time','repeat','to_date','description'];
+ const handleDownloadEventTemplate = () => {
+  // Use raw snake_case keys for header row to ensure parser recognizes columns across locales
+  const ws = XLSX.utils.aoa_to_sheet([
+    eventTemplateHeaders
+  ]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, t('template_sheet_name'));
+     XLSX.writeFile(wb, 'events_template.xlsx');
+  };
   const [repeatType, setRepeatType] = useState<RepeatType>('none');
   const [customRepeatFrequency, setCustomRepeatFrequency] = useState(1);
   const [customRepeatUnit, setCustomRepeatUnit] = useState<'day' | 'week' | 'month' | 'year'>('week');
@@ -716,7 +732,7 @@ export const Calendar: React.FC<CalendarProps> = ({
     return date.toLocaleDateString('en-US', options);
   };
 
-  // Hàm xử lý khi lưu tùy chỉnh lặp lại
+  // Hàm xử lý khi lưu tự chỉnh lặp lại
   const handleSaveCustomRepeat = () => {
     // Thiết lập repeat_type là 'custom'
     setRepeatType('custom');
@@ -1095,7 +1111,8 @@ export const Calendar: React.FC<CalendarProps> = ({
           handlePrevious={handlePrevious}
           handleNext={handleNext}
           handleToday={handleToday}
-          handleAddEvent={handleAddEvent}
+         onOpenEventImport={openEventImport}
+         onDownloadEventTemplate={handleDownloadEventTemplate}
         />
         
         {/* Calendar View */}
@@ -1124,6 +1141,14 @@ export const Calendar: React.FC<CalendarProps> = ({
           )}
         </div>
       </div>
+      
+      {/* Global FAB for Add Event */}
+      <CircleButton
+        name="add"
+        aria-label={t('add_event')}
+        title={t('add_event')}
+        onClick={handleAddEvent}
+      />
       
       {/* Add Schedule Sidebar */}
       {isAddScheduleOpen && (
@@ -1266,9 +1291,12 @@ export const Calendar: React.FC<CalendarProps> = ({
         </Modal>
       )}
 
-      {/* Debug Test Component - Remove in production */}
-      <div className="mt-4">
-              </div>
+      <EventExcelImportModal
+        isOpen={isEventImportOpen}
+        onClose={closeEventImport}
+        taskId={taskId}
+        onImported={() => refreshTaskEvents()}
+      />
     </div>
   );
 };

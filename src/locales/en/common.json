@@ -1,4 +1,7 @@
 {
   "app_name": "Optiverse",
-  "template_demo": "This is English"
+  "template_demo": "This is English",
+  "import": "Import",
+  "template": "Template",
+  "download_template": "Download Template"
 }

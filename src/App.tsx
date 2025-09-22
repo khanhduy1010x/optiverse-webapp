@@ -52,6 +52,7 @@ import Modal from 'react-modal';
 import { GROUP_CLASSNAMES } from './styles';
 import BannedModal from './components/BannedModal';
 import AchievementsAdminPage from './pages/Admin/AchievementsAdmin.page';
+import TaskStatistic from './pages/Task/TaskStatistic.page';
 
 
 declare global {
@@ -247,6 +248,14 @@ const AppContent: React.FC = () => {
             element={
               <ProtectedRoute>
                 <TaskPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/task-statistic"
+            element={
+              <ProtectedRoute>
+                <TaskStatistic />
               </ProtectedRoute>
             }
           />
