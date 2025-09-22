@@ -135,5 +135,46 @@
 
   "start_time_label": "Start Time",
   "end_time_label": "End Time",
-  "time_range_sep": "-"
+  "time_range_sep": "-",
+  "add_event": "Add event",
+  
+
+  "previous": "Previous",
+  "next": "Next",
+  "change_date": "Change date",
+  "view_type": "View type",
+  "day": "Day",
+  "week": "Week",
+  "month": "Month",
+  
+  "import_events": "Import events",
+  "download_event_template": "Download event template",
+  "import_excel": "Import from Excel",
+  "choose_file": "Choose file",
+  "template_columns": "Template columns:",
+  "template_sheet_name": "Event Template",
+  "parsing_file": "Parsing file...",
+  "processing": "Processing...",
+  "start_import": "Start import",
+  "row_error": "Row {{index}}: {{message}}",
+  "import_success": "Imported {{count}} rows successfully",
+  "invalid_file_type": "Invalid file type. Please upload a .xlsx file.",
+  "no_rows_found": "No rows found in the sheet.",
+  "import_failed": "Import failed. Please try again.",
+  "missing_title": "Missing title",
+  "unknown_error": "Unknown error",
+  
+  "column_title": "Title",
+  "column_start_date": "Start Date (dd/mm/yyyy)",
+  "column_start_time": "Start Time (hh:mm am/pm)",
+  "column_end_time": "End Time (hh:mm am/pm)",
+  "column_repeat": "Repeat (none/daily/weekly/monthly/yearly/custom)",
+  "column_to_date": "To Date (dd/mm/yyyy)",
+  "column_description": "Description",
+  "task_statistics": "Task Statistics",
+  "loading": "Loading...",
+  "completion_rate": "Completion rate",
+  "by_status": "By status",
+  "tasks_by_day": "Tasks by day",
+  "statistic": "Statistic"
 }

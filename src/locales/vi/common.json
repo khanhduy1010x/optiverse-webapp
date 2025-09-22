@@ -1,4 +1,7 @@
 {
   "app_name": "Optiverse",
-  "template_demo": "Đây là tiếng Việt"
+  "template_demo": "Đây là tiếng Việt",
+  "import": "Import",
+  "template": "Template",
+  "download_template": "Tải Template"
 }

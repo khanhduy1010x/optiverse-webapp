@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 
 // Components
 import TaskHeader from './TaskHeader.screen';
 import TaskList from './TaskList.screen';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 import TaskDetail from './TaskDetail.screen';
 import CreateTaskForm from './CreateTaskForm.screen';
 import EditTaskForm from './EditTaskForm.screen';
@@ -13,7 +14,10 @@ import TaskSidebar from './TaskSidebar.component';
 import TaskEvent from './TaskEvent.screen';
 import { TaskOverdueNotifier, setForceCheckFunction, forceCheckForOverdueTasks } from '../../components/task-event/TaskOverdueNotifier.component';
 import View from '../../components/common/View.component';
+import { CircleButton } from '../../components/common/Button.component';
 import { GROUP_CLASSNAMES } from '../../styles/group-class-name.style';
+import TaskExcelImportModal from '../../components/task/TaskExcelImportModal.component';
+import * as XLSX from 'xlsx';
 
 // Hooks
 import { useTaskState } from '../../hooks/task/useTaskState.hook';
@@ -23,12 +27,9 @@ import { useTaskForm } from '../../hooks/task/useTaskForm.hook';
 import { useSearchFilter } from '../../hooks/task/useSearchFilter.hook';
 import useTaskReminder from '../../hooks/task/useTaskReminder.hook';
 import { Tag } from '../../types/task/response/tag.response';
-import tagService from '../../services/tag.service';
 import type { Task } from '../../types/task/response/task.response';
 import taskService from '../../services/task.service';
-import { localDateTimeToISO } from '../../utils/date.utils';
 import { useTaskStreak } from '../../hooks/streak/useTaskStreak.hook';
-import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 // Định nghĩa kiểu dữ liệu cho các tab
 export type TaskStatusTab = 'all' | 'pending' | 'completed' | 'overdue';
@@ -36,6 +37,7 @@ export type TaskStatusTab = 'all' | 'pending' | 'completed' | 'overdue';
 const TaskPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { t } = useAppTranslate('task');
+  const [searchParams] = useSearchParams();
 
   // Main state
   const {
@@ -106,8 +108,17 @@ const TaskPage: React.FC = () => {
   const [showEditTaskForm, setShowEditTaskForm] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
 
+  // Import modal state for Task
+  const [isTaskImportOpen, setIsTaskImportOpen] = useState(false);
   // State cho sidebar
   const [selectedMenu, setSelectedMenu] = useState<'task' | 'task-event' | 'task-settings'>('task');
+  // Sync selectedMenu with query param when coming from other pages
+  useEffect(() => {
+    const menu = searchParams.get('menu');
+    if (menu === 'task' || menu === 'task-event' || menu === 'task-settings') {
+      setSelectedMenu(menu as 'task' | 'task-event' | 'task-settings');
+    }
+  }, [searchParams]);
   
   // State mới để theo dõi tab đang được chọn
   const [activeTab, setActiveTab] = useState<TaskStatusTab>('all');
@@ -145,6 +156,42 @@ const TaskPage: React.FC = () => {
   const confirmDeleteTask = (taskId: string) => {
     setTaskToDelete(taskId);
     setShowDeleteConfirm(true);
+  };
+
+  // Handlers: Task Import & Download Template
+  const handleOpenTaskImport = () => setIsTaskImportOpen(true);
+  const handleCloseTaskImport = () => setIsTaskImportOpen(false);
+  const handleTaskImported = async () => {
+    await fetchTasksAndCheckOverdue();
+  };
+  const handleDownloadTaskTemplate = () => {
+    const headers = [
+      'title',
+      'description',
+      'priority',
+      'status',
+      'start_time',
+      'end_time',
+      'start_date',
+      'end_date',
+      'tags',
+      'event_title',
+      'all_day',
+      'repeat_type',
+      'repeat_interval',
+      'repeat_unit',
+      'repeat_days',
+      'repeat_end_type',
+      'repeat_end_date',
+      'repeat_occurrences',
+      'exclusion_dates',
+      'location',
+      'event_color',
+    ];
+    const ws = XLSX.utils.aoa_to_sheet([headers]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Tasks');
+    XLSX.writeFile(wb, 'tasks_template.xlsx');
   };
 
   // Tag operations
@@ -517,6 +564,8 @@ const TaskPage: React.FC = () => {
                   activeTab={activeTab}
                   handleTabChange={handleTabChange}
                   tasks={tasks}
+                  onOpenTaskImport={handleOpenTaskImport}
+                  onDownloadTaskTemplate={handleDownloadTaskTemplate}
                 />
 
                 {/* Task List */}
@@ -532,6 +581,13 @@ const TaskPage: React.FC = () => {
                   searchQuery={searchQuery}
                   filterTags={filterTags}
                 />
+
+                {/* Task Import Modal */}
+                <TaskExcelImportModal
+                isOpen={isTaskImportOpen}
+                  onClose={handleCloseTaskImport}
+                 onImported={handleTaskImported}
+               />
               </>
             ) : selectedMenu === 'task-event' ? (
               <TaskEvent />
@@ -563,6 +619,13 @@ const TaskPage: React.FC = () => {
           </div>
         </View>
       </View>
+
+      <CircleButton
+        name="add"
+        aria-label={t('add_task')}
+        title={t('add_task')}
+        onClick={openCreateTaskForm}
+      />
 
       {/* Task Detail Modal */}
       {showTaskDetail && selectedTask && (

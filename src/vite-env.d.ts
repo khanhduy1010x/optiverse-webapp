@@ -7,3 +7,9 @@ declare module "*.svg" {
   const src: string;
   export default src;
 }
+
+// Support importing binary assets as URLs via Vite's ?url suffix
+declare module "*.xlsx?url" {
+  const src: string;
+  export default src;
+}
