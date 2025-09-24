@@ -8,7 +8,7 @@ import { EmptyState } from '../../components/task-event/EmptyState.component';
 import { CalendarContainer } from '../../components/task-event/CalendarContainer.component';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
 
-const Schedule: React.FC = () => {
+const TaskEvent: React.FC = () => {
   const { t } = useAppTranslate('task');
   // Custom hook to fetch the first task
   const { taskId, loading: loadingTask, error: taskError, refreshTask } = useFirstTask();
@@ -75,4 +75,4 @@ const Schedule: React.FC = () => {
   );
 };
 
-export default Schedule; 
+export default TaskEvent;

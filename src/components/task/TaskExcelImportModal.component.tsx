@@ -228,20 +228,36 @@ const randomColor = () => {
   return colors[Math.floor(Math.random() * colors.length)];
 };
 
+// Normalize row keys: e.g. "Start Date" -> "start_date"
+const normalizeKeys = (row: Record<string, any>): Record<string, any> => {
+  const out: Record<string, any> = {};
+  Object.entries(row).forEach(([k, v]) => {
+    const key = String(k).trim().toLowerCase().replace(/[\s-]+/g, '_');
+    out[key] = v;
+  });
+  return out;
+};
+
 export const TaskExcelImportModal: React.FC<TaskExcelImportModalProps> = ({ isOpen, onClose, onImported }) => {
   const { t } = useAppTranslate('task');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [fileName, setFileName] = useState<string>('');
   const [parsing, setParsing] = useState(false);
   const [processing, setProcessing] = useState(false);
-  const [rows, setRows] = useState<TaskImportRow[]>([]);
+  const [rows, setRows] = useState<Record<string, any>[]>([]);
   const [errors, setErrors] = useState<TaskImportParseError[]>([]);
 
-  // Removed: dynamic template generation and pre-built template download from modal
-  // const taskTemplateUrl = useMemo(...)
-  // const eventTemplateUrl = useMemo(...)
-  // const handleDownloadTaskTemplate = () => { ... }
-  // const handleDownloadEventTemplate = () => { ... }
+  const taskTemplateHeaders = useMemo(
+    () => [
+      'title',
+      'description', 
+      'start_date',
+      'start_time',
+      'end_date',
+      'end_time',
+    ],
+    []
+  );
 
   const handleChooseFile = () => fileInputRef.current?.click();
 
@@ -262,33 +278,8 @@ export const TaskExcelImportModal: React.FC<TaskExcelImportModalProps> = ({ isOp
       const wb = XLSX.read(data, { type: 'array' });
       const ws = wb.Sheets[wb.SheetNames[0]];
       const json = XLSX.utils.sheet_to_json<Record<string, any>>(ws, { defval: '' });
-
-      const parsed: TaskImportRow[] = json.map((r) => ({
-        title: r['title']?.toString().trim(),
-        description: r['description']?.toString() || undefined,
-        priority: r['priority'] || undefined,
-        status: r['status'] || undefined,
-        start_time: r['start_time']?.toString() || undefined,
-        end_time: r['end_time']?.toString() || undefined,
-        start_date: r['start_date']?.toString() || undefined,
-        end_date: (r['end_date']?.toString() || r['to_date']?.toString() || undefined),
-        tags: r['tags']?.toString() || undefined,
-        event_title: r['event_title']?.toString() || undefined,
-        all_day: r['all_day'] ?? undefined,
-        repeat_type: r['repeat_type'] || undefined,
-        repeat_interval: r['repeat_interval'] ?? undefined,
-        repeat_unit: r['repeat_unit'] || undefined,
-        repeat_days: r['repeat_days'] ?? undefined,
-        repeat_end_type: r['repeat_end_type'] || undefined,
-        repeat_end_date: r['repeat_end_date']?.toString() || undefined,
-        repeat_occurrences: r['repeat_occurrences'] ?? undefined,
-        exclusion_dates: r['exclusion_dates']?.toString() || undefined,
-        location: r['location']?.toString() || undefined,
-        event_color: r['event_color']?.toString() || undefined,
-      }));
-
-      setRows(parsed);
-      if (!parsed.length) {
+      setRows(json);
+      if (!json.length) {
         toast.warn(t('no_rows_found'));
       }
     } catch (err) {
@@ -314,83 +305,25 @@ export const TaskExcelImportModal: React.FC<TaskExcelImportModalProps> = ({ isOp
     const tagMap = new Map(existingTags.map(tg => [tg.name.trim().toLowerCase(), tg]));
 
     for (let i = 0; i < rows.length; i++) {
-      const r = rows[i];
+      const rRaw = rows[i] as any;
+      const r = normalizeKeys(rRaw);
       const rowIndex = i + 2; // considering header row at 1
       try {
-        if (!r.title || !r.title.toString().trim()) {
+        const title = (r['title'] ?? r['task_title'])?.toString().trim();
+        if (!title) {
           throw new Error(t('missing_title'));
         }
 
-        const priority = normalizePriority(typeof r.priority === 'string' ? r.priority : String(r.priority ?? '')) ?? 'medium';
-        const status = normalizeStatus(typeof r.status === 'string' ? r.status : String(r.status ?? '')) ?? 'pending';
-
         const taskPayload: Omit<Task, '_id'> = {
-          title: r.title.toString().trim(),
-          description: r.description?.toString() || undefined,
-          priority,
-          status,
-          start_time: combineDateTimeToISO((r as any).start_date, r.start_time, r.start_time, false),
-          end_time: combineDateTimeToISO((r as any).end_date, r.end_time, r.end_time, true),
+          title,
+          description: r['description']?.toString() || undefined,
+          priority: 'medium', // Default priority
+          status: 'pending', // Default status
+          start_time: combineDateTimeToISO(r['start_date'], r['start_time'], r['start_time'], false),
+          end_time: combineDateTimeToISO(r['end_date'], r['end_time'], r['end_time'], false),
         };
 
         const createdTask = await taskService.createTask(taskPayload);
-
-        // Handle tags
-        const tagNames = splitTags(r.tags);
-        for (const name of tagNames) {
-          const key = name.toLowerCase();
-          let tag = tagMap.get(key);
-          if (!tag) {
-            // create new tag
-            tag = await tagService.createTag({ name, color: randomColor() });
-            existingTags = [...existingTags, tag];
-            tagMap.set(key, tag);
-          }
-          try {
-            await tagService.createTaskTag(createdTask._id, tag._id);
-          } catch (e) {
-            console.warn('Associate tag failed', e);
-          }
-        }
-
-        // Optionally create TaskEvent
-        const anyEventField = r.event_title || r.start_time || r.repeat_type || r.repeat_interval || r.repeat_unit || r.repeat_days || r.repeat_end_type || r.repeat_end_date || r.repeat_occurrences || r.exclusion_dates || r.location || r.event_color || r.all_day;
-        if (anyEventField) {
-          const repeat_type = normalizeRepeatType(typeof r.repeat_type === 'string' ? r.repeat_type : String(r.repeat_type ?? '')) ?? 'none';
-          const repeat_unit = normalizeRepeatUnit(typeof r.repeat_unit === 'string' ? r.repeat_unit : String(r.repeat_unit ?? ''));
-          const repeat_end_type = normalizeRepeatEndType(typeof r.repeat_end_type === 'string' ? r.repeat_end_type : String(r.repeat_end_type ?? ''));
-          const all_day = toBoolean(r.all_day);
-          const repeat_interval = parseNumber(r.repeat_interval);
-          const repeat_occurrences = parseNumber(r.repeat_occurrences);
-          const repeat_days = parseDays(r.repeat_days);
-          const exclusion_dates = (r.exclusion_dates ? r.exclusion_dates.split(',').map(s => s.trim()).filter(Boolean) : []).map(d => d);
-
-          const eventPayload: CreateTaskEventRequest = {
-            task_id: createdTask._id,
-            title: r.event_title?.toString() || r.title.toString(),
-            start_time: combineDateTimeToISO((r as any).start_date, r.start_time, r.start_time, false) || new Date().toISOString(),
-            end_time: combineDateTimeToISO((r as any).end_date, r.end_time, r.end_time, true),
-            all_day: all_day,
-            repeat_type,
-            repeat_interval: repeat_interval,
-            repeat_unit,
-            repeat_days,
-            repeat_end_type,
-            repeat_end_date: parseDateString(typeof r.repeat_end_date === 'string' ? r.repeat_end_date : String(r.repeat_end_date ?? '')),
-            repeat_occurrences,
-            exclusion_dates,
-            location: r.location,
-            description: r.description,
-            color: r.event_color,
-          };
-
-          try {
-            await taskEventService.createTaskEvent(eventPayload);
-          } catch (e) {
-            console.warn('Create event failed', e);
-          }
-        }
-
         createdCount += 1;
       } catch (e: any) {
         console.error('Row error', e);
@@ -454,6 +387,17 @@ export const TaskExcelImportModal: React.FC<TaskExcelImportModalProps> = ({ isOp
           <p className="text-xs text-gray-500">
             {t('template_columns')}
           </p>
+
+          <div className="rounded-md border border-gray-200 bg-gray-50 p-3">
+            <div className="text-xs font-medium text-gray-700 mb-2">{t('template_sheet_name')}</div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+              {taskTemplateHeaders.map((key) => (
+                <span key={key} className="inline-flex items-center rounded-md bg-white px-2 py-1 text-xs font-medium text-gray-700 shadow ring-1 ring-gray-200">
+                  {t(`column_${key}` as any)}
+                </span>
+              ))}
+            </div>
+          </div>
 
           {(parsing || processing) && (
             <div className="text-sm text-gray-700">{parsing ? t('parsing_file') : t('processing')}</div>

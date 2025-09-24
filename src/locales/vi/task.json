@@ -175,5 +175,6 @@
   "completion_rate": "Tỉ lệ hoàn thành",
   "by_status": "Theo trạng thái",
   "tasks_by_day": "Số nhiệm vụ theo ngày",
-  "statistic": "Thống kê"
+  "statistic": "Thống kê",
+  "more_count": "+{{count}} nữa"
 }

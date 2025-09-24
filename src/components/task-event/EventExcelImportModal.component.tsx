@@ -58,14 +58,39 @@ const normalizeRepeatUnit = (v?: string): RepeatUnit | undefined => {
 const normalizeRepeatSelection = (v?: string): RepeatType => {
   const s = (v || '').toString().trim().toLowerCase();
   if (!s) return 'none';
+  
+  // Xử lý các trường hợp không lặp
   if ([
-    'does not repeat', "doesn't repeat", 'doesnt repeat', 'no repeat', 'none',
+    'does not repeat', "doesn't repeat", 'doesnt repeat', 'no repeat', 'none', 'never',
     'không lặp', 'không lặp lại', 'khong lap', 'khong lap lai'
   ].includes(s)) return 'none';
-  if (['daily', 'hàng ngày', 'hang ngay', 'ngày', 'ngay'].includes(s)) return 'daily';
-  if (['weekly', 'hàng tuần', 'hang tuan', 'tuần', 'tuan'].includes(s)) return 'weekly';
-  if (['monthly', 'hàng tháng', 'hang thang', 'tháng', 'thang'].includes(s)) return 'monthly';
-  if (['yearly', 'hàng năm', 'hang nam', 'năm', 'nam', 'annually', 'annual'].includes(s)) return 'yearly';
+  
+  // Xử lý daily - thêm nhiều biến thể
+  if ([
+    'daily', 'day', 'everyday', 'every day', 'each day',
+    'hàng ngày', 'hang ngay', 'ngày', 'ngay', 'mỗi ngày', 'moi ngay'
+  ].includes(s)) return 'daily';
+  
+  // Xử lý weekly
+  if ([
+    'weekly', 'week', 'every week', 'each week',
+    'hàng tuần', 'hang tuan', 'tuần', 'tuan', 'mỗi tuần', 'moi tuan'
+  ].includes(s)) return 'weekly';
+  
+  // Xử lý monthly
+  if ([
+    'monthly', 'month', 'every month', 'each month',
+    'hàng tháng', 'hang thang', 'tháng', 'thang', 'mỗi tháng', 'moi thang'
+  ].includes(s)) return 'monthly';
+  
+  // Xử lý yearly
+  if ([
+    'yearly', 'year', 'every year', 'each year', 'annually', 'annual',
+    'hàng năm', 'hang nam', 'năm', 'nam', 'mỗi năm', 'moi nam'
+  ].includes(s)) return 'yearly';
+  
+  // Log để debug các giá trị không nhận diện được
+  console.log('Unrecognized repeat value:', v, 'normalized:', s);
   return 'none';
 };
 const isTimeHM = (s?: string): boolean => {
@@ -96,38 +121,55 @@ const parseDMY = (s?: string): { y: number; m: number; d: number } | undefined =
   return undefined;
 };
 
-const toISOFromParts = (
-  dateStr?: string,
-  timeStr?: string,
-  fallback?: string,
-  allDay?: boolean,
+const combineDateTimeToISO = (
+  dateVal?: any,
+  timeVal?: any,
+  fallback?: any,
   isEnd?: boolean
 ): string | undefined => {
-  const dateParts = parseDMY(dateStr);
-  if (dateParts) {
+  // If date is an Excel serial number, build base date from it
+  if (typeof dateVal === 'number' && isFinite(dateVal)) {
+    const baseISO = parseExcelSerialToISO(dateVal);
+    if (baseISO) {
+      const d = new Date(baseISO);
+      let h = 0;
+      let mi = 0;
+      if (isTimeHM(timeVal)) {
+        const [hh, mm] = String(timeVal).split(':').map(Number);
+        h = hh; mi = mm;
+      } else if (typeof timeVal === 'number') {
+        const minutes = Math.round((Number(timeVal) % 1) * 24 * 60);
+        h = Math.floor(minutes / 60);
+        mi = minutes % 60;
+      } else if (isEnd) {
+        h = 23; mi = 59;
+      }
+      d.setHours(h, mi, isEnd ? 59 : 0, isEnd ? 999 : 0);
+      return d.toISOString();
+    }
+  }
+
+  const parts = parseDMY(dateVal);
+  if (parts) {
     let h = 0;
     let mi = 0;
-    if (isTimeHM(timeStr)) {
-      const [hh, mm] = String(timeStr).split(':').map(Number);
-      h = hh;
-      mi = mm;
-    } else if (allDay) {
-      if (isEnd) {
-        h = 23; mi = 59;
-      } else {
-        h = 0; mi = 0;
-      }
+    if (isTimeHM(timeVal)) {
+      const [hh, mm] = String(timeVal).split(':').map(Number);
+      h = hh; mi = mm;
+    } else if (typeof timeVal === 'number') {
+      // If time is given as Excel fraction, approximate by converting days to minutes
+      const minutes = Math.round((Number(timeVal) % 1) * 24 * 60);
+      h = Math.floor(minutes / 60);
+      mi = minutes % 60;
+    } else if (isEnd) {
+      h = 23; mi = 59;
     }
-    const dt = new Date(dateParts.y, dateParts.m - 1, dateParts.d, h, mi, isEnd && allDay ? 59 : 0, isEnd && allDay ? 999 : 0);
+    const dt = new Date(parts.y, parts.m - 1, parts.d, h, mi, isEnd ? 59 : 0, isEnd ? 999 : 0);
     return dt.toISOString();
   }
-  // If no date parts, try fallback as ISO or parseable date
-  const fb = (fallback || '').trim();
-  if (fb) {
-    const d = new Date(fb);
-    if (!isNaN(d.getTime())) return d.toISOString();
-  }
-  return undefined;
+  // If no date parts and fallback is time-only (e.g., "09:00"), avoid creating a date from today.
+  if (isTimeHM(fallback)) return undefined;
+  return parseDateTimeFlexible(fallback);
 };
 
 const parseExcelSerialToISO = (val: any): string | undefined => {
@@ -196,6 +238,20 @@ const normalizeKeys = (row: Record<string, any>): Record<string, any> => {
   Object.entries(row).forEach(([k, v]) => {
     const key = String(k).trim().toLowerCase().replace(/[\s-]+/g, '_');
     out[key] = v;
+    
+    // Thêm các alias cho title để dễ tìm
+    if (['title', 'event_title', 'task_title', 'name', 'event_name', 'task_name'].includes(key)) {
+      out['title'] = v;
+      out['event_title'] = v;
+      out['task_title'] = v;
+      out['name'] = v;
+    }
+    
+    // Thêm các alias cho repeat
+    if (['repeat', 'repeat_type', 'recurring', 'recurrence'].includes(key)) {
+      out['repeat'] = v;
+      out['repeat_type'] = v;
+    }
   });
   return out;
 };
@@ -243,6 +299,7 @@ export const EventExcelImportModal: React.FC<EventExcelImportModalProps> = ({ is
       const wb = XLSX.read(data, { type: 'array' });
       const ws = wb.Sheets[wb.SheetNames[0]];
       const json = XLSX.utils.sheet_to_json<Record<string, any>>(ws, { defval: '' });
+      console.log('Parsed JSON from Excel:', json);
       setRows(json);
       if (!json.length) toast.warn(t('no_rows_found'));
     } catch (err) {
@@ -266,45 +323,78 @@ export const EventExcelImportModal: React.FC<EventExcelImportModalProps> = ({ is
 
     for (let i = 0; i < rows.length; i++) {
       const rRaw = rows[i] as any;
+      
+      // Bỏ qua dòng trống (tất cả giá trị đều rỗng hoặc chỉ chứa whitespace)
+      const hasData = Object.values(rRaw).some(value => 
+        value !== null && value !== undefined && value.toString().trim() !== ''
+      );
+      
+      if (!hasData) {
+        console.log('Skipping empty row:', i + 2);
+        continue;
+      }
+      
       const r = normalizeKeys(rRaw);
       const rowIndex = i + 2; // header is row 1
       try {
-        const title = (r['title'] ?? r['event_title'])?.toString().trim();
-        if (!title) throw new Error(t('missing_title'));
+        // Tìm title từ nhiều cột có thể có
+        const titleValue = r['title'] ?? r['event_title'] ?? r['task_title'] ?? r['name'] ?? r['event_name'] ?? r['task_name'];
+        const title = titleValue && titleValue.toString().trim() !== '' ? titleValue.toString().trim() : null;
+        
+        if (!title) {
+          throw new Error(t('missing_title'));
+        }
 
         const allDay = toBoolean(r['all_day']);
 
         const startISO =
-          toISOFromParts(r['start_date'], isTimeHM(r['start_time']) ? r['start_time'] : undefined, typeof r['start_time'] === 'string' ? r['start_time'] : String(r['start_time'] ?? ''), !!allDay, false) ||
+          combineDateTimeToISO(r['start_date'], r['start_time'], r['start_time'], false) ||
           parseDateTimeFlexible(r['start_time']);
         if (!startISO) throw new Error(t('unknown_error'));
 
+        // Xử lý end_time tương tự như modal create - không tự động set 23:59:59
         const endISO =
-          toISOFromParts(r['to_date'] || r['end_date'], isTimeHM(r['end_time']) ? r['end_time'] : undefined, typeof r['end_time'] === 'string' ? r['end_time'] : String(r['end_time'] ?? ''), !!allDay, true) ||
+          combineDateTimeToISO(r['start_date'], r['end_time'], r['end_time'], false) ||
           parseDateTimeFlexible(r['end_time']);
 
-        const repeatType = normalizeRepeatSelection(r['repeat']) || normalizeRepeatType(r['repeat_type']);
-        const repeatEndType = normalizeRepeatEndType(r['repeat_end_type']);
-        const repeatUnit = normalizeRepeatUnit(r['repeat_unit']);
+        // Chuẩn hóa các trường repeat từ dữ liệu Excel trước khi tạo payload
+        const rawRepeat = r['repeat'] ?? r['repeat_type'] ?? r['recurring'] ?? r['recurrence'];
+        const repeatType = normalizeRepeatSelection(rawRepeat?.toString?.());
+        const repeatUnit = normalizeRepeatUnit(r['repeat_unit']?.toString?.());
         const repeatInterval = parseNumber(r['repeat_interval']);
-        const repeatOccurrences = parseNumber(r['repeat_occurrences']);
         const repeatDays = parseRepeatDays(r['repeat_days']);
-        const exclusionDates = (r['exclusion_dates']?.toString() || '')
-          .split(',')
-          .map((s: string) => s.trim())
-          .filter(Boolean)
-          .map((d: string) => {
-            const p = parseDMY(d);
-            if (p) return new Date(p.y, p.m - 1, p.d).toISOString();
-            const dt = new Date(d);
-            return isNaN(dt.getTime()) ? undefined : dt.toISOString();
-          })
-          .filter(Boolean) as string[];
+        const repeatOccurrences = parseNumber(r['repeat_occurrences']);
+        const exclusionDatesRaw = r['exclusion_dates'];
+        const exclusionDates = Array.isArray(exclusionDatesRaw)
+          ? exclusionDatesRaw
+              .map((item: any) => parseDateTimeFlexible(item))
+              .filter((s): s is string => !!s)
+          : (exclusionDatesRaw
+            ? String(exclusionDatesRaw)
+                .split(/[;,\s]+/)
+                .map((s) => parseDateTimeFlexible(s))
+                .filter((s): s is string => !!s)
+            : undefined);
+        const repeatEndType = normalizeRepeatEndType(r['repeat_end_type']?.toString?.());
 
-        const guests = (r['guests']?.toString() || '')
-          .split(',')
-          .map((s: string) => s.trim())
-          .filter((s: string) => !!s);
+        // Tạo payload với xử lý repeat cẩn thận
+        // Hỗ trợ đọc repeat_end_date từ cột 'repeat_end_date' hoặc alias 'to_date' trong template
+        const repeatEndDateISO = combineDateTimeToISO(
+          r['repeat_end_date'] || r['to_date'],
+          undefined,
+          r['repeat_end_date'] || r['to_date'],
+          true
+        );
+        // Force: when importing, always set repeat_end_type to 'on' and use date fields for repeat_end_date
+        const finalRepeatEndType: RepeatEndType = 'on';
+
+        // Chuẩn hóa guests từ Excel: hỗ trợ mảng hoặc chuỗi phân tách bởi dấu phẩy
+        const guestsRaw = r['guests'];
+        const guestsList = Array.isArray(guestsRaw)
+          ? guestsRaw.map((g: any) => String(g).trim()).filter(Boolean)
+          : (guestsRaw
+            ? String(guestsRaw).split(',').map((s) => s.trim()).filter(Boolean)
+            : undefined);
 
         const payload: CreateTaskEventRequest = {
           task_id: taskId,
@@ -313,103 +403,110 @@ export const EventExcelImportModal: React.FC<EventExcelImportModalProps> = ({ is
           end_time: endISO,
           all_day: allDay,
           repeat_type: repeatType,
-          repeat_interval: repeatInterval,
-          repeat_unit: repeatUnit,
-          repeat_days: repeatDays,
-          repeat_end_type: repeatEndType,
-          repeat_end_date: toISOFromParts(r['repeat_end_date'], undefined, r['repeat_end_date'], true, true),
-          repeat_occurrences: repeatOccurrences,
-          exclusion_dates: exclusionDates,
+          ...(repeatType !== 'none' && {
+            repeat_interval: repeatInterval || 1,
+            repeat_unit: repeatUnit,
+            repeat_days: repeatDays,
+            repeat_end_type: finalRepeatEndType,
+            ...(finalRepeatEndType === 'on' && { repeat_end_date: repeatEndDateISO }),
+            ...(exclusionDates ? { exclusion_dates: exclusionDates } : {}),
+          }),
           location: r['location']?.toString() || undefined,
           description: r['description']?.toString() || undefined,
-          guests,
+          guests: guestsList,
           color: r['color']?.toString() || undefined,
-        };
+        };      
+      console.log('Final payload for row', rowIndex, ':', payload);
 
-        await taskEventService.createTaskEvent(payload);
-        createdCount += 1;
-      } catch (e: any) {
-        console.error('Row error', e);
-        rowErrors.push({ rowIndex, message: e?.message || t('unknown_error') });
-      }
+      await taskEventService.createTaskEvent(payload);
+      createdCount += 1;
+    } catch (e: any) {
+      console.error('Row error', e);
+      rowErrors.push({ rowIndex, message: e?.message || t('unknown_error') });
     }
+  }
 
-    setProcessing(false);
-    setErrors(rowErrors);
+  setProcessing(false);
+  setErrors(rowErrors);
 
-    if (createdCount > 0) {
-      toast.success(t('import_success', { count: createdCount }));
-    }
-    if (rowErrors.length > 0) {
-      rowErrors.slice(0, 3).forEach(er => toast.error(t('row_error', { index: er.rowIndex, message: er.message })));
-    }
+  if (createdCount > 0) {
+    toast.success(t('import_success', { count: createdCount }));
+  }
+  if (rowErrors.length > 0) {
+    rowErrors.slice(0, 3).forEach(er => toast.error(t('row_error', { index: er.rowIndex, message: er.message })));
+  }
 
-    onImported?.({ createdCount, errors: rowErrors });
-    if (rowErrors.length === 0) onClose();
-  };
+  // Gọi callback để refresh events trên UI
+  onImported?.({ createdCount, errors: rowErrors });
+  
+  // Đóng modal nếu không có lỗi
+  if (rowErrors.length === 0) {
+    onClose();
+  }
+};
 
-  if (!isOpen) return null;
+if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-2xl bg-white rounded-lg shadow-lg p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">{t('import_excel')}</h2>
-          <button aria-label={t('close')} onClick={onClose} className="text-gray-500 hover:text-gray-700">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"/></svg>
+return (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div className="w-full max-w-2xl bg-white rounded-lg shadow-lg p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold">{t('import_excel')}</h2>
+        <button aria-label={t('close')} onClick={onClose} className="text-gray-500 hover:text-gray-700">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"/></svg>
+        </button>
+      </div>
+
+      <div className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <button onClick={handleChooseFile} className="px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm border">
+            {t('choose_file')}
+          </button>
+          {fileName && (
+            <span className="text-sm text-gray-600 truncate">{fileName}</span>
+          )}
+          <input ref={fileInputRef} type="file" accept=".xlsx" className="hidden" onChange={onFileChange} />
+        </div>
+
+        <p className="text-xs text-gray-500">{t('template_columns')}</p>
+
+        <div className="rounded-md border border-gray-200 bg-gray-50 p-3">
+          <div className="text-xs font-medium text-gray-700 mb-2">{t('template_sheet_name')}</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+            {eventTemplateHeaders.map((key) => (
+              <span key={key} className="inline-flex items-center rounded-md bg-white px-2 py-1 text-xs font-medium text-gray-700 shadow ring-1 ring-gray-200">
+                {t(`column_${key}` as any)}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {(parsing || processing) && (
+          <div className="text-sm text-gray-700">{parsing ? t('parsing_file') : t('processing')}</div>
+        )}
+
+        <div className="flex items-center justify-end space-x-2">
+          <button onClick={onClose} className="px-3 py-2 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm">
+            {t('cancel')}
+          </button>
+          <button disabled={parsing || processing || !rows.length} onClick={processImport} className={`px-3 py-2 rounded-md text-white text-sm ${parsing || processing || !rows.length ? 'bg-green-300' : 'bg-green-500 hover:bg-green-600'}`}>
+            {t('start_import')}
           </button>
         </div>
 
-        <div className="space-y-4">
-          <div className="flex items-center space-x-2">
-            <button onClick={handleChooseFile} className="px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm border">
-              {t('choose_file')}
-            </button>
-            {fileName && (
-              <span className="text-sm text-gray-600 truncate">{fileName}</span>
-            )}
-            <input ref={fileInputRef} type="file" accept=".xlsx" className="hidden" onChange={onFileChange} />
-          </div>
-
-          <p className="text-xs text-gray-500">{t('template_columns')}</p>
-
-          <div className="rounded-md border border-gray-200 bg-gray-50 p-3">
-            <div className="text-xs font-medium text-gray-700 mb-2">{t('template_sheet_name')}</div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-              {eventTemplateHeaders.map((key) => (
-                <span key={key} className="inline-flex items-center rounded-md bg-white px-2 py-1 text-xs font-medium text-gray-700 shadow ring-1 ring-gray-200">
-                  {t(`column_${key}` as any)}
-                </span>
+        {errors.length > 0 && (
+          <div className="mt-2 p-3 border rounded-md bg-red-50 border-red-200">
+            <ul className="list-disc ml-4 text-sm text-red-700 space-y-1 max-h-40 overflow-y-auto">
+              {errors.map(er => (
+                <li key={er.rowIndex}>{t('row_error', { index: er.rowIndex, message: er.message })}</li>
               ))}
-            </div>
+            </ul>
           </div>
-
-          {(parsing || processing) && (
-            <div className="text-sm text-gray-700">{parsing ? t('parsing_file') : t('processing')}</div>
-          )}
-
-          <div className="flex items-center justify-end space-x-2">
-            <button onClick={onClose} className="px-3 py-2 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm">
-              {t('cancel')}
-            </button>
-            <button disabled={parsing || processing || !rows.length} onClick={processImport} className={`px-3 py-2 rounded-md text-white text-sm ${parsing || processing || !rows.length ? 'bg-green-300' : 'bg-green-500 hover:bg-green-600'}`}>
-              {t('start_import')}
-            </button>
-          </div>
-
-          {errors.length > 0 && (
-            <div className="mt-2 p-3 border rounded-md bg-red-50 border-red-200">
-              <ul className="list-disc ml-4 text-sm text-red-700 space-y-1 max-h-40 overflow-y-auto">
-                {errors.map(er => (
-                  <li key={er.rowIndex}>{t('row_error', { index: er.rowIndex, message: er.message })}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </div>
-  );
+  </div>
+);
 };
 
 export default EventExcelImportModal;

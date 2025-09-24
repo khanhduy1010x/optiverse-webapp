@@ -3,5 +3,11 @@
   "template_demo": "Đây là tiếng Việt",
   "import": "Import",
   "template": "Template",
-  "download_template": "Tải Template"
+  "download_template": "Tải Template",
+  "import_export": "Import/Export",
+  "import_data": "Import Dữ liệu",
+  "download_task_template_desc": "Tải template Excel cho task",
+  "download_event_template_desc": "Tải template Excel cho sự kiện",
+  "import_task_desc": "Import task từ file Excel",
+  "import_event_desc": "Import sự kiện từ file Excel"
 }

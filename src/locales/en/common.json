@@ -3,5 +3,11 @@
   "template_demo": "This is English",
   "import": "Import",
   "template": "Template",
-  "download_template": "Download Template"
+  "download_template": "Download Template",
+  "import_export": "Import/Export",
+  "import_data": "Import Data",
+  "download_task_template_desc": "Download Excel template for tasks",
+  "download_event_template_desc": "Download Excel template for events",
+  "import_task_desc": "Import tasks from Excel file",
+  "import_event_desc": "Import events from Excel file"
 }

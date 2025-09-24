@@ -3,6 +3,7 @@ import { ViewTypeDropdown } from './ViewTypeDropdown.component';
 import { MiniCalendar } from './MiniCalendar.component';
 import { RefreshButton } from './RefreshButton.component';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
+import { ImportDropdown } from '../common/ImportDropdown.component';
 
 type ViewType = 'Day' | 'Week' | 'Month' | 'Year';
 
@@ -136,29 +137,13 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
         </select>
         <div className="flex items-center gap-3">
           <RefreshButton onClick={handleToday} />
-          {/* Import & Template */}
-          <button
-            onClick={onOpenEventImport}
-            className="bg-green-500 hover:bg-green-600 text-white px-2 py-2 rounded-md text-sm flex items-center"
-            aria-label={t('import', {}, 'common')}
-            title={t('import', {}, 'common')}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
-            </svg>
-            <span className="hidden sm:inline ml-1">{t('import', {}, 'common')}</span>
-          </button>
-          <button
-            onClick={onDownloadEventTemplate}
-            className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-2 py-2 rounded-md text-sm border flex items-center"
-            aria-label={t('download_template', {}, 'common')}
-            title={t('download_template', {}, 'common')}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v8m0 0l-3-3m3 3l3-3M4 4h16v6H4z" />
-            </svg>
-            <span className="hidden sm:inline ml-1">{t('template', {}, 'common')}</span>
-          </button>
+          {/* Import/Export Dropdown */}
+          <ImportDropdown
+            onDownloadTemplate={onDownloadEventTemplate}
+            onOpenImport={onOpenEventImport}
+            type="event"
+            className=""
+          />
         </div>
       </div>
     </div>

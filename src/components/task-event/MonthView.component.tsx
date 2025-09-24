@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { TaskEvent } from '../../types/task-events/task-events.types';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isToday } from 'date-fns';
 import { CalendarEvent } from './CalendarEvent.component';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 interface MonthViewProps {
   currentDate: Date;
@@ -16,6 +17,7 @@ export const MonthView: React.FC<MonthViewProps> = ({
   handleAddEvent,
   handleEditEvent
 }) => {
+  const { t } = useAppTranslate('task');
   // Tạo mảng các ngày trong tháng (bao gồm cả ngày của tháng trước và tháng sau để hiển thị đủ lịch)
   const days = useMemo(() => {
     try {
@@ -96,8 +98,16 @@ export const MonthView: React.FC<MonthViewProps> = ({
     const rows: React.ReactNode[] = [];
     let cells: React.ReactNode[] = [];
 
-    // Tên các ngày trong tuần
-    const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    // Tên các ngày trong tuần (i18n)
+    const weekDays = [
+      t('day_sun'),
+      t('day_mon'),
+      t('day_tue'),
+      t('day_wed'),
+      t('day_thu'),
+      t('day_fri'),
+      t('day_sat'),
+    ];
 
     // Tạo header cho lịch
     rows.push(
@@ -160,7 +170,7 @@ export const MonthView: React.FC<MonthViewProps> = ({
                 className="text-xs text-center bg-gray-100 rounded-full py-1 px-2 cursor-pointer hover:bg-gray-200 transition-colors w-full font-medium text-gray-700 shadow-sm"
                 onClick={() => dayEvents.slice(3).forEach(event => handleEditEvent(event))}
               >
-                +{dayEvents.length - 3} more
+                {t('more_count', { count: dayEvents.length - 3 })}
               </div>
             )}
           </div>
@@ -204,4 +214,4 @@ export const MonthView: React.FC<MonthViewProps> = ({
       </div>
     </div>
   );
-}; 
+};
