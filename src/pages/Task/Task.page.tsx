@@ -165,33 +165,14 @@ const TaskPage: React.FC = () => {
     await fetchTasksAndCheckOverdue();
   };
   const handleDownloadTaskTemplate = () => {
-    const headers = [
-      'title',
-      'description',
-      'priority',
-      'status',
-      'start_time',
-      'end_time',
-      'start_date',
-      'end_date',
-      'tags',
-      'event_title',
-      'all_day',
-      'repeat_type',
-      'repeat_interval',
-      'repeat_unit',
-      'repeat_days',
-      'repeat_end_type',
-      'repeat_end_date',
-      'repeat_occurrences',
-      'exclusion_dates',
-      'location',
-      'event_color',
-    ];
-    const ws = XLSX.utils.aoa_to_sheet([headers]);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Tasks');
-    XLSX.writeFile(wb, 'tasks_template.xlsx');
+    // Download the pre-made template file from styles/task directory
+    const templatePath = '/src/styles/task/Task Template.xlsx';
+    const link = document.createElement('a');
+    link.href = templatePath;
+    link.download = 'Task Template.xlsx';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   // Tag operations

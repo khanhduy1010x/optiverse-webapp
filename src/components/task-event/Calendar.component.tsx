@@ -86,16 +86,16 @@ export const Calendar: React.FC<CalendarProps> = ({
  const closeEventImport = () => setIsEventImportOpen(false);
  
  // Download Event Template
- const eventTemplateHeaders = ['title','start_date','start_time','end_time','repeat','to_date','description'];
  const handleDownloadEventTemplate = () => {
-  // Use raw snake_case keys for header row to ensure parser recognizes columns across locales
-  const ws = XLSX.utils.aoa_to_sheet([
-    eventTemplateHeaders
-  ]);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, t('template_sheet_name'));
-     XLSX.writeFile(wb, 'events_template.xlsx');
-  };
+   // Download the pre-made template file from styles/task directory
+   const templatePath = '/src/styles/task/Task Event Template.xlsx';
+   const link = document.createElement('a');
+   link.href = templatePath;
+   link.download = 'Task Event Template.xlsx';
+   document.body.appendChild(link);
+   link.click();
+   document.body.removeChild(link);
+ };
   const [repeatType, setRepeatType] = useState<RepeatType>('none');
   const [customRepeatFrequency, setCustomRepeatFrequency] = useState(1);
   const [customRepeatUnit, setCustomRepeatUnit] = useState<'day' | 'week' | 'month' | 'year'>('week');

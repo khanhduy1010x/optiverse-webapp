@@ -83,8 +83,7 @@ const generateRecurringInstances = (originalEvent: TaskEvent): TaskEvent[] => {
     
     let currentDate = new Date(startDate);
     let occurrenceCount = 0;
-   // Đánh dấu vòng lặp đầu tiên để luôn tạo instance cho ngày base
-   let firstIteration = true;
+    // Bắt đầu từ lần lặp đầu tiên (không tạo lại event gốc)
     
     // Tính toán maxOccurrences dựa trên repeat_end_type với giới hạn an toàn
     let maxOccurrences = 10; // Mặc định
@@ -185,37 +184,44 @@ const generateRecurringInstances = (originalEvent: TaskEvent): TaskEvent[] => {
       return newDate;
     };
     
-    // Bắt đầu từ lần lặp thứ 2 (vì event gốc đã được thêm rồi)
+    // Bắt đầu từ ngày gốc (bao gồm cả ngày đầu tiên)
+    // Đối với daily repeat, bắt đầu từ chính ngày gốc
     if ((repeatType === 'weekly' || (repeatType === 'custom' && repeatUnit === 'week')) && (repeatDays?.length || 0) > 0) {
-      // Với weekly/custom-week có chọn ngày trong tuần, tìm NGÀY KẾ TIẾP theo repeat_days sau ngày bắt đầu
+      // Với weekly/custom-week có chọn ngày trong tuần, kiểm tra xem ngày bắt đầu có nằm trong repeat_days không
       const daysSorted = [...repeatDays].sort((a, b) => a - b);
       const baseDow = startDate.getDay();
-      let nextDay: number | null = null;
-      for (const d of daysSorted) {
-        if (d > baseDow) { nextDay = d; break; }
-      }
-      if (nextDay !== null) {
-        const delta = nextDay - baseDow;
-        const candidate = new Date(startDate);
-        candidate.setDate(candidate.getDate() + delta);
-        currentDate = candidate;
+      
+      // Kiểm tra xem ngày bắt đầu có trong repeat_days không
+      if (repeatDays.includes(baseDow)) {
+        // Ngày bắt đầu nằm trong repeat_days, bắt đầu từ ngày này
+        currentDate = new Date(startDate);
       } else {
-        // Không còn ngày phù hợp trong tuần hiện tại -> nhảy sang block tuần kế tiếp theo interval và chọn ngày đầu tiên
-        const weekStart = new Date(startDate);
-        weekStart.setHours(0, 0, 0, 0);
-        weekStart.setDate(weekStart.getDate() - weekStart.getDay());
-        const nextBlockStart = new Date(weekStart);
-        nextBlockStart.setDate(nextBlockStart.getDate() + 7 * repeatInterval);
-        const nextCandidate = new Date(nextBlockStart);
-        nextCandidate.setDate(nextCandidate.getDate() + daysSorted[0]);
-        currentDate = nextCandidate;
+        // Tìm ngày kế tiếp trong repeat_days
+        let nextDay: number | null = null;
+        for (const d of daysSorted) {
+          if (d > baseDow) { nextDay = d; break; }
+        }
+        if (nextDay !== null) {
+          const delta = nextDay - baseDow;
+          const candidate = new Date(startDate);
+          candidate.setDate(candidate.getDate() + delta);
+          currentDate = candidate;
+        } else {
+          // Không còn ngày phù hợp trong tuần hiện tại -> nhảy sang block tuần kế tiếp theo interval và chọn ngày đầu tiên
+          const weekStart = new Date(startDate);
+          weekStart.setHours(0, 0, 0, 0);
+          weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+          const nextBlockStart = new Date(weekStart);
+          nextBlockStart.setDate(nextBlockStart.getDate() + 7 * repeatInterval);
+          const nextCandidate = new Date(nextBlockStart);
+          nextCandidate.setDate(nextCandidate.getDate() + daysSorted[0]);
+          currentDate = nextCandidate;
+        }
       }
     } else {
-      // Với các loại khác, đơn giản là tăng ngày theo khoảng lặp
-      currentDate = incrementDate(currentDate, repeatType, repeatInterval);
+      // Với các loại khác (daily, monthly, yearly), bắt đầu từ chính ngày gốc
+      currentDate = new Date(startDate);
     }
-    // KHÔNG pre-shift sang lần lặp thứ 2. Bắt đầu tạo instance từ ngày base trước
-    currentDate = new Date(startDate);
     
     // Tạo các recurring instances
      while (occurrenceCount < maxOccurrences) {
@@ -240,7 +246,7 @@ const generateRecurringInstances = (originalEvent: TaskEvent): TaskEvent[] => {
        }
       
       // Đối với weekly repeat với repeat_days, xử lý các ngày được chọn trong tuần
-      if (repeatType === 'weekly' && repeatDays.length > 0 && !firstIteration) {
+      if (repeatType === 'weekly' && repeatDays.length > 0) {
         const dayOfWeek = currentDate.getDay();
         
         // Nếu ngày hiện tại không nằm trong danh sách repeat_days
@@ -269,7 +275,7 @@ const generateRecurringInstances = (originalEvent: TaskEvent): TaskEvent[] => {
       }
       
       // Đối với custom repeat với repeat_days
-      if (repeatType === 'custom' && repeatUnit === 'week' && repeatDays.length > 0 && !firstIteration) {
+      if (repeatType === 'custom' && repeatUnit === 'week' && repeatDays.length > 0) {
         const dayOfWeek = currentDate.getDay();
         
         if (!repeatDays.includes(dayOfWeek)) {
@@ -379,8 +385,7 @@ const generateRecurringInstances = (originalEvent: TaskEvent): TaskEvent[] => {
       } else {
         currentDate = incrementDate(currentDate, repeatType, repeatInterval);
       }
-      // Sau khi đã thêm instance đầu tiên (base), các vòng tiếp theo không còn là lần đầu nữa
-      firstIteration = false;
+      // Tiếp tục với lần lặp tiếp theo
     }
   } catch (error) {
     console.error('Error generating recurring instances:', error);

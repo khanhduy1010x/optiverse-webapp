@@ -5,6 +5,7 @@ import { TaskStatusTab } from './Task.page';
 import NotificationBell from '../../components/task-event/NotificationBell.component';
 import { Task } from '../../types/task/response/task.response';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
+import { ImportDropdown } from '../../components/common/ImportDropdown.component';
 
 interface TaskHeaderProps {
   searchQuery: string;
@@ -97,29 +98,13 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
             {/* Add NotificationBell component */}
             <NotificationBell tasks={tasks} />
 
-            {/* Import & Template buttons */}
-            <button
-              onClick={onOpenTaskImport}
-              className="bg-green-500 hover:bg-green-600 text-white px-2 py-2 rounded-md text-sm flex items-center"
-              aria-label={t('import', {}, 'common')}
-              title={t('import', {}, 'common')}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
-              </svg>
-              <span className="hidden sm:inline ml-1">{t('import', {}, 'common')}</span>
-            </button>
-            <button
-              onClick={onDownloadTaskTemplate}
-              className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-2 py-2 rounded-md text-sm border flex items-center"
-              aria-label={t('download_template', {}, 'common')}
-              title={t('download_template', {}, 'common')}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v8m0 0l-3-3m3 3l3-3M4 4h16v6H4z" />
-              </svg>
-              <span className="hidden sm:inline ml-1">{t('template', {}, 'common')}</span>
-            </button>
+            {/* Import/Export Dropdown */}
+            <ImportDropdown
+              onDownloadTemplate={onDownloadTaskTemplate}
+              onOpenImport={onOpenTaskImport}
+              type="task"
+              className=""
+            />
 
             <button
               onClick={() => setShowTagManagement(true)}

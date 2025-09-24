@@ -49,7 +49,6 @@
   "save": "Save",
   "edit_close_aria": "Close task edit form",
   "edit_close_title": "Close task edit form",
-  "create_new_tag": "+ Create new tag",
   "status_label": "Status",
   "priority_label": "Priority",
   "start_label": "Start",
@@ -176,5 +175,6 @@
   "completion_rate": "Completion rate",
   "by_status": "By status",
   "tasks_by_day": "Tasks by day",
-  "statistic": "Statistic"
+  "statistic": "Statistic",
+  "more_count": "+{{count}} more"
 }
