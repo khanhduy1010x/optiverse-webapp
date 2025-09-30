@@ -1142,13 +1142,7 @@ export const Calendar: React.FC<CalendarProps> = ({
         </div>
       </div>
       
-      {/* Global FAB for Add Event */}
-      <CircleButton
-        name="add"
-        aria-label={t('add_event')}
-        title={t('add_event')}
-        onClick={handleAddEvent}
-      />
+      {/* Global FAB removed: using page-level CircleButton in Task.page.tsx */}
       
       {/* Add Schedule Sidebar */}
       {isAddScheduleOpen && (

@@ -163,10 +163,10 @@ export const UpdateTaskEventModalForm: React.FC<UpdateTaskEventModalFormProps> =
   return (
     <>
       <Modal isOpen={isOpen}
-        className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[350px] md:w-[400px] max-w-[95vw] bg-white rounded-xl shadow-2xl z-[2000] outline-none"
+        className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[400px] md:w-[450px] max-w-[95vw] bg-white rounded-xl shadow-2xl z-[2000] outline-none"
         overlayClassName="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000]"
         onRequestClose={() => { resetForm(); onClose(); }}
-        shouldCloseOnOverlayClick={false}
+        shouldCloseOnOverlayClick={true}
         ariaHideApp={false}
       >
         <form onSubmit={handleSubmit} className="p-4 md:p-6 flex flex-col gap-3">

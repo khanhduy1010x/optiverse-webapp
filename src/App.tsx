@@ -54,7 +54,6 @@ import BannedModal from './components/BannedModal';
 import AchievementsAdminPage from './pages/Admin/AchievementsAdmin.page';
 import TaskStatistic from './pages/Task/TaskStatistic.page';
 
-
 declare global {
   interface Window {
     showUserBannedModal?: () => void;

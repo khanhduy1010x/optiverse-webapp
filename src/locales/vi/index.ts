@@ -10,6 +10,7 @@ import collab from './collab.json';
 import achievement from './achievement.json';
 import notification from './notification.json';
 import error from './error.json';
+import taskEvent from './task-event.json';
 
 export default {
   common,
@@ -24,4 +25,5 @@ export default {
   achievement,
   notification,
   error,
+  'task-event': taskEvent,
 };

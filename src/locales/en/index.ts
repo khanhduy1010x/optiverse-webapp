@@ -14,6 +14,7 @@ import tag from "./tag.json";
 import admin from "./admin.json";
 import chat from "./chat.json";
 import error from './error.json';
+import taskEvent from './task-event.json';
 
 export default {
   common,
@@ -32,4 +33,5 @@ export default {
   admin,
   chat,
   error,
+  'task-event': taskEvent,
 };

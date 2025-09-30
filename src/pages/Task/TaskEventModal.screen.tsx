@@ -5,6 +5,7 @@ import { useTaskEventOperations } from '../../hooks/task-events/useTaskEventOper
 import Modal from 'react-modal';
 import { GROUP_CLASSNAMES } from '../../styles';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
+import DateTimePicker from '../../components/datetime-picker/DateTimePicker.component';
 
 interface TaskEventModalProps {
   isOpen: boolean;
@@ -209,10 +210,10 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
 
   return (
     <Modal isOpen={isOpen}
-      className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[350px] md:w-[400px] max-w-[95vw] bg-white rounded-xl shadow-2xl z-[2000] outline-none"
+      className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[400px] max-w-[95vw] bg-white rounded-2xl shadow-2xl z-[2000] outline-none"
       overlayClassName="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000]"
       onRequestClose={handleCancel}
-      shouldCloseOnOverlayClick={false}
+      shouldCloseOnOverlayClick={true}
       ariaHideApp={false}
     >
       <form onSubmit={handleSubmit} className="p-4 md:p-6 flex flex-col gap-3">
@@ -225,59 +226,44 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
           className="w-full border-0 border-b border-gray-200 py-2 mb-2 focus:outline-none focus:ring-0 focus:border-blue-400 placeholder-gray-400 text-base bg-blue-50/30 rounded-t-xl transition-all"
           autoFocus
         />
-        {/* Ngày bắt đầu/kết thúc */}
-        <div className="flex items-center gap-2 mb-2">
-          <div className="flex flex-col flex-1">
-          <input
-              type="date"
-              value={formData.start_time ? new Date(formData.start_time).toISOString().slice(0, 10) : ''}
-              onChange={e => {
-                const date = new Date(e.target.value);
-                const prev = new Date(formData.start_time ?? Date.now());
-                date.setHours(prev.getHours(), prev.getMinutes());
-                handleInputChange('start_time', date);
-              }}
-            className="border border-gray-200 rounded-md p-1.5 text-sm"
-              placeholder={t('start_date_placeholder')}
-          />
-          </div>
-          <span className="text-gray-400 mt-6">-</span>
-          <div className="flex flex-col flex-1">
-          <input
-              type="date"
-              value={formData.end_time ? new Date(formData.end_time).toISOString().slice(0, 10) : ''}
-              onChange={e => {
-                const date = new Date(e.target.value);
-                const prev = new Date(formData.end_time ?? Date.now());
-                date.setHours(prev.getHours(), prev.getMinutes());
-                handleInputChange('end_time', date);
-              }}
-            className="border border-gray-200 rounded-md p-1.5 text-sm"
-              placeholder={t('end_date_placeholder')}
-          />
-          </div>
-        </div>
-        {/* Thời gian bắt đầu/kết thúc */}
-        <div className="flex items-center gap-2 mb-2">
-          <div className="flex flex-col flex-1">
-          <input
-              type="time"
-              value={formatTimeForInput(formData.start_time)}
-              onChange={e => handleStartTimeChange(e.target.value)}
-              className="border border-gray-200 rounded-md p-1.5 text-sm"
-              placeholder={t('start_time_placeholder')}
+        {/* Start Time */}
+        <div className="mb-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            {t('start_time_label')}
+          </label>
+          <DateTimePicker
+            value={formData.start_time}
+            onChange={(date: Date) => {
+              handleInputChange('start_time', date);
+            }}
+            onClear={() => {
+              handleInputChange('start_time', new Date());
+            }}
+            placeholder={t('start_time_placeholder')}
+            showTime={true}
+            timeFormat="24h"
+            className="w-full"
           />
         </div>
-          <span className="text-gray-400 mt-6">-</span>
-          <div className="flex flex-col flex-1">
-          <input
-              type="time"
-              value={formData.end_time ? formatTimeForInput(formData.end_time) : ''}
-              onChange={e => handleEndTimeChange(e.target.value)}
-              className="border border-gray-200 rounded-md p-1.5 text-sm"
-              placeholder={t('end_time_placeholder')}
+
+        {/* End Time */}
+        <div className="mb-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            {t('end_time_label')}
+          </label>
+          <DateTimePicker
+            value={formData.end_time}
+            onChange={(date: Date) => {
+              handleInputChange('end_time', date);
+            }}
+            onClear={() => {
+              handleInputChange('end_time', undefined);
+            }}
+            placeholder={t('end_time_placeholder')}
+            showTime={true}
+            timeFormat="24h"
+            className="w-full"
           />
-        </div>
         </div>
         {/* Lặp lại */}
         <div className="relative w-full mb-2">
@@ -398,4 +384,4 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
       </form>
     </Modal>
   );
-}; 
+};

@@ -4,6 +4,9 @@ import Modal from 'react-modal';
 import { CreateTaskFormProps } from '../../types/task/props/component.props';
 import { isoToLocalDateTime, localDateTimeToISO } from '../../utils/date.utils';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
+import { X } from 'lucide-react';
+import { CalendarDatePicker } from '../../components/task-event/CalendarDatePicker.component';
+import { TimePickerDropdown } from '../../components/task-event/TimePickerDropdown.component';
 
 const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
     title,
@@ -30,7 +33,34 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
     handleCreateNewTag
 }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+    const [showStartTimePicker, setShowStartTimePicker] = useState(false);
+    const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+    const [showEndTimePicker, setShowEndTimePicker] = useState(false);
+    const [showDeadlineFields, setShowDeadlineFields] = useState(false);
+
     const { t } = useAppTranslate('task');
+    
+    // Date and time formatting functions to match task-event
+    const formatDate = (dateInput: string | Date) => {
+        const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
+        return date.toLocaleDateString('vi-VN', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    };
+
+    const formatTime = (dateInput: string | Date) => {
+        const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
+        return date.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        });
+    };
+    
     // Add errors state object for validation
     const [errors, setErrors] = useState<{
         title?: string;
@@ -196,268 +226,347 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
     };
 
     return (
-        <Modal isOpen={true}
-            className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[450px] max-w-[90vw] bg-white rounded-2xl shadow-2xl z-[2000] outline-none"
+        <Modal 
+            isOpen={true}
+            className="fixed inset-0 flex items-center justify-center z-[2000] outline-none"
             overlayClassName="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000]"
-        >            
-            <div className={GROUP_CLASSNAMES.taskModalContent}>
-                {/* Task name */}
-                <div className={GROUP_CLASSNAMES.taskDetailHeader}>
-                    <input
-                        className={`w-full text-xl font-medium border-0 p-0 mb-2 focus:outline-none focus:ring-0 placeholder-gray-400 ${errors.title ? 'border-b border-red-500' : ''}`}
-                        type="text"
-                        placeholder={t('create_task_name_placeholder')}
-                        value={title}
-                        onChange={(e) => {
-                            setTitle(e.target.value);
-                            if (errors.title) {
-                                setErrors(prev => ({ ...prev, title: undefined }));
-                            }
-                        }}
-                        autoFocus
-                        autoComplete="off"
-                        maxLength={50}
-                    />
-                    {errors.title && (
-                        <div className="text-red-500 text-xs mt-1">{errors.title}</div>
-                    )}
-                    <div className="text-xs text-gray-400 mt-1">{title.length}/50 {t('characters')}</div>
-                </div>
-
-                {/* Description */}
-                <div className={GROUP_CLASSNAMES.taskDetailDescription}>
-                    <textarea
-                        className={`w-full text-sm border-0 p-0 focus:outline-none focus:ring-0 placeholder-gray-400 resize-none ${errors.description ? 'border border-red-500' : ''}`}
-                        placeholder={t('create_description_placeholder')}
-                        value={description}
-                        onChange={(e) => {
-                            setDescription(e.target.value);
-                            if (errors.description) {
-                                setErrors(prev => ({ ...prev, description: undefined }));
-                            }
-                        }}
-                        rows={1}
-                        autoComplete="off"
-                        maxLength={150}
-                    />
-                    {errors.description && (
-                        <div className="text-red-500 text-xs mt-1">{errors.description}</div>
-                    )}
-                    <div className="text-xs text-gray-400 mt-1">{description.length}/150 {t('characters')}</div>
-                </div>
-
-                <div className={GROUP_CLASSNAMES.taskDetailSection}>
-                    {/* Task attributes */}
-                    <div className="space-y-2">
-                        {/* Priority */}
-                        <div className={GROUP_CLASSNAMES.flexItemsCenter + " py-2"}>
-                            <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
-                            </svg>
-                            <select
-                                aria-label={t('create_priority_aria')}
-                                className="flex-grow border-0 bg-transparent focus:outline-none focus:ring-0 text-sm text-gray-700"
-                                value={priority}
-                                onChange={(e) => setPriority(e.target.value as any)}
-                                autoComplete="off"
-                            >
-                                <option value="low">{t('priority_low')}</option>
-                                <option value="medium">{t('priority_medium')}</option>
-                                <option value="high">{t('priority_high')}</option>
-                            </select>
-                        </div>
-
-                        {/* Start Time */}
-                        <div className={GROUP_CLASSNAMES.flexItemsCenter + " py-2"}>
-                            <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            <div className="flex-grow">
-                                <label className="text-sm text-gray-500 block mb-1">{t('create_start_time_label')}</label>
-                                <input
-                                    type="datetime-local"
-                                    className={`w-full border border-gray-200 rounded px-2 py-1 text-sm ${errors.time ? 'border-red-500' : ''}`}
-                                    value={isoToLocalDateTime(start_time || '')}
-                                    onChange={(e) => {
-                                        setStartTime(e.target.value);
-                                        if (errors.time) {
-                                            setErrors(prev => ({ ...prev, time: undefined }));
-                                        }
-                                    }}
-                                    autoComplete="off"
-                                />
-                            </div>
-                        </div>
-
-                        {/* End Time (Deadline) */}
-                        <div className={GROUP_CLASSNAMES.flexItemsCenter + " py-2"}>
-                            <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <div className="flex-grow">
-                                <label className="text-sm text-gray-500 block mb-1">{t('create_deadline_label')}</label>
-                                <input
-                                    type="datetime-local"
-                                    className={`w-full border border-gray-200 rounded px-2 py-1 text-sm ${errors.time ? 'border-red-500' : ''}`}
-                                    value={isoToLocalDateTime(end_time || '')}
-                                    onChange={(e) => {
-                                        setEndTime(e.target.value);
-                                        if (errors.time) {
-                                            setErrors(prev => ({ ...prev, time: undefined }));
-                                        }
-                                    }}
-                                    autoComplete="off"
-                                />
-                            </div>
-                        </div>
-                        {errors.time && (
-                            <div className="text-red-500 text-xs mt-1 ml-8">{errors.time}</div>
-                        )}
-
-                        {/* Tags */}
-                        <div className={GROUP_CLASSNAMES.flexItemsCenter + " py-2"}>
-                            <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                            </svg>
-                            <div className="flex-grow">
-                                <div className={GROUP_CLASSNAMES.tagContainer + " mb-2"}>
-                                    {selectedTags.length === 0 ? (
-                                        <></>
-                                    ) : (
-                                        selectedTags.map(tag => (
-                                            <span
-                                                key={tag._id || `temp-${tag.name}-${Math.random().toString(36).substr(2, 9)}`}
-                                                className={GROUP_CLASSNAMES.tagItem}
-                                                style={{
-                                                    backgroundColor: `${tag.color}15`,
-                                                    color: tag.color
-                                                }}
-                                            >
-                                                {tag.name}
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleTagSelect(tag)}
-                                                    className="ml-1 focus:outline-none"
-                                                    aria-label={t('create_remove_tag')}
-                                                >
-                                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                                                    </svg>
-                                                </button>
-                                            </span>
-                                        ))
-                                    )}
-                                </div>
-                                <div className="relative">
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowNewTagForm(!showNewTagForm)}
-                                        className="text-xs text-blue-500 hover:text-blue-700 focus:outline-none"
-                                    >
-                                        + {t('create_select_tags')}
-                                    </button>
-
-                                    {showNewTagForm && (
-                                        <div className="fixed top-1/3 left-1/3 transform -translate-x-1/2 -translate-y-1/2 w-64 bg-white rounded-md shadow-xl z-50 max-h-96 overflow-y-auto border border-gray-200">
-                                            <div className="sticky top-0 bg-white px-4 py-3 border-b border-gray-200 flex justify-between items-center">
-                                                <span className="font-medium">{t('create_select_tags')}</span>
-                                                <button
-                                                    onClick={() => setShowNewTagForm(false)}
-                                                    className="text-gray-500 hover:text-gray-700"
-                                                >
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                                                    </svg>
-                                                </button>
-                                            </div>
-
-                                            {allTags.length === 0 ? (
-                                                <div className="px-4 py-3 text-sm text-gray-500">{t('create_no_tags_available')}</div>
-                                            ) : (
-                                                <div className="py-2">
-                                                    {allTags.map(tag => {
-                                                        const isSelected = selectedTags.some(t =>
-                                                            (t._id && tag._id && t._id === tag._id) ||
-                                                            (t.name && tag.name && t.name === tag.name)
-                                                        );
-                                                        return (
-                                                            <div
-                                                                key={tag._id || `temp-${tag.name}-${Math.random().toString(36).substr(2, 9)}`}
-                                                                className={`px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer ${isSelected ? 'bg-gray-100' : ''}`}
-                                                                onClick={() => handleTagSelect(tag)}
-                                                            >
-                                                                <div className={GROUP_CLASSNAMES.flexItemsCenter}>
-                                                                    <span
-                                                                        className="w-4 h-4 rounded-full mr-2"
-                                                                        style={{ backgroundColor: tag.color }}
-                                                                    ></span>
-                                                                    <span>{tag.name}</span>
-                                                                    {isSelected && (
-                                                                        <svg className="w-4 h-4 ml-auto text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                                                                        </svg>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                        );
-                                                    })}
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Action buttons */}
-                <div className={GROUP_CLASSNAMES.taskModalFooter}>
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="text-sm text-gray-500 hover:text-gray-700"
-                        disabled={isSubmitting}
-                    >
-                        {t('cancel')}
-                    </button>
-                    <button
-                        type="button"
-                        onClick={handleCreateTask}
-                        className={`px-4 py-2 text-sm bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center ${
-                            isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
-                        }`}
-                        disabled={isSubmitting}
-                    >
-                        {isSubmitting ? (
-                            <>
-                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                {t('creating')}
-                            </>
-                        ) : (
-                            t('create_task_cta')
-                        )}
-                    </button>
-                </div>
-
-                {/* Close button */}
-                <button
-                    type="button"
-                    onClick={onClose}
-                    className={GROUP_CLASSNAMES.taskModalCloseButton}
-                    aria-label={t('create_close_aria')}
-                    title={t('create_close_title')}
-                >
-                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
+            onRequestClose={onClose}
+            shouldCloseOnOverlayClick={true}
+            ariaHideApp={false}
+        >
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 max-h-[90vh] flex flex-col relative">
+            {/* Close button */}
+            <div className="absolute top-3 right-3">
+              <button
+                onClick={onClose}
+                aria-label={t('close')}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-400" />
+              </button>
             </div>
-        </Modal>
-    );
-};
 
-export default CreateTaskForm; 
+            {/* Form Content */}
+            <form onSubmit={(e) => { e.preventDefault(); handleCreateTask(); }} className="flex-1 overflow-y-auto">
+              <div className="p-6 space-y-4">
+                {/* Title */}
+                <div>
+                  <input
+                    type="text"
+                    placeholder={t('add_title')}
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className="w-full text-xl font-medium border-0 border-b-2 border-transparent focus:border-blue-500 focus:outline-none pb-2 placeholder-gray-400"
+                  />
+                  {errors.title && <div className="text-red-500 text-xs mt-1">{errors.title}</div>}
+                </div>
+
+
+                {/* Priority */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-2">{t('priority_label')}</label>
+                  <div className="flex gap-2">
+                    <button type="button" aria-label={t('priority_low')} onClick={() => setPriority('low')} className={`px-3 py-1 rounded-md border text-xs ${priority==='low'?'bg-blue-50 border-blue-400 text-blue-700':'border-gray-200 text-gray-700'}`}>{t('priority_low')}</button>
+                    <button type="button" aria-label={t('priority_medium')} onClick={() => setPriority('medium')} className={`px-3 py-1 rounded-md border text-xs ${priority==='medium'?'bg-blue-50 border-blue-400 text-blue-700':'border-gray-200 text-gray-700'}`}>{t('priority_medium')}</button>
+                    <button type="button" aria-label={t('priority_high')} onClick={() => setPriority('high')} className={`px-3 py-1 rounded-md border text-xs ${priority==='high'?'bg-blue-50 border-blue-400 text-blue-700':'border-gray-200 text-gray-700'}`}>{t('priority_high')}</button>
+                  </div>
+                </div>
+
+                {/* Set Deadline Toggle Button */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setShowDeadlineFields(!showDeadlineFields)}
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    {t('set_deadline')}
+                    <svg 
+                      className={`w-4 h-4 transition-transform ${showDeadlineFields ? 'rotate-180' : ''}`} 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Date and Time - conditional rendering based on showDeadlineFields */}
+                {showDeadlineFields && (
+                  <div className="space-y-3">
+                    {/* Start Date Label */}
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-2">{t('create_start_time_label')}</label>
+                    </div>
+                    {/* Start Row */}
+                    <div className="grid grid-cols-2 gap-2">
+                      {/* Start Date */}
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={() => setShowStartDatePicker(!showStartDatePicker)}
+                          className="flex items-center gap-3 w-full p-2 text-left border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
+                          aria-label={t('select_date')}
+                        >
+                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <span className="text-sm text-gray-700">
+                            {start_time ? formatDate(start_time) : t('select_date')}
+                          </span>
+                        </button>
+                        {showStartDatePicker && (
+                          <div className="absolute top-full left-0 mt-1 z-50">
+                            <CalendarDatePicker
+                              selectedDate={start_time ? new Date(start_time as any) : new Date()}
+                              onDateSelect={(date) => {
+                                const currentTime = start_time ? new Date(start_time as any) : new Date();
+                                date.setHours(currentTime.getHours(), currentTime.getMinutes(), 0, 0);
+                                setStartTime(new Date(date));
+                                setShowStartDatePicker(false);
+                              }}
+                              isOpen={showStartDatePicker}
+                              onClose={() => setShowStartDatePicker(false)}
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Start Time */}
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={() => setShowStartTimePicker(!showStartTimePicker)}
+                          className="flex items-center gap-2 w-full p-2 text-left border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
+                          aria-label={t('start_time')}
+                        >
+                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span className="text-xs text-gray-700">
+                            {start_time ? formatTime(start_time) : t('start_time')}
+                          </span>
+                        </button>
+                        {showStartTimePicker && (
+                          <div className="absolute top-full left-0 mt-1 z-50">
+                            <TimePickerDropdown
+                              selectedTime={start_time ? formatTime(start_time) : ''}
+                              onTimeSelect={(time: string) => {
+                                const period = time.endsWith('pm') ? 'pm' : 'am';
+                                const timeStr = time.slice(0, -2);
+                                const [hoursStr, minutesStr] = timeStr.split(':');
+                                let hours = parseInt(hoursStr, 10);
+                                const minutes = parseInt(minutesStr, 10);
+                                if (period === 'pm' && hours !== 12) hours += 12;
+                                if (period === 'am' && hours === 12) hours = 0;
+                                const currentDate = start_time ? new Date(start_time as any) : new Date();
+                                currentDate.setHours(hours, minutes, 0, 0);
+                                setStartTime(new Date(currentDate));
+                                setShowStartTimePicker(false);
+                              }}
+                              isOpen={showStartTimePicker}
+                              onClose={() => setShowStartTimePicker(false)}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Deadline Label */}
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-2">{t('create_deadline_label')}</label>
+                    </div>
+
+                    {/* End Row */}
+                    <div className="grid grid-cols-2 gap-2">
+                    {/* End Date */}
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setShowEndDatePicker(!showEndDatePicker)}
+                        className="flex items-center gap-3 w-full p-2 text-left border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
+                        aria-label={t('select_date')}
+                      >
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span className="text-sm text-gray-700">
+                          {end_time ? formatDate(end_time) : t('select_date')}
+                        </span>
+                      </button>
+                      {showEndDatePicker && (
+                        <div className="absolute top-full left-0 mt-1 z-50">
+                          <CalendarDatePicker
+                            selectedDate={end_time ? new Date(end_time as any) : (start_time ? new Date(start_time as any) : new Date())}
+                            onDateSelect={(date) => {
+                              const currentTime = end_time ? new Date(end_time as any) : (start_time ? new Date(start_time as any) : new Date());
+                              date.setHours(currentTime.getHours(), currentTime.getMinutes(), 0, 0);
+                              setEndTime(new Date(date));
+                              setShowEndDatePicker(false);
+                            }}
+                            isOpen={showEndDatePicker}
+                            onClose={() => setShowEndDatePicker(false)}
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* End Time */}
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setShowEndTimePicker(!showEndTimePicker)}
+                        className="flex items-center gap-2 w-full p-2 text-left border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
+                        aria-label={t('end_time')}
+                      >
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span className="text-xs text-gray-700">
+                          {end_time ? formatTime(end_time) : t('end_time')}
+                        </span>
+                      </button>
+                      {showEndTimePicker && (
+                        <div className="absolute top-full left-0 mt-1 z-50">
+                          <TimePickerDropdown
+                            selectedTime={end_time ? formatTime(end_time) : ''}
+                            onTimeSelect={(time: string) => {
+                              const period = time.endsWith('pm') ? 'pm' : 'am';
+                              const timeStr = time.slice(0, -2);
+                              const [hoursStr, minutesStr] = timeStr.split(':');
+                              let hours = parseInt(hoursStr, 10);
+                              const minutes = parseInt(minutesStr, 10);
+                              if (period === 'pm' && hours !== 12) hours += 12;
+                              if (period === 'am' && hours === 12) hours = 0;
+                              const baseDate = end_time ? new Date(end_time as any) : (start_time ? new Date(start_time as any) : new Date());
+                              baseDate.setHours(hours, minutes, 0, 0);
+                              setEndTime(new Date(baseDate));
+                              setShowEndTimePicker(false);
+                            }}
+                            isOpen={showEndTimePicker}
+                            onClose={() => setShowEndTimePicker(false)}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {errors.time && <div className="text-red-500 text-xs">{errors.time}</div>}
+                  </div>
+                )}
+
+                {/* Description (below date/time, above tags) */}
+                <div>
+                  <textarea
+                    rows={3}
+                    placeholder={t('add_description')}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    className="w-full text-sm border border-gray-200 rounded-md px-3 py-2 placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+                  />
+                  {errors.description && <div className="text-red-500 text-xs mt-1">{errors.description}</div>}
+                </div>
+
+                {/* Tags */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-2">{t('tags')}</label>
+                  <div className="flex flex-wrap gap-2">
+                    {allTags?.map((tag) => {
+                      const isSelected = selectedTags?.some((t) => t._id === tag._id);
+                      return (
+                        <button
+                          type="button"
+                          key={tag._id}
+                          onClick={() => handleTagSelect(tag)}
+                          className={`px-3 py-1 rounded-full text-xs border transition-colors ${isSelected ? 'bg-blue-50 border-blue-400 text-blue-700' : 'bg-white border-gray-200 text-gray-700'}`}
+                          title={t('select_tag')}
+                        >
+                          {tag.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Add new tag */}
+                  {!showNewTagForm ? (
+                    <button
+                      type="button"
+                      onClick={() => setShowNewTagForm(true)}
+                      className="mt-2 text-xs text-blue-600 hover:underline"
+                      aria-label={t('add_new_tag')}
+                    >
+                      {t('add_new_tag')}
+                    </button>
+                  ) : (
+                    <div className="mt-2 flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={newTagName}
+                        onChange={(e) => setNewTagName(e.target.value)}
+                        placeholder={t('tag_name_placeholder')}
+                        className="text-xs px-2 py-1 border border-gray-200 rounded-md focus:border-blue-500 focus:outline-none"
+                      />
+                      <input
+                        type="color"
+                        value={newTagColor}
+                        onChange={(e) => setNewTagColor(e.target.value)}
+                        aria-label={t('tag_color')}
+                        className="w-8 h-8 p-0 border border-gray-200 rounded-md"
+                      />
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          await handleCreateNewTag(newTagName, newTagColor, () => {
+                            setNewTagName('');
+                            setNewTagColor('#4f46e5');
+                            setShowNewTagForm(false);
+                          });
+                        }}
+                        className="text-xs px-3 py-1 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                        aria-label={t('save_tag')}
+                      >
+                        {t('save')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowNewTagForm(false)}
+                        className="text-xs px-3 py-1 rounded-md border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
+                        aria-label={t('cancel')}
+                      >
+                        {t('cancel')}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+              </form>
+
+              {/* Footer */}
+              <div className="flex items-center justify-end gap-2 p-4 border-t border-gray-200">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-3 py-2 text-xs border border-gray-200 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+                  aria-label={t('cancel')}
+                >
+                  {t('cancel')}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCreateTask}
+                  disabled={isSubmitting || !title?.trim()}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  aria-label={t('create_task')}
+                >
+                  {t('create_task')}
+                </button>
+              </div>
+          </div>
+         </Modal>
+     );
+ };
+ 
+ export default CreateTaskForm;

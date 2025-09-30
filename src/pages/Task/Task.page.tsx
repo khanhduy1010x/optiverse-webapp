@@ -17,6 +17,7 @@ import View from '../../components/common/View.component';
 import { CircleButton } from '../../components/common/Button.component';
 import { GROUP_CLASSNAMES } from '../../styles/group-class-name.style';
 import TaskExcelImportModal from '../../components/task/TaskExcelImportModal.component';
+import { CreateTaskEventModalForm } from '../../components/task-event/CreateTaskEventModal.component';
 import * as XLSX from 'xlsx';
 
 // Hooks
@@ -512,6 +513,53 @@ const TaskPage: React.FC = () => {
   // Add the task streak hook
   const { updateTaskStreak } = useTaskStreak();
 
+  // State for modal type switching
+  const [modalType, setModalType] = useState<'task' | 'event' | null>(null);
+  const [showCreateTaskEventModal, setShowCreateTaskEventModal] = useState(false);
+
+  // Handle CircleButton click with modal type selection
+  const handleCircleButtonClick = () => {
+    if (selectedMenu === 'task-event') {
+      // If in task-event section, default to event modal but allow switching
+      setModalType('event');
+      setShowCreateTaskEventModal(true);
+    } else {
+      // If in task section, show task modal by default but allow switching
+      setModalType('task');
+      setShowCreateTaskForm(true);
+    }
+  };
+
+  // Handle modal type switching
+  const switchModalType = (type: 'task' | 'event') => {
+    setModalType(type);
+    if (type === 'task') {
+      setShowCreateTaskEventModal(false);
+      setShowCreateTaskForm(true);
+    } else {
+      setShowCreateTaskForm(false);
+      setShowCreateTaskEventModal(true);
+    }
+  };
+
+  // Close all modals
+  const closeAllModals = () => {
+    // Reset form data to ensure create modal is always empty
+    resetForm();
+    setTitle('');
+    setDescription('');
+    setPriority('low');
+    setStartTime('');
+    setEndTime('');
+    setSelectedTags([]);
+    setTaskToEdit(null);
+    
+    // Close modals
+    setShowCreateTaskForm(false);
+    setShowCreateTaskEventModal(false);
+    setModalType(null);
+  };
+
   return (
     <View className="w-full dark:border-gray-700 rounded-lg overflow-hidden">
       {/* Sidebar and Main Content */}
@@ -603,9 +651,9 @@ const TaskPage: React.FC = () => {
 
       <CircleButton
         name="add"
-        aria-label={t('add_task')}
-        title={t('add_task')}
-        onClick={openCreateTaskForm}
+        aria-label={selectedMenu === 'task-event' ? t('add_event') : t('add_task')}
+        title={selectedMenu === 'task-event' ? t('add_event') : t('add_task')}
+        onClick={handleCircleButtonClick}
       />
 
       {/* Task Detail Modal */}
@@ -621,66 +669,135 @@ const TaskPage: React.FC = () => {
 
       {/* Create Task Form */}
       {showCreateTaskForm && (
-        <CreateTaskForm
-          onClose={() => setShowCreateTaskForm(false)}
-          onSave={async (taskData) => {
-            try {
-              
-              const response = await taskService.createTask({
-                title: taskData.title || '',
-                description: taskData.description || '',
-                priority: taskData.priority as 'low' | 'medium' | 'high',
-                status: 'pending',
-                start_time: formatDateToISOString(taskData.start_time),
-                end_time: formatDateToISOString(taskData.end_time)
-              });
+        <div>
+          {/* Modal Type Switcher */}
+          {(selectedMenu === 'task' || selectedMenu === 'task-event') && (
+            <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-[2100] bg-white rounded-lg shadow-lg border border-gray-200 p-1 flex">
+              <button
+                onClick={() => switchModalType('task')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  modalType === 'task' 
+                    ? 'bg-blue-500 text-white' 
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                }`}
+              >
+                {t('create_task')}
+              </button>
+              <button
+                onClick={() => switchModalType('event')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  modalType === 'event' 
+                    ? 'bg-blue-500 text-white' 
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                }`}
+              >
+                {t('create_event')}
+              </button>
+            </div>
+          )}
+          
+          <CreateTaskForm
+            onClose={closeAllModals}
+            onSave={async (taskData) => {
+              try {
+                
+                const response = await taskService.createTask({
+                  title: taskData.title || '',
+                  description: taskData.description || '',
+                  priority: taskData.priority as 'low' | 'medium' | 'high',
+                  status: 'pending',
+                  start_time: formatDateToISOString(taskData.start_time),
+                  end_time: formatDateToISOString(taskData.end_time)
+                });
 
-              if (response && response._id) {
-                console.log('Task created successfully:', response);
-                
-                // Update task streak when task is created
-                await updateTaskStreak();
-                
-                // Add tags if any
-                if (taskData.tags && taskData.tags.length > 0) {
-                  for (const tag of taskData.tags) {
-                    await taskService.createTaskTag(response._id, tag._id);
+                if (response && response._id) {
+                  console.log('Task created successfully:', response);
+                  
+                  // Update task streak when task is created
+                  await updateTaskStreak();
+                  
+                  // Add tags if any
+                  if (taskData.tags && taskData.tags.length > 0) {
+                    for (const tag of taskData.tags) {
+                      await taskService.createTaskTag(response._id, tag._id);
+                    }
                   }
+                  
+                  // Close form and refresh tasks
+                  closeAllModals();
+                  fetchTasksAndCheckOverdue();
+                  return true;
                 }
-                
-                // Close form and refresh tasks
-                setShowCreateTaskForm(false);
-                fetchTasksAndCheckOverdue();
-                return true;
+                return false;
+              } catch (error) {
+                console.error('Error creating task:', error);
+                return false;
               }
-              return false;
-            } catch (error) {
-              console.error('Error creating task:', error);
-              return false;
-            }
-          }}
-          title={title}
-          setTitle={setTitle}
-          description={description}
-          setDescription={setDescription}
-          priority={priority}
-          setPriority={setPriority}
-          start_time={start_time}
-          setStartTime={setStartTime}
-          end_time={end_time}
-          setEndTime={setEndTime}
-          allTags={allTags}
-          selectedTags={selectedTags}
-          setSelectedTags={setSelectedTags}
-          showNewTagForm={showNewTagForm}
-          setShowNewTagForm={setShowNewTagForm}
-          newTagName={newTagName}
-          setNewTagName={setNewTagName}
-          newTagColor={newTagColor}
-          setNewTagColor={setNewTagColor}
-          handleCreateNewTag={handleCreateNewTag}
-          handleTagSelect={handleTagSelect}
-        />
+            }}
+            title={title}
+            setTitle={setTitle}
+            description={description}
+            setDescription={setDescription}
+            priority={priority}
+            setPriority={setPriority}
+            start_time={start_time}
+            setStartTime={setStartTime}
+            end_time={end_time}
+            setEndTime={setEndTime}
+            allTags={allTags}
+            selectedTags={selectedTags}
+            setSelectedTags={setSelectedTags}
+            showNewTagForm={showNewTagForm}
+            setShowNewTagForm={setShowNewTagForm}
+            newTagName={newTagName}
+            setNewTagName={setNewTagName}
+            newTagColor={newTagColor}
+            setNewTagColor={setNewTagColor}
+            handleCreateNewTag={handleCreateNewTag}
+            handleTagSelect={handleTagSelect}
+          />
+        </div>
+      )}
+
+      {/* Create Task Event Modal */}
+      {showCreateTaskEventModal && (
+        <div>
+          {/* Modal Type Switcher */}
+          {(selectedMenu === 'task' || selectedMenu === 'task-event') && (
+            <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-[2100] bg-white rounded-lg shadow-lg border border-gray-200 p-1 flex">
+              <button
+                onClick={() => switchModalType('task')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  modalType === 'task' 
+                    ? 'bg-blue-500 text-white' 
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                }`}
+              >
+                {t('create_task')}
+              </button>
+              <button
+                onClick={() => switchModalType('event')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  modalType === 'event' 
+                    ? 'bg-blue-500 text-white' 
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                }`}
+              >
+                {t('create_event')}
+              </button>
+            </div>
+          )}
+          
+          <CreateTaskEventModalForm
+            isOpen={showCreateTaskEventModal}
+            onClose={closeAllModals}
+            taskId={tasks.length > 0 ? tasks[0]._id : ''}
+            onSuccess={() => {
+              closeAllModals();
+              fetchTasksAndCheckOverdue();
+            }}
+          />
+        </div>
       )}
 
       {/* Edit Task Form */}
