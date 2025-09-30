@@ -31,7 +31,7 @@ export const CalendarContainer: React.FC<CalendarContainerProps> = ({
       {/* Sidebar sẽ được render ở ngoài CalendarContainer nếu có */}
       <div className="flex-1 h-full bg-white flex flex-col relative transition-all duration-300 overflow-auto">
         <div className="absolute top-4 right-4 md:top-6 md:right-8 z-50">
-          <RefreshButton onClick={onRefresh} />
+          {/* Removed duplicate refresh button to avoid duplication with header */}
         </div>
         <div className="flex-1 flex flex-col">
           <Calendar

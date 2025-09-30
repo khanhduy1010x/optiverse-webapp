@@ -3,6 +3,9 @@ import Modal from 'react-modal';
 import { useTaskEventForm } from '../../hooks/task-events/useTaskEventForm.hook';
 import { useTaskEventOperations } from '../../hooks/task-events/useTaskEventOperations.hook';
 import { TaskEvent } from '../../types/task-events/task-events.types';
+import { CalendarDatePicker } from './CalendarDatePicker.component';
+import { TimePickerDropdown } from './TimePickerDropdown.component';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 interface CreateTaskEventModalFormProps {
   isOpen: boolean;
@@ -19,9 +22,13 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
   onSuccess,
   addEvent
 }) => {
-  const { formData, handleInputChange, resetForm, getCreatePayload } = useTaskEventForm();
+  const { t } = useAppTranslate('task');
+  const { formData, handleInputChange, resetForm } = useTaskEventForm();
   const { createTaskEvent, loading } = useTaskEventOperations();
   const [showRepeatOptions, setShowRepeatOptions] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showStartTimePicker, setShowStartTimePicker] = useState(false);
+  const [showEndTimePicker, setShowEndTimePicker] = useState(false);
   const [selectedColor, setSelectedColor] = useState('#3B82F6');
   const [dateError, setDateError] = useState('');
 
@@ -79,27 +86,27 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title || !formData.title.trim()) {
-      alert('Title is required.');
+      alert(t('title_required'));
       return;
     }
     if (formData.title.length > 50) {
-      alert('Title must not exceed 50 characters.');
+      alert(t('title_max_length'));
       return;
     }
     if (!taskId || !taskId.trim()) {
-      alert('Task ID is required.');
+      alert(t('task_id_required'));
       return;
     }
     if (!formData.start_time) {
-      alert('Start time is required.');
+      alert(t('start_time_required'));
       return;
     }
     if (!formData.repeat_type) {
-      alert('Repeat type is required.');
+      alert(t('repeat_type_required'));
       return;
     }
     if (formData.description && formData.description.length > 100) {
-      alert('Description must not exceed 100 characters.');
+      alert(t('description_max_length'));
       return;
     }
 
@@ -218,235 +225,342 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
 
   if (!isOpen) return null;
 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      weekday: 'short', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  };
+
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit',
+      hour12: true 
+    });
+  };
+
   return (
-    <Modal isOpen={isOpen}
-      className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[350px] md:w-[400px] max-w-[95vw] bg-white rounded-xl shadow-2xl z-[2000] outline-none"
+    <Modal 
+      isOpen={isOpen}
+      className="fixed inset-0 flex items-center justify-center z-[2000] outline-none"
       overlayClassName="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000]"
       onRequestClose={() => { resetForm(); onClose(); }}
-      shouldCloseOnOverlayClick={false}
+      shouldCloseOnOverlayClick={true}
       ariaHideApp={false}
     >
-      <form onSubmit={handleSubmit} className="p-4 md:p-6 flex flex-col gap-3">
-        {/* Tiêu đề */}
-        <input
-          type="text"
-          placeholder="Add schedule title"
-          value={formData.title}
-          onChange={(e) => handleInputChange('title', e.target.value)}
-          className="w-full border-0 border-b border-gray-200 py-2 mb-2 focus:outline-none focus:ring-0 focus:border-blue-400 placeholder-gray-400 text-base bg-blue-50/30 rounded-t-xl transition-all"
-          autoFocus
-        />
-        {formData.title && formData.title.length > 50 && (
-          <div className="text-red-500 text-xs mb-1">Title must not exceed 50 characters.</div>
-        )}
-        {/* Ngày bắt đầu/kết thúc */}
-        <div className="flex items-center gap-2 mb-2">
-          <div className="flex flex-col flex-1">
-            <label className="text-xs text-gray-500 mb-1" htmlFor="start-date">Start Date</label>
-            <input
-              id="start-date"
-              type="date"
-              value={formData.start_time ? new Date(formData.start_time).toISOString().slice(0, 10) : ''}
-              onChange={e => {
-                const date = new Date(e.target.value);
-                const prev = new Date(formData.start_time ?? Date.now());
-                date.setHours(prev.getHours(), prev.getMinutes());
-                handleInputChange('start_time', date);
-              }}
-              className="border border-gray-200 rounded-md p-1.5 text-sm"
-              placeholder="Start date"
-            />
-          </div>
-          {/* Đã xoá End Date ở đây */}
-        </div>
-        {/* Thời gian bắt đầu/kết thúc */}
-        <div className="flex items-center gap-2 mb-2">
-          <div className="flex flex-col flex-1">
-            <label className="text-xs text-gray-500 mb-1" htmlFor="start-time">Start Time</label>
-            <input
-              id="start-time"
-              type="time"
-              value={(() => { try { return formData.start_time ? new Date(formData.start_time).toTimeString().slice(0, 5) : ''; } catch { return ''; } })()}
-              onChange={e => {
-                const newDate = new Date(formData.start_time);
-                const [hours, minutes] = e.target.value.split(':').map(Number);
-                newDate.setHours(hours, minutes);
-                handleInputChange('start_time', newDate);
-              }}
-              className="border border-gray-200 rounded-md p-1.5 text-sm"
-              placeholder="Start time"
-            />
-          </div>
-          <span className="text-gray-400 mt-6">-</span>
-          <div className="flex flex-col flex-1">
-            <label className="text-xs text-gray-500 mb-1" htmlFor="end-time">End Time</label>
-            <input
-              id="end-time"
-              type="time"
-              value={(() => { try { return formData.end_time ? new Date(formData.end_time).toTimeString().slice(0, 5) : ''; } catch { return ''; } })()}
-              onChange={e => {
-                if (!formData.end_time) return;
-                const newDate = new Date(formData.end_time);
-                const [hours, minutes] = e.target.value.split(':').map(Number);
-                newDate.setHours(hours, minutes);
-                handleInputChange('end_time', newDate);
-              }}
-              className="border border-gray-200 rounded-md p-1.5 text-sm"
-              placeholder="End time"
-            />
-          </div>
-        </div>
-        {/* Lặp lại */}
-        <div className="relative w-full mb-2">
-          <button
-            type="button"
-            onClick={() => setShowRepeatOptions(!showRepeatOptions)}
-            className="w-full text-left py-1 text-sm flex justify-between items-center border border-gray-200 rounded-md px-2"
-          >
-            <span>{formData.repeat_type === 'none' ? 'Does not repeat' : 
-                   formData.repeat_type === 'daily' ? 'Daily' :
-                   formData.repeat_type === 'weekly' ? 'Weekly' :
-                   formData.repeat_type === 'monthly' ? 'Monthly' :
-                   formData.repeat_type === 'yearly' ? 'Yearly' : 'Custom'}</span>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          {showRepeatOptions && (
-            <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
-              <div 
-                className="p-2 hover:bg-gray-100 cursor-pointer"
-                onClick={() => {
-                  handleInputChange('repeat_type', 'none');
-                  setShowRepeatOptions(false);
-                }}
-              >
-                Does not repeat
-              </div>
-              <div 
-                className="p-2 hover:bg-gray-100 cursor-pointer"
-                onClick={() => {
-                  handleInputChange('repeat_type', 'daily');
-                  setShowRepeatOptions(false);
-                }}
-              >
-                Daily
-              </div>
-              <div 
-                className="p-2 hover:bg-gray-100 cursor-pointer"
-                onClick={() => {
-                  handleInputChange('repeat_type', 'weekly');
-                  setShowRepeatOptions(false);
-                }}
-              >
-                Weekly
-              </div>
-              <div 
-                className="p-2 hover:bg-gray-100 cursor-pointer"
-                onClick={() => {
-                  handleInputChange('repeat_type', 'monthly');
-                  setShowRepeatOptions(false);
-                }}
-              >
-                Monthly
-              </div>
-              <div 
-                className="p-2 hover:bg-gray-100 cursor-pointer"
-                onClick={() => {
-                  handleInputChange('repeat_type', 'yearly');
-                  setShowRepeatOptions(false);
-                }}
-              >
-                Yearly
-              </div>
-            </div>
-          )}
-        </div>
-        {/* Chọn khoảng thời gian lặp lại */}
-        {(formData.repeat_type === 'daily' || formData.repeat_type === 'weekly' || formData.repeat_type === 'monthly' || formData.repeat_type === 'yearly') && (
-          <div className="flex gap-2 mb-2">
-            <div className="flex flex-col flex-1">
-              <label className="text-xs text-gray-500 mb-1">
-                {formData.repeat_type === 'daily' && 'To Date'}
-                {formData.repeat_type === 'weekly' && 'To Week'}
-                {formData.repeat_type === 'monthly' && 'To Month'}
-                {formData.repeat_type === 'yearly' && 'To Year'}
-              </label>
-              {formData.repeat_type === 'daily' && (
-                <input
-                  type="date"
-                  value={formData.repeat_to || ''}
-                  onChange={e => handleInputChange('repeat_to', e.target.value)}
-                  className="border border-gray-200 rounded-md p-1.5 text-sm"
-                />
-              )}
-              {formData.repeat_type === 'weekly' && (
-                <input
-                  type="week"
-                  value={formData.repeat_to || ''}
-                  onChange={e => handleInputChange('repeat_to', e.target.value)}
-                  className="border border-gray-200 rounded-md p-1.5 text-sm"
-                />
-              )}
-              {formData.repeat_type === 'monthly' && (
-                <input
-                  type="month"
-                  value={formData.repeat_to || ''}
-                  onChange={e => handleInputChange('repeat_to', e.target.value)}
-                  className="border border-gray-200 rounded-md p-1.5 text-sm"
-        />
-              )}
-              {formData.repeat_type === 'yearly' && (
-                <input
-                  type="number"
-                  min={new Date().getFullYear()}
-                  max={2100}
-                  value={formData.repeat_to || ''}
-                  onChange={e => handleInputChange('repeat_to', e.target.value)}
-                  className="border border-gray-200 rounded-md p-1.5 text-sm"
-                  placeholder="Year"
-        />
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 max-h-[90vh] flex flex-col relative">
+        
+        <button
+          type="button"
+          onClick={() => { resetForm(); onClose(); }}
+          className="absolute top-3 right-3 p-2 hover:bg-gray-100 rounded-full transition-colors"
+        >
+          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      
+      {/* Form Content */}
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
+          <div className="p-6 space-y-4">
+            {/* Title Input */}
+            <div>
+              <input
+                type="text"
+                placeholder={t('add_title')}
+                value={formData.title || ''}
+                onChange={(e) => handleInputChange('title', e.target.value)}
+                className="w-full text-xl font-medium border-0 border-b-2 border-transparent focus:border-blue-500 focus:outline-none pb-2 placeholder-gray-400"
+                autoFocus
+              />
+              {formData.title && formData.title.length > 50 && (
+                <div className="text-red-500 text-xs mt-1">{t('title_max_length')}</div>
               )}
             </div>
+
+            {/* Date and Time Section */}
+            <div className="space-y-3">
+              {/* Date Picker */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowDatePicker(!showDatePicker)}
+                  className="flex items-center gap-3 w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span className="text-gray-700">
+                    {formData.start_time ? formatDate(formData.start_time.toISOString()) : t('select_date')}
+                  </span>
+                </button>
+                
+                {showDatePicker && (
+                  <div className="absolute top-full left-0 mt-1 z-50">
+                    <CalendarDatePicker
+                      selectedDate={formData.start_time ? new Date(formData.start_time) : new Date()}
+                      onDateSelect={(date) => {
+                        const currentTime = formData.start_time ? new Date(formData.start_time) : new Date();
+                        date.setHours(currentTime.getHours(), currentTime.getMinutes());
+                        handleInputChange('start_time', date.toISOString());
+                        setShowDatePicker(false);
+                      }}
+                      isOpen={showDatePicker}
+                      onClose={() => setShowDatePicker(false)}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Time Pickers: always visible (removed All Day toggle) */}
+              <div className="flex items-center gap-3">
+                {/* Start Time */}
+                <div className="flex-1 relative">
+                  <button
+                      type="button"
+                      onClick={() => setShowStartTimePicker(!showStartTimePicker)}
+                      className="flex items-center gap-2 w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className="text-sm text-gray-700">
+                        {formData.start_time ? formatTime(formData.start_time.toISOString()) : t('start_time')}
+                      </span>
+                    </button>
+                    
+                    {showStartTimePicker && (
+                      <div className="absolute top-full left-0 mt-1 z-50">
+                        <TimePickerDropdown
+                          selectedTime={formData.start_time ? formatTime(formData.start_time.toISOString()) : ''}
+                          onTimeSelect={(time: string) => {
+                            const currentDate = formData.start_time ? new Date(formData.start_time) : new Date();
+                            const [timeStr, period] = time.split(' ');
+                            const [hours, minutes] = timeStr.split(':').map(Number);
+                            let adjustedHours = hours;
+                            if (period === 'PM' && hours !== 12) adjustedHours += 12;
+                            if (period === 'AM' && hours === 12) adjustedHours = 0;
+                            
+                            currentDate.setHours(adjustedHours, minutes);
+                            handleInputChange('start_time', currentDate.toISOString());
+                            setShowStartTimePicker(false);
+                          }}
+                          isOpen={showStartTimePicker}
+                          onClose={() => setShowStartTimePicker(false)}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <span className="text-gray-400">-</span>
+
+                  {/* End Time */}
+                  <div className="flex-1 relative">
+                    <button
+                      type="button"
+                      onClick={() => setShowEndTimePicker(!showEndTimePicker)}
+                      className="flex items-center gap-2 w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className="text-sm text-gray-700">
+                        {formData.end_time ? formatTime(formData.end_time.toISOString()) : t('end_time')}
+                      </span>
+                    </button>
+                    
+                    {showEndTimePicker && (
+                      <div className="absolute top-full left-0 mt-1 z-50">
+                        <TimePickerDropdown
+                          selectedTime={formData.end_time ? formatTime(formData.end_time.toISOString()) : ''}
+                          onTimeSelect={(time: string) => {
+                            const currentDate = formData.end_time ? new Date(formData.end_time) : new Date(formData.start_time || new Date());
+                            const [timeStr, period] = time.split(' ');
+                            const [hours, minutes] = timeStr.split(':').map(Number);
+                            let adjustedHours = hours;
+                            if (period === 'PM' && hours !== 12) adjustedHours += 12;
+                            if (period === 'AM' && hours === 12) adjustedHours = 0;
+                            
+                            currentDate.setHours(adjustedHours, minutes);
+                            handleInputChange('end_time', currentDate.toISOString());
+                            setShowEndTimePicker(false);
+                          }}
+                          isOpen={showEndTimePicker}
+                          onClose={() => setShowEndTimePicker(false)}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+            </div>
+
+            {/* Repeat Options */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowRepeatOptions(!showRepeatOptions)}
+                className="flex items-center gap-3 w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span className="text-gray-700">
+                  {formData.repeat_type === 'none' ? t('does_not_repeat') : 
+                   formData.repeat_type === 'daily' ? t('daily') :
+                   formData.repeat_type === 'weekly' ? t('weekly') :
+                   formData.repeat_type === 'monthly' ? t('monthly') :
+                   formData.repeat_type === 'yearly' ? t('yearly') : t('custom')}
+                </span>
+              </button>
+              
+              {showRepeatOptions && (
+                <div className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-[200px]">
+                  <div 
+                    className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
+                    onClick={() => {
+                      handleInputChange('repeat_type', 'none');
+                      setShowRepeatOptions(false);
+                    }}
+                  >
+                    {t('does_not_repeat')}
+                  </div>
+                  <div 
+                    className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
+                    onClick={() => {
+                      handleInputChange('repeat_type', 'daily');
+                      setShowRepeatOptions(false);
+                    }}
+                  >
+                    {t('daily')}
+                  </div>
+                  <div 
+                    className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
+                    onClick={() => {
+                      handleInputChange('repeat_type', 'weekly');
+                      setShowRepeatOptions(false);
+                    }}
+                  >
+                    {t('weekly')}
+                  </div>
+                  <div 
+                    className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
+                    onClick={() => {
+                      handleInputChange('repeat_type', 'monthly');
+                      setShowRepeatOptions(false);
+                    }}
+                  >
+                    {t('monthly')}
+                  </div>
+                  <div 
+                    className="p-3 hover:bg-gray-50 cursor-pointer"
+                    onClick={() => {
+                      handleInputChange('repeat_type', 'yearly');
+                      setShowRepeatOptions(false);
+                    }}
+                  >
+                    {t('yearly')}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Repeat End Date - Only show if repeat is not 'none' */}
+            {(formData.repeat_type === 'daily' || formData.repeat_type === 'weekly' || formData.repeat_type === 'monthly' || formData.repeat_type === 'yearly') && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">
+                  {formData.repeat_type === 'daily' && t('to_date')}
+                  {formData.repeat_type === 'weekly' && t('to_week')}
+                  {formData.repeat_type === 'monthly' && t('to_month')}
+                  {formData.repeat_type === 'yearly' && t('to_year')}
+                </label>
+                {formData.repeat_type === 'daily' && (
+                  <input
+                    type="date"
+                    value={formData.repeat_to || ''}
+                    onChange={e => handleInputChange('repeat_to', e.target.value)}
+                    className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                )}
+                {formData.repeat_type === 'weekly' && (
+                  <input
+                    type="week"
+                    value={formData.repeat_to || ''}
+                    onChange={e => handleInputChange('repeat_to', e.target.value)}
+                    className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                )}
+                {formData.repeat_type === 'monthly' && (
+                  <input
+                    type="month"
+                    value={formData.repeat_to || ''}
+                    onChange={e => handleInputChange('repeat_to', e.target.value)}
+                    className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                )}
+                {formData.repeat_type === 'yearly' && (
+                  <input
+                    type="number"
+                    min={new Date().getFullYear()}
+                    max={2100}
+                    value={formData.repeat_to || ''}
+                    onChange={e => handleInputChange('repeat_to', e.target.value)}
+                    className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder={t('year')}
+                  />
+                )}
+              </div>
+            )}
+
+            {/* Description */}
+            <div className="space-y-2">
+              <textarea
+                placeholder={t('add_description')}
+                value={formData.description || ''}
+                onChange={e => handleInputChange('description', e.target.value)}
+                className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                rows={3}
+              />
+              {!!formData.description && formData.description.length > 100 && (
+                <div className="text-red-500 text-xs">{t('description_max_length')}</div>
+              )}
+            </div>
+
+            {/* Error Messages */}
+            {dateError && (
+              <div className="text-red-500 text-sm bg-red-50 p-3 rounded-lg">{dateError}</div>
+            )}
           </div>
-        )}
-        {/* Description */}
-        <textarea
-          placeholder="Add description"
-          value={formData.description || ''}
-          onChange={e => handleInputChange('description', e.target.value)}
-          className="w-full border-0 border-b border-gray-200 py-2 focus:outline-none focus:ring-0 text-sm mb-2 resize-none min-h-[32px]"
-        />
-        {!!formData.description && formData.description.length > 100 && (
-          <div className="text-red-500 text-xs mb-1">Description must not exceed 100 characters.</div>
-        )}
-        {dateError && (
-          <div className="text-red-500 text-xs mb-1">{dateError}</div>
-        )}
-        {/* Nút lưu/hủy */}
-        <div className="flex justify-end gap-2 mt-2">
+        </form>
+
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-3 p-4 border-t border-gray-200">
           <button 
             type="button"
             onClick={() => { resetForm(); onClose(); }}
-            className="px-5 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl text-base font-semibold transition-all"
+            className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
-            Cancel
+            {t('cancel')}
           </button>
           <button
             type="submit"
+            onClick={handleSubmit}
             disabled={
               loading ||
-              !formData.title.trim() ||
+              !formData.title?.trim() ||
               (formData.title && formData.title.length > 50) ||
-              (!!formData.description && formData.description.length > 100)
-             || !!dateError
+              (!!formData.description && formData.description.length > 100) ||
+              !!dateError
             }
-            className="px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-bold shadow-md hover:scale-105 hover:shadow-xl transition-all text-base disabled:bg-blue-300 disabled:opacity-60"
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
           >
-            Save
+            {loading ? t('saving') : t('save')}
           </button>
         </div>
-      </form>
+      </div>
     </Modal>
   );
 };
