@@ -11,6 +11,8 @@ import achievement from './achievement.json';
 import notification from './notification.json';
 import error from './error.json';
 import taskEvent from './task-event.json';
+import chat from './chat.json';
+
 
 export default {
   common,
@@ -26,4 +28,5 @@ export default {
   notification,
   error,
   'task-event': taskEvent,
+  chat,
 };

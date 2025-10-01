@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { AllFriendsProps } from '../../../types/friend/props/component.props';
 import { GROUP_CLASSNAMES } from '../../../styles/group-class-name.style';
 import { useAllFriend } from '../../../hooks/friend/useAllFriend.hook';
@@ -17,6 +17,19 @@ const AllFriends: React.FC<AllFriendsProps> = ({
     friends,
     loading,
   });
+  const [startingChatWith, setStartingChatWith] = useState<string | null>(null);
+
+  const handleStartChat = async (friendId: string) => {
+    if (startingChatWith) return; // Prevent multiple clicks
+    
+    setStartingChatWith(friendId);
+    try {
+      await onStartChat?.(friendId);
+    } finally {
+      // Reset loading state after a short delay to prevent flashing
+      setTimeout(() => setStartingChatWith(null), 500);
+    }
+  };
 
   if (loading) {
     return (
@@ -80,8 +93,10 @@ const AllFriends: React.FC<AllFriendsProps> = ({
         return (
           <div
             key={friend._id}
-            className="bg-white rounded-lg p-5 shadow-sm border border-gray-200 transition-all hover:shadow-md cursor-pointer"
-            onClick={() => onStartChat && onStartChat(friend.friend_id)}
+            className={`bg-white rounded-lg p-5 shadow-sm border border-gray-200 transition-all hover:shadow-md ${
+              startingChatWith === friend.friend_id ? 'cursor-not-allowed opacity-75' : 'cursor-pointer'
+            }`}
+            onClick={() => !startingChatWith && handleStartChat(friend.friend_id)}
           >
             <div className="flex items-start justify-between">
               <div className="flex items-center">
@@ -132,27 +147,60 @@ const AllFriends: React.FC<AllFriendsProps> = ({
                   )}
 
                   <button
-                    className="mt-2 inline-flex items-center text-blue-600 hover:text-blue-800 text-sm"
+                    className={`mt-2 inline-flex items-center text-sm transition-all ${
+                      startingChatWith === friend.friend_id
+                        ? 'text-gray-400 cursor-not-allowed'
+                        : 'text-blue-600 hover:text-blue-800'
+                    }`}
                     onClick={e => {
                       e.stopPropagation();
-                      onStartChat && onStartChat(friend.friend_id);
+                      handleStartChat(friend.friend_id);
                     }}
+                    disabled={startingChatWith === friend.friend_id}
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4 mr-1"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
-                      />
-                    </svg>
-                    {t('start_conversation')}
+                    {startingChatWith === friend.friend_id ? (
+                      <>
+                        <svg
+                          className="animate-spin h-4 w-4 mr-1"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        {t('starting')}...
+                      </>
+                    ) : (
+                      <>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4 mr-1"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+                          />
+                        </svg>
+                        {t('start_conversation')}
+                      </>
+                    )}
                   </button>
                 </div>
               </div>

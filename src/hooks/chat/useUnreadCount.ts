@@ -1,34 +1,117 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { ref, onValue, set, get, update } from 'firebase/database';
+import { ref, onValue, set, get, update, query, orderByKey, limitToLast } from 'firebase/database';
 import { db } from '../../firebase';
 
 /**
  * Hook để theo dõi và cập nhật số tin nhắn chưa đọc trong hội thoại
+ * Sử dụng cơ chế lastRead marker để tối ưu hóa hiệu suất
+ * Sử dụng orderByKey() thay vì orderByChild('createdAt') để:
+ * - Tránh Firebase Index error
+ * - Tăng performance (orderByKey() nhanh hơn orderByChild())
+ * - Key của Firebase push() được tạo theo thời gian, đảm bảo thứ tự chronological
  * @param conversationId ID của hội thoại
  */
 export function useUnreadCount(conversationId: string) {
   const [unreadCount, setUnreadCount] = useState(0);
   const currentUserId = localStorage.getItem('user_id') || '';
   const inputFocusedRef = useRef(false);
+  const lastCalculationRef = useRef<number>(0);
+  const calculationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Lắng nghe số tin nhắn chưa đọc
+  // Lắng nghe lastRead marker và tính toán unread count
   useEffect(() => {
     if (!conversationId || !currentUserId) return;
 
-    const unreadCountRef = ref(
+    // Lắng nghe lastRead marker của user hiện tại
+    const lastReadRef = ref(
       db,
-      `unreadCount/${conversationId}/${currentUserId}`
+      `conversations/${conversationId}/lastRead/${currentUserId}`
     );
 
-    const unsubscribe = onValue(unreadCountRef, snapshot => {
-      const count = snapshot.val() || 0;
-      setUnreadCount(count);
+    const messagesRef = ref(db, `messages/${conversationId}`);
+
+    const unsubscribeLastRead = onValue(lastReadRef, async (lastReadSnapshot) => {
+      const lastReadTimestamp = lastReadSnapshot.val() || 0;
+      
+      // Tính toán chính xác unread count từ tất cả tin nhắn chưa đọc với debounce
+      const calculateAccurateUnread = async (immediate = false) => {
+        // Debounce để tránh tính toán quá nhiều lần
+        if (!immediate) {
+          const now = Date.now();
+          if (now - lastCalculationRef.current < 1000) { // Chỉ tính toán tối đa 1 lần/giây
+            if (calculationTimeoutRef.current) {
+              clearTimeout(calculationTimeoutRef.current);
+            }
+            calculationTimeoutRef.current = setTimeout(() => calculateAccurateUnread(true), 500);
+            return;
+          }
+        }
+        
+        lastCalculationRef.current = Date.now();
+        
+        try {
+          // Lấy tất cả tin nhắn gần đây và filter theo lastReadTimestamp
+          // Sử dụng orderByKey() để tránh Firebase Index error
+          const allMessagesQuery = query(
+            messagesRef,
+            orderByKey(),
+            limitToLast(100) // Lấy 100 tin nhắn gần nhất
+          );
+          
+          const allMessagesSnapshot = await get(allMessagesQuery);
+          
+          if (!allMessagesSnapshot.exists()) {
+            setUnreadCount(0);
+            return;
+          }
+
+          const allMessages = allMessagesSnapshot.val() || {};
+          let accurateUnreadCount = 0;
+
+          // Đếm chính xác tất cả tin nhắn chưa đọc (có createdAt > lastReadTimestamp)
+          Object.values(allMessages).forEach((message: any) => {
+            if (
+              message.senderId !== currentUserId && // Không phải tin nhắn của mình
+              !message.deleted && // Tin nhắn chưa bị xóa
+              (!message.hiddenBy || !message.hiddenBy.includes(currentUserId)) && // Tin nhắn chưa bị ẩn
+              message.createdAt > lastReadTimestamp // Tin nhắn được tạo sau lastRead marker
+            ) {
+              accurateUnreadCount++;
+            }
+          });
+
+          console.log(`Accurate unread count for conversation ${conversationId}:`, accurateUnreadCount, 'lastRead:', lastReadTimestamp);
+          setUnreadCount(accurateUnreadCount);
+        } catch (error) {
+          console.error('Error calculating accurate unread count:', error);
+          setUnreadCount(0);
+        }
+      };
+
+      // Tính toán unread count ngay lập tức
+      await calculateAccurateUnread(true);
+
+      // Lắng nghe tin nhắn mới để cập nhật realtime (chỉ cần lắng nghe tin nhắn mới nhất)
+      // Sử dụng orderByKey() thay vì orderByChild('createdAt') để tránh Firebase Index error
+      // Key của Firebase push() được tạo theo thời gian, đảm bảo thứ tự chronological
+      const latestMessagesQuery = query(messagesRef, orderByKey(), limitToLast(10));
+      const unsubscribeMessages = onValue(latestMessagesQuery, async () => {
+        // Khi có tin nhắn mới, tính lại unread count chính xác (với debounce)
+        await calculateAccurateUnread();
+      });
+
+      return () => unsubscribeMessages();
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribeLastRead();
+      if (calculationTimeoutRef.current) {
+        clearTimeout(calculationTimeoutRef.current);
+      }
+    };
   }, [conversationId, currentUserId]);
 
-  // Đánh dấu đã đọc tất cả tin nhắn khi focus vào input
+  // Đánh dấu đã đọc bằng cách cập nhật lastRead marker
   const markAsRead = useCallback(async () => {
     if (!conversationId || !currentUserId) return;
 
@@ -40,61 +123,52 @@ export function useUnreadCount(conversationId: string) {
     );
 
     try {
-      // Cập nhật unreadCount về 0
-      const unreadCountRef = ref(
-        db,
-        `unreadCount/${conversationId}/${currentUserId}`
-      );
-      await set(unreadCountRef, 0);
-      console.log('Updated unreadCount to 0');
-
-      // Cập nhật trường readBy của tất cả tin nhắn chưa đọc
+      // Lấy tin nhắn mới nhất để cập nhật lastRead marker
       const messagesRef = ref(db, `messages/${conversationId}`);
-      const messagesSnapshot = await get(messagesRef);
+      const latestMessagesQuery = query(messagesRef, orderByKey(), limitToLast(1));
+      const latestMessageSnapshot = await get(latestMessagesQuery);
 
-      if (messagesSnapshot.exists()) {
-        const messages = messagesSnapshot.val();
-        console.log('All messages:', messages);
-        const updates: { [key: string]: any } = {};
+      if (latestMessageSnapshot.exists()) {
+        const messages = latestMessageSnapshot.val();
+        const latestMessage = Object.values(messages)[0] as any;
+        const latestTimestamp = latestMessage.createdAt;
 
-        // Duyệt qua tất cả tin nhắn
-        Object.keys(messages).forEach(messageId => {
-          const message = messages[messageId];
-          console.log(
-            'Checking message:',
-            messageId,
-            'sender:',
-            message.senderId,
-            'currentUser:',
-            currentUserId
-          );
+        // Cập nhật lastRead marker với timestamp của tin nhắn mới nhất
+        const lastReadRef = ref(
+          db,
+          `conversations/${conversationId}/lastRead/${currentUserId}`
+        );
+        await set(lastReadRef, latestTimestamp);
+        
+        console.log('Updated lastRead marker to:', latestTimestamp);
 
-          // Chỉ cập nhật tin nhắn của người khác gửi (người khác gửi cho mình)
-          if (message.senderId !== currentUserId) {
-            const readBy = message.readBy || {};
-            console.log('Message readBy before:', readBy);
+        // Cập nhật readBy cho tất cả tin nhắn chưa đọc để hiển thị trạng thái "đã đọc" realtime
+        // Lấy tất cả tin nhắn để cập nhật readBy cho những tin nhắn chưa đọc
+        const allMessagesQuery = query(messagesRef, orderByKey(), limitToLast(50));
+        const allMessagesSnapshot = await get(allMessagesQuery);
+        
+        if (allMessagesSnapshot.exists()) {
+          const allMessages = allMessagesSnapshot.val();
+          const updates: { [key: string]: any } = {};
+          const readTimestamp = Date.now();
 
-            // Nếu chưa có trường readBy hoặc chưa đánh dấu đã đọc
-            if (!readBy[currentUserId]) {
-              readBy[currentUserId] = Date.now();
-              updates[`messages/${conversationId}/${messageId}/readBy`] =
-                readBy;
-              console.log('Will update message:', messageId, 'readBy:', readBy);
-            } else {
-              console.log('Message already read by current user');
+          // Duyệt qua tất cả tin nhắn và đánh dấu readBy cho những tin nhắn chưa đọc
+          Object.entries(allMessages).forEach(([messageId, message]: [string, any]) => {
+            // Chỉ cập nhật tin nhắn của người khác và chưa được đánh dấu đã đọc
+            if (message.senderId !== currentUserId && message.createdAt <= latestTimestamp) {
+              const readBy = message.readBy || {};
+              if (!readBy[currentUserId]) {
+                readBy[currentUserId] = readTimestamp;
+                updates[`messages/${conversationId}/${messageId}/readBy`] = readBy;
+              }
             }
-          } else {
-            console.log('Skipping own message');
-          }
-        });
+          });
 
-        // Thực hiện cập nhật hàng loạt nếu có tin nhắn cần cập nhật
-        if (Object.keys(updates).length > 0) {
-          console.log('Performing updates:', updates);
-          await update(ref(db), updates);
-          console.log('Updates completed successfully');
-        } else {
-          console.log('No updates needed');
+          // Thực hiện cập nhật hàng loạt nếu có tin nhắn cần cập nhật
+          if (Object.keys(updates).length > 0) {
+            await update(ref(db), updates);
+            console.log(`Updated readBy for ${Object.keys(updates).length} messages`);
+          }
         }
       } else {
         console.log('No messages found in conversation');
@@ -104,32 +178,20 @@ export function useUnreadCount(conversationId: string) {
     }
   }, [conversationId, currentUserId]);
 
-  // Tăng số tin nhắn chưa đọc
+  // Tăng số tin nhắn chưa đọc (với cơ chế lastRead marker, việc này được tự động tính toán)
   const incrementUnread = useCallback(
     (targetUserId: string) => {
       if (!conversationId || !targetUserId || targetUserId === currentUserId)
         return;
 
-      // Kiểm tra xem người nhận có đang focus vào input không
-      const typingRef = ref(
-        db,
-        `typingStatus/${conversationId}/${targetUserId}`
-      );
-      get(typingRef).then(snapshot => {
-        // Nếu người nhận không đang focus vào input, tăng số tin nhắn chưa đọc
-        if (!snapshot.exists() || !snapshot.val()) {
-          const unreadCountRef = ref(
-            db,
-            `unreadCount/${conversationId}/${targetUserId}`
-          );
-
-          // Đọc giá trị hiện tại và tăng lên 1
-          get(unreadCountRef).then(snapshot => {
-            const currentCount = snapshot.val() || 0;
-            set(unreadCountRef, currentCount + 1);
-          });
-        }
-      });
+      // Với cơ chế lastRead marker, unread count được tự động tính toán
+      // dựa trên việc so sánh timestamp của tin nhắn với lastRead marker
+      // Không cần thực hiện thêm action nào ở đây vì:
+      // 1. Khi có tin nhắn mới, useEffect sẽ tự động tính lại unread count
+      // 2. lastRead marker của người nhận vẫn giữ nguyên (không thay đổi)
+      // 3. Tin nhắn mới sẽ có timestamp > lastRead marker => tự động được tính là chưa đọc
+      
+      console.log(`New message for user ${targetUserId} in conversation ${conversationId} - unread count will be auto-calculated`);
     },
     [conversationId, currentUserId]
   );

@@ -1,11 +1,13 @@
 import React from 'react';
 
-interface ImagePreviewProps {
-    images: File[];
-    onRemove: (index: number) => void;
-}
+import { ImagePreviewProps } from '../../types/chat/props/component.props';
 
 const ImagePreview: React.FC<ImagePreviewProps> = ({ images, onRemove }) => {
+    // Handle case when images is undefined or empty
+    if (!images || images.length === 0) {
+        return null;
+    }
+
     return (
         <div className="flex flex-wrap gap-2 p-2 max-h-40 overflow-y-auto w-full" style={{ maxWidth: '100%' }}>
             {images.map((image, index) => (
@@ -40,4 +42,4 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({ images, onRemove }) => {
     );
 };
 
-export default ImagePreview; 
+export default ImagePreview;

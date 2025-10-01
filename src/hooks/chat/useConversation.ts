@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { ref, onValue, push, set, query, orderByChild, equalTo } from "firebase/database";
+import { ref, onValue, push, set, query, orderByChild, equalTo, get } from "firebase/database";
 import { db } from "../../firebase";
 import { ConversationType } from "../../types/chat/ConversationType";
 import chatService from "../../services/chat.service";
@@ -18,23 +18,31 @@ export function useConversation() {
 
   // Lấy danh sách hội thoại từ Firebase
   useEffect(() => {
-    if (!currentUserId) return;
+    if (!currentUserId) {
+      console.log('useConversation: No currentUserId found');
+      return;
+    }
     
+    console.log('useConversation: Starting to load conversations for user:', currentUserId);
     const conversationsRef = ref(db, "conversations");
     
     const unsubscribe = onValue(conversationsRef, async (snapshot) => {
       const data = snapshot.val();
+      console.log('useConversation: Firebase data received:', data);
       if (!data) {
+        console.log('useConversation: No conversations data found');
         setLoading(false);
         return;
       }
       
-      // Lọc các hội thoại mà user hiện tại tham gia và không bị ẩn
+      // Lọc các hội thoại mà user hiện tại tham gia và không bị ẩn hoặc xóa mềm (chỉ individual conversations)
       const userConversations = Object.entries(data)
         .filter(([_, conv]: [string, any]) => {
           const isParticipant = conv.members && conv.members[currentUserId];
           const isHidden = conv.hiddenBy && conv.hiddenBy[currentUserId];
-          return isParticipant && !isHidden;
+          const isDeleted = conv.deletedBy && conv.deletedBy[currentUserId]; // Kiểm tra xóa mềm
+          const isNotGroupConversation = conv.type !== 'group'; // Loại trừ group conversations
+          return isParticipant && !isHidden && !isDeleted && isNotGroupConversation;
         })
         .map(([id, conv]: [string, any]) => ({
           id,
@@ -106,32 +114,78 @@ export function useConversation() {
 
   // Tạo hội thoại mới hoặc lấy hội thoại hiện có
   const getOrCreateConversation = useCallback(async (targetUserId: string) => {
-    if (!currentUserId || !targetUserId || currentUserId === targetUserId) return null;
-    
-    // Kiểm tra xem đã có hội thoại nào giữa hai người dùng chưa
-    const existingConversation = conversations.find(conv => 
-      conv.members[currentUserId] && conv.members[targetUserId] && 
-      Object.keys(conv.members).length === 2
-    );
-    
-    if (existingConversation) {
-      return existingConversation.id;
+    if (!currentUserId || !targetUserId || currentUserId === targetUserId) {
+      console.log('getOrCreateConversation: Invalid parameters', { currentUserId, targetUserId });
+      return null;
     }
     
-    // Nếu chưa có, tạo hội thoại mới
-    const conversationsRef = ref(db, "conversations");
-    const newConversationRef = push(conversationsRef);
-    
-    await set(newConversationRef, {
-      members: {
-        [currentUserId]: true,
-        [targetUserId]: true
-      },
-      createdAt: Date.now()
+    console.log('getOrCreateConversation: Searching for existing conversation', {
+      currentUserId,
+      targetUserId
     });
     
-    return newConversationRef.key;
-  }, [conversations, currentUserId]);
+    try {
+      // Truy vấn trực tiếp Firebase để tìm conversation đã tồn tại
+      const conversationsRef = ref(db, "conversations");
+      const snapshot = await get(conversationsRef);
+      const allConversations = snapshot.val();
+      
+      console.log('getOrCreateConversation: Firebase data received', allConversations);
+      
+      if (allConversations) {
+        // Tìm conversation 1-1 giữa hai user
+        const existingConversationEntry = Object.entries(allConversations).find(([id, conv]: [string, any]) => {
+          const hasCurrentUser = conv.members && conv.members[currentUserId];
+          const hasTargetUser = conv.members && conv.members[targetUserId];
+          const memberCount = conv.members ? Object.keys(conv.members).length : 0;
+          const isOneOnOne = memberCount === 2;
+          const isNotHidden = !conv.hiddenBy || !conv.hiddenBy[currentUserId];
+          const isNotGroupConversation = conv.type !== 'group';
+          
+          console.log('getOrCreateConversation: Checking conversation', {
+            conversationId: id,
+            hasCurrentUser,
+            hasTargetUser,
+            memberCount,
+            isOneOnOne,
+            isNotHidden,
+            isNotGroupConversation,
+            members: conv.members,
+            hiddenBy: conv.hiddenBy,
+            type: conv.type
+          });
+          
+          return hasCurrentUser && hasTargetUser && isOneOnOne && isNotHidden && isNotGroupConversation;
+        });
+        
+        if (existingConversationEntry) {
+          const [conversationId] = existingConversationEntry;
+          console.log('getOrCreateConversation: Found existing conversation', conversationId);
+          return conversationId;
+        }
+      }
+      
+      console.log('getOrCreateConversation: No existing conversation found, creating new one');
+      
+      // Nếu chưa có, tạo hội thoại mới
+      const newConversationRef = push(conversationsRef);
+      
+      await set(newConversationRef, {
+        members: {
+          [currentUserId]: true,
+          [targetUserId]: true
+        },
+        createdAt: Date.now(),
+        type: 'individual' // Đảm bảo đây là conversation cá nhân
+      });
+      
+      console.log('getOrCreateConversation: Created new conversation', newConversationRef.key);
+      return newConversationRef.key;
+    } catch (error) {
+      console.error('getOrCreateConversation: Error', error);
+      return null;
+    }
+  }, [currentUserId]);
 
   return { conversations, users, loading, getOrCreateConversation };
-} 
+}

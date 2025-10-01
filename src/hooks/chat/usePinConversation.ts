@@ -8,7 +8,7 @@ import { toast } from 'react-toastify';
  */
 export function usePinConversation() {
   const [pinnedConversations, setPinnedConversations] = useState<{
-    [conversationId: string]: number;
+    [conversationId: string]: boolean;
   }>({});
   const currentUserId = localStorage.getItem('user_id') || '';
 
@@ -23,12 +23,12 @@ export function usePinConversation() {
       if (!snapshot.exists()) return;
 
       const data = snapshot.val();
-      const pinned: { [conversationId: string]: number } = {};
+      const pinned: { [conversationId: string]: boolean } = {};
 
       // Lọc các hội thoại được ghim bởi người dùng hiện tại
       Object.entries(data).forEach(([id, conv]: [string, any]) => {
         if (conv.pinnedBy && conv.pinnedBy[currentUserId]) {
-          pinned[id] = conv.pinnedBy[currentUserId];
+          pinned[id] = true;
         }
       });
 
@@ -57,21 +57,9 @@ export function usePinConversation() {
           return false;
         }
 
-        // Tìm thứ tự ghim tiếp theo (từ 1-5)
-        const pinnedOrders = Object.values(pinnedConversations);
-        let nextOrder = 1;
-
-        while (pinnedOrders.includes(nextOrder) && nextOrder <= 5) {
-          nextOrder++;
-        }
-
         // Cập nhật trạng thái ghim
-        const pinnedRef = ref(
-          db,
-          `conversations/${conversationId}/pinnedBy/${currentUserId}`
-        );
         await update(ref(db, `conversations/${conversationId}`), {
-          [`pinnedBy/${currentUserId}`]: nextOrder,
+          [`pinnedBy/${currentUserId}`]: true,
         });
 
         toast.success('Đã ghim hội thoại');
@@ -82,7 +70,7 @@ export function usePinConversation() {
         return false;
       }
     },
-    [currentUserId, pinnedConversations, getPinnedCount]
+    [currentUserId, getPinnedCount]
   );
 
   // Bỏ ghim một hội thoại
@@ -91,35 +79,13 @@ export function usePinConversation() {
       if (!currentUserId || !conversationId) return false;
 
       try {
-        // Lấy thứ tự ghim của hội thoại cần bỏ ghim
-        const removedOrder = pinnedConversations[conversationId];
-        if (!removedOrder) return false;
+        // Kiểm tra xem hội thoại có được ghim không
+        if (!pinnedConversations[conversationId]) return false;
 
         // Xóa trạng thái ghim
         await update(ref(db, `conversations/${conversationId}`), {
           [`pinnedBy/${currentUserId}`]: null,
         });
-
-        // Sắp xếp lại thứ tự cho các hội thoại còn lại
-        const updates: { [path: string]: number | null } = {};
-
-        // Lấy danh sách hội thoại đã ghim và thứ tự ghim
-        const pinnedItems = Object.entries(pinnedConversations)
-          .filter(([id]) => id !== conversationId)
-          .sort((a, b) => a[1] - b[1]);
-
-        // Cập nhật lại thứ tự ghim cho các hội thoại còn lại
-        pinnedItems.forEach(([id, order], index) => {
-          const newOrder = index + 1; // Thứ tự mới bắt đầu từ 1
-          if (order !== newOrder) {
-            updates[`conversations/${id}/pinnedBy/${currentUserId}`] = newOrder;
-          }
-        });
-
-        // Nếu có cập nhật, thực hiện cập nhật hàng loạt
-        if (Object.keys(updates).length > 0) {
-          await update(ref(db), updates);
-        }
 
         toast.success('Đã bỏ ghim hội thoại');
         return true;
@@ -140,20 +106,11 @@ export function usePinConversation() {
     [pinnedConversations]
   );
 
-  // Lấy thứ tự ghim của một hội thoại
-  const getPinOrder = useCallback(
-    (conversationId: string) => {
-      return pinnedConversations[conversationId] || 0;
-    },
-    [pinnedConversations]
-  );
-
   return {
     pinnedConversations,
     pinConversation,
     unpinConversation,
     isConversationPinned,
-    getPinOrder,
     getPinnedCount,
   };
 }

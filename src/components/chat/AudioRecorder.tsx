@@ -1,9 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-interface AudioRecorderProps {
-    onRecordingComplete: (audioBlob: File) => void;
-    onCancel: () => void;
-}
+import { AudioRecorderProps } from '../../types/chat/props/component.props';
 
 const AudioRecorder: React.FC<AudioRecorderProps> = ({ onRecordingComplete, onCancel }) => {
     const [isRecording, setIsRecording] = useState(false);

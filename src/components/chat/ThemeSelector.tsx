@@ -1,12 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useConversationTheme } from '../../hooks/chat/useConversationTheme';
 import { toast } from 'react-toastify';
-
-interface ThemeSelectorProps {
-    conversationId: string;
-    onClose: () => void;
-    isOpen: boolean;
-}
+import { ThemeSelectorProps } from '../../types/chat/props/component.props';
 
 const ThemeSelector: React.FC<ThemeSelectorProps> = ({ conversationId, onClose, isOpen }) => {
     const {

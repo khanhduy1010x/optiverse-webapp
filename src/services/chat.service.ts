@@ -94,6 +94,50 @@ class ChatService {
   }
 
   /**
+   * Xóa mềm conversation - chỉ ẩn conversation đối với user hiện tại
+   */
+  async softDeleteConversation(conversationId: string) {
+    try {
+      const userId = localStorage.getItem('user_id');
+      if (!userId) throw new Error('User not logged in');
+
+      const conversationRef = ref(db, `conversations/${conversationId}`);
+      
+      // Cập nhật field deletedBy với timestamp hiện tại
+      await update(conversationRef, {
+        [`deletedBy/${userId}`]: Date.now()
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error soft deleting conversation:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Khôi phục conversation đã bị xóa mềm
+   */
+  async restoreConversation(conversationId: string) {
+    try {
+      const userId = localStorage.getItem('user_id');
+      if (!userId) throw new Error('User not logged in');
+
+      const conversationRef = ref(db, `conversations/${conversationId}`);
+      
+      // Xóa field deletedBy cho user hiện tại
+      await update(conversationRef, {
+        [`deletedBy/${userId}`]: null
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error restoring conversation:', error);
+      return false;
+    }
+  }
+
+  /**
    * Lấy theme của hội thoại
    */
   async getConversationTheme(conversationId: string) {
@@ -109,6 +153,92 @@ class ChatService {
       return null;
     } catch (error) {
       console.error('Error getting conversation theme:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Cập nhật theme cho group conversation
+   */
+  async updateGroupConversationTheme(groupId: string, themeData: {
+    backgroundColor?: string;
+    backgroundUrl?: string;
+    textColor?: string;
+  }) {
+    try {
+      const userId = localStorage.getItem('user_id');
+      if (!userId) throw new Error('User not logged in');
+
+      const groupRef = ref(db, `groupConversations/${groupId}`);
+      await update(groupRef, {
+        theme: {
+          ...themeData,
+          updatedAt: Date.now(),
+          updatedBy: userId,
+        },
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error updating group conversation theme:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Tải lên hình ảnh làm theme cho group conversation
+   */
+  async uploadGroupThemeImage(groupId: string, file: File) {
+    try {
+      const userId = localStorage.getItem('user_id');
+      if (!userId) throw new Error('User not logged in');
+
+      // Tạo FormData để gửi file
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // Gọi API để tải lên hình ảnh
+      const response = await api.post<ApiResponse<string>>(
+        '/core/profile/chat/theme',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
+      // Lấy URL của hình ảnh từ response
+      const downloadURL = response.data.data;
+
+      // Cập nhật theme cho group conversation
+      await this.updateGroupConversationTheme(groupId, {
+        backgroundUrl: downloadURL,
+      });
+
+      return downloadURL;
+    } catch (error) {
+      console.error('Error uploading group theme image:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Lấy theme của group conversation
+   */
+  async getGroupConversationTheme(groupId: string) {
+    try {
+      const groupRef = ref(db, `groupConversations/${groupId}`);
+      const snapshot = await get(groupRef);
+
+      if (snapshot.exists()) {
+        const group = snapshot.val();
+        return group.theme || null;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error getting group conversation theme:', error);
       return null;
     }
   }
