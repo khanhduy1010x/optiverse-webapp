@@ -1,21 +1,7 @@
 import React from 'react';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
 
-interface ChatHeaderProps {
-  textColor: string;
-  otherUser: any;
-  getInitials: (name: string) => string;
-  activeConversationId: string;
-  handleTogglePinConversation: (id: string) => void;
-  isConversationPinned: (id: string) => boolean;
-  showMessageSearch: boolean;
-  setShowMessageSearch: (show: boolean) => void;
-  showPinnedMessages: boolean;
-  setShowPinnedMessages: (show: boolean) => void;
-  showThemeSelector: boolean;
-  setShowThemeSelector: (show: boolean) => void;
-  t: (key: string) => string;
-}
+import { ChatHeaderProps } from '../../types/chat/props/component.props';
 
 const ChatHeader: React.FC<ChatHeaderProps> = ({
   textColor,

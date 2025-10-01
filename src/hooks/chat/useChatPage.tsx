@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import MessageItem from '../../pages/chat/MessageItem.screen';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useConversation } from './useConversation';
 import { useMessages } from './useMessages';
 import { useSendMessage } from './useSendMessage';
@@ -9,15 +9,17 @@ import { useUnreadCount } from './useUnreadCount';
 import { useConversationTheme } from './useConversationTheme';
 import { usePinConversation } from './usePinConversation';
 import { usePinMessage } from './usePinMessage';
+import { useSearchConversationMessages } from './useSearchConversationMessages';
 import { useSearchMessages } from './useSearchMessages';
 import { UserResponse } from '../../types/auth/auth.types';
 import friendService from '../../services/friend.service';
 import { Friend } from '../../types/friend/response/friend.response';
-import { ref, get, remove } from 'firebase/database';
+import { ref, get } from 'firebase/database';
 import { db } from '../../firebase';
 import { MessageType } from '../../types/chat/MessageType';
 import { toast } from 'react-toastify';
 import { useAppTranslate } from '../useAppTranslate';
+import chatService from '../../services/chat.service';
 
 interface LocationState {
   friendId?: string;
@@ -49,6 +51,10 @@ export interface UseChatPageReturn {
   highlightedMessageId: string | null;
   showDeleteModal: boolean;
   selectedConversation: any;
+
+  // Pagination state
+  hasMore: boolean;
+  loadingMore: boolean;
 
   // Refs
   fileInputRef: React.RefObject<HTMLInputElement>;
@@ -97,6 +103,7 @@ export interface UseChatPageReturn {
   handleSelectConversation: (conversationId: string) => void;
   handleStartChat: (friendId: string) => Promise<void>;
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handlePasteImage: (files: File[]) => void;
   handleRemoveImage: (index: number) => void;
   handleOpenFileDialog: () => void;
   handleReplyToMessage: (message: MessageType) => void;
@@ -123,6 +130,7 @@ export interface UseChatPageReturn {
   handleInputBlurEvent: () => void;
   renderMessages: () => React.ReactNode;
   renderReplyPreview: () => React.ReactNode;
+  loadMoreMessages: () => void;
 
   // Hook functions
   getOrCreateConversation: (friendId: string) => Promise<string | null>;
@@ -150,7 +158,11 @@ export interface UseChatPageReturn {
 export const useChatPage = (): UseChatPageReturn => {
   const { t } = useAppTranslate('chat');
   const location = useLocation();
+  const navigate = useNavigate();
   const state = location.state as LocationState | null;
+  
+  // Ref to track if friendId from navigation state has been processed
+  const processedFriendIdRef = useRef<string | null>(null);
 
   // Get conversation list and user information
   const { conversations, users, loading, getOrCreateConversation } = useConversation();
@@ -183,12 +195,13 @@ export const useChatPage = (): UseChatPageReturn => {
 
   // State cho tìm kiếm tổng
   const [globalSearchQuery, setGlobalSearchQuery] = useState('');
-  const [globalSearchResults, setGlobalSearchResults] = useState<MessageType[]>([]);
-  const [isGlobalSearching, setIsGlobalSearching] = useState(false);
   const [showGlobalSearch, setShowGlobalSearch] = useState(false);
 
   // State for image selection
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
+
+  // State for current conversation user (for restored conversations)
+  const [currentConversationUser, setCurrentConversationUser] = useState<UserResponse | undefined>(undefined);
 
   // Ref for file input
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -209,7 +222,18 @@ export const useChatPage = (): UseChatPageReturn => {
   const emojiPickerRef = useRef<HTMLDivElement>(null);
 
   // Get messages for current conversation
-  const { messages, loading: messagesLoading } = useMessages(activeConversationId || '');
+  console.log('useChatPage: activeConversationId for individual messages:', activeConversationId);
+  const { 
+    messages, 
+    loading: messagesLoading, 
+    hasMore, 
+    loadingMore, 
+    loadMoreMessages 
+  } = useMessages(activeConversationId || '', {
+    initialLimit: 10,
+    loadMoreLimit: 10,
+    enablePagination: true
+  });
 
   // Hook to send new messages
   const {
@@ -244,13 +268,22 @@ export const useChatPage = (): UseChatPageReturn => {
   // Hook to manage pinned messages
   const { pinnedMessages, pinMessage, unpinMessage, isMessagePinned } = usePinMessage(activeConversationId || '');
 
-  // Hook to search messages
+  // Hook to search messages in current conversation
   const {
     searchResults,
     loading: searchLoading,
     error: searchError,
     searchMessages,
-    clearSearch,
+    clearSearch: clearSearchResults,
+  } = useSearchConversationMessages();
+
+  // Hook for global search across all conversations
+  const {
+    searchResults: globalSearchResults,
+    loading: isGlobalSearching,
+    error: globalSearchError,
+    searchMessages: globalSearchMessages,
+    clearSearch: clearGlobalSearchResults,
   } = useSearchMessages();
 
   // State to track if we should scroll to bottom
@@ -276,7 +309,11 @@ export const useChatPage = (): UseChatPageReturn => {
     if (!activeConversationId) return undefined;
 
     const conversation = conversations.find(conv => conv.id === activeConversationId);
-    if (!conversation) return undefined;
+    
+    // If conversation not in filtered array, use currentConversationUser state
+    if (!conversation) {
+      return currentConversationUser;
+    }
 
     const currentUserId = localStorage.getItem('user_id');
     if (!currentUserId) return undefined;
@@ -307,6 +344,70 @@ export const useChatPage = (): UseChatPageReturn => {
       full_name: otherUserId,
       avatar_url: '',
     };
+  }, [activeConversationId, conversations, friends, users, currentConversationUser]);
+
+  // Effect to fetch conversation user info when conversation is not in filtered array
+  useEffect(() => {
+    const fetchConversationUserInfo = async () => {
+      if (!activeConversationId) {
+        setCurrentConversationUser(undefined);
+        return;
+      }
+
+      const currentUserId = localStorage.getItem('user_id');
+      if (!currentUserId) return;
+
+      // Check if conversation exists in filtered array
+      const conversation = conversations.find(conv => conv.id === activeConversationId);
+      if (conversation) {
+        // Conversation exists in filtered array, clear the state
+        setCurrentConversationUser(undefined);
+        return;
+      }
+
+      // Conversation not in filtered array, fetch from Firebase
+      try {
+        const conversationRef = ref(db, `conversations/${activeConversationId}`);
+        const snapshot = await get(conversationRef);
+        if (snapshot.exists()) {
+          const conversationData = snapshot.val();
+          const otherUserId = Object.keys(conversationData.members).find(id => id !== currentUserId);
+          
+          if (otherUserId) {
+            // Find user info from friends list
+            const friend = friends.find(f => f.friend_id === otherUserId);
+            if (friend && friend.friendInfo) {
+              setCurrentConversationUser({
+                user_id: otherUserId,
+                email: friend.friendInfo.email || '',
+                full_name: friend.friendInfo.full_name || '',
+                avatar_url: friend.friendInfo.avatar_url || '',
+              });
+              return;
+            }
+
+            // Fallback: use info from users object
+            const userFromAPI = users[otherUserId];
+            if (userFromAPI) {
+              setCurrentConversationUser(userFromAPI);
+              return;
+            }
+
+            // Last fallback
+            setCurrentConversationUser({
+              user_id: otherUserId,
+              email: '',
+              full_name: otherUserId,
+              avatar_url: '',
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching conversation user info:', error);
+      }
+    };
+
+    fetchConversationUserInfo();
   }, [activeConversationId, conversations, friends, users]);
 
   // Handle click outside search results to close dropdown
@@ -379,7 +480,10 @@ export const useChatPage = (): UseChatPageReturn => {
   // Handle receiving friendId from Friend List page and start chat immediately
   useEffect(() => {
     const initiateChatWithFriend = async () => {
-      if (state?.friendId) {
+      if (state?.friendId && processedFriendIdRef.current !== state.friendId) {
+        // Mark this friendId as processed to prevent duplicate processing
+        processedFriendIdRef.current = state.friendId;
+        
         const conversationId = await getOrCreateConversation(state.friendId);
         if (conversationId) {
           setActiveConversationId(conversationId);
@@ -392,43 +496,68 @@ export const useChatPage = (): UseChatPageReturn => {
             }
           }, 200);
         }
+        
+        // Clear the navigation state to prevent re-processing on page reload
+        navigate(location.pathname, { replace: true });
       }
     };
 
-    if (state?.friendId) {
+    if (state?.friendId && processedFriendIdRef.current !== state.friendId) {
       initiateChatWithFriend();
     }
-  }, [state, getOrCreateConversation, handleInputFocusEvent]);
+  }, [state, getOrCreateConversation, handleInputFocusEvent, navigate, location.pathname]);
 
   // Register input ref for typing status
   useEffect(() => {
     registerInputRef(messageInputRef.current);
   }, [registerInputRef, messageInputRef]);
 
-  // Handle scroll event to detect if user has scrolled up
-  const handleScroll = () => {
+  // Function to scroll to bottom
+  const scrollToBottom = useCallback(() => {
     if (messageContainerRef.current) {
-      const { scrollTop, scrollHeight, clientHeight } = messageContainerRef.current;
-      // Consider scrolled up if not at the bottom (with a small buffer)
-      const scrolledUp = scrollTop < scrollHeight - clientHeight - 50;
-      setIsScrolledUp(scrolledUp);
+      messageContainerRef.current.scrollTo({
+        top: messageContainerRef.current.scrollHeight,
+        behavior: 'smooth',
+      });
+      setIsScrolledUp(false);
     }
-  };
+  }, []);
+
+  // Handle scroll event to detect if user has scrolled up
+  const handleScroll = useCallback(() => {
+    if (!messageContainerRef.current) return;
+    
+    const { scrollTop, scrollHeight, clientHeight } = messageContainerRef.current;
+    const isAtBottom = scrollHeight - scrollTop - clientHeight < 50;
+    
+    setIsScrolledUp(!isAtBottom);
+    setShouldScrollToBottom(isAtBottom);
+
+    // Infinite scroll: Load more messages when scrolled near the top
+    if (scrollTop < 100 && hasMore && !loadingMore && !messagesLoading) {
+      loadMoreMessages();
+    }
+  }, [hasMore, loadingMore, messagesLoading, loadMoreMessages]);
 
   // Scroll to newest messages when messages change, but only in specific cases
   useEffect(() => {
     if (messageContainerRef.current && messages.length > 0) {
       // Scroll to bottom only if:
-      // 1. We explicitly set shouldScrollToBottom flag
-      // 2. New message arrived (messages.length > prevMessagesLengthRef.current)
-      // 3. First load of conversation (prevMessagesLengthRef.current === 0)
+      // 1. We explicitly set shouldScrollToBottom flag (conversation change, send message)
+      // 2. First load of conversation (prevMessagesLengthRef.current === 0)
+      // 3. New message arrived AND user is not scrolled up (at the bottom)
+      const isNewMessage = messages.length > prevMessagesLengthRef.current;
+      const isFirstLoad = prevMessagesLengthRef.current === 0;
+      
       if (
         shouldScrollToBottom ||
-        messages.length > prevMessagesLengthRef.current ||
-        prevMessagesLengthRef.current === 0
+        isFirstLoad ||
+        (isNewMessage && !isScrolledUp)
       ) {
-        messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
-        setShouldScrollToBottom(false);
+        setTimeout(() => {
+          scrollToBottom();
+          setShouldScrollToBottom(false);
+        }, 100);
       }
 
       // Mark messages as read when opening conversation and input is focused
@@ -439,7 +568,7 @@ export const useChatPage = (): UseChatPageReturn => {
       // Update the previous messages length reference
       prevMessagesLengthRef.current = messages.length;
     }
-  }, [messages, markAsRead, shouldScrollToBottom]);
+  }, [messages, markAsRead, shouldScrollToBottom, scrollToBottom, isScrolledUp]);
 
   // Handle selecting a conversation
   const handleSelectConversation = (conversationId: string) => {
@@ -518,6 +647,34 @@ export const useChatPage = (): UseChatPageReturn => {
     if (e.target) {
       e.target.value = '';
     }
+  };
+
+  // Handle paste image from clipboard
+  const handlePasteImage = (files: File[]) => {
+    if (!files || files.length === 0) return;
+
+    // Validate files (only images)
+    const validFiles: File[] = [];
+    const maxSize = 5 * 1024 * 1024; // 5MB
+
+    files.forEach(file => {
+      // Check if file is an image
+      if (!file.type.startsWith('image/')) {
+        toast.error(t('file_not_image'));
+        return;
+      }
+
+      // Check file size
+      if (file.size > maxSize) {
+        toast.error(t('file_too_large'));
+        return;
+      }
+
+      validFiles.push(file);
+    });
+
+    // Add valid files to selected images
+    setSelectedImages(prev => [...prev, ...validFiles]);
   };
 
   // Handle remove image from preview
@@ -686,10 +843,16 @@ export const useChatPage = (): UseChatPageReturn => {
   // Handle message search submit
   const handleMessageSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (messageSearchQuery.trim()) {
-      searchMessages(messageSearchQuery);
+    if (messageSearchQuery.trim() && activeConversationId) {
+      searchMessages(messageSearchQuery, activeConversationId);
     }
   };
+
+  // Handle clear search - reset both query and results
+  const clearSearch = useCallback(() => {
+    setMessageSearchQuery('');
+    clearSearchResults();
+  }, [clearSearchResults]);
 
   // Handle pin/unpin conversation
   const handleTogglePinConversation = async (conversationId: string) => {
@@ -793,44 +956,12 @@ export const useChatPage = (): UseChatPageReturn => {
     e.preventDefault();
     if (!globalSearchQuery.trim()) return;
 
-    setIsGlobalSearching(true);
-    try {
-      // Tìm kiếm trong tất cả các hội thoại
-      const results: MessageType[] = [];
-
-      for (const conversation of conversations) {
-        const messagesRef = ref(db, `messages/${conversation.id}`);
-        const snapshot = await get(messagesRef);
-
-        if (snapshot.exists()) {
-          const messagesData = snapshot.val();
-
-          Object.entries(messagesData).forEach(([id, messageData]: [string, any]) => {
-            if (messageData.text.toLowerCase().includes(globalSearchQuery.toLowerCase())) {
-              results.push({
-                id,
-                ...messageData,
-                conversationId: conversation.id,
-              });
-            }
-          });
-        }
-      }
-
-      // Sắp xếp kết quả theo thời gian mới nhất
-      results.sort((a, b) => b.createdAt - a.createdAt);
-
-      setGlobalSearchResults(results);
-    } catch (error) {
-      console.error('Error searching messages globally:', error);
-    } finally {
-      setIsGlobalSearching(false);
-    }
+    globalSearchMessages(globalSearchQuery);
   };
 
   // Hàm để xóa kết quả tìm kiếm tổng
   const clearGlobalSearch = () => {
-    setGlobalSearchResults([]);
+    clearGlobalSearchResults();
     setGlobalSearchQuery('');
   };
 
@@ -844,16 +975,7 @@ export const useChatPage = (): UseChatPageReturn => {
     setTimeout(() => setHighlightedMessageId(null), 2000);
   };
 
-  // Function to scroll to bottom
-  const scrollToBottom = () => {
-    if (messageContainerRef.current) {
-      messageContainerRef.current.scrollTo({
-        top: messageContainerRef.current.scrollHeight,
-        behavior: 'smooth',
-      });
-      setIsScrolledUp(false);
-    }
-  };
+
 
   // Hàm xóa conversation
   const handleDeleteConversation = (conversationId: string) => {
@@ -865,11 +987,16 @@ export const useChatPage = (): UseChatPageReturn => {
   const confirmDeleteConversation = async () => {
     if (!selectedConversation) return;
     try {
-      await remove(ref(db, `conversations/${selectedConversation.id}`));
-      if (activeConversationId === selectedConversation.id) {
-        setActiveConversationId(null);
+      // Sử dụng xóa mềm thay vì xóa cứng
+      const success = await chatService.softDeleteConversation(selectedConversation.id);
+      if (success) {
+        if (activeConversationId === selectedConversation.id) {
+          setActiveConversationId(null);
+        }
+        toast.success(t('conversation_deleted'));
+      } else {
+        toast.error(t('failed_delete_conversation'));
       }
-      toast.success(t('conversation_deleted'));
     } catch (error) {
       toast.error(t('failed_delete_conversation'));
     } finally {
@@ -887,29 +1014,43 @@ export const useChatPage = (): UseChatPageReturn => {
 
     console.log('renderMessages: Rendering', messages.length, 'messages');
     
-    return messages.map((message, index) => {
-      const isOwn = message.senderId === localStorage.getItem('user_id');
-      const showAvatar = index === 0 || messages[index - 1].senderId !== message.senderId;
-      const showTime = index === messages.length - 1 || 
-        messages[index + 1].senderId !== message.senderId ||
-        (messages[index + 1].createdAt - message.createdAt) > 300000; // 5 minutes
+    return (
+      <>
+        {/* Loading indicator for loading more messages */}
+        {loadingMore && (
+          <div className="flex justify-center py-4">
+            <div className="flex items-center space-x-2 text-gray-500">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+              <span className="text-sm">Loading more messages...</span>
+            </div>
+          </div>
+        )}
+        
+        {messages.map((message, index) => {
+          const isOwn = message.senderId === localStorage.getItem('user_id');
+          const showAvatar = index === 0 || messages[index - 1].senderId !== message.senderId;
+          const showTime = index === messages.length - 1 || 
+            messages[index + 1].senderId !== message.senderId ||
+            (messages[index + 1].createdAt - message.createdAt) > 300000; // 5 minutes
 
-      return (
-         <MessageItem
-           key={message.id}
-           message={message}
-           conversationId={activeConversationId || ''}
-           isCurrentUser={isOwn}
-           onPin={handleTogglePinMessage}
-           onReply={handleReplyToMessage}
-           users={users}
-           messageRef={(el: HTMLDivElement | null) => {
-             if (el) messageRefs.current[message.id] = el;
-           }}
-           highlight={highlightedMessageId === message.id}
-         />
-       );
-    });
+          return (
+             <MessageItem
+               key={message.id}
+               message={message}
+               conversationId={activeConversationId || ''}
+               isCurrentUser={isOwn}
+               onPin={handleTogglePinMessage}
+               onReply={handleReplyToMessage}
+               users={users}
+               messageRef={(el: HTMLDivElement | null) => {
+                 if (el) messageRefs.current[message.id] = el;
+               }}
+               highlight={highlightedMessageId === message.id}
+             />
+           );
+        })}
+      </>
+    );
   };
 
   // Render reply preview
@@ -985,6 +1126,8 @@ export const useChatPage = (): UseChatPageReturn => {
     loading,
     messages,
     messagesLoading,
+    hasMore,
+    loadingMore,
     theme,
     isTyping,
     unreadCount,
@@ -1018,6 +1161,7 @@ export const useChatPage = (): UseChatPageReturn => {
     handleSelectConversation,
     handleStartChat,
     handleFileChange,
+    handlePasteImage,
     handleRemoveImage,
     handleOpenFileDialog,
     handleReplyToMessage,
@@ -1066,5 +1210,6 @@ export const useChatPage = (): UseChatPageReturn => {
     isMessagePinned,
     searchMessages,
     clearSearch,
+    loadMoreMessages,
   };
 };

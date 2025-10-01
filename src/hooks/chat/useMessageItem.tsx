@@ -114,6 +114,19 @@ export const useMessageItem = ({
         }
     };
 
+    // Xử lý xóa reaction cụ thể
+    const handleRemoveSpecificReaction = async (reactionType: ReactionType) => {
+        try {
+            const success = await removeReaction(message.id, reactionType);
+            if (!success) {
+                toast.error('Không thể xóa biểu cảm');
+            }
+        } catch (error) {
+            console.error('Error removing specific reaction:', error);
+            toast.error('Đã xảy ra lỗi khi xóa biểu cảm');
+        }
+    };
+
     // Xử lý ghim tin nhắn
     const handlePinMessage = () => {
         if (onPin) {
@@ -189,15 +202,17 @@ export const useMessageItem = ({
 
     // Định dạng thời gian
     const formattedTime = useMemo(() => {
-        if (!message.createdAt) return { time: '', date: '' };
+        // Hỗ trợ cả createdAt (individual chat) và timestamp (group chat)
+        const messageTime = message.createdAt || (message as any).timestamp;
+        if (!messageTime) return { time: '', date: '' };
 
         // Tách thời gian và ngày để hiển thị tốt hơn
-        const date = new Date(message.createdAt);
+        const date = new Date(messageTime);
         const timeStr = format(date, 'HH:mm', { locale: vi });
         const dateStr = format(date, 'dd/MM/yyyy', { locale: vi });
 
         return { time: timeStr, date: dateStr };
-    }, [message.createdAt]);
+    }, [message.createdAt, (message as any).timestamp]);
 
     // Tính toán reactionCounts mới:
     const reactionCounts = useMemo(() => {
@@ -221,19 +236,8 @@ export const useMessageItem = ({
         const currentUserId = localStorage.getItem('user_id');
         if (!currentUserId) return null;
 
-        // Debug: Log thông tin tin nhắn
-        console.log('Message debug:', {
-            messageId: message.id,
-            senderId: message.senderId,
-            currentUserId: currentUserId,
-            readBy: message.readBy,
-            isCurrentUser: isCurrentUser
-        });
-
         // Kiểm tra xem có người khác đã đọc tin nhắn này chưa
         const readByOthers = message.readBy && Object.keys(message.readBy).some(uid => uid !== currentUserId);
-
-        // console.log('readByOthers:', readByOthers);
 
         if (!readByOthers) {
             return (
@@ -511,6 +515,7 @@ export const useMessageItem = ({
         handleReactionPickerClose,
         handleAddReaction,
         handleRemoveReaction,
+        handleRemoveSpecificReaction,
         handlePinMessage,
         handleDeleteMessage,
         handleToggleVisibility,

@@ -1,11 +1,6 @@
 import React from 'react';
+import { ReplyMessageProps } from '../../types/chat/props/component.props';
 
-interface ReplyMessageProps {
-    replyText: string;
-    senderName: string;
-    isCurrentUser: boolean;
-    onClick?: () => void;
-}
 
 const ReplyMessage: React.FC<ReplyMessageProps> = ({
     replyText,

@@ -5,30 +5,10 @@ import EmojiPicker from 'emoji-picker-react';
 import {
   AttachFile as AttachFileIcon,
   Close as CloseIcon,
+  Brush as BrushIcon,
 } from '@mui/icons-material';
 
-interface MessageInputProps {
-  messageText: string;
-  setMessageText: (text: string) => void;
-  handleSendMessage: () => void;
-  handleMessageChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-  replyToMessage: any;
-  renderReplyPreview: () => React.ReactNode;
-  handleCancelReply: () => void;
-  selectedImages: File[];
-  handleOpenFileDialog: () => void;
-  handleRemoveImage: (index: number) => void;
-  showEmojiPicker: boolean;
-  setShowEmojiPicker: (show: boolean) => void;
-  handleEmojiClick: (emojiData: any) => void;
-  fileInputRef: React.RefObject<HTMLInputElement>;
-  messageInputRef: React.RefObject<HTMLTextAreaElement>;
-  emojiPickerRef: React.RefObject<HTMLDivElement>;
-  handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleInputFocusEvent: () => void;
-  handleInputBlurEvent: () => void;
-  registerInputRef: (ref: HTMLTextAreaElement | null) => void;
-}
+import { MessageInputProps } from '../../types/chat/props/component.props';
 
 const MessageInput: React.FC<MessageInputProps> = ({
   messageText,
@@ -51,40 +31,72 @@ const MessageInput: React.FC<MessageInputProps> = ({
   handleInputFocusEvent,
   handleInputBlurEvent,
   registerInputRef,
+  handlePasteImage,
+  isGroupChat = false,
+  groupName,
+  memberCount,
+  onOpenDrawingBoard,
 }) => {
   const { t } = useAppTranslate('chat');
 
+  // Handle paste event
+  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    const imageFiles: File[] = [];
+    
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.type.indexOf('image') !== -1) {
+        const file = item.getAsFile();
+        if (file) {
+          imageFiles.push(file);
+        }
+      }
+    }
+
+    if (imageFiles.length > 0) {
+      e.preventDefault();
+      handlePasteImage(imageFiles);
+    }
+  };
+
   return (
     <div className="p-4 border-t border-gray-200 bg-white">
-      {/* Reply preview */}
-      {replyToMessage && (
-        <div className="mb-3 p-3 bg-gray-50 rounded-lg border-l-4 border-[#21b4ca]">
-          <div className="flex justify-between items-start">
-            <div className="flex-1">
-              {renderReplyPreview()}
-            </div>
-            <button
-              onClick={handleCancelReply}
-              className="ml-2 text-gray-500 hover:text-gray-700"
-            >
-              <CloseIcon fontSize="small" />
-            </button>
-          </div>
+      {/* Group chat indicator */}
+      {isGroupChat && groupName && (
+        <div className="mb-2 flex items-center gap-2 text-sm text-gray-600">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+            />
+          </svg>
+          <span>
+            {t('messaging_in')} <strong>{groupName}</strong>
+            {memberCount && ` (${memberCount} ${t('members')})`}
+          </span>
         </div>
       )}
+      {/* Reply preview */}
+      {renderReplyPreview()}
 
       {/* Image previews */}
       {selectedImages.length > 0 && (
         <div className="mb-3">
-          <div className="flex flex-wrap gap-2">
-            {selectedImages.map((image, index) => (
-              <ImagePreview
-                key={index}
-                file={image}
-                onRemove={() => handleRemoveImage(index)}
-              />
-            ))}
-          </div>
+          <ImagePreview
+            images={selectedImages}
+            onRemove={handleRemoveImage}
+          />
         </div>
       )}
 
@@ -109,6 +121,28 @@ const MessageInput: React.FC<MessageInputProps> = ({
           <AttachFileIcon />
         </button>
 
+        {/* Drawing button */}
+        <button
+          onClick={onOpenDrawingBoard}
+          className="flex items-center justify-center w-10 h-10 text-gray-500 hover:text-[#21b4ca] hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
+          title="Mở bảng vẽ"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+            />
+          </svg>
+        </button>
+
         {/* Text input */}
         <div className="flex-1 relative">
           <textarea
@@ -122,6 +156,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
             onChange={handleMessageChange}
             onFocus={handleInputFocusEvent}
             onBlur={handleInputBlurEvent}
+            onPaste={handlePaste}
             placeholder={t('type_message')}
             className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-[#21b4ca] focus:border-transparent"
             rows={1}

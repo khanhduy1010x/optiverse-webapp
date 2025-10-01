@@ -1,10 +1,6 @@
 import React, { useState, useRef } from 'react';
 
-interface AudioMessageProps {
-    audioUrl: string;
-    duration: number;
-    isCurrentUser: boolean;
-}
+import { AudioMessageProps } from '../../types/chat/props/component.props';
 
 const AudioMessage: React.FC<AudioMessageProps> = ({ audioUrl, duration, isCurrentUser }) => {
     const [isPlaying, setIsPlaying] = useState(false);

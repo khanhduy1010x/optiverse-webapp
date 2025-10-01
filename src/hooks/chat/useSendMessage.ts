@@ -6,6 +6,7 @@ import {
   update,
   get,
   set,
+  remove,
 } from 'firebase/database';
 import { db } from '../../firebase';
 import { MessageContentType, MessageType } from '../../types/chat/MessageType';
@@ -22,21 +23,61 @@ export function useSendMessage(conversationId: string) {
    */
   const sendTextMessage = useCallback(
     async (message: Omit<MessageType, 'id' | 'createdAt'>) => {
-      if (!conversationId) return false;
+      console.log('=== SEND TEXT MESSAGE STARTED ===');
+      console.log('conversationId:', conversationId);
+      console.log('message:', message);
+      
+      if (!conversationId) {
+        console.error('No conversationId provided');
+        return false;
+      }
 
       try {
+        console.log('Creating Firebase references...');
         const messagesRef = ref(db, `messages/${conversationId}`);
         const timestamp = Date.now();
+        
+        console.log('messagesRef path:', `messages/${conversationId}`);
+        console.log('timestamp:', timestamp);
+
+        // Lấy thông tin người gửi để lưu vào senderInfo
+        let senderInfo = null;
+        if (message.senderId) {
+          try {
+            const users = await chatService.getUsersByIds([message.senderId]);
+            if (users.length > 0) {
+              const user = users[0];
+              senderInfo = {
+                full_name: user.full_name,
+                avatar_url: user.avatar_url,
+                email: user.email
+              };
+            }
+          } catch (error) {
+            console.error('Error fetching sender info:', error);
+          }
+        }
 
         // Thêm tin nhắn mới vào database
+        console.log('Pushing message to Firebase...');
         const newMessageRef = push(messagesRef, {
           ...message,
           createdAt: timestamp,
+          senderInfo: senderInfo,
         });
+        
+        console.log('Message pushed with key:', newMessageRef.key);
 
-        // Cập nhật tin nhắn cuối cùng trong conversation
+        // Cập nhật tin nhắn cuối cùng trong conversation và khôi phục cuộc trò chuyện nếu bị xóa mềm
+        console.log('Updating conversation lastMessage...');
         const conversationRef = ref(db, `conversations/${conversationId}`);
-        update(conversationRef, {
+        
+        // Kiểm tra xem cuộc trò chuyện có bị xóa mềm không
+        const conversationSnapshot = await get(conversationRef);
+        const conversationData = conversationSnapshot.val();
+        const currentUserId = localStorage.getItem('user_id') || '';
+        
+        const updateData: any = {
           lastMessage: {
             text: message.text,
             senderId: message.senderId,
@@ -46,57 +87,40 @@ export function useSendMessage(conversationId: string) {
             isReply: !!message.replyTo,
           },
           lastMessageId: newMessageRef.key,
-        });
+        };
+        
+        // Cập nhật conversation trước
+        await update(conversationRef, updateData);
+        
+        // Nếu cuộc trò chuyện bị xóa mềm bởi user hiện tại, khôi phục nó
+        if (conversationData?.deletedBy?.[currentUserId]) {
+          console.log('Restoring soft-deleted conversation for user:', currentUserId);
+          const deletedByUserRef = ref(db, `conversations/${conversationId}/deletedBy/${currentUserId}`);
+          await remove(deletedByUserRef);
+          console.log('Successfully removed deletedBy field for user:', currentUserId);
+        }
+        
+        console.log('Conversation updated successfully');
 
-        // Đánh dấu đã đọc cho người gửi
-        const currentUserId = localStorage.getItem('user_id') || '';
+        // Cập nhật lastRead marker cho người gửi (đánh dấu đã đọc tin nhắn vừa gửi)
         if (currentUserId) {
-          const selfUnreadCountRef = ref(
+          const lastReadRef = ref(
             db,
-            `unreadCount/${conversationId}/${currentUserId}`
+            `conversations/${conversationId}/lastRead/${currentUserId}`
           );
-          set(selfUnreadCountRef, 0);
+          await set(lastReadRef, timestamp);
+          console.log('Updated sender lastRead marker to:', timestamp);
         }
 
-        // Tăng số tin nhắn chưa đọc cho người nhận
-        try {
-          // Lấy thông tin về các thành viên trong hội thoại
-          const membersRef = ref(db, `conversations/${conversationId}/members`);
-          const membersSnapshot = await get(membersRef);
+        // Với cơ chế lastRead marker, unread count sẽ được tự động tính toán
+        // cho người nhận dựa trên việc so sánh timestamp tin nhắn mới
+        // với lastRead marker của họ. Không cần tăng unread count thủ công nữa.
+        console.log('Message sent - unread count will be auto-calculated for recipient');
 
-          if (membersSnapshot.exists()) {
-            const members = membersSnapshot.val();
-
-            // Tìm ID của người nhận (khác với người gửi)
-            Object.keys(members).forEach(async memberId => {
-              if (memberId !== currentUserId) {
-                // Kiểm tra xem người nhận có đang focus vào input không
-                const typingRef = ref(
-                  db,
-                  `typingStatus/${conversationId}/${memberId}`
-                );
-                const typingSnapshot = await get(typingRef);
-
-                // Nếu người nhận không đang focus vào input, tăng số tin nhắn chưa đọc
-                if (!typingSnapshot.exists() || !typingSnapshot.val()) {
-                  const unreadCountRef = ref(
-                    db,
-                    `unreadCount/${conversationId}/${memberId}`
-                  );
-                  const unreadSnapshot = await get(unreadCountRef);
-                  const currentCount = unreadSnapshot.val() || 0;
-
-                  set(unreadCountRef, currentCount + 1);
-                }
-              }
-            });
-          }
-        } catch (error) {
-          console.error('Error updating unread count:', error);
-        }
-
+        console.log('=== SEND TEXT MESSAGE COMPLETED SUCCESSFULLY ===');
         return true;
       } catch (error) {
+        console.error('=== SEND TEXT MESSAGE FAILED ===');
         console.error('Error sending message:', error);
         return false;
       }

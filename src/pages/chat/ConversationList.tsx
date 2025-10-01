@@ -24,16 +24,11 @@ const ConversationList: React.FC<ConversationListProps> = ({
 }) => {
   const { t } = useAppTranslate('chat');
   // Sử dụng hook để quản lý hội thoại được ghim
-  const { pinnedConversations, isConversationPinned, getPinOrder } =
+  const { pinnedConversations, isConversationPinned } =
     usePinConversation();
 
   // Sort conversations by pin status first, then by the latest message
   const sortedConversations = [...conversations].sort((a, b) => {
-    // Nếu cả hai đều được ghim, sắp xếp theo thứ tự ghim
-    if (isConversationPinned(a.id) && isConversationPinned(b.id)) {
-      return getPinOrder(a.id) - getPinOrder(b.id);
-    }
-
     // Nếu chỉ một trong hai được ghim, ưu tiên hội thoại được ghim
     if (isConversationPinned(a.id)) return -1;
     if (isConversationPinned(b.id)) return 1;
@@ -94,7 +89,6 @@ const ConversationList: React.FC<ConversationListProps> = ({
             users={users}
             isActive={activeConversationId === conversation.id}
             isPinned={isConversationPinned(conversation.id)}
-            pinOrder={getPinOrder(conversation.id)}
             onSelect={onSelectConversation}
             onDeleteConversation={onDeleteConversation}
           />

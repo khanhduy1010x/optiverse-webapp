@@ -1,37 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
 import ConversationList from '../../pages/chat/ConversationList';
+import GroupConversationList from './GroupConversationList';
+import { useGroupConversations } from '../../hooks/chat/useGroupConversations';
+import CreateGroupModal from './group/CreateGroupModal';
+import { ChatSidebarProps } from '../../types/chat/props/component.props';
 
-interface ChatSidebarProps {
-  // Global search
-  globalSearchQuery: string;
-  setGlobalSearchQuery: (query: string) => void;
-  handleGlobalSearch: (e: React.FormEvent) => void;
-  isGlobalSearching: boolean;
-  globalSearchResults: any[];
-  clearGlobalSearch: () => void;
-  conversations: any[];
-  users: any;
-  messageRefs: React.MutableRefObject<any>;
-  setHighlightedMessageId: (id: string | null) => void;
-  handleSelectConversation: (id: string) => void;
-
-  // Friends search
-  searchQuery: string;
-  handleSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleSearchFocus: () => void;
-  showFriendsList: boolean;
-  searchContainerRef: React.RefObject<HTMLDivElement>;
-  friendsLoading: boolean;
-  uniqueFriends: any[];
-  activeConversationId: string | null;
-  handleStartChat: (friendId: string) => void;
-  getInitials: (name: string) => string;
-
-  // Conversation list
-  loading: boolean;
-  onDeleteConversation: (id: string) => void;
-}
 
 const ChatSidebar: React.FC<ChatSidebarProps> = ({
   globalSearchQuery,
@@ -42,6 +16,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
   clearGlobalSearch,
   conversations,
   users,
+  groupUsers,
   messageRefs,
   setHighlightedMessageId,
   handleSelectConversation,
@@ -57,8 +32,13 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
   getInitials,
   loading,
   onDeleteConversation,
+  groupConversations,
+  onSelectGroupConversation,
+  activeGroupConversationId,
 }) => {
   const { t } = useAppTranslate('chat');
+  const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
+  const { loading: groupLoading } = useGroupConversations();
 
   return (
     <div className="w-80 p-4 border-r border-gray-200 bg-white overflow-y-auto custom-scrollbar-3">
@@ -262,6 +242,41 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
         )}
       </div>
 
+      {/* Group Conversations Section */}
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-sm font-medium text-gray-700">{t('groups')}</h3>
+          <button
+            onClick={() => setShowCreateGroupModal(true)}
+            className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+            title={t('create_group')}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4 text-gray-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+          </button>
+        </div>
+        
+        <GroupConversationList
+          groupConversations={groupConversations || []}
+          users={groupUsers || {}}
+          loading={groupLoading}
+          activeGroupConversationId={activeGroupConversationId}
+          onSelectGroupConversation={onSelectGroupConversation || (() => {})}
+        />
+      </div>
+
       {/* Conversation list */}
       <ConversationList
         conversations={conversations}
@@ -270,6 +285,16 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
         activeConversationId={activeConversationId}
         onSelectConversation={handleSelectConversation}
         onDeleteConversation={onDeleteConversation}
+      />
+
+      {/* Create Group Modal */}
+      <CreateGroupModal
+        isOpen={showCreateGroupModal}
+        onClose={() => setShowCreateGroupModal(false)}
+        onSuccess={() => {
+          setShowCreateGroupModal(false);
+          // Group list will automatically update via useGroupConversations hook
+        }}
       />
     </div>
   );

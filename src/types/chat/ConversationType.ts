@@ -1,9 +1,12 @@
 // Hội thoại 1-1 hoặc nhóm (mở rộng sau này)
 export interface ConversationType {
   id: string;
+  type?: 'direct' | 'group'; // Loại hội thoại: 1-1 hoặc nhóm
   members: { [userId: string]: true };
   lastMessageId?: string;
   hiddenBy?: { [userId: string]: true };
+  // Xóa mềm: lưu thông tin user nào đã xóa conversation và thời gian xóa
+  deletedBy?: { [userId: string]: number }; // timestamp khi user xóa conversation
   createdAt?: number;
   lastMessage?: {
     text: string;

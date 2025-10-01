@@ -1,6 +1,7 @@
 // Định nghĩa các interface cho Friend
 
 export interface FriendUserInfo {
+  id: string;
   email?: string;
   full_name?: string;
   avatar_url?: string;

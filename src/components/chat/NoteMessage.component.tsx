@@ -2,11 +2,8 @@ import React from 'react';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import '../../styles/note/NoteMessage.style.css';
+import { NoteMessageProps } from '../../types/chat/props/component.props';
 
-interface NoteMessageProps {
-    title: string;
-    content: string;
-}
 
 const quillModules = {
     toolbar: false

@@ -3,9 +3,9 @@ import {
   ref,
   onChildAdded,
   query,
-  orderByChild,
+  orderByKey,
   limitToLast,
-  get,
+  off,
 } from 'firebase/database';
 import { db } from '../../firebase';
 import { toast } from 'react-toastify';
@@ -154,9 +154,10 @@ export function useNewMessageNotification() {
         listenersRef.current[conversationId] = true;
 
         // Lắng nghe tin nhắn mới trong hội thoại này
+        // Sử dụng orderByKey() thay vì orderByChild('createdAt') để tránh Firebase Index error
         const messagesRef = query(
           ref(db, `messages/${conversationId}`),
-          orderByChild('createdAt'),
+          orderByKey(),
           limitToLast(1)
         );
 

@@ -3,13 +3,13 @@ import { ConversationType } from '../../types/chat/ConversationType';
 import { UserResponse } from '../../types/auth/auth.types';
 import { useUnreadCount } from '../../hooks/chat/useUnreadCount';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
+import { PushPin as PinIcon } from '@mui/icons-material';
 
 interface ConversationItemProps {
   conversation: ConversationType;
   users: Record<string, UserResponse>;
   isActive: boolean;
   isPinned: boolean;
-  pinOrder: number;
   onSelect: (id: string) => void;
   onUnhideLastMessage?: () => void;
   onDeleteConversation?: (id: string) => void;
@@ -20,7 +20,6 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
   users,
   isActive,
   isPinned,
-  pinOrder,
   onSelect,
   onUnhideLastMessage,
   onDeleteConversation,
@@ -89,8 +88,8 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
     >
       {/* Pin indicator */}
       {isPinned && (
-        <div className="absolute top-0 right-0 w-4 h-4 flex items-center justify-center bg-[#21b4ca] text-white rounded-full text-[8px] font-bold">
-          {pinOrder}
+        <div className="absolute top-0 right-0 w-4 h-4 flex items-center justify-center bg-[#21b4ca] text-white rounded-full">
+          <PinIcon sx={{ fontSize: 10 }} />
         </div>
       )}
 
@@ -173,11 +172,36 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
                   </>
                 );
               }
+
+              // Lấy tên người gửi tin nhắn cuối
+              const getSenderName = () => {
+                if (!lastMsg?.senderId) return '';
+                
+                // Nếu là tin nhắn của người dùng hiện tại
+                if (lastMsg.senderId === currentUserId) {
+                  return t('you') + ': ';
+                }
+                
+                // Nếu là tin nhắn của người khác (trong chat 1-1 sẽ là người kia)
+                const senderUser = users[lastMsg.senderId];
+                if (senderUser) {
+                  const senderName = senderUser.full_name || senderUser.email || 'Unknown';
+                  return senderName + ': ';
+                }
+                
+                return '';
+              };
+
+              const senderPrefix = getSenderName();
+
               if (lastMsg?.images && lastMsg.images.length > 0) {
                 // Thêm emoji ảnh phía trước
-                return `🖼️ ${lastMsg.images.length > 1 ? lastMsg.images.length + ' ' + t('photo') : '1 ' + t('photo')}${lastMsg.text ? ' - ' + lastMsg.text : ''}`;
+                const imageText = `🖼️ ${lastMsg.images.length > 1 ? lastMsg.images.length + ' ' + t('photo') : '1 ' + t('photo')}${lastMsg.text ? ' - ' + lastMsg.text : ''}`;
+                return senderPrefix + imageText;
               }
-              return conversation.lastMessage?.text || '';
+              
+              const messageText = conversation.lastMessage?.text || '';
+              return messageText ? senderPrefix + messageText : '';
             })() || t('start_chatting')}
           </p>
 

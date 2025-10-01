@@ -11,7 +11,7 @@ import {
     DoneAll as DoneAllIcon,
     Reply as ReplyIcon,
 } from '@mui/icons-material';
-import { useMessageItem } from '../../hooks/chat/useMessageItem';
+import { useMessageItem } from "../../hooks/chat/useMessageItem";
 import AudioMessage from '../../components/chat/AudioMessage';
 import ReplyMessage from '../../components/chat/ReplyMessage';
 import NoteMessage from '../../components/chat/NoteMessage.component';
@@ -35,6 +35,10 @@ interface MessageItemProps {
     messageRef?: React.Ref<HTMLDivElement>;
     highlight?: boolean;
     textColor?: string;
+    
+    // Group chat props
+    isGroupChat?: boolean;
+    showSenderName?: boolean;
 }
 
 const MessageItem: React.FC<MessageItemProps> = ({
@@ -46,7 +50,9 @@ const MessageItem: React.FC<MessageItemProps> = ({
     users = {},
     messageRef,
     highlight,
-    textColor
+    textColor,
+    isGroupChat = false,
+    showSenderName = false
 }) => {
     const {
         anchorEl,
@@ -66,6 +72,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
         handleReactionPickerClose,
         handleAddReaction,
         handleRemoveReaction,
+        handleRemoveSpecificReaction,
         handlePinMessage,
         handleDeleteMessage,
         handleToggleVisibility,
@@ -111,8 +118,8 @@ const MessageItem: React.FC<MessageItemProps> = ({
                     {!isCurrentUser && (
                         <Avatar
                             sx={{ width: 32, height: 32, mr: 1, flexShrink: 0 }}
-                            alt={users[message.senderId]?.full_name || 'User Avatar'}
-                            src={users[message.senderId]?.avatar_url || '/static/images/avatar/1.jpg'}
+                            alt={message.senderInfo?.full_name || users[message.senderId]?.full_name || 'User Avatar'}
+                            src={message.senderInfo?.avatar_url || users[message.senderId]?.avatar_url || '/static/images/avatar/1.jpg'}
                         />
                     )}
                     <Box
@@ -177,12 +184,12 @@ const MessageItem: React.FC<MessageItemProps> = ({
                 }}
             >
                 {!isCurrentUser && (
-                    <Avatar
-                        sx={{ width: 32, height: 32, mr: 1, flexShrink: 0 }}
-                        alt={users[message.senderId]?.full_name || 'User Avatar'}
-                        src={users[message.senderId]?.avatar_url || '/static/images/avatar/1.jpg'}
-                    />
-                )}
+                        <Avatar
+                            sx={{ width: 32, height: 32, mr: 1, flexShrink: 0 }}
+                            alt={message.senderInfo?.full_name || users[message.senderId]?.full_name || 'User Avatar'}
+                            src={message.senderInfo?.avatar_url || users[message.senderId]?.avatar_url || '/static/images/avatar/1.jpg'}
+                        />
+                    )}
                 <Box
                     sx={{
                         position: 'relative',
@@ -202,6 +209,22 @@ const MessageItem: React.FC<MessageItemProps> = ({
                 >
                     {/* Hiển thị tin nhắn trả lời */}
                     {renderReply()}
+
+                    {/* Hiển thị tên người gửi trong group chat */}
+                    {isGroupChat && showSenderName && !isCurrentUser && (
+                        <Typography
+                            variant="caption"
+                            sx={{
+                                color: textColor || 'text.secondary',
+                                fontWeight: 'medium',
+                                mb: 0.5,
+                                display: 'block',
+                                fontSize: '0.75rem',
+                            }}
+                        >
+                            {message.senderInfo?.full_name || users[message.senderId]?.full_name || 'Unknown User'}
+                        </Typography>
+                    )}
 
                     {message.text && (
                         noteData ? (
@@ -331,7 +354,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
                                 <span style={{ fontSize: 18 }}>{reaction}</span>
                                 <Typography variant="caption" sx={{ ml: 0.5 }}>{info.count}</Typography>
                                 {isMine && (
-                                    <IconButton size="small" onClick={() => removeReaction(message.id, reaction as ReactionType)} sx={{ ml: 0.5, p: 0.2 }}>
+                                    <IconButton size="small" onClick={() => handleRemoveSpecificReaction(reaction as ReactionType)} sx={{ ml: 0.5, p: 0.2 }}>
                                         <span style={{ fontSize: 12 }}>✕</span>
                                     </IconButton>
                                 )}
@@ -340,7 +363,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
                     })}
                     {/* Nút clear tất cả reaction của mình */}
                     {message.reactions?.[currentUserId] && (
-                        <StyledReactionButton onClick={() => removeReaction(message.id)}>
+                        <StyledReactionButton onClick={handleRemoveReaction}>
                             <span style={{ fontSize: 14 }}>🧹</span>
                             <Typography variant="caption" sx={{ ml: 0.5 }}>Clear</Typography>
                         </StyledReactionButton>

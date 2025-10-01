@@ -2,6 +2,12 @@
 export interface MessageType {
   id: string;
   senderId: string;
+  // Thông tin người gửi được lưu trực tiếp để tránh mất dữ liệu khi user rời nhóm
+  senderInfo?: {
+    full_name: string;
+    avatar_url?: string;
+    email?: string;
+  };
   text: string;
   createdAt: number; // timestamp
   // Thứ tự ghim, từ 1-5, 1 là ưu tiên nhất
