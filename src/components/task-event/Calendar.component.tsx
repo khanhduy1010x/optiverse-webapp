@@ -27,6 +27,7 @@ import { GROUP_CLASSNAMES } from '../../styles';
 import DeleteConfirmation from '../../pages/Task/DeleteConfirmation.screen';
 import * as XLSX from 'xlsx';
 import { EventExcelImportModal } from './EventExcelImportModal.component';
+import { useTaskDeadlineMarkers } from '../../hooks/task/useTaskDeadlineMarkers.hook';
 type ViewType = 'Day' | 'Week' | 'Month' | 'Year';
 
 interface CalendarProps {
@@ -155,6 +156,12 @@ export const Calendar: React.FC<CalendarProps> = ({
       return { startDate, endDate };
     }
   }, [currentDate, viewType]);
+
+  // Fetch deadlines within current date range
+  const { deadlines: deadlineTasks } = useTaskDeadlineMarkers({
+    startDate: dateRange.startDate,
+    endDate: dateRange.endDate,
+  });
   
   // Sử dụng hook useCalendarEventLayout ở cấp cao nhất của component
   const layoutResult = useCalendarEventLayout({
@@ -241,6 +248,9 @@ export const Calendar: React.FC<CalendarProps> = ({
       } else if (viewType === 'Year') {
         newDate.setFullYear(currentDate.getFullYear() - 1);
       }
+      
+      // Đảm bảo ngày hợp lệ
+      console.log('Navigating to previous date:', newDate);
       setCurrentDate(newDate);
     } catch (error) {
       console.error('Error in handlePrevious:', error);
@@ -259,6 +269,9 @@ export const Calendar: React.FC<CalendarProps> = ({
       } else if (viewType === 'Year') {
         newDate.setFullYear(currentDate.getFullYear() + 1);
       }
+      
+      // Đảm bảo ngày hợp lệ và không có giới hạn về tương lai
+      console.log('Navigating to next date:', newDate);
       setCurrentDate(newDate);
     } catch (error) {
       console.error('Error in handleNext:', error);
@@ -576,6 +589,7 @@ export const Calendar: React.FC<CalendarProps> = ({
               currentDate={currentDate}
               currentTime={currentTime}
               taskEvents={eventsWithLayout}
+              deadlineTasks={deadlineTasks}
               handleAddEvent={emptyFunction} // Thay thế bằng hàm rỗng
               handleEditEvent={handleViewEventDetail}
             />
@@ -586,6 +600,7 @@ export const Calendar: React.FC<CalendarProps> = ({
               currentDate={currentDate}
               currentTime={currentTime}
               taskEvents={eventsWithLayout}
+              deadlineTasks={deadlineTasks}
               handleAddEvent={emptyFunction} // Thay thế bằng hàm rỗng
               handleEditEvent={handleViewEventDetail}
             />
@@ -595,6 +610,7 @@ export const Calendar: React.FC<CalendarProps> = ({
             <MonthView
               currentDate={currentDate}
               taskEvents={eventsWithLayout}
+              deadlineTasks={deadlineTasks}
               handleAddEvent={emptyFunction} // Thay thế bằng hàm rỗng
               handleEditEvent={handleViewEventDetail}
             />
@@ -605,6 +621,7 @@ export const Calendar: React.FC<CalendarProps> = ({
               currentDate={currentDate}
               currentTime={currentTime}
               taskEvents={eventsWithLayout}
+              deadlineTasks={deadlineTasks}
               handleAddEvent={emptyFunction} // Thay thế bằng hàm rỗng
               handleEditEvent={handleViewEventDetail}
             />
@@ -1094,6 +1111,8 @@ export const Calendar: React.FC<CalendarProps> = ({
     });
   };
 
+  // Removed test event functions used for internal debugging
+
   return (
     <div className="flex h-full bg-gray-50 relative">
       {/* Task Overdue Notifier - invisible component that checks for overdue tasks */}
@@ -1134,6 +1153,12 @@ export const Calendar: React.FC<CalendarProps> = ({
                 >
                   Retry
                 </button>
+              </div>
+            </div>
+          ) : taskEvents.length === 0 ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center text-gray-500">
+                <p>No events found for this task</p>
               </div>
             </div>
           ) : (
@@ -1294,3 +1319,6 @@ export const Calendar: React.FC<CalendarProps> = ({
     </div>
   );
 };
+
+
+// ... existing code ...

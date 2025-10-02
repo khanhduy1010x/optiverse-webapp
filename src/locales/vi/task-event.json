@@ -21,5 +21,15 @@
   "to_month": "Đến tháng",
   "to_year": "Đến năm",
   "year": "Năm",
-  "add_description": "Thêm mô tả"
+  "add_description": "Thêm mô tả",
+  "validation_failed": "Xác thực thất bại",
+  "validation_title_required": "Tiêu đề là bắt buộc",
+  "validation_task_id_required": "ID nhiệm vụ là bắt buộc",
+  "validation_start_time_required": "Thời gian bắt đầu là bắt buộc",
+  "validation_repeat_type_required": "Loại lặp lại là bắt buộc",
+  "validation_start_time_invalid": "Thời gian bắt đầu không hợp lệ",
+  "validation_end_time_invalid": "Thời gian kết thúc không hợp lệ",
+  "validation_end_time_before_start": "Thời gian kết thúc phải sau thời gian bắt đầu",
+  "validation_title_too_long": "Tiêu đề không được vượt quá 50 ký tự",
+  "validation_description_too_long": "Mô tả không được vượt quá 100 ký tự"
 }

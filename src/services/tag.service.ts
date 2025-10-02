@@ -30,6 +30,28 @@ class TagService {
     }
   }
 
+  // Update an existing tag
+  async updateTag(tagId: string, payload: Partial<Pick<Tag, 'name' | 'color'>>): Promise<Tag> {
+    try {
+      const response = await api.put<ApiResponse<{ tag: Tag }>>(
+        `/productivity/tag/${tagId}`,
+        payload
+      );
+      if (response.data && response.data.data && (response.data.data as any)) {
+        const tag = (response.data.data as any).tag ?? (response.data.data as any);
+        return {
+          ...tag,
+          createdAt: tag.createdAt || tag.created_at,
+          updatedAt: tag.updatedAt || tag.updated_at,
+        } as Tag;
+      }
+      throw new Error('Failed to update tag');
+    } catch (error) {
+      console.error(`Error updating tag ${tagId}:`, error);
+      throw error;
+    }
+  }
+
   // Create a new tag
   async createTag(tagData: Omit<Tag, '_id' | 'user_id'>): Promise<Tag> {
     try {

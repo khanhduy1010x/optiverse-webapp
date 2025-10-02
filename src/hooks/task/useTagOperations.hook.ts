@@ -254,6 +254,37 @@ export function useTagOperations(
     }
   };
 
+  // Handle tag updating
+  const handleUpdateTag = async (
+    tagId: string,
+    payload: Partial<Pick<Tag, 'name' | 'color'>>,
+  ) => {
+    try {
+      const updated = await tagService.updateTag(tagId, payload);
+
+      // Update allTags state
+      setAllTags(prev => prev.map(t => (t._id === tagId ? { ...t, ...updated } : t)));
+
+      // Update selectedTags state
+      setSelectedTags(prev => prev.map(t => (t._id === tagId ? { ...t, ...updated } : t)));
+
+      // Update taskTags mapping for all tasks
+      setTaskTags(prev => {
+        const next = { ...prev };
+        Object.keys(next).forEach(taskIdKey => {
+          next[taskIdKey] = (next[taskIdKey] || []).map(t => (t._id === tagId ? { ...t, ...updated } : t));
+        });
+        return next;
+      });
+
+      console.log('Tag updated successfully:', updated);
+      return true;
+    } catch (error) {
+      console.error('Error updating tag:', error);
+      return false;
+    }
+  };
+
   // Update tags for a task
   const updateTaskTags = async (
     taskId: string,
@@ -325,6 +356,7 @@ export function useTagOperations(
     handleSortChange,
     confirmDeleteTag,
     handleDeleteTag,
+    handleUpdateTag,
     updateTaskTags,
   };
 }

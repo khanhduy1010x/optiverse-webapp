@@ -39,6 +39,8 @@
   "delete": "Xóa",
   "delete_tag": "Xóa nhãn",
   "creating": "Đang tạo...",
+  "tag_update_success": "Cập nhật nhãn thành công",
+  "tag_update_failed": "Cập nhật nhãn thất bại. Vui lòng thử lại.",
 
   "create_task_cta": "Tạo công việc",
   "create_close_aria": "Đóng form tạo công việc",
