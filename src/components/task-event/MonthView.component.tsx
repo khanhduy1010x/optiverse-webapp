@@ -1,21 +1,29 @@
 import React, { useMemo } from 'react';
 import { TaskEvent } from '../../types/task-events/task-events.types';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isToday } from 'date-fns';
+import { isSameLocalDay, ensureDate } from '../../utils/date.util';
 import { CalendarEvent } from './CalendarEvent.component';
+import { CalendarDeadlineEvent } from './CalendarDeadlineEvent.component';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
+import type { Task } from '../../types/task/response/task.response';
+import { DeadlineBadge } from './DeadlineBadge.component';
 
 interface MonthViewProps {
   currentDate: Date;
   taskEvents: TaskEvent[];
+  deadlineTasks: Task[];
   handleAddEvent: (date?: Date, hour?: number) => void;
   handleEditEvent: (event: TaskEvent) => void;
+  onDeadlineClick?: (task: Task) => void;
 }
 
 export const MonthView: React.FC<MonthViewProps> = ({
   currentDate,
   taskEvents,
+  deadlineTasks,
   handleAddEvent,
-  handleEditEvent
+  handleEditEvent,
+  onDeadlineClick
 }) => {
   const { t } = useAppTranslate('task');
   // Tạo mảng các ngày trong tháng (bao gồm cả ngày của tháng trước và tháng sau để hiển thị đủ lịch)
@@ -70,14 +78,7 @@ export const MonthView: React.FC<MonthViewProps> = ({
   // Kiểm tra xem một sự kiện có thuộc về một ngày cụ thể không
   const getEventsForDay = (day: Date) => {
     try {
-      return taskEvents.filter(event => {
-        const eventDate = new Date(event.start_time);
-        return (
-          eventDate.getDate() === day.getDate() &&
-          eventDate.getMonth() === day.getMonth() &&
-          eventDate.getFullYear() === day.getFullYear()
-        );
-      });
+      return taskEvents.filter(event => isSameLocalDay(ensureDate(event.start_time), day));
     } catch (error) {
       console.error('Error filtering events for day:', error, day);
       return [];
@@ -130,6 +131,7 @@ export const MonthView: React.FC<MonthViewProps> = ({
       const dayEvents = getEventsForDay(day);
       const isCurrentMonth = isSameMonth(day, currentDate);
       const isTodayDate = isToday(day);
+      const deadlinesForDay = (deadlineTasks || []).filter(t => t.end_time && isSameLocalDay(ensureDate(t.end_time), day));
       
       cells.push(
         <div
@@ -153,8 +155,23 @@ export const MonthView: React.FC<MonthViewProps> = ({
             </span>
           </div>
           
-          {/* Hiển thị các sự kiện trong ngày */}
+          {/* Hiển thị các deadline và sự kiện trong ngày */}
           <div className="mt-1 max-h-[100px] overflow-y-auto flex flex-col items-start gap-1 pr-1">
+            {/* Deadline trước, giới hạn tối đa 2 */}
+            {deadlinesForDay.slice(0, 2).map((task, idx) => (
+              <CalendarDeadlineEvent
+                key={task._id || `deadline-${i}-${idx}`}
+                task={task}
+                onClick={() => onDeadlineClick && onDeadlineClick(task)}
+                className="w-full block"
+              />
+            ))}
+            {deadlinesForDay.length > 2 && (
+              <div className="text-[10px] text-red-700 bg-red-50 rounded-full py-0.5 px-2 inline-block">
+                +{deadlinesForDay.length - 2} more
+              </div>
+            )}
+            {/* Event sau */}
             {dayEvents.slice(0, 3).map((event, index) => (
               <CalendarEvent
                 key={event._id || index}
@@ -163,8 +180,6 @@ export const MonthView: React.FC<MonthViewProps> = ({
                 className="w-full block"
               />
             ))}
-            
-            {/* Hiển thị số sự kiện còn lại nếu có nhiều hơn 3 */}
             {dayEvents.length > 3 && (
               <div 
                 className="text-xs text-center bg-gray-100 rounded-full py-1 px-2 cursor-pointer hover:bg-gray-200 transition-colors w-full font-medium text-gray-700 shadow-sm"

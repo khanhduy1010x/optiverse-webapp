@@ -6,6 +6,7 @@ import Modal from 'react-modal';
 import { GROUP_CLASSNAMES } from '../../styles';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
 import DateTimePicker from '../../components/datetime-picker/DateTimePicker.component';
+import { validateTaskEvent } from '../../utils/validate.util';
 
 interface TaskEventModalProps {
   isOpen: boolean;
@@ -49,23 +50,16 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
     e.preventDefault();
     let success = false;
     try {
-      // Validate required fields
-      if (!formData.title || !formData.title.trim()) {
-        alert(t('validation_title_required'));
-        return;
-      }
+      // Basic required field validation
       if (!taskId || !taskId.trim()) {
         alert(t('validation_task_id_required'));
-        return;
-      }
-      if (!formData.start_time) {
-        alert(t('validation_start_time_required'));
         return;
       }
       if (!formData.repeat_type) {
         alert(t('validation_repeat_type_required'));
         return;
       }
+
       // Chuẩn hóa ngày giờ về ISO string
       const startTimeISO = (formData.start_time instanceof Date)
         ? formData.start_time.toISOString()
@@ -73,12 +67,27 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
       const endTimeISO = formData.end_time
         ? (formData.end_time instanceof Date ? formData.end_time.toISOString() : new Date(formData.end_time).toISOString())
         : undefined;
+
       // Gộp 3 trường thành description
       const mergedDescription = [
         (formData.guests?.join(', ') || '').trim(),
         (formData.location || '').trim(),
         (formData.description || '').trim()
       ].filter(Boolean).join('\n');
+
+      // Use comprehensive validation from validate.util.ts
+      const validationResult = validateTaskEvent({
+        title: formData.title || '',
+        start_time: startTimeISO,
+        end_time: endTimeISO,
+        description: mergedDescription
+      });
+
+      if (!validationResult.valid) {
+        alert(t('validation_failed') + ': ' + validationResult.errors.map(error => t(error)).join(', '));
+        return;
+      }
+
       // Chuẩn hóa guests
       const guestsArr = Array.isArray(formData.guests) ? formData.guests.filter(g => !!g && g.trim()) : [];
       // Chuẩn hóa location

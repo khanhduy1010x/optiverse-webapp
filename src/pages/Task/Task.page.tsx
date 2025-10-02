@@ -195,7 +195,7 @@ const TaskPage: React.FC = () => {
     sortTasksWithCompletedAtBottom
   );
 
-  const { fetchUserTags, handleCreateNewTag, handleFilterByTags, confirmDeleteTag, handleDeleteTag, updateTaskTags } =
+  const { fetchUserTags, handleCreateNewTag, handleFilterByTags, confirmDeleteTag, handleDeleteTag, updateTaskTags, handleUpdateTag } =
     tagOperations;
 
   // Task form
@@ -633,6 +633,7 @@ const TaskPage: React.FC = () => {
                     setNewTagColor={setNewTagColor}
                     handleCreateNewTag={handleCreateNewTag}
                     confirmDeleteTag={confirmDeleteTagWrapper}
+                    handleUpdateTag={handleUpdateTag}
                     setShowTagManagement={setShowTagManagement}
                   />
                 ) : (
@@ -849,6 +850,7 @@ const TaskPage: React.FC = () => {
           setNewTagColor={setNewTagColor}
           handleCreateNewTag={handleCreateNewTag}
           confirmDeleteTag={confirmDeleteTagWrapper}
+          handleUpdateTag={handleUpdateTag}
           setShowTagManagement={setShowTagManagement}
         />
       )}

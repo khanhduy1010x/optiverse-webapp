@@ -1,22 +1,29 @@
 import React, { useMemo } from 'react';
 import { TaskEvent } from '../../types/task-events/task-events.types';
 import { format, addDays, startOfWeek } from 'date-fns';
+import { isSameLocalDay, ensureDate } from '../../utils/date.util';
 import { CalendarEvent } from './CalendarEvent.component';
+import type { Task } from '../../types/task/response/task.response';
+import { CalendarDeadlineEvent } from './CalendarDeadlineEvent.component';
 
 interface WeekViewProps {
   currentDate: Date;
   currentTime: Date;
   taskEvents: TaskEvent[];
+  deadlineTasks: Task[];
   handleAddEvent: (date?: Date, hour?: number) => void;
   handleEditEvent: (event: TaskEvent) => void;
+  onDeadlineClick?: (task: Task) => void;
 }
 
 export const WeekView: React.FC<WeekViewProps> = ({
   currentDate,
   currentTime,
   taskEvents,
+  deadlineTasks,
   handleAddEvent,
-  handleEditEvent
+  handleEditEvent,
+  onDeadlineClick
 }) => {
   // Tạo mảng các ngày trong tuần
   const weekDays = useMemo(() => {
@@ -43,12 +50,7 @@ export const WeekView: React.FC<WeekViewProps> = ({
   // Kiểm tra xem một sự kiện có thuộc về một ngày cụ thể không
   const isEventInDay = (event: TaskEvent, day: Date) => {
     try {
-      const eventDate = new Date(event.start_time);
-      return (
-        eventDate.getDate() === day.getDate() &&
-        eventDate.getMonth() === day.getMonth() &&
-        eventDate.getFullYear() === day.getFullYear()
-      );
+      return isSameLocalDay(ensureDate(event.start_time), day);
     } catch (error) {
       console.error('Error checking if event is in day:', error, event, day);
       return false;
@@ -154,8 +156,17 @@ export const WeekView: React.FC<WeekViewProps> = ({
                   return false;
                 }
               });
+              const deadlinesInCell = (deadlineTasks || []).filter(task => {
+                if (!task.end_time) return false;
+                try {
+                  const d = ensureDate(task.end_time);
+                  return isSameLocalDay(d, day) && d.getHours() === hour;
+                } catch {
+                  return false;
+                }
+              });
               // Tính chiều cao động: mỗi event 56px, min 64px
-              const cellHeight = Math.max(64, eventsInCell.length * 56);
+              const cellHeight = Math.max(64, (eventsInCell.length * 56) + (deadlinesInCell.length * 40));
               return (
                 <div
                   key={dayIndex}
@@ -193,6 +204,14 @@ export const WeekView: React.FC<WeekViewProps> = ({
                       return null;
                     }
                   })}
+                  {deadlinesInCell.map((task, idx) => (
+                    <CalendarDeadlineEvent
+                      key={task._id || `deadline-${dayIndex}-${hour}-${idx}`}
+                      task={task}
+                      onClick={() => onDeadlineClick && onDeadlineClick(task)}
+                      className="w-full block mb-1 rounded-xl shadow-md hover:scale-[1.03] transition-all duration-200"
+                    />
+                  ))}
                 </div>
               );
             })}
@@ -201,4 +220,4 @@ export const WeekView: React.FC<WeekViewProps> = ({
       </div>
     </div>
   );
-}; 
+};
