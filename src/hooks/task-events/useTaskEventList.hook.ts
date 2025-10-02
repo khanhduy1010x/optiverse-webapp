@@ -410,11 +410,11 @@ export const useTaskEventList = (taskId: string) => {
   const [refreshKey, setRefreshKey] = useState<number>(0);
 
   const fetchTaskEvents = useCallback(async () => {
-    console.log('Fetching task events for taskId:', taskId);
+    console.log('🔍 Fetching task events for taskId:', taskId);
     
     // Nếu không có taskId, không làm gì cả
     if (!taskId) {
-      console.log('No taskId provided, skipping fetch');
+      console.log('❌ No taskId provided, skipping fetch');
       setTaskEvents([]);
       setLoading(false);
       return;
@@ -425,16 +425,77 @@ export const useTaskEventList = (taskId: string) => {
     
     try {
       // Luôn lấy dữ liệu từ API
-      console.log('Calling API for task events with taskId:', taskId);
+      console.log('🚀 Calling API for task events with taskId:', taskId);
+      console.log('📡 API endpoint will be: /productivity/task-event/task/' + taskId);
+      
       const response = await taskEventService.getTaskEventsByTaskId(taskId);
-      console.log('API response:', response);
+      console.log('📦 Full API response received:', response);
+      console.log('📊 Response code:', response?.code);
+      console.log('📋 Response message:', response?.message);
       
       if (response && response.data) {
-        // Chuyển đổi chuỗi thời gian thành đối tượng Date
-        const events = Array.isArray(response.data.data) ? response.data.data : [];
-        console.log('Parsed events:', events);
+        // Hỗ trợ cả 2 định dạng dữ liệu trả về:
+        // 1) ApiResponse<TaskEvent[]>  -> data: TaskEvent[]
+        // 2) ApiResponse<{ taskEvents: TaskEvent[] }> -> data: { taskEvents: TaskEvent[] }
+        const rawData: any = response.data?.data;
+        let events: TaskEvent[] = [];
         
-        const formattedEvents = events.map(event => ({
+        console.log('🔍 Raw data type:', typeof rawData);
+        console.log('🔍 Raw data is array:', Array.isArray(rawData));
+        console.log('🔍 Raw data content:', rawData);
+        console.log('🔍 Raw data length (if array):', Array.isArray(rawData) ? rawData.length : 'N/A');
+        
+        if (Array.isArray(rawData)) {
+          events = rawData as TaskEvent[];
+          console.log('✅ Parsed as direct array, events count:', events.length);
+        } else if (rawData && Array.isArray(rawData.taskEvents)) {
+          events = rawData.taskEvents as TaskEvent[];
+          console.log('✅ Parsed from taskEvents property, events count:', events.length);
+        } else if (rawData && typeof rawData === 'object') {
+          // Kiểm tra các key khác có thể chứa array
+          const possibleArrayKeys = Object.keys(rawData).filter(key => Array.isArray(rawData[key]));
+          console.log('🔍 Possible array keys in response:', possibleArrayKeys);
+          
+          if (possibleArrayKeys.length > 0) {
+            events = rawData[possibleArrayKeys[0]] as TaskEvent[];
+            console.log('✅ Found events in key:', possibleArrayKeys[0], 'count:', events.length);
+          } else {
+            console.warn('⚠️ No array found in response data');
+          }
+        } else {
+          console.warn('⚠️ Unexpected task events response shape:', rawData);
+          console.warn('⚠️ Response structure:', {
+            hasData: !!response.data,
+            dataKeys: response.data ? Object.keys(response.data) : [],
+            rawDataType: typeof rawData,
+            rawDataKeys: rawData && typeof rawData === 'object' ? Object.keys(rawData) : []
+          });
+        }
+        
+        console.log('📋 Final parsed events count:', events.length);
+        if (events.length > 0) {
+          console.log('📝 Sample event structure:', {
+            id: events[0]._id,
+            title: events[0].title,
+            start_time: events[0].start_time,
+            end_time: events[0].end_time,
+            repeat_type: events[0].repeat_type
+          });
+          console.log('📝 Full sample event:', events[0]);
+        }
+        
+        // Validate và format events
+        const validEvents = events.filter(event => {
+          if (!event._id || !event.title) {
+            console.warn('⚠️ Invalid event found (missing id or title):', event);
+            return false;
+          }
+          return true;
+        });
+        
+        console.log('✅ Valid events after filtering:', validEvents.length);
+        
+        const formattedEvents = validEvents.map(event => ({
           ...event,
           start_time: event.start_time ? new Date(event.start_time) : new Date(),
           end_time: event.end_time ? new Date(event.end_time) : undefined
@@ -442,14 +503,32 @@ export const useTaskEventList = (taskId: string) => {
         
         // Tạo các sự kiện lặp lại ảo từ events gốc
         const allEventsWithRecurring = generateRecurringEvents(formattedEvents);
-        console.log('Generated events with recurring instances:', allEventsWithRecurring.length, 'total events');
+        console.log('🔄 Generated events with recurring instances:', allEventsWithRecurring.length, 'total events');
+        
+        // Log events by date for debugging
+        const eventsByDate = allEventsWithRecurring.reduce((acc, event) => {
+          const startTime = event.start_time instanceof Date ? event.start_time : new Date(event.start_time);
+          const dateKey = startTime.toISOString().split('T')[0];
+          if (!acc[dateKey]) acc[dateKey] = [];
+          acc[dateKey].push(event.title);
+          return acc;
+        }, {} as Record<string, string[]>);
+        
+        console.log('📅 Events grouped by date:', eventsByDate);
+        
         setTaskEvents(allEventsWithRecurring);
       } else {
-        console.log('No data in response or invalid response structure');
+        console.log('❌ No data in response or invalid response structure');
         setTaskEvents([]);
       }
-    } catch (err) {
-      console.error('Error in useTaskEventList:', err);
+    } catch (err: any) {
+      console.error('❌ Error in useTaskEventList:', err);
+      console.error('❌ Error details:', {
+        message: err?.message,
+        status: err?.response?.status,
+        statusText: err?.response?.statusText,
+        data: err?.response?.data
+      });
       setError('Failed to fetch task events');
       setTaskEvents([]);
     } finally {

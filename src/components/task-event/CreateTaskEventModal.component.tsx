@@ -29,6 +29,7 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
+  const [showToDatePicker, setShowToDatePicker] = useState(false);
   const [selectedColor, setSelectedColor] = useState('#3B82F6');
   const [dateError, setDateError] = useState('');
 
@@ -241,6 +242,31 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
       minute: '2-digit',
       hour12: true 
     });
+  };
+
+  // Helpers for To Date (repeat_to) using CalendarDatePicker, similar UI to Start Date
+  const formatDateYMD = (ymd?: string) => {
+    if (!ymd) return t('select_date');
+    const [y, m, d] = ymd.split('-').map(Number);
+    const date = new Date(y, (m || 1) - 1, d || 1);
+    return date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const parseYMDToDate = (ymd?: string) => {
+    if (!ymd) return new Date();
+    const [y, m, d] = ymd.split('-').map(Number);
+    return new Date(y, (m || 1) - 1, d || 1);
+  };
+
+  const formatDateYYYYMMDD = (date: Date) => {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
   };
 
   return (
@@ -478,12 +504,34 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
                   {formData.repeat_type === 'yearly' && t('to_year')}
                 </label>
                 {formData.repeat_type === 'daily' && (
-                  <input
-                    type="date"
-                    value={formData.repeat_to || ''}
-                    onChange={e => handleInputChange('repeat_to', e.target.value)}
-                    className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setShowToDatePicker(!showToDatePicker)}
+                      className="flex items-center gap-3 w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span className="text-gray-700">
+                        {formatDateYMD(String(formData.repeat_to || ''))}
+                      </span>
+                    </button>
+
+                    {showToDatePicker && (
+                      <div className="absolute top-full left-0 mt-1 z-50">
+                        <CalendarDatePicker
+                          selectedDate={parseYMDToDate(String(formData.repeat_to || ''))}
+                          onDateSelect={(date) => {
+                            handleInputChange('repeat_to', formatDateYYYYMMDD(date));
+                            setShowToDatePicker(false);
+                          }}
+                          isOpen={showToDatePicker}
+                          onClose={() => setShowToDatePicker(false)}
+                        />
+                      </div>
+                    )}
+                  </div>
                 )}
                 {formData.repeat_type === 'weekly' && (
                   <input

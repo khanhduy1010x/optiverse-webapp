@@ -1,22 +1,29 @@
 import React, { useMemo } from 'react';
 import { TaskEvent } from '../../types/task-events/task-events.types';
 import { format } from 'date-fns';
+import { ensureDate, isSameLocalDay } from '../../utils/date.util';
 import { CalendarEvent } from './CalendarEvent.component';
+import type { Task } from '../../types/task/response/task.response';
+import { CalendarDeadlineEvent } from './CalendarDeadlineEvent.component';
 
 interface DayViewProps {
   currentDate: Date;
   currentTime: Date;
   taskEvents: TaskEvent[];
+  deadlineTasks: Task[];
   handleAddEvent: (date?: Date, hour?: number) => void;
   handleEditEvent: (event: TaskEvent) => void;
+  onDeadlineClick?: (task: Task) => void;
 }
 
 export const DayView: React.FC<DayViewProps> = ({
   currentDate,
   currentTime,
   taskEvents,
+  deadlineTasks,
   handleAddEvent,
-  handleEditEvent
+  handleEditEvent,
+  onDeadlineClick
 }) => {
   // Tạo mảng các giờ trong ngày
   const hours = useMemo(() => {
@@ -76,8 +83,8 @@ export const DayView: React.FC<DayViewProps> = ({
   // Kiểm tra xem một sự kiện có thuộc về giờ cụ thể không
   const isEventInHour = (event: TaskEvent, hour: number) => {
     try {
-      const eventDate = new Date(event.start_time);
-      return eventDate.getHours() === hour;
+      const eventDate = ensureDate(event.start_time);
+      return !isNaN(eventDate.getTime()) && eventDate.getHours() === hour;
     } catch (error) {
       console.error('Error checking if event is in hour:', error, event, hour);
       return false;
@@ -94,6 +101,8 @@ export const DayView: React.FC<DayViewProps> = ({
           <div className="text-2xl md:text-3xl font-bold text-gray-800">{format(currentDate, 'MMMM d, yyyy')}</div>
         </div>
       </div>
+
+      {/* Deadline events rendered within the time grid */}
 
       {/* Lưới thời gian dạng 1 cột, event absolute theo thời gian */}
       <div className="flex-grow overflow-x-auto relative" style={{minWidth: 340}}>
@@ -140,8 +149,29 @@ export const DayView: React.FC<DayViewProps> = ({
               </div>
             );
           })}
+
+          {/* Render deadlines as time-based events */}
+          {(deadlineTasks || []).filter(t => t.end_time && isSameLocalDay(ensureDate(t.end_time), currentDate)).map((task, idx) => {
+            const end = ensureDate(task.end_time!);
+            const endMinutes = end.getHours() * 60 + end.getMinutes();
+            const top = (endMinutes / 1440) * 100;
+            const height = 24; // fixed small height for a deadline marker
+            return (
+              <div
+                key={task._id || `deadline-${idx}`}
+                className="absolute left-0 right-0 px-2"
+                style={{ top: `${top}%`, height: `calc(${height}px + 1px)`, zIndex: 25 }}
+              >
+                <CalendarDeadlineEvent
+                  task={task}
+                  onClick={() => onDeadlineClick && onDeadlineClick(task)}
+                  className="w-full block mb-1 rounded-xl shadow-md hover:scale-[1.03] transition-all duration-200"
+                />
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
   );
-}; 
+};

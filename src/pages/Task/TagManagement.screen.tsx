@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Tag } from '../../types/task/response/tag.response';
 import { GROUP_CLASSNAMES } from '../../styles';
 import { TagManagementProps } from '../../types/task/props/component.props';
@@ -13,9 +13,13 @@ const TagManagement: React.FC<TagManagementProps> = ({
   setNewTagColor,
   handleCreateNewTag,
   confirmDeleteTag,
+  handleUpdateTag,
   setShowTagManagement,
 }) => {
   const { t } = useAppTranslate();
+  const [editingTagId, setEditingTagId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editColor, setEditColor] = useState('#3B82F6');
   const resetTagForm = () => {
     setNewTagName('');
     setNewTagColor('#3B82F6');
@@ -91,6 +95,7 @@ const TagManagement: React.FC<TagManagementProps> = ({
                   handleCreateNewTag(newTagName, newTagColor, resetTagForm)
                 }
                 disabled={!newTagName.trim()}
+                id="create-tag-button"
                 className={`${GROUP_CLASSNAMES.tagManagementButton} ${
                   newTagName.trim()
                     ? GROUP_CLASSNAMES.tagManagementButtonActive
@@ -142,32 +147,91 @@ const TagManagement: React.FC<TagManagementProps> = ({
                     key={tag._id}
                     className={GROUP_CLASSNAMES.tagManagementListItem}
                   >
-                    <div className="flex items-center">
-                      <span
-                        className="w-4 h-4 rounded-full mr-2"
-                        style={{ backgroundColor: tag.color }}
-                      ></span>
-                      <span className="text-sm font-medium">{tag.name}</span>
-                    </div>
-                    <button
-                      onClick={() => confirmDeleteTag(tag)}
-                      className={GROUP_CLASSNAMES.tagManagementDeleteButton}
-                      title={t('delete_tag')}
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    {editingTagId === tag._id ? (
+                      <div className="flex items-center gap-2 w-full">
+                        <input
+                          type="text"
+                          value={editName}
+                          onChange={e => e.target.value.length <= 25 && setEditName(e.target.value)}
+                          className={GROUP_CLASSNAMES.tagManagementInput}
+                          maxLength={25}
                         />
-                      </svg>
-                    </button>
+                        <input
+                          type="color"
+                          value={editColor}
+                          onChange={e => setEditColor(e.target.value)}
+                          className={GROUP_CLASSNAMES.tagManagementColorInput}
+                          aria-label={t('choose_tag_color')}
+                          title={t('choose_tag_color')}
+                        />
+                        <div className="flex items-center gap-2">
+                          <button
+                            className={`${GROUP_CLASSNAMES.tagManagementButton} ${GROUP_CLASSNAMES.tagManagementButtonActive}`}
+                            onClick={async () => {
+                              const ok = await handleUpdateTag(tag._id, { name: editName.trim(), color: editColor });
+                              if (ok) {
+                                alert(t('tag_update_success'));
+                                setEditingTagId(null);
+                              } else {
+                                alert(t('tag_update_failed'));
+                              }
+                            }}
+                          >
+                            {t('save')}
+                          </button>
+                          <button
+                            className={`${GROUP_CLASSNAMES.tagManagementButton}`}
+                            onClick={() => setEditingTagId(null)}
+                          >
+                            {t('cancel')}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center w-full justify-between">
+                        <div className="flex items-center">
+                          <span
+                            className="w-4 h-4 rounded-full mr-2"
+                            style={{ backgroundColor: tag.color }}
+                          ></span>
+                          <span className="text-sm font-medium">{tag.name}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              setEditingTagId(tag._id);
+                              setEditName(tag.name);
+                              setEditColor(tag.color || '#3B82F6');
+                            }}
+                            className={GROUP_CLASSNAMES.tagManagementDeleteButton}
+                            title={t('edit')}
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5h2M12 7v10m9-5a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => confirmDeleteTag(tag)}
+                            className={GROUP_CLASSNAMES.tagManagementDeleteButton}
+                            title={t('delete_tag')}
+                          >
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>

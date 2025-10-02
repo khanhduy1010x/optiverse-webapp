@@ -92,7 +92,8 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
   
   const formatDate = (dateInput: string | Date) => {
     const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
-    return date.toLocaleDateString('vi-VN', {
+    // Display date in English (US) for Start Time and Deadline
+    return date.toLocaleDateString('en-US', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',

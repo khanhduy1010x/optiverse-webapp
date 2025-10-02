@@ -52,6 +52,7 @@ export interface TagManagementProps {
     resetForm: () => void
   ) => Promise<Tag | null>;
   confirmDeleteTag: (tag: Tag) => void;
+  handleUpdateTag: (tagId: string, payload: Partial<Pick<Tag, 'name' | 'color'>>) => Promise<boolean>;
   setShowTagManagement: React.Dispatch<React.SetStateAction<boolean>>;
 }
 export interface TaskDetailProps {

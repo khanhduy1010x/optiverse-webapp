@@ -21,5 +21,15 @@
   "to_month": "To Month",
   "to_year": "To Year",
   "year": "Year",
-  "add_description": "Add description"
+  "add_description": "Add description",
+  "validation_failed": "Validation failed",
+  "validation_title_required": "Title is required",
+  "validation_task_id_required": "Task ID is required",
+  "validation_start_time_required": "Start time is required",
+  "validation_repeat_type_required": "Repeat type is required",
+  "validation_start_time_invalid": "Start time is invalid",
+  "validation_end_time_invalid": "End time is invalid",
+  "validation_end_time_before_start": "End time must be after start time",
+  "validation_title_too_long": "Title must not exceed 50 characters",
+  "validation_description_too_long": "Description must not exceed 100 characters"
 }
