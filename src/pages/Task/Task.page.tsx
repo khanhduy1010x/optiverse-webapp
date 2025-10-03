@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 
 // Components
@@ -492,6 +492,18 @@ const TaskPage: React.FC = () => {
     }
   };
 
+  // Lắng nghe sự kiện refresh từ Calendar để fetch đồng thời
+  useEffect(() => {
+    const handleExternalRefresh = () => {
+      // Fetch lại danh sách task và kiểm tra overdue mà không cần reload trang
+      fetchTasksAndCheckOverdue();
+    };
+    window.addEventListener('tasks:refresh', handleExternalRefresh as EventListener);
+    return () => {
+      window.removeEventListener('tasks:refresh', handleExternalRefresh as EventListener);
+    };
+  }, []);
+
   // Hàm điều hướng sidebar
   const handleNavigate = (menu: string, path: string) => {
     setSelectedMenu(menu as 'task' | 'task-event' | 'task-settings');
@@ -792,7 +804,6 @@ const TaskPage: React.FC = () => {
           <CreateTaskEventModalForm
             isOpen={showCreateTaskEventModal}
             onClose={closeAllModals}
-            taskId={tasks.length > 0 ? tasks[0]._id : ''}
             onSuccess={() => {
               closeAllModals();
               fetchTasksAndCheckOverdue();

@@ -20,7 +20,8 @@ interface TaskEventListProps {
 
 export const TaskEventList: React.FC<TaskEventListProps> = ({ taskId }) => {
   const { t } = useAppTranslate('task');
-  const { taskEvents, loading, error, refreshTaskEvents, removeEvent } = useTaskEventList(taskId);
+  // useTaskEventList hiện không nhận tham số taskId nữa (lấy theo user_id)
+  const { taskEvents, loading, error, refreshTaskEvents, removeEvent } = useTaskEventList();
   // const { deleteTaskEvent } = useTaskEventOperations();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTaskEvent, setSelectedTaskEvent] = useState<TaskEvent | undefined>(undefined);
@@ -304,7 +305,7 @@ export const TaskEventList: React.FC<TaskEventListProps> = ({ taskId }) => {
           }}
           onConfirm={() => {
             if (eventToDelete?._id) {
-              removeEvent(eventToDelete._id, 'this');
+              removeEvent(eventToDelete._id, 'this', eventToDelete.start_time as any);
               refreshTaskEvents();
             }
             setIsDeleteConfirmOpen(false);
@@ -343,7 +344,7 @@ export const TaskEventList: React.FC<TaskEventListProps> = ({ taskId }) => {
                 type="button"
                 onClick={() => {
                   if (eventToDelete?._id) {
-                    removeEvent(eventToDelete._id, 'this');
+                    removeEvent(eventToDelete._id, 'this', eventToDelete.start_time as any);
                     refreshTaskEvents();
                   }
                   setIsRecurringDeleteOpen(false);

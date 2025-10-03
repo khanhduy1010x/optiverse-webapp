@@ -1,10 +1,11 @@
 import { useState } from 'react';
+import { useAppSelector } from '../../store/hooks';
+import type { RootState } from '../../store';
 import { RepeatType, RepeatEndType, TaskEvent } from '../../types/task-events/task-events.types';
 import { CreateTaskEventRequest } from '../../types/task-events/request/create-task-event.request';
 import { UpdateTaskEventRequest } from '../../types/task-events/request/update-task-event.request';
 
 interface TaskEventFormState {
-  task_id: string;
   title: string;
   start_time: Date;
   end_time?: Date;
@@ -23,7 +24,6 @@ interface TaskEventFormState {
 }
 
 const initialState: TaskEventFormState = {
-  task_id: '',
   title: '',
   start_time: new Date(),
   end_time: new Date(new Date().getTime() + 60 * 60 * 1000), // 1 hour later
@@ -38,10 +38,10 @@ const initialState: TaskEventFormState = {
 };
 
 export const useTaskEventForm = (taskEvent?: TaskEvent) => {
+  const userId = useAppSelector((s: RootState) => (s as any)?.auth?.user?.id);
   const [formData, setFormData] = useState<TaskEventFormState>(
     taskEvent
       ? {
-          task_id: taskEvent.task_id || '',
           title: taskEvent.title || '',
           start_time: new Date(taskEvent.start_time),
           end_time: taskEvent.end_time ? new Date(taskEvent.end_time) : new Date(new Date(taskEvent.start_time).getTime() + 60 * 60 * 1000),
@@ -77,7 +77,7 @@ export const useTaskEventForm = (taskEvent?: TaskEvent) => {
 
   const getCreatePayload = (): CreateTaskEventRequest => {
     const payload: CreateTaskEventRequest = {
-      task_id: formData.task_id,
+      user_id: userId || '',
       title: formData.title,
       start_time: formData.start_time,
       end_time: formData.end_time,
@@ -133,4 +133,4 @@ export const useTaskEventForm = (taskEvent?: TaskEvent) => {
     getCreatePayload,
     getUpdatePayload,
   };
-}; 
+};

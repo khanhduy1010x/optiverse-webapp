@@ -25,24 +25,30 @@ import { toast } from 'react-toastify';
 import Modal from 'react-modal';
 import { GROUP_CLASSNAMES } from '../../styles';
 import DeleteConfirmation from '../../pages/Task/DeleteConfirmation.screen';
+import TaskDetail from '../../pages/Task/TaskDetail.screen';
+import EditTaskForm from '../../pages/Task/EditTaskForm.screen';
+import { convertTaskEventToTask, convertTaskToTaskEvent } from '../../utils/task-event-converter.utils';
+import { Task } from '../../types/task/response/task.response';
+import { Tag } from '../../types/task/response/tag.response';
 import * as XLSX from 'xlsx';
 import { EventExcelImportModal } from './EventExcelImportModal.component';
 import { useTaskDeadlineMarkers } from '../../hooks/task/useTaskDeadlineMarkers.hook';
+import { useAppSelector } from '../../store/hooks';
+import { useTagOperations } from '../../hooks/task/useTagOperations.hook';
+import tagService from '../../services/tag.service';
 type ViewType = 'Day' | 'Week' | 'Month' | 'Year';
 
 interface CalendarProps {
-  taskId: string;
   taskEvents: TaskEvent[];
   loading: boolean;
   error: string | null;
   addEvent: (event: TaskEvent) => void;
-  removeEvent: (eventId: string, deleteOption?: 'all' | 'this') => void;
+  removeEvent: (eventId: string, deleteOption?: 'all' | 'this', instanceStartTime?: Date | string) => void;
   updateEvent: (eventId: string, event: TaskEvent, updateOption?: 'all' | 'this') => void;
   refreshTaskEvents: () => void;
 }
 
 export const Calendar: React.FC<CalendarProps> = ({
-  taskId,
   taskEvents,
   loading,
   error,
@@ -52,6 +58,11 @@ export const Calendar: React.FC<CalendarProps> = ({
   refreshTaskEvents
 }) => {
   const { t } = useAppTranslate('task');
+  
+  // Get user_id from Redux store
+  const user = useAppSelector((state) => state.auth.user);
+  const userId = user?._id;
+  
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewType, setViewType] = useState<ViewType>('Week');
   const [showSidebar, setShowSidebar] = useState(false);
@@ -75,6 +86,72 @@ export const Calendar: React.FC<CalendarProps> = ({
   const [isRecurringDeleteOpen, setIsRecurringDeleteOpen] = useState(false);
   const [eventToDelete, setEventToDelete] = useState<TaskEvent | null>(null);
   const [showRepeatOptions, setShowRepeatOptions] = useState(false);
+  
+  // Task Detail Modal states
+  const [showTaskDetail, setShowTaskDetail] = useState(false);
+  const [showEditTaskForm, setShowEditTaskForm] = useState(false);
+  const [showDeleteTaskConfirm, setShowDeleteTaskConfirm] = useState(false);
+  const [selectedTaskEvent, setSelectedTaskEvent] = useState<TaskEvent | null>(null);
+  const [selectedSource, setSelectedSource] = useState<'event' | 'task' | null>(null);
+  
+  // EditTaskForm states
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editStatus, setEditStatus] = useState<'pending' | 'completed' | 'overdue'>('pending');
+  const [editPriority, setEditPriority] = useState<'low' | 'medium' | 'high'>('medium');
+  const [editStartTime, setEditStartTime] = useState<Date | string | undefined>(undefined);
+  const [editEndTime, setEditEndTime] = useState<Date | string | undefined>(undefined);
+  const [editSelectedTags, setEditSelectedTags] = useState<Tag[]>([]);
+  const [editShowNewTagForm, setEditShowNewTagForm] = useState(false);
+  const [editNewTagName, setEditNewTagName] = useState('');
+  const [editNewTagColor, setEditNewTagColor] = useState('#3B82F6');
+  
+  // Tag management states
+  const [allTags, setAllTags] = useState<Tag[]>([]);
+  const [taskTags, setTaskTags] = useState<{ [taskId: string]: Tag[] }>({});
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
+  const [filterTags, setFilterTags] = useState<string[]>([]);
+  
+  // Initialize tag operations hook
+  const tagOperations = useTagOperations(
+    tasks,
+    setTasks,
+    setFilteredTasks,
+    allTags,
+    setAllTags,
+    editSelectedTags,
+    setEditSelectedTags,
+    filterTags,
+    setFilterTags,
+    taskTags,
+    setTaskTags,
+    async () => {
+      console.log('Filter callback not used in calendar');
+    },
+    (tasksToSort: Task[]) => tasksToSort // Simple sort function
+  );
+
+  const { fetchUserTags, handleCreateNewTag, handleTagSelect } = tagOperations;
+
+  // Fetch tags on component mount
+  useEffect(() => {
+    fetchUserTags();
+  }, []);
+  
+  // Reset edit form when closing
+  const resetEditForm = () => {
+    setEditTitle('');
+    setEditDescription('');
+    setEditStatus('pending');
+    setEditPriority('medium');
+    setEditStartTime(undefined);
+    setEditEndTime(undefined);
+    setEditSelectedTags([]);
+    setEditShowNewTagForm(false);
+    setEditNewTagName('');
+    setEditNewTagColor('#3B82F6');
+  };
   
   // Thêm state cho chức năng All day
   const [isAllDay, setIsAllDay] = useState(false);
@@ -162,6 +239,25 @@ export const Calendar: React.FC<CalendarProps> = ({
     startDate: dateRange.startDate,
     endDate: dateRange.endDate,
   });
+
+  // Local optimistic deadlines state to allow instant UI updates without full reload
+  const [localDeadlines, setLocalDeadlines] = useState<Task[] | null>(null);
+  useEffect(() => {
+    // Initialize or sync local deadlines when the hook provides new data
+    setLocalDeadlines(prev => {
+      // If we already have local changes, try to merge updates by ID
+      if (prev && prev.length) {
+        const byId = new Map<string, Task>();
+        prev.forEach(t => byId.set(t._id, t));
+        (deadlineTasks || []).forEach(t => {
+          byId.set(t._id, { ...byId.get(t._id), ...t });
+        });
+        return Array.from(byId.values());
+      }
+      // Otherwise take the latest from hook
+      return deadlineTasks;
+    });
+  }, [deadlineTasks]);
   
   // Sử dụng hook useCalendarEventLayout ở cấp cao nhất của component
   const layoutResult = useCalendarEventLayout({
@@ -209,21 +305,21 @@ export const Calendar: React.FC<CalendarProps> = ({
     '11:00pm', '11:15pm', '11:30pm', '11:45pm',
   ];
   
-  // Fetch the task data when the component mounts
-  useEffect(() => {
-    const fetchTask = async () => {
-      if (taskId && taskId !== 'mock-task-1') {
-        try {
-          const taskData = await taskService.fetchTaskById(taskId);
-          setTask(taskData);
-        } catch (error) {
-          console.error('Failed to fetch task:', error);
-        }
-      }
-    };
-    
-    fetchTask();
-  }, [taskId]);
+  // Fetch the task data when the component mounts - removed since we no longer need taskId
+  // useEffect(() => {
+  //   const fetchTask = async () => {
+  //     if (taskId && taskId !== 'mock-task-1') {
+  //       try {
+  //         const taskData = await taskService.fetchTaskById(taskId);
+  //         setTask(taskData);
+  //       } catch (error) {
+  //         console.error('Failed to fetch task:', error);
+  //       }
+  //     }
+  //   };
+  //   
+  //   fetchTask();
+  // }, [taskId]);
   
   // Update current time every minute for the time indicator
   useEffect(() => {
@@ -415,7 +511,7 @@ export const Calendar: React.FC<CalendarProps> = ({
     
     // Tạo đối tượng event tạm thời với các giá trị mặc định
       const tempEvent: Partial<TaskEvent> = {
-        task_id: taskId,
+        user_id: userId,
         title: '',
       start_time: new Date(),
       end_time: new Date(),
@@ -477,7 +573,7 @@ export const Calendar: React.FC<CalendarProps> = ({
     
     // Tạo đối tượng event tạm thời với các giá trị mặc định
     const tempEvent: Partial<TaskEvent> = {
-      task_id: taskId,
+      user_id: userId,
       title: '',
       start_time: selectedDateTime,
       end_time: new Date(selectedDateTime.getTime() + 60 * 60 * 1000), // Mặc định kéo dài 1 giờ
@@ -510,8 +606,169 @@ export const Calendar: React.FC<CalendarProps> = ({
 
   // Hàm mới để hiển thị chi tiết sự kiện
   const handleViewEventDetail = (event: TaskEvent) => {
-    setEventDetail(event);
-    setIsDetailOpen(true);
+    setSelectedTaskEvent(event);
+    setSelectedSource('event');
+    setShowTaskDetail(true);
+  };
+
+  // Handler khi click vào deadline (Task) trên lịch
+  const handleDeadlineClick = (task: Task) => {
+    try {
+      // Chuyển Task sang một TaskEvent đơn giản để tái sử dụng luồng hiển thị TaskDetail
+      const pseudoEvent: TaskEvent = {
+        _id: task._id,
+        user_id: task.user_id || userId || '',
+        title: task.title,
+        description: task.description,
+        // Ưu tiên dùng end_time của task như mốc thời gian hiển thị deadline
+        start_time: task.end_time || task.start_time || new Date(),
+        end_time: task.end_time,
+        repeat_type: 'none'
+      } as TaskEvent;
+      setSelectedTaskEvent(pseudoEvent);
+      setSelectedSource('task');
+      setShowTaskDetail(true);
+    } catch (error) {
+      console.error('Error handling deadline click:', error, task);
+    }
+  };
+
+  // Handler cho TaskDetail modal
+  const handleTaskDetailEdit = (task: Task) => {
+    // Initialize edit form with current task data
+    setEditTitle(task.title);
+    setEditDescription(task.description || '');
+    setEditStatus(task.status);
+    setEditPriority(task.priority);
+    setEditStartTime(task.start_time);
+    setEditEndTime(task.end_time);
+    setEditSelectedTags(task.tags || []);
+    setShowTaskDetail(false);
+    setShowEditTaskForm(true);
+  };
+
+  const handleTaskDetailDelete = (taskId: string) => {
+    setShowTaskDetail(false);
+    setShowDeleteTaskConfirm(true);
+  };
+
+  const handleTaskDetailClose = () => {
+    setShowTaskDetail(false);
+    setSelectedTaskEvent(null);
+    setSelectedSource(null);
+  };
+
+  // Handler cho EditTaskForm modal
+  const handleEditTaskFormSave = async (updatedData: { 
+    title: string; 
+    description: string; 
+    status: string; 
+    priority: string; 
+    tags: Tag[];
+    start_time?: string | Date;
+    end_time?: string | Date;
+  }) => {
+    if (selectedTaskEvent) {
+      try {
+        if (selectedSource === 'task') {
+          // Update underlying Task via API and optimistic UI
+          const formatDateToISOString = (date: any) => {
+            if (!date) return undefined;
+            const d = typeof date === 'string' ? new Date(date) : new Date(date.getTime());
+            return d.toISOString();
+          };
+          const dataToUpdate = {
+            title: updatedData.title,
+            description: updatedData.description,
+            status: updatedData.status as 'pending' | 'completed' | 'overdue',
+            priority: updatedData.priority as 'low' | 'medium' | 'high',
+            start_time: formatDateToISOString(updatedData.start_time),
+            end_time: formatDateToISOString(updatedData.end_time)
+          };
+
+          // Optimistic update local deadlines
+          setLocalDeadlines(prev => {
+            if (!prev) return prev;
+            return prev.map(t => t._id === selectedTaskEvent._id ? { ...t, ...dataToUpdate } as Task : t);
+          });
+
+          await taskService.updateTask(selectedTaskEvent._id, dataToUpdate);
+          setShowEditTaskForm(false);
+          setSelectedTaskEvent(null);
+          setSelectedSource(null);
+          toast.success(t('task_updated_successfully'));
+        } else {
+          // Create updated Task object with proper type casting and update calendar event
+          const updatedTask: Task = {
+            ...convertTaskEventToTask(selectedTaskEvent),
+            ...updatedData,
+            status: updatedData.status as 'pending' | 'completed' | 'overdue',
+            priority: updatedData.priority as 'low' | 'medium' | 'high'
+          };
+          const updatedTaskEvent = convertTaskToTaskEvent(updatedTask, selectedTaskEvent);
+          updateEvent(selectedTaskEvent._id, updatedTaskEvent);
+          setShowEditTaskForm(false);
+          setSelectedTaskEvent(null);
+          setSelectedSource(null);
+          // Notify other pages (e.g., Task Page) to refresh concurrently
+          try {
+            window.dispatchEvent(new CustomEvent('tasks:refresh', {
+              detail: { source: 'calendar', action: 'update', id: selectedTaskEvent._id }
+            }));
+          } catch (e) {
+            // Non-blocking: log and continue
+            console.debug('Dispatch tasks:refresh event failed:', e);
+          }
+          toast.success(t('task_updated_successfully'));
+        }
+      } catch (error) {
+        console.error('Error updating task:', error);
+        toast.error(t('error_updating_task'));
+      }
+    }
+  };
+
+  const handleEditTaskFormCancel = () => {
+    setShowEditTaskForm(false);
+    setSelectedTaskEvent(null);
+  };
+
+  // Handler cho DeleteConfirmation modal
+  const handleDeleteTaskConfirm = () => {
+    if (selectedTaskEvent) {
+      if (selectedSource === 'task') {
+        // Delete underlying Task via API and optimistic UI
+        setLocalDeadlines(prev => (prev ? prev.filter(t => t._id !== selectedTaskEvent._id) : prev));
+        taskService.deleteTask(selectedTaskEvent._id)
+          .catch(err => {
+            console.error('Error deleting task:', err);
+            // On failure, we could refetch or revert; here we just notify
+          });
+        setShowDeleteTaskConfirm(false);
+        setSelectedTaskEvent(null);
+        setSelectedSource(null);
+        // Notify other pages (e.g., Task Page) to refresh concurrently
+        try {
+          window.dispatchEvent(new CustomEvent('tasks:refresh', {
+            detail: { source: 'calendar', action: 'delete', id: selectedTaskEvent._id }
+          }));
+        } catch (e) {
+          console.debug('Dispatch tasks:refresh event failed:', e);
+        }
+        toast.success(t('task_deleted_successfully'));
+      } else {
+        removeEvent(selectedTaskEvent._id);
+        setShowDeleteTaskConfirm(false);
+        setSelectedTaskEvent(null);
+        setSelectedSource(null);
+        toast.success(t('task_deleted_successfully'));
+      }
+    }
+  };
+
+  const handleDeleteTaskCancel = () => {
+    setShowDeleteTaskConfirm(false);
+    setSelectedTaskEvent(null);
   };
 
   const getViewTitle = () => {
@@ -589,9 +846,10 @@ export const Calendar: React.FC<CalendarProps> = ({
               currentDate={currentDate}
               currentTime={currentTime}
               taskEvents={eventsWithLayout}
-              deadlineTasks={deadlineTasks}
+              deadlineTasks={localDeadlines ?? deadlineTasks}
               handleAddEvent={emptyFunction} // Thay thế bằng hàm rỗng
               handleEditEvent={handleViewEventDetail}
+              onDeadlineClick={handleDeadlineClick}
             />
           );
         case 'Week':
@@ -600,9 +858,10 @@ export const Calendar: React.FC<CalendarProps> = ({
               currentDate={currentDate}
               currentTime={currentTime}
               taskEvents={eventsWithLayout}
-              deadlineTasks={deadlineTasks}
+              deadlineTasks={localDeadlines ?? deadlineTasks}
               handleAddEvent={emptyFunction} // Thay thế bằng hàm rỗng
               handleEditEvent={handleViewEventDetail}
+              onDeadlineClick={handleDeadlineClick}
             />
           );
         case 'Month':
@@ -610,9 +869,10 @@ export const Calendar: React.FC<CalendarProps> = ({
             <MonthView
               currentDate={currentDate}
               taskEvents={eventsWithLayout}
-              deadlineTasks={deadlineTasks}
+              deadlineTasks={localDeadlines ?? deadlineTasks}
               handleAddEvent={emptyFunction} // Thay thế bằng hàm rỗng
               handleEditEvent={handleViewEventDetail}
+              onDeadlineClick={handleDeadlineClick}
             />
           );
         default:
@@ -621,9 +881,10 @@ export const Calendar: React.FC<CalendarProps> = ({
               currentDate={currentDate}
               currentTime={currentTime}
               taskEvents={eventsWithLayout}
-              deadlineTasks={deadlineTasks}
+              deadlineTasks={localDeadlines ?? deadlineTasks}
               handleAddEvent={emptyFunction} // Thay thế bằng hàm rỗng
               handleEditEvent={handleViewEventDetail}
+              onDeadlineClick={handleDeadlineClick}
             />
           );
       }
@@ -804,7 +1065,7 @@ export const Calendar: React.FC<CalendarProps> = ({
     
     try {
       console.log('Creating new task event with all day:', isAllDay);
-      console.log('Task ID:', taskId);
+      console.log('User ID:', userId);
       console.log('Repeat type:', repeatType);
       console.log('Custom repeat days:', customRepeatDays);
       
@@ -838,7 +1099,7 @@ export const Calendar: React.FC<CalendarProps> = ({
       // Chuẩn bị dữ liệu event gốc với đầy đủ thông tin recurring
       const newEventData: TaskEvent = {
         _id: '', // Sẽ được tạo bởi backend
-        task_id: taskId,
+        user_id: userId || '',
         title: savedTitle,
         description: '',
         start_time: startTime,
@@ -1115,8 +1376,8 @@ export const Calendar: React.FC<CalendarProps> = ({
 
   return (
     <div className="flex h-full bg-gray-50 relative">
-      {/* Task Overdue Notifier - invisible component that checks for overdue tasks */}
-      {task && <TaskOverdueNotifier tasks={[task]} taskEvents={taskEvents} />}
+      {/* Task Overdue Notifier - removed since we no longer have task data */}
+      {/* {task && <TaskOverdueNotifier tasks={[task]} taskEvents={taskEvents} />} */}
       
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
@@ -1155,12 +1416,6 @@ export const Calendar: React.FC<CalendarProps> = ({
                 </button>
               </div>
             </div>
-          ) : taskEvents.length === 0 ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center text-gray-500">
-                <p>No events found for this task</p>
-              </div>
-            </div>
           ) : (
             renderCalendarView()
           )}
@@ -1169,15 +1424,13 @@ export const Calendar: React.FC<CalendarProps> = ({
       
       {/* Global FAB removed: using page-level CircleButton in Task.page.tsx */}
       
-      {/* Add Schedule Sidebar */}
+      {/* Create Event Modal */}
       {isAddScheduleOpen && (
         <CreateTaskEventModalForm
           isOpen={isAddScheduleOpen}
           onClose={() => setIsAddScheduleOpen(false)}
-          taskId={taskId}
           onSuccess={() => {
             setIsAddScheduleOpen(false);
-            refreshTaskEvents();
           }}
           addEvent={addEvent}
         />
@@ -1188,11 +1441,9 @@ export const Calendar: React.FC<CalendarProps> = ({
         <UpdateTaskEventModalForm
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        taskId={taskId}
         taskEvent={selectedEvent}
         onSuccess={() => {
           setIsModalOpen(false);
-          refreshTaskEvents();
         }}
         updateEvent={(eventId: string, event: TaskEvent, option: 'all' | 'this' = 'this') => {
           // Forward the option selected in UpdateTaskEventModalForm
@@ -1203,14 +1454,56 @@ export const Calendar: React.FC<CalendarProps> = ({
       
 
 
-      {/* Event Detail Modal */}
-      {isDetailOpen && eventDetail && (
-        <TaskEventDetail
-          isOpen={isDetailOpen}
-          event={eventDetail}
-          onClose={() => setIsDetailOpen(false)}
-          onEdit={() => handleEditEvent(eventDetail)}
-          onDelete={() => handleDeleteEvent(eventDetail)}
+      {/* TaskDetail Modal */}
+      {showTaskDetail && selectedTaskEvent && (
+        <TaskDetail
+          task={convertTaskEventToTask(selectedTaskEvent)}
+          tags={allTags}
+          onClose={handleTaskDetailClose}
+          onEdit={handleTaskDetailEdit}
+          onDelete={handleTaskDetailDelete}
+        />
+      )}
+
+      {/* EditTaskForm Modal */}
+      {showEditTaskForm && selectedTaskEvent && (
+        <EditTaskForm
+          task={convertTaskEventToTask(selectedTaskEvent)}
+          onClose={handleEditTaskFormCancel}
+          onSave={handleEditTaskFormSave}
+          title={editTitle}
+          setTitle={setEditTitle}
+          description={editDescription}
+          setDescription={setEditDescription}
+          status={editStatus}
+          setStatus={setEditStatus}
+          priority={editPriority}
+          setPriority={setEditPriority}
+          start_time={editStartTime}
+          setStartTime={setEditStartTime}
+          end_time={editEndTime}
+          setEndTime={setEditEndTime}
+          selectedTags={editSelectedTags}
+          setSelectedTags={setEditSelectedTags}
+          allTags={allTags}
+          handleTagSelect={handleTagSelect}
+          showNewTagForm={editShowNewTagForm}
+          setShowNewTagForm={setEditShowNewTagForm}
+          newTagName={editNewTagName}
+          setNewTagName={setEditNewTagName}
+          newTagColor={editNewTagColor}
+          setNewTagColor={setEditNewTagColor}
+          handleCreateNewTag={handleCreateNewTag}
+        />
+      )}
+
+      {/* DeleteConfirmation Modal for Task */}
+      {showDeleteTaskConfirm && selectedTaskEvent && (
+        <DeleteConfirmation
+          title={t('delete_task_title')}
+          description={t('delete_task_confirm', { title: selectedTaskEvent.title || t('no_title') })}
+          onCancel={handleDeleteTaskCancel}
+          onConfirm={handleDeleteTaskConfirm}
         />
       )}
 
@@ -1228,10 +1521,9 @@ export const Calendar: React.FC<CalendarProps> = ({
             setEventToDelete(null);
           }}
           onConfirm={() => {
-            if (eventToDelete?._id) {
-              removeEvent(eventToDelete._id, 'this');
-              refreshTaskEvents();
-            }
+              if (eventToDelete?._id) {
+                removeEvent(eventToDelete._id, 'this', eventToDelete.start_time as any);
+              }
             setIsDeleteConfirmOpen(false);
             setEventToDelete(null);
           }}
@@ -1268,8 +1560,7 @@ export const Calendar: React.FC<CalendarProps> = ({
                 type="button"
                 onClick={() => {
                   if (eventToDelete?._id) {
-                    removeEvent(eventToDelete._id, 'this');
-                    refreshTaskEvents();
+                    removeEvent(eventToDelete._id, 'this', eventToDelete.start_time as any);
                   }
                   setIsRecurringDeleteOpen(false);
                   setEventToDelete(null);
@@ -1283,7 +1574,6 @@ export const Calendar: React.FC<CalendarProps> = ({
                 onClick={() => {
                   if (eventToDelete?._id) {
                     removeEvent(eventToDelete._id, 'all');
-                    refreshTaskEvents();
                   }
                   setIsRecurringDeleteOpen(false);
                   setEventToDelete(null);
@@ -1313,7 +1603,6 @@ export const Calendar: React.FC<CalendarProps> = ({
       <EventExcelImportModal
         isOpen={isEventImportOpen}
         onClose={closeEventImport}
-        taskId={taskId}
         onImported={() => refreshTaskEvents()}
       />
     </div>

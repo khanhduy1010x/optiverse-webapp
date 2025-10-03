@@ -147,36 +147,18 @@ export const useTaskOverdueNotification = (tasks: Task[], taskEvents: TaskEvent[
     try {
       console.log(`Attempting to mark task event "${event.title}" (${event._id}) as overdue`);
       
-      // Get the associated task
-      if (event.task_id) {
-        const task = tasks.find(t => t._id === event.task_id);
-        
-        if (task && task.status !== 'completed' && task.status !== 'overdue') {
-          // Update task status to overdue
-          await taskService.updateTask(event.task_id, { status: 'overdue' });
-          console.log(`API call to update task ${event.task_id} completed`);
-          
-          // Send notification to backend with event information
-          await notificationService.sendTaskOverdueNotification(
-            event.task_id, 
-            `${task.title} (Event: ${event.title})`
-          );
-          console.log(`Notification sent to backend for event ${event._id}`);
-          
-          // Show toast notification to user
-          toast.error(`Event "${event.title}" for task "${task.title}" is now overdue!`, {
-            position: "top-right",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-          });
-          console.log(`Toast notification displayed for event ${event._id}`);
-        } else {
-          console.log(`Task ${event.task_id} is already ${task?.status || 'unknown'}, skipping event update`);
-        }
-      }
+      // Send event-only overdue notification (no task linkage)
+      await notificationService.sendEventOverdueNotification(event._id, event.title || 'Untitled Event');
+      // Show toast notification to user
+      toast.error(`Event "${event.title}" is now overdue!`, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      console.log(`Toast notification displayed for event ${event._id}`);
       
       // Mark event as checked
       setCheckedEventIds(prev => ({
@@ -481,4 +463,4 @@ export const useTaskOverdueNotification = (tasks: Task[], taskEvents: TaskEvent[
     checkAllOverdue,
     forceCheckOverdue
   };
-}; 
+};

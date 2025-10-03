@@ -5,21 +5,23 @@ import { UpdateTaskEventRequest } from '../../types/task-events/request/update-t
 import { TaskEvent, RepeatType, RepeatEndType } from '../../types/task-events/task-events.types';
 import { useTaskEventList } from './useTaskEventList.hook';
 import notificationService from '../../services/notification.service';
-import taskService from '../../services/task.service';
+// Removed taskService dependency since TaskEvent no longer links to Task via task_id
+import { useAppSelector } from '../../store/hooks';
 
 export const useTaskEventOperations = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const userId = useAppSelector(state => state.auth.user?._id) || '';
   
   // Để sử dụng các hàm từ useTaskEventList
   let addEventToList: ((event: TaskEvent) => void) | null = null;
-  let removeEventFromList: ((eventId: string) => void) | null = null;
+  let removeEventFromList: ((eventId: string, deleteOption?: 'all' | 'this') => void) | null = null;
   let updateEventInList: ((eventId: string, event: TaskEvent) => void) | null = null;
   
   // Hàm này được gọi bởi các component để set các hàm từ useTaskEventList
   const setListOperations = (
     add: (event: TaskEvent) => void,
-    remove: (eventId: string) => void,
+    remove: (eventId: string, deleteOption?: 'all' | 'this') => void,
     update: (eventId: string, event: TaskEvent) => void
   ) => {
     addEventToList = add;
@@ -38,28 +40,11 @@ export const useTaskEventOperations = () => {
       console.log(`Task Event "${event.title}" is overdue!`);
       
       try {
-        // If the event has a task_id, get the task and update its status
-        if (event.task_id && event.task_id.trim() !== '') {
-          try {
-            const task = await taskService.fetchTaskById(event.task_id);
-            
-            if (task && task.status !== 'completed' && task.status !== 'overdue') {
-              // Update task status to overdue
-              await taskService.updateTask(event.task_id, { status: 'overdue' });
-              
-              // Send notification
-              await notificationService.sendTaskEventOverdueNotification(
-                event.task_id,
-                event._id,
-                task.title,
-                event.title || 'Untitled Event'
-              );
-            }
-          } catch (error) {
-            console.error(`Error fetching task for event ${event._id}:`, error);
-          }
-        }
-        
+        // Send event-only overdue notification (no task linkage)
+        await notificationService.sendEventOverdueNotification(
+          event._id,
+          event.title || 'Untitled Event'
+        );
         return true;
       } catch (error) {
         console.error(`Error handling overdue task event ${event._id}:`, error);
@@ -70,11 +55,18 @@ export const useTaskEventOperations = () => {
     return false;
   };
 
+  // No task_id provisioning needed anymore
+
   const createTaskEvent = async (data: CreateTaskEventRequest): Promise<TaskEvent | null> => {
     setLoading(true);
     setError(null);
     
     try {
+      // Ensure required fields
+      if (!data.user_id || data.user_id.trim() === '') {
+        data.user_id = userId;
+      }
+
       console.log('Creating task event with data:', data);
       
       // Luôn gọi API thực tế, không sử dụng dữ liệu giả lập
@@ -176,9 +168,14 @@ export const useTaskEventOperations = () => {
             ? taskEventId.split('-recurrence-')[0]
             : taskEventId);
       
-      // For recurring instances, we don't call the API since they only exist on the frontend
+      // For recurring instances, update parent event via list hook by adding exclusion_dates
       if (isRecurrenceInstance) {
-        console.log('This is a recurring instance, no need to call API');
+        console.log('This is a recurring instance. Trigger list removal with option "this" to persist exclusion_dates.');
+        if (removeEventFromList && typeof removeEventFromList === 'function') {
+          removeEventFromList(taskEventId, 'this');
+        } else {
+          console.warn('removeEventFromList not set; recurring instance deletion may not persist.');
+        }
         return true;
       }
       
@@ -188,8 +185,8 @@ export const useTaskEventOperations = () => {
       
       // Xóa sự kiện khỏi state local nếu có
       if (removeEventFromList && typeof removeEventFromList === 'function') {
-        console.log('Removing event from local state');
-        removeEventFromList(taskEventId);
+        console.log('Removing event from local state (delete all)');
+        removeEventFromList(originalId, 'all');
       } else {
         console.log('No removeEventFromList function provided or it is not a function');
       }

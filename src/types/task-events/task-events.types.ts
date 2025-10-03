@@ -4,7 +4,7 @@ export type RepeatUnit = 'day' | 'week' | 'month' | 'year';
 
 export interface TaskEvent {
   _id: string;
-  task_id?: string;
+  user_id: string;
   title: string;
   description?: string;
   start_time: Date | string;

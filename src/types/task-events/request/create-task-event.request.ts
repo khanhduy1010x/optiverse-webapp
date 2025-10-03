@@ -1,7 +1,7 @@
 import { RepeatType, RepeatEndType, RepeatUnit } from '../task-events.types';
 
 export interface CreateTaskEventRequest {
-  task_id: string;
+  user_id: string;
   title?: string;
   start_time: Date | string;
   end_time?: Date | string;
