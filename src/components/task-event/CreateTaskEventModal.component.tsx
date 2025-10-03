@@ -6,11 +6,11 @@ import { TaskEvent } from '../../types/task-events/task-events.types';
 import { CalendarDatePicker } from './CalendarDatePicker.component';
 import { TimePickerDropdown } from './TimePickerDropdown.component';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
+import { useAppSelector } from '../../store/hooks';
 
 interface CreateTaskEventModalFormProps {
   isOpen: boolean;
   onClose: () => void;
-  taskId: string;
   onSuccess: () => void;
   addEvent?: (event: TaskEvent) => void;
 }
@@ -18,13 +18,13 @@ interface CreateTaskEventModalFormProps {
 export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> = ({
   isOpen,
   onClose,
-  taskId,
   onSuccess,
   addEvent
 }) => {
   const { t } = useAppTranslate('task');
   const { formData, handleInputChange, resetForm } = useTaskEventForm();
   const { createTaskEvent, loading } = useTaskEventOperations();
+  const userId = useAppSelector(state => state.auth.user?._id);
   const [showRepeatOptions, setShowRepeatOptions] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
@@ -94,8 +94,8 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
       alert(t('title_max_length'));
       return;
     }
-    if (!taskId || !taskId.trim()) {
-      alert(t('task_id_required'));
+    if (!userId || !userId.trim()) {
+      alert(t('user_id_required'));
       return;
     }
     if (!formData.start_time) {
@@ -177,7 +177,7 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
     // Chuẩn bị payload cho event gốc với đầy đủ thông tin recurring
     const payload: TaskEvent = {
       _id: '', // Sẽ được tạo bởi backend
-      task_id: taskId,
+      user_id: userId || '',
       title: formData.title.trim(),
       start_time: eventStart.toISOString(),
       end_time: eventEnd ? eventEnd.toISOString() : undefined,
@@ -203,7 +203,7 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
     } else {
       // Convert Date objects to ISO strings for API
       await createTaskEvent({
-        task_id: taskId,
+        user_id: userId || '',
         title: formData.title.trim(),
         start_time: eventStart.toISOString(),
         end_time: eventEnd ? eventEnd.toISOString() : undefined,

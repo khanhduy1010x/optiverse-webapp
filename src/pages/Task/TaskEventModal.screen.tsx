@@ -11,7 +11,7 @@ import { validateTaskEvent } from '../../utils/validate.util';
 interface TaskEventModalProps {
   isOpen: boolean;
   onClose: () => void;
-  taskId: string;
+  taskId: string; // Deprecated linkage; not used for event creation
   taskEvent?: TaskEvent;
   onSuccess: () => void;
   addEvent?: (event: TaskEvent) => void;
@@ -51,10 +51,6 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
     let success = false;
     try {
       // Basic required field validation
-      if (!taskId || !taskId.trim()) {
-        alert(t('validation_task_id_required'));
-        return;
-      }
       if (!formData.repeat_type) {
         alert(t('validation_repeat_type_required'));
         return;
@@ -121,7 +117,6 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
       } else {
         const payload = getCreatePayload();
         payload.title = formData.title.trim();
-        payload.task_id = taskId;
         payload.start_time = startTimeISO;
         payload.end_time = endTimeISO;
         payload.description = mergedDescription;

@@ -57,6 +57,24 @@ class NotificationService {
     }
   }
 
+  // Gửi thông báo nhắc nhở cho event quá hạn (không gắn với task)
+  async sendEventOverdueNotification(eventId: string, eventTitle: string) {
+    try {
+      const response = await api.post<ApiResponse<any>>('/notification', {
+        title: 'Event Overdue Reminder',
+        content: `Your event "${eventTitle}" is overdue!`,
+        type: 'event_overdue',
+        metadata: {
+          eventId
+        }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error sending event overdue notification:', error);
+      throw error;
+    }
+  }
+
   // Lấy danh sách thông báo của người dùng hiện tại
   async getUserNotifications() {
     try {
@@ -91,4 +109,4 @@ class NotificationService {
   }
 }
 
-export default new NotificationService(); 
+export default new NotificationService();

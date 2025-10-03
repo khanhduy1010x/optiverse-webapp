@@ -5,13 +5,13 @@ import { useTaskEventForm } from '../../hooks/task-events/useTaskEventForm.hook'
 import { useTaskEventOperations } from '../../hooks/task-events/useTaskEventOperations.hook';
 import { useTaskEventList } from '../../hooks/task-events/useTaskEventList.hook';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
+import { useAppSelector } from '../../store/hooks';
 import { GROUP_CLASSNAMES } from '../../styles';
 
 
 interface UpdateTaskEventModalFormProps {
   isOpen: boolean;
   onClose: () => void;
-  taskId: string;
   taskEvent: TaskEvent;
   onSuccess: () => void;
   updateEvent?: (eventId: string, event: TaskEvent, updateOption?: 'all' | 'this') => void;
@@ -20,7 +20,6 @@ interface UpdateTaskEventModalFormProps {
 export const UpdateTaskEventModalForm: React.FC<UpdateTaskEventModalFormProps> = ({
   isOpen,
   onClose,
-  taskId,
   taskEvent,
   onSuccess,
   updateEvent
@@ -32,8 +31,9 @@ export const UpdateTaskEventModalForm: React.FC<UpdateTaskEventModalFormProps> =
   const [selectedColor, setSelectedColor] = useState(taskEvent.color || '#3B82F6');
   const [titleError, setTitleError] = useState('');
   const [descError, setDescError] = useState('');
+  const userId = useAppSelector(state => state.auth.user?._id);
 
-  const { taskEvents, refreshTaskEvents } = useTaskEventList(taskId);
+  const { taskEvents, refreshTaskEvents } = useTaskEventList();
 
   // Xác nhận cập nhật cho sự kiện lặp lại (UI đẹp mắt, đồng bộ design)
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -88,8 +88,8 @@ export const UpdateTaskEventModalForm: React.FC<UpdateTaskEventModalFormProps> =
       alert(t('create_title_max'));
       return;
     }
-    if (!taskId || !taskId.trim()) {
-      alert(t('validation_task_id_required'));
+    if (!userId || !userId.trim()) {
+      alert(t('validation_user_id_required'));
       return;
     }
     if (!formData.start_time) {
@@ -141,8 +141,6 @@ export const UpdateTaskEventModalForm: React.FC<UpdateTaskEventModalFormProps> =
       // Hook sẽ tự xử lý logic: 'this' => exclusion + tạo event single, 'all' => cập nhật event gốc và regenerate
       updateEvent(taskEvent._id, { ...taskEvent, ...payload } as TaskEvent, option);
 
-      // Làm tươi danh sách sự kiện sau cập nhật
-      refreshTaskEvents();
       success = true;
     } catch (e) {
       console.error('handleConfirmUpdate error:', e);
@@ -275,25 +273,7 @@ export const UpdateTaskEventModalForm: React.FC<UpdateTaskEventModalFormProps> =
             </p>
           </div>
 
-          <div className="space-y-2 mb-5">
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50">
-              <span className="mt-1 inline-flex h-2.5 w-2.5 rounded-full bg-blue-500"></span>
-              <p className="text-sm text-gray-700">{t('recurring_update_all')}</p>
-            </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50">
-              <span className="mt-1 inline-flex h-2.5 w-2.5 rounded-full bg-gray-400"></span>
-              <p className="text-sm text-gray-700">{t('recurring_update_this')}</p>
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setIsConfirmOpen(false)}
-              className={GROUP_CLASSNAMES.modalButtonCancel}
-            >
-              {t('cancel')}
-            </button>
+          <div className="flex flex-col gap-2 mb-5">
             <button
               type="button"
               onClick={async () => {
@@ -302,7 +282,7 @@ export const UpdateTaskEventModalForm: React.FC<UpdateTaskEventModalFormProps> =
                 await handleConfirmUpdate('this', pendingPayload);
                 setPendingPayload(null);
               }}
-              className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-black transition-colors"
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
             >
               {t('update_this')}
             </button>
@@ -314,9 +294,19 @@ export const UpdateTaskEventModalForm: React.FC<UpdateTaskEventModalFormProps> =
                 await handleConfirmUpdate('all', pendingPayload);
                 setPendingPayload(null);
               }}
-              className={GROUP_CLASSNAMES.modalButtonConfirm}
+              className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
             >
               {t('update_all')}
+            </button>
+          </div>
+
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={() => setIsConfirmOpen(false)}
+              className={GROUP_CLASSNAMES.modalButtonCancel}
+            >
+              {t('cancel')}
             </button>
           </div>
         </div>

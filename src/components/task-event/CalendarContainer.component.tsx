@@ -4,7 +4,6 @@ import { RefreshButton } from './RefreshButton.component';
 import { TaskEvent } from '../../types/task-events/task-events.types';
 
 interface CalendarContainerProps {
-  taskId: string | null;
   taskEvents: TaskEvent[];
   loading: boolean;
   error: string | null;
@@ -16,7 +15,6 @@ interface CalendarContainerProps {
 }
 
 export const CalendarContainer: React.FC<CalendarContainerProps> = ({
-  taskId,
   taskEvents,
   loading,
   error,
@@ -35,7 +33,6 @@ export const CalendarContainer: React.FC<CalendarContainerProps> = ({
         </div>
         <div className="flex-1 flex flex-col">
           <Calendar
-            taskId={taskId || ''}
             taskEvents={taskEvents}
             loading={loading}
             error={error}

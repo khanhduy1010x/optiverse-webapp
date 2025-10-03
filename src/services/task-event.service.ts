@@ -33,10 +33,36 @@ const validateTaskEventData = (data: {
 };
 
 export const taskEventService = {
+  // Method mới để lấy events theo userId
+  getTaskEventsByUserId: async () => {
+    try {
+      console.log(`🔍 Fetching task events for current user`);
+      console.log(`📡 API endpoint: ${BASE_URL}/user`);
+      
+      const response = await api.get<ApiResponse<TaskEvent[]>>(`${BASE_URL}/user`);
+      
+      console.log(`✅ API Response received:`, response);
+      console.log(`📊 Response data structure:`, response?.data);
+      console.log(`📋 Events count:`, Array.isArray(response?.data?.data) ? response.data.data.length : 'Not an array');
+      
+      return response;
+    } catch (error: any) {
+      console.error(`❌ Error fetching task events for user:`, error);
+      console.error(`🔍 Error details:`, {
+        message: error?.message || 'Unknown error',
+        status: error?.response?.status || 'No status',
+        statusText: error?.response?.statusText || 'No status text',
+        data: error?.response?.data || 'No data'
+      });
+      return { data: { status: 'error', data: [], message: 'Failed to fetch events' } };
+    }
+  },
+
+  // Giữ lại method cũ để tương thích ngược (deprecated)
   getTaskEventsByTaskId: async (taskId: string) => {
     try {
-      console.log(`🔍 Fetching task events for taskId: ${taskId}`);
-      console.log(`📡 API endpoint: ${BASE_URL}/task/${taskId}`);
+      console.log(`🔍 Fetching task events for taskId: ${taskId} (deprecated - using user endpoint)`);
+      console.log(`📡 API endpoint: ${BASE_URL}/user`);
       
       const response = await api.get<ApiResponse<TaskEvent[]>>(`${BASE_URL}/user`);
       

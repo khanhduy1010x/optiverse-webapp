@@ -1,8 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useSelector } from 'react-redux';
 import { TaskEvent } from '../../types/task-events/task-events.types';
 import { taskEventService } from '../../services/task-event.service';
+// task_id removed from model; taskService not needed for event creation
 import { CreateTaskEventRequest } from '../../types/task-events/request/create-task-event.request';
 import { UpdateTaskEventRequest } from '../../types/task-events/request/update-task-event.request';
+import { RootState } from '../../store';
 
 // Helper function to generate recurring events
 const generateRecurringEvents = (events: TaskEvent[]): TaskEvent[] => {
@@ -403,18 +406,22 @@ const generateRecurringInstances = (originalEvent: TaskEvent): TaskEvent[] => {
 // Hàm createRecurringEvents và estimateEndDateFromOccurrences đã được loại bỏ vì không còn cần thiết
 // Các recurring events giờ được tạo ảo trên frontend thông qua generateRecurringInstances
 
-export const useTaskEventList = (taskId: string) => {
+export const useTaskEventList = () => {
   const [taskEvents, setTaskEvents] = useState<TaskEvent[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState<number>(0);
 
+  // Lấy user_id từ Redux store
+  const user = useSelector((state: RootState) => state.auth.user);
+  const userId = user?._id;
+
   const fetchTaskEvents = useCallback(async () => {
-    console.log('🔍 Fetching task events for taskId:', taskId);
+    console.log('🔍 Fetching task events for current user');
     
-    // Nếu không có taskId, không làm gì cả
-    if (!taskId) {
-      console.log('❌ No taskId provided, skipping fetch');
+    // Nếu không có userId, không làm gì cả
+    if (!userId) {
+      console.log('❌ No userId found, skipping fetch');
       setTaskEvents([]);
       setLoading(false);
       return;
@@ -424,15 +431,12 @@ export const useTaskEventList = (taskId: string) => {
     setError(null);
     
     try {
-      // Luôn lấy dữ liệu từ API
-      console.log('🚀 Calling API for task events with taskId:', taskId);
-      console.log('📡 API endpoint will be: /productivity/task-event/task/' + taskId);
+      // Sử dụng method mới để lấy events theo userId
+      console.log('🚀 Calling API for task events by userId:', userId);
+      console.log('📡 API endpoint will be: /productivity/task-event/user');
       
-      const response = await taskEventService.getTaskEventsByTaskId(taskId);
-      console.log('📦 Full API response received:', response);
-      console.log('📊 Response code:', response?.code);
-      console.log('📋 Response message:', response?.message);
-      
+      const response = await taskEventService.getTaskEventsByUserId();
+        
       if (response && response.data) {
         // Hỗ trợ cả 2 định dạng dữ liệu trả về:
         // 1) ApiResponse<TaskEvent[]>  -> data: TaskEvent[]
@@ -534,7 +538,7 @@ export const useTaskEventList = (taskId: string) => {
     } finally {
       setLoading(false);
     }
-  }, [taskId]);
+  }, [userId]); // Thay đổi dependency từ taskId sang userId
 
   // Hàm để trigger refresh từ bên ngoài
   const refreshTaskEvents = useCallback(() => {
@@ -556,7 +560,7 @@ export const useTaskEventList = (taskId: string) => {
     try {
       // Chuẩn bị dữ liệu để gửi lên server - chỉ lưu event gốc
       const eventToCreate: CreateTaskEventRequest = {
-        task_id: taskId,
+        user_id: userId || '',
         title: newEvent.title,
         start_time: newEvent.start_time,
         end_time: newEvent.end_time,
@@ -618,8 +622,13 @@ export const useTaskEventList = (taskId: string) => {
   };
 
   // Hàm xóa sự kiện với options: 'all' (xóa toàn bộ series) hoặc 'this' (chỉ xóa instance này)
-  const removeEvent = async (eventId: string, deleteOption: 'all' | 'this' = 'all') => {
+  const removeEvent = async (
+    eventId: string,
+    deleteOption: 'all' | 'this' = 'all',
+    instanceStartTime?: Date | string
+  ) => {
     console.log('Removing event from local state and database:', eventId, 'Option:', deleteOption);
+    console.log('Instance start time provided:', instanceStartTime);
     
     try {
       // Kiểm tra xem đây có phải là recurring instance không
@@ -628,11 +637,11 @@ export const useTaskEventList = (taskId: string) => {
       if (isRecurringInstance) {
         // Lấy ID của event gốc
         const parentEventId = eventId.split('::recurrence::')[0];
+        console.log('Parent event ID:', parentEventId);
         
         if (deleteOption === 'all') {
           // Xóa toàn bộ series - xóa event gốc
           await taskEventService.deleteTaskEvent(parentEventId);
-          // Xóa event gốc khỏi state và tạo lại virtual instances
           setTaskEvents(prev => {
             const updatedEvents = prev.filter(event => event._id !== parentEventId && !event.isRecurrence);
             const allEventsWithRecurring = generateRecurringEvents(updatedEvents);
@@ -644,26 +653,64 @@ export const useTaskEventList = (taskId: string) => {
           console.log('Deleting single instance - adding to exclusion_dates');
 
           const parentEvent = taskEvents.find(e => e._id === parentEventId && !e.isRecurrence);
+          console.log('Found parent event:', parentEvent?.title);
+          
           if (parentEvent) {
-            // Xác định đúng ngày của instance thông qua generateRecurringInstances
-            const instances = generateRecurringInstances(parentEvent);
-            const targetInstance = instances.find(inst => inst._id === eventId);
-            const instanceDateSrc = targetInstance ? new Date(targetInstance.start_time) : null;
+            let instanceDateSrc: Date | null = null;
+            
+            // Ưu tiên dùng instanceStartTime từ UI
+            if (instanceStartTime) {
+              instanceDateSrc = new Date(instanceStartTime);
+              console.log('Using provided instanceStartTime:', instanceDateSrc);
+            } else {
+              // Fallback: tìm instance trong danh sách generated
+              const instances = generateRecurringInstances(parentEvent);
+              const targetInstance = instances.find(inst => inst._id === eventId);
+              if (targetInstance) {
+                instanceDateSrc = new Date(targetInstance.start_time);
+                console.log('Found target instance via generation:', instanceDateSrc);
+              }
+            }
 
             if (instanceDateSrc) {
+              // Tạo date object chỉ với ngày (không có thời gian) để đảm bảo so sánh chính xác
               const instanceDateOnly = new Date(
                 instanceDateSrc.getFullYear(),
                 instanceDateSrc.getMonth(),
                 instanceDateSrc.getDate()
               );
+              
+              console.log('Instance date to exclude:', instanceDateOnly.toISOString().split('T')[0]);
+              console.log('Current exclusion_dates:', parentEvent.exclusion_dates);
 
-              const updatedExclusionDates = [...(parentEvent.exclusion_dates || []), instanceDateOnly];
+              // Kiểm tra xem ngày này đã có trong exclusion_dates chưa
+              const existingExclusions = parentEvent.exclusion_dates || [];
+              const isAlreadyExcluded = existingExclusions.some(excludeDate => {
+                const excludeDateOnly = new Date(excludeDate);
+                const excludeDateNormalized = new Date(
+                  excludeDateOnly.getFullYear(),
+                  excludeDateOnly.getMonth(),
+                  excludeDateOnly.getDate()
+                );
+                return excludeDateNormalized.getTime() === instanceDateOnly.getTime();
+              });
+
+              if (isAlreadyExcluded) {
+                console.log('Date already excluded, skipping update');
+                return;
+              }
+
+              const updatedExclusionDates = [...existingExclusions, instanceDateOnly];
+              console.log('Updated exclusion_dates:', updatedExclusionDates.map(d => new Date(d).toISOString().split('T')[0]));
 
               const parentEventUpdate: UpdateTaskEventRequest = {
                 exclusion_dates: updatedExclusionDates
               };
 
+              // Cập nhật event gốc ở DB để loại trừ instance đã xóa
+              console.log('Updating parent event with exclusion_dates...');
               await taskEventService.updateTaskEvent(parentEventId, parentEventUpdate);
+              console.log('Parent event updated successfully');
 
               setTaskEvents(prev => {
                 const updatedEvents = prev.filter(e => !e.isRecurrence).map(event => {
@@ -679,11 +726,17 @@ export const useTaskEventList = (taskId: string) => {
               });
             } else {
               console.warn('Could not resolve instance date for deletion, skipping exclusion update.');
+              console.warn('EventId:', eventId);
+              console.warn('InstanceStartTime:', instanceStartTime);
             }
+          } else {
+            console.warn('Parent event not found for ID:', parentEventId);
           }
         }
       } else {
         // Đây là event gốc hoặc event đơn
+        console.log('Deleting single/root event');
+        // Xóa event ở DB
         await taskEventService.deleteTaskEvent(eventId);
         setTaskEvents(prev => {
           const updatedEvents = prev.filter(event => event._id !== eventId && !event.isRecurrence);
@@ -694,6 +747,12 @@ export const useTaskEventList = (taskId: string) => {
       }
     } catch (error) {
       console.error('Error deleting event:', error);
+      console.error('Error details:', {
+        eventId,
+        deleteOption,
+        instanceStartTime,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   };
 
@@ -804,7 +863,7 @@ export const useTaskEventList = (taskId: string) => {
           
             // Tạo event mới với repeat_type = 'none'
             const newSingleEvent: CreateTaskEventRequest = {
-              task_id: taskId, // Use the taskId from hook parameter which is guaranteed to be string
+              user_id: userId || '', // Sử dụng userId từ Redux store
               title: updatedEvent.title,
               start_time: updatedEvent.start_time,
               end_time: updatedEvent.end_time,
@@ -891,9 +950,9 @@ export const useTaskEventList = (taskId: string) => {
 
   // Fetch dữ liệu khi taskId hoặc refreshKey thay đổi
   useEffect(() => {
-    console.log('TaskId or refreshKey changed, fetching events');
+    console.log('UserId or refreshKey changed, fetching events');
     fetchTaskEvents();
-  }, [taskId, refreshKey, fetchTaskEvents]);
+  }, [userId, refreshKey, fetchTaskEvents]);
 
   // Chỉ trả ra danh sách hiển thị: tất cả instance ảo + các event không lặp (repeat_type === 'none')
   const visibleEvents = taskEvents.filter(e => e.isRecurrence || !e.repeat_type || e.repeat_type === 'none');
@@ -907,3 +966,4 @@ export const useTaskEventList = (taskId: string) => {
     updateEvent
   };
 };
+  // No task_id provisioning needed anymore
