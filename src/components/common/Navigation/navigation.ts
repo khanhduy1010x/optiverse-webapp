@@ -104,10 +104,11 @@ export const NAV_SECTIONS: NavSection[] = [
       },
       {
         label: 'Achievements',
-        path: '/achievements',
+        path: '/user-achievements',
         icon: 'trophy',
         parentPath: '/user-profile',
       },
+
     ],
   },
   {

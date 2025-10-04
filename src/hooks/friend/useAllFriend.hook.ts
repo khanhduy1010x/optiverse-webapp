@@ -16,7 +16,6 @@ import {
   removeFriend,
 } from '../../store/slices/friend.slice';
 import FriendService from '../../services/friend.service';
-import achievementService from '../../services/achievement.service';
 import { useAppTranslate } from '../useAppTranslate';
 
 export const useAllFriend = ({
@@ -30,11 +29,6 @@ export const useAllFriend = ({
     const fetchFriends = async () => {
       const friends = await FriendService.viewAllFriends();
       dispatch(setFriends(friends));
-      
-      // Check for friend achievements when the friends list loads
-      if (friends && friends.length > 0) {
-        await achievementService.checkFriendAchievements();
-      }
     };
     fetchFriends();
   }, []);

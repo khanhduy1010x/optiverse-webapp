@@ -6,7 +6,6 @@ export interface NotificationSettings {
   chat_notifications: boolean;
   friend_notifications: boolean;
   note_notifications: boolean;
-  achievement_notifications: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -17,5 +16,4 @@ export interface UpdateNotificationSettingsDto {
   chat_notifications?: boolean;
   friend_notifications?: boolean;
   note_notifications?: boolean;
-  achievement_notifications?: boolean;
 }

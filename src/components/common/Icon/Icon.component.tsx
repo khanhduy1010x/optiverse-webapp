@@ -21,6 +21,12 @@ const Icon: React.FC<IconProps> = ({
 
   const SVGIcon = ICONS[name];
 
+  // Add null check to prevent undefined element type error
+  if (!SVGIcon) {
+    console.warn(`Icon "${name}" not found in ICONS`);
+    return null;
+  }
+
   const iconColor = color
     ? color
     : inverted

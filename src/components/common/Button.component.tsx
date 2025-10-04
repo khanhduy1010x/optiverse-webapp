@@ -10,6 +10,7 @@ import { SystemStyle } from '../../types/theme.type';
 import { makeCircleShadow } from '../../utils/theme.util';
 
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
+  title?: string;
   textType?: 'regular' | 'bold';
   textSize?: number;
   inverted?: boolean;
@@ -17,6 +18,7 @@ type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   rightIcon?: IconName;
   displayLeft?: boolean;
   displayRight?: boolean;
+  children?: React.ReactNode;
 }
 
 interface FlashcardButtonProps {
@@ -44,6 +46,7 @@ const DefaultButton: React.FC<ButtonProps> = ({
   rightIcon,
   displayLeft = true,
   displayRight = true,
+  children,
   ...props
 }) => {
   const { theme } = useTheme();
@@ -81,7 +84,17 @@ const DefaultButton: React.FC<ButtonProps> = ({
       </div>
     }
 
-    {title && (
+    {children ? (
+      <div
+        className={`${BUTTON_CSS.rootView} 
+            bg-transparent
+            flex-1
+          `}
+        style={textColor}
+      >
+        {children}
+      </div>
+    ) : title ? (
       <div
         className={`${BUTTON_CSS.rootView} 
             bg-transparent
@@ -95,7 +108,7 @@ const DefaultButton: React.FC<ButtonProps> = ({
           style={textColor}
         />
       </div>
-    )}
+    ) : null}
 
     {
       (leftIcon || rightIcon) && displayRight &&
@@ -122,6 +135,7 @@ const NeubrutalismButton: React.FC<ButtonProps> = ({
   rightIcon,
   displayLeft = true,
   displayRight = true,
+  children,
   ...props
 }) => {
   const { theme } = useTheme();
@@ -159,7 +173,17 @@ const NeubrutalismButton: React.FC<ButtonProps> = ({
       </div>
     }
 
-    {title && (
+    {children ? (
+      <div
+        className={`${BUTTON_CSS.rootView} 
+            bg-transparent
+            flex-1
+          `}
+        style={textColor}
+      >
+        {children}
+      </div>
+    ) : title ? (
       <div
         className={`${BUTTON_CSS.rootView} 
             bg-transparent
@@ -173,7 +197,7 @@ const NeubrutalismButton: React.FC<ButtonProps> = ({
           style={textColor}
         />
       </div>
-    )}
+    ) : null}
 
     {
       (leftIcon || rightIcon) && displayRight &&
@@ -200,6 +224,7 @@ const PixelButton: React.FC<ButtonProps> = ({
   rightIcon,
   displayLeft = true,
   displayRight = true,
+  children,
   ...props
 }) => {
   const { theme } = useTheme();
@@ -246,7 +271,17 @@ const PixelButton: React.FC<ButtonProps> = ({
       </div>
     }
 
-    {title && (
+    {children ? (
+      <div
+        className={`${BUTTON_CSS.rootView} 
+            bg-transparent
+            flex-1
+          `}
+        style={textColor}
+      >
+        {children}
+      </div>
+    ) : title ? (
       <div
         className={`${BUTTON_CSS.rootView} 
             bg-transparent
@@ -257,11 +292,10 @@ const PixelButton: React.FC<ButtonProps> = ({
           title={title}
           textType={textType}
           textSize={textSize}
-
           style={textColor}
         />
       </div>
-    )}
+    ) : null}
 
     {
       (leftIcon || rightIcon) && displayRight &&
@@ -509,3 +543,4 @@ const FlashcardButton: React.FC<FlashcardButtonProps> = ({
 };
 
 export { Button, CircleButton, FlashcardButton };
+export default Button;

@@ -2,15 +2,9 @@ import { useEffect } from 'react';
 import { Task } from '../../types/task/response/task.response';
 import { Tag } from '../../types/task/response/tag.response';
 import taskService from '../../services/task.service';
-import achievementService from '../../services/achievement.service';
 import { useSelector } from 'react-redux';
 import { useState } from 'react';
-import { Task } from '../../types/task/response/task.response';
-import { Tag } from '../../types/tag/response/tag.response';
-import taskService from '../../services/task.service';
-import taskTagService from '../../services/task-tag.service';
 import tagService from '../../services/tag.service';
-import achievementService from '../../services/achievement.service';
 import { useTaskStreak } from '../streak/useTaskStreak.hook';
 
 export function useTaskOperations(
@@ -29,7 +23,7 @@ export function useTaskOperations(
   setTaskToDelete: React.Dispatch<React.SetStateAction<string | null>>,
   setShowDeleteConfirm: React.Dispatch<React.SetStateAction<boolean>>
 ) {
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const { user } = useSelector((state: any) => state.auth);
   const { updateTaskStreak } = useTaskStreak();
 
   // Get current user from Redux store
@@ -220,16 +214,6 @@ export function useTaskOperations(
     }
   };
 
-  // Check for achievements when a task is completed
-  const checkAchievements = async () => {
-    try {
-      console.log('Checking for new achievements...');
-      await achievementService.checkTaskAchievements();
-    } catch (error) {
-      console.error('Error checking achievements:', error);
-    }
-  };
-
   // Handle task update (optimistic update)
   const handleTaskUpdate = async (
     taskId: string,
@@ -290,10 +274,8 @@ export function useTaskOperations(
       if (response && response.data) {
         console.log('Task updated successfully:', response.data);
         
-        // If we're completing a task, check for achievements and update streak
+        // If we're completing a task, update streak
         if (isCompletingTask) {
-          checkAchievements();
-          // Update task streak when task is completed
           await updateTaskStreak();
         }
       } else {

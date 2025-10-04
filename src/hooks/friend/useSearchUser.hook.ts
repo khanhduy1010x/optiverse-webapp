@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { SearchUsersProps } from '../../types/friend/props/component.props';
 import FriendService from '../../services/friend.service';
-import achievementService from '../../services/achievement.service';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 export const useSearchUser = (props: SearchUsersProps) => {
@@ -44,10 +43,7 @@ export const useSearchUser = (props: SearchUsersProps) => {
         FriendService.viewAllPending(),
       ]);
 
-      // Check for friend achievements if we have friends
-      if (friendsList && friendsList.length > 0) {
-        await achievementService.checkFriendAchievements();
-      }
+
 
       // Trigger lại hàm kiểm tra trạng thái với key mới
       setRefreshKey(prev => prev + 1);
