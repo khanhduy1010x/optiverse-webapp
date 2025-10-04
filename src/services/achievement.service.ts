@@ -1,332 +1,221 @@
-import api from './api.service';
-import { ConditionTypeEnum, Achievement, UserAchievement, UserAchievementWithDetails } from '../types/achievement/achievement.type';
-import { toast, Bounce, Slide } from 'react-toastify';
-import React from 'react';
+import  api  from './api.service';
+import { 
+  Achievement, 
+  Rule, 
+  RuleCategory, 
+  LogicOperator, 
+  ValueType, 
+  Operator 
+} from '../types/achievement/achievement.types';
+import { AchievementFormData, UpdateAchievementRequest, CreateAchievementRequest } from '../types/achievement/request/achievement.request';
+import { AchievementListResponse, AchievementResponse, DeleteAchievementResponse } from '../types/achievement/response/achievement.response';
+import { ApiResponse } from '../types/api/api.interface';
 
-interface AchievementResponse {
-  total: number;
-  achievements: Achievement[];
-}
+class AchievementService {
+  // TTL chống trùng thông báo theo achievement
+  private readonly TOAST_COOLDOWN_MS = 3000;
+  private readonly TOAST_SESSION_PREFIX = 'achievementToastShown:';
 
-interface UserAchievementResponse {
-  total: number;
-  achievements: UserAchievementWithDetails[];
-}
-
-// Custom component for achievement notifications
-const AchievementToast = ({ achievement }: { achievement: Achievement }) => {
-  return React.createElement('div', { 
-    style: { 
-      display: 'flex',
-      alignItems: 'center',
-      gap: '16px',
-      padding: '18px',
-      backgroundColor: '#ffffff',
-      borderRadius: '16px',
-      boxShadow: '0 6px 16px rgba(0, 0, 0, 0.12)',
-      border: '1px solid rgba(0, 0, 0, 0.06)',
-      width: '100%',
-      maxWidth: '380px',
-      margin: '0 auto',
-      transform: 'translateY(0)',
-      animation: 'fadeIn 0.3s ease-out'
-    } 
-  }, [
-    achievement.icon_url || achievement.badge_image ? 
-      React.createElement('div', {
-        style: {
-          overflow: 'hidden',
-          width: '64px',
-          height: '64px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: '#f0f7ff',
-          borderRadius: '12px',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-          border: '1px solid rgba(0, 0, 0, 0.04)'
-        }
-      }, [
-        React.createElement('img', { 
-          src: achievement.icon_url || achievement.badge_image, 
-          alt: 'Achievement Icon',
-          style: {
-            width: '85%',
-            height: '85%',
-            objectFit: 'contain'
-          }
-        })
-      ]) : null,
-    React.createElement('div', { 
-      style: { flex: 1 } 
-    }, [
-      React.createElement('div', {
-        style: {
-          fontSize: '11px',
-          fontWeight: '600',
-          color: '#4CAF50',
-          textTransform: 'uppercase',
-          letterSpacing: '0.5px',
-          marginBottom: '4px'
-        }
-      }, 'Thành tựu mới'),
-      React.createElement('div', { 
-        style: {
-          fontSize: '18px',
-          fontWeight: 'bold',
-          marginBottom: '6px',
-          color: '#333333'
-        }
-      }, achievement.title),
-      React.createElement('div', { 
-        style: {
-          fontSize: '14px',
-          color: '#555555',
-          lineHeight: '1.5'
-        }
-      }, achievement.description)
-    ])
-  ]);
-};
-
-// Add global CSS for animation
-if (!document.getElementById('achievement-toast-styles')) {
-  const styleEl = document.createElement('style');
-  styleEl.id = 'achievement-toast-styles';
-  styleEl.innerHTML = `
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(-20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-    
-    .achievement-toast {
-      overflow: visible !important;
-      background: transparent !important;
-      box-shadow: none !important;
-    }
-  `;
-  document.head.appendChild(styleEl);
-}
-
-const achievementService = {
-
-  /**
-   * Get all achievements that the user has unlocked (đã đạt được)
-   */
-  getUnlockedAchievements: async () => {
+  private hasRecentToast(achievementId: string): boolean {
     try {
-      const response = await api.get('/productivity/user-achievement/my-achievements/unlocked');
-      console.log('API response for unlocked achievements:', response.data);
+      const key = `${this.TOAST_SESSION_PREFIX}${achievementId}`;
+      const lastShown = sessionStorage.getItem(key);
+      if (!lastShown) return false;
+      const last = parseInt(lastShown, 10);
+      return !isNaN(last) && Date.now() - last < this.TOAST_COOLDOWN_MS;
+    } catch (_) {
+      return false;
+    }
+  }
 
-      // Xử lý cấu trúc response có dạng { total, achievements }
-      if (response.data && response.data.data) {
-        return response.data.data.achievements || [];
-      }
-      return [];
+  private markToastShown(achievementId: string): void {
+    try {
+      const key = `${this.TOAST_SESSION_PREFIX}${achievementId}`;
+      sessionStorage.setItem(key, Date.now().toString());
+    } catch (_) {
+      // ignore
+    }
+  }
+  // Lấy tất cả achievements
+  async getAllAchievements(): Promise<AchievementListResponse> {
+    try {
+      const response = await api.get<ApiResponse<AchievementListResponse>>('/productivity/achievement');
+      console.log('Achievement list response:', response.data);
+      return response.data.data || response.data;
     } catch (error) {
-      console.error('Error fetching unlocked achievements:', error);
-      return [];
-    }
-  },
-
-  /**
-   * Get all achievements that the user hasn't unlocked yet (chưa đạt được)
-   */
-  getLockedAchievements: async () => {
-    try {
-      const response = await api.get('/productivity/user-achievement/my-achievements/locked');
-      console.log('API response for locked achievements:', response.data);
-
-      // Xử lý cấu trúc response có dạng { total, achievements }
-      if (response.data && response.data.data) {
-        return response.data.data.achievements || [];
-      }
-      return [];
-    } catch (error) {
-      console.error('Error fetching locked achievements:', error);
-      return [];
-    }
-  },
-
-  /**
-   * Check and unlock all task-related achievements for a user
-   * @returns Array of newly unlocked achievements
-   */
-  checkTaskAchievements: async () => {
-    try {
-      const response = await api.post(`/productivity/achievement/check-task-achievements`);
-      const newAchievements = response.data.data || [];
-
-      // Hiển thị thông báo nếu có thành tựu mới
-      if (newAchievements.length > 0) {
-        achievementService.showAchievementNotifications(newAchievements);
-      }
-
-      return response.data;
-    } catch (error) {
-      console.error('Error checking task achievements:', error);
-      return { data: [] };
-    }
-  },
-
-  /**
-   * Check and unlock all friend-related achievements for a user
-   * @returns Array of newly unlocked achievements
-   */
-  checkFriendAchievements: async () => {
-    try {
-      const response = await api.post(`/productivity/achievement/check-friend-achievements`);
-      const newAchievements = response.data.data || [];
-
-      // Hiển thị thông báo nếu có thành tựu mới
-      if (newAchievements.length > 0) {
-        achievementService.showAchievementNotifications(newAchievements);
-      }
-
-      return response.data;
-    } catch (error) {
-      console.error('Error checking friend achievements:', error);
-      return { data: [] };
-    }
-  },
-
-  /**
-   * Hiển thị thông báo cho các thành tựu mới
-   */
-  showAchievementNotifications: (achievements: Achievement[]) => {
-    // Hiển thị từng thành tựu riêng biệt
-    achievements.forEach((achievement, index) => {
-      setTimeout(() => {
-        toast(
-          ({ closeToast }) => AchievementToast({ achievement }),
-          {
-            position: "top-center",
-            autoClose: 5000,
-            hideProgressBar: true,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            transition: Bounce,
-            className: 'achievement-toast',
-            icon: false,
-            style: {
-              zIndex: 9999
-            }
-          }
-        );
-      }, index * 2000); // Hiển thị lần lượt, cách nhau 2 giây
-    });
-  },
-
-  /**
-   * Get all achievements (admin)
-   */
-  getAllAchievements: async () => {
-    try {
-      const response = await api.get('/productivity/achievement');
-      if (response.data && response.data.data) {
-        return response.data.data;
-      }
-      return [];
-    } catch (error) {
-      console.error('Error fetching all achievements:', error);
-      return [];
-    }
-  },
-
-  /**
-   * Update an achievement (admin)
-   */
-  updateAchievement: async (id: string, data: { title: string; description?: string; keepExistingImage?: boolean } | FormData) => {
-    try {
-      // Kiểm tra nếu data là FormData
-      const isFormData = data instanceof FormData;
-      const config = isFormData ? { 
-        headers: { 'Content-Type': 'multipart/form-data' } 
-      } : {};
-      
-      // If data is not FormData and has keepExistingImage flag, remove it before sending to API
-      if (!isFormData && 'keepExistingImage' in data) {
-        const { keepExistingImage, ...cleanData } = data;
-        data = cleanData;
-      }
-      
-      const response = await api.put(`/productivity/achievement/${id}`, data, config);
-      return response.data;
-    } catch (error: any) {
-      console.error('Error updating achievement:', error);
-      
-      // Handle network connectivity issues
-      if (error.code === 'EAI_AGAIN' || error.message?.includes('EAI_AGAIN')) {
-        throw new Error('Network connectivity issue with image upload service. Please check your internet connection and try again.');
-      }
-      
-      // Handle duplicate key error
-      if (error.response?.data?.code === 11000 || 
-          (error.response?.data?.error && error.response?.data?.error.includes('E11000')) ||
-          (error.response?.data?.message && error.response?.data?.message.includes('duplicate key'))) {
-        
-        // Extract title from the error if possible
-        const titleMatch = error.response?.data?.message?.match(/title:\s*"([^"]+)"/);
-        const title = titleMatch ? titleMatch[1] : 'this title';
-        throw new Error(`An achievement with the title "${title}" already exists. Please use a different title.`);
-      }
-      
-      // Handle specific API errors
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      }
-      
-      throw error;
-    }
-  },
-
-  /**
-   * Create a new achievement (admin)
-   */
-  createAchievement: async (data: { title: string; description?: string; icon_url?: string } | FormData) => {
-    try {
-      // Kiểm tra nếu data là FormData
-      const isFormData = data instanceof FormData;
-      const config = isFormData ? { 
-        headers: { 'Content-Type': 'multipart/form-data' } 
-      } : {};
-      
-      const response = await api.post('/productivity/achievement', data, config);
-      return response.data;
-    } catch (error: any) {
-      console.error('Error creating achievement:', error);
-      
-      // Handle network connectivity issues
-      if (error.code === 'EAI_AGAIN' || error.message?.includes('EAI_AGAIN')) {
-        throw new Error('Network connectivity issue with image upload service. Please check your internet connection and try again.');
-      }
-      
-      // Handle duplicate key error
-      if (error.response?.data?.code === 11000 || 
-          (error.response?.data?.error && error.response?.data?.error.includes('E11000')) ||
-          (error.response?.data?.message && error.response?.data?.message.includes('duplicate key'))) {
-        
-        // Extract title from the error if possible
-        const titleMatch = error.response?.data?.message?.match(/title:\s*"([^"]+)"/);
-        const title = titleMatch ? titleMatch[1] : 'this title';
-        throw new Error(`An achievement with the title "${title}" already exists. Please use a different title.`);
-      }
-      
-      // Handle specific API errors
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      }
-      
+      console.error('Error fetching achievements:', error);
       throw error;
     }
   }
-};
 
-export default achievementService; 
+  // Lấy achievement theo ID
+  async getAchievementById(id: string): Promise<AchievementResponse> {
+    try {
+      const response = await api.get<ApiResponse<AchievementResponse>>(`/productivity/achievement/${id}`);
+      console.log('Achievement detail response:', response.data);
+      return response.data.data || response.data;
+    } catch (error) {
+      console.error(`Error fetching achievement ${id}:`, error);
+      throw error;
+    }
+  }
+
+  // Tạo achievement mới
+  async createAchievement(data: AchievementFormData): Promise<AchievementResponse> {
+    try {
+      if (data.icon_file) {
+        // Sử dụng FormData khi có file upload
+        const formData = new FormData();
+        formData.append('title', data.title);
+        formData.append('description', data.description || '');
+        // Đính kèm file với key 'icon_file' theo chuẩn yêu cầu
+        formData.append('icon_file', data.icon_file);
+        // Gửi rules dưới dạng JSON string để server parse lại
+        formData.append('rules', JSON.stringify(data.rules));
+        formData.append('logic_operator', String(data.logic_operator));
+        formData.append('reward', data.reward || '');
+
+        const response = await api.post<ApiResponse<AchievementResponse>>('/productivity/achievement', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        console.log('Create achievement with file response:', response.data);
+        return response.data.data || response.data;
+      } else {
+        // Sử dụng JSON khi không có file upload
+        const requestData: CreateAchievementRequest = {
+          title: data.title,
+          description: data.description,
+          icon_url: data.icon_url || '',
+          rules: data.rules,
+          logic_operator: data.logic_operator,
+          reward: data.reward,
+        };
+        
+        const response = await api.post<ApiResponse<AchievementResponse>>('/productivity/achievement', requestData);
+        console.log('Create achievement response:', response.data);
+        return response.data.data || response.data;
+      }
+    } catch (error) {
+      console.error('Error creating achievement:', error);
+      throw error;
+    }
+  }
+
+  // Cập nhật achievement
+  async updateAchievement(id: string, data: AchievementFormData): Promise<AchievementResponse> {
+    try {
+      if (data.icon_file) {
+        // Sử dụng FormData khi có file upload
+        const formData = new FormData();
+        formData.append('title', data.title);
+        formData.append('description', data.description || '');
+        // Đính kèm file với key 'icon_file' theo chuẩn yêu cầu
+        formData.append('icon_file', data.icon_file);
+        formData.append('rules', JSON.stringify(data.rules));
+        formData.append('logic_operator', String(data.logic_operator));
+        formData.append('reward', data.reward || '');
+
+        const response = await api.put<ApiResponse<AchievementResponse>>(`/productivity/achievement/${id}`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        console.log('Update achievement with file response:', response.data);
+        return response.data.data || response.data;
+      } else {
+        // Sử dụng JSON khi không có file upload
+        const requestData: UpdateAchievementRequest = {
+          title: data.title,
+          description: data.description,
+          icon_url: data.icon_url,
+          rules: data.rules,
+          logic_operator: data.logic_operator,
+          reward: data.reward,
+        };
+        
+        const response = await api.put<ApiResponse<AchievementResponse>>(`/productivity/achievement/${id}`, requestData);
+        console.log('Update achievement response:', response.data);
+        return response.data.data || response.data;
+      }
+    } catch (error) {
+      console.error(`Error updating achievement ${id}:`, error);
+      throw error;
+    }
+  }
+
+  // Xóa achievement
+  async deleteAchievement(id: string): Promise<DeleteAchievementResponse> {
+    try {
+      const response = await api.delete<ApiResponse<DeleteAchievementResponse>>(`/productivity/achievement/${id}`);
+      console.log('Delete achievement response:', response.data);
+      return response.data.data || response.data;
+    } catch (error) {
+      console.error(`Error deleting achievement ${id}:`, error);
+      throw error;
+    }
+  }
+
+  // Đánh giá achievements
+  async evaluateAchievements(): Promise<any> {
+    try {
+      const response = await api.post<ApiResponse<any>>('/productivity/achievement/evaluate');
+      console.log('Evaluate achievements response:', response.data);
+      
+      const result = response.data.data || response.data;
+      
+      // Kiểm tra nếu có achievement mới được mở khóa (sử dụng newlyUnlocked thay vì unlocked)
+      const newlyUnlockedAchievements = result?.newlyUnlocked || [];
+      if (newlyUnlockedAchievements.length > 0) {
+        // Import toast dynamically để tránh circular dependency
+        const { toast } = await import('react-toastify');
+        
+        // Hiển thị thông báo cho từng achievement mới (chỉ những achievement thực sự mới unlock)
+        newlyUnlockedAchievements.forEach((achievementId: string) => {
+          // Tìm thông tin chi tiết của achievement từ results
+          const achievementResult = result.results?.find((r: any) => r.achievementId === achievementId);
+          const toastId = `achievement-${achievementId}`;
+
+          // Bỏ qua nếu toast đang hiển thị hoặc vừa hiển thị gần đây
+          if ((toast.isActive && toast.isActive(toastId)) || this.hasRecentToast(achievementId)) {
+            return;
+          }
+
+          toast.success(
+            `🎉 Congratulations! You've unlocked a new achievement!`,
+            {
+              toastId,
+              position: "top-center",
+              autoClose: 5000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              className: 'achievement-toast',
+              style: {
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                color: 'white',
+                fontWeight: 'bold',
+                borderRadius: '12px',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+              }
+            }
+          );
+
+          // Đánh dấu đã hiển thị để chống trùng trong TTL
+          this.markToastShown(achievementId);
+        });
+        
+        console.log(`Displayed ${newlyUnlockedAchievements.length} achievement notification(s) for newly unlocked achievements`);
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('Error evaluating achievements:', error);
+      throw error;
+    }
+  }
+}
+
+export default new AchievementService();

@@ -24,16 +24,16 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
       icon: 'setting' as IconName,
     },
     {
+      id: 'achievements',
+      label: 'Achievements',
+      path: '/user-achievements',
+      icon: 'trophy' as IconName,
+    },
+    {
       id: 'login-sessions',
       label: t('login_sessions'),
       path: '/login-session',
       icon: 'devices' as IconName,
-    },
-    {
-      id: 'achievements',
-      label: t('achievements'),
-      path: '/achievements',
-      icon: 'trophy' as IconName,
     },
     {
       id: 'notifications',

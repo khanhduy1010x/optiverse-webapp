@@ -41,4 +41,4 @@ export const useLoginStreak = () => {
   }, [isAuthenticated, isLoading]);
 
   return { streak };
-}; 
+};

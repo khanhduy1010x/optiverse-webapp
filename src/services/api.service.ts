@@ -10,6 +10,10 @@ import {
   SESSION_EXPIRED_EVENT,
 } from '../constants/auth.constants';
 import { logout } from '../store/slices/auth.slice';
+import { 
+  achievementResponseInterceptor, 
+  achievementErrorInterceptor 
+} from '../utils/achievementInterceptor';
 
 const api: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_URL_BASE,
@@ -122,7 +126,7 @@ if (typeof window !== 'undefined') {
 }
 
 api.interceptors.response.use(
-  response => {
+  async response => {
     // Kiểm tra user banned
     if (
       response.headers['x-user-banned'] === 'true' ||
@@ -148,7 +152,8 @@ api.interceptors.response.use(
       );
     }
 
-    return response;
+    // Gọi achievement interceptor để tự động đánh giá achievements
+    return await achievementResponseInterceptor(response);
   },
   async error => {
     const originalRequest = error.config;
@@ -179,7 +184,8 @@ api.interceptors.response.use(
       }
     }
 
-    return Promise.reject(error);
+    // Gọi achievement error interceptor
+    return achievementErrorInterceptor(error);
   }
 );
 

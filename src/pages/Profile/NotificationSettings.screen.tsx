@@ -42,13 +42,6 @@ export default function NotificationSettings() {
       description: t('friend_notifications_description'),
       icon: ICONS.friend,
     },
-
-    {
-      key: 'achievement_notifications' as const,
-      label: t('achievement_notifications'),
-      description: t('achievement_notifications_description'),
-      icon: ICONS.trophy,
-    },
   ];
 
   const handleToggle = async (key: keyof UpdateNotificationSettingsDto) => {

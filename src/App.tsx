@@ -34,7 +34,6 @@ import { AdminRoute } from './components/AdminRoute';
 import FocusSessionList from './pages/FocusTimer/FocusTimerList.page';
 import { AuthViewType } from './types/auth/auth.types';
 import LoginSessions from './pages/Profile/LoginSession.page';
-import AchievementsPage from './pages/Profile/Achievements.page';
 import TaskPage from './pages/Task/Task.page';
 import TemplateComponent from './pages/Template/TemplateComponent.page';
 import FocusTimerLayout from './pages/FocusTimer/FocusTimerLayout.page';
@@ -51,8 +50,9 @@ import { useEffect, useState } from 'react';
 import Modal from 'react-modal';
 import { GROUP_CLASSNAMES } from './styles';
 import BannedModal from './components/BannedModal';
-import AchievementsAdminPage from './pages/Admin/AchievementsAdmin.page';
 import TaskStatistic from './pages/Task/TaskStatistic.page';
+import UserAchievementPage from './pages/user/UserAchievement.page';
+import AchievementManagement from './pages/Achievement/AchievementManagement.page';
 
 declare global {
   interface Window {
@@ -149,7 +149,8 @@ const AppContent: React.FC = () => {
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="users" element={<UserManagement />} />
             <Route path="settings" element={<SystemSettings />} />
-            <Route path="achievements" element={<AchievementsAdminPage />} />
+            <Route path="achievements" element={<AchievementManagement />} />
+            
           </Route>
 
           <Route
@@ -283,10 +284,10 @@ const AppContent: React.FC = () => {
             }
           />
           <Route
-            path="/achievements"
+            path="/user-achievements"
             element={
               <ProtectedRoute>
-                <AchievementsPage />
+                <UserAchievementPage />
               </ProtectedRoute>
             }
           />

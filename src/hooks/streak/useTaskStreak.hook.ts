@@ -19,4 +19,4 @@ export const useTaskStreak = () => {
   }, []);
 
   return { updateTaskStreak };
-}; 
+};

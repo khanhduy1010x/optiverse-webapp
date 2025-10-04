@@ -1,116 +1,65 @@
-import React, { useState } from 'react';
-import { Achievement } from '../../types/achievement/achievement.type';
-import Text from '../common/Text.component';
-import Icon from '../common/Icon/Icon.component';
+import React from 'react'
+import { Achievement } from '../../types/achievement/achievement.types'
+import { motion } from 'framer-motion'
 
 interface AchievementCardProps {
-  achievement: Achievement;
-  unlocked: boolean;
-  unlocked_at?: string;
+  achievement: Achievement
+  onEdit: (achievement: Achievement) => void
+  onDelete: (id: string) => void
 }
 
-const AchievementCard: React.FC<AchievementCardProps> = ({ achievement, unlocked, unlocked_at }) => {
-  const [isHovering, setIsHovering] = useState(false);
-  
-  // Format date function
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return '';
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('vi-VN', { 
-        day: 'numeric',
-        month: 'numeric',
-        year: 'numeric'
-      });
-    } catch (error) {
-      return dateString;
-    }
-  };
-  
+const AchievementCard: React.FC<AchievementCardProps> = ({ achievement, onEdit, onDelete }) => {
   return (
-    <div 
-      className="relative m-2"
-      onMouseEnter={() => setIsHovering(true)}
-      onMouseLeave={() => setIsHovering(false)}
+    <motion.div
+      whileHover={{ scale: 1.02 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 24 }}
+      className="relative overflow-hidden rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-200 shadow-sm hover:shadow-lg"
     >
-      {/* Main Card */}
-      <div className={`
-        w-[140px] h-[160px]
-        ${unlocked 
-          ? 'bg-white shadow-md hover:shadow-lg' 
-          : 'bg-gray-50 shadow-sm'}
-        rounded-xl overflow-hidden transition-all duration-300
-        border ${unlocked ? 'border-blue-100' : 'border-gray-100'} hover:border-blue-200
-        flex flex-col items-center cursor-pointer
-        relative
-      `}>
-        {/* Status indicator */}
-        {unlocked && (
-          <div className="absolute top-3 right-3 flex items-center">
-            <div className="w-2 h-2 rounded-full bg-green-500 shadow-sm mr-1"></div>
-          </div>
-        )}
-        
-        {/* Fixed height icon container */}
-        <div className="w-full h-[90px] flex items-center justify-center pt-4">
-          {(achievement.badge_image || achievement.icon_url) ? (
-            <img 
-              src={achievement.badge_image || achievement.icon_url} 
-              alt={achievement.title} 
-              className={`w-14 h-14 object-contain ${!unlocked && 'opacity-60 filter grayscale'}`}
+      <div className="absolute top-0 left-0 h-1 w-full bg-gradient-to-r from-indigo-500 via-sky-500 to-cyan-500" />
+      <div className="p-6">
+        <div className="flex items-start gap-4">
+          {achievement.icon_url ? (
+            <img
+              src={achievement.icon_url}
+              alt={achievement.title}
+              className="h-16 w-16 rounded-xl object-cover ring-1 ring-gray-200"
             />
           ) : (
-            <div className={`
-              w-14 h-14 flex items-center justify-center
-              ${unlocked 
-                ? 'bg-gradient-to-br from-blue-50 to-green-50 rounded-full shadow-inner border border-blue-100' 
-                : 'bg-gray-100 rounded-full filter grayscale opacity-70 border border-gray-200'}
-            `}>
-              <Icon 
-                name="trophy" 
-                size={28} 
-                className={unlocked ? 'text-amber-500' : 'text-gray-400'} 
-              />
+            <div className="h-16 w-16 rounded-xl bg-gray-100 flex items-center justify-center ring-1 ring-gray-200">
+              <span className="text-2xl">🏆</span>
             </div>
           )}
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900 truncate">{achievement.title}</h3>
+              <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gradient-to-r from-indigo-50 to-blue-50 text-blue-700 ring-1 ring-blue-200 whitespace-nowrap">
+                {achievement.reward} points
+              </span>
+            </div>
+            <p className="mt-2 text-sm text-gray-600 overflow-hidden max-h-12">
+              {achievement.description || 'No description'}
+            </p>
+          </div>
         </div>
-        
-        {/* Fixed height title container */}
-        <div className="w-full h-[70px] flex items-start justify-center px-2 pt-1">
-          <Text className={`text-xs font-medium text-center line-clamp-2
-            ${unlocked ? 'text-gray-800' : 'text-gray-500'}`}>
-            {achievement.title}
-          </Text>
+
+        <div className="mt-5 flex items-center justify-end gap-2">
+          <button
+            onClick={() => onEdit(achievement)}
+            className="px-3 py-1.5 rounded-md text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 text-sm font-medium transition-colors"
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => achievement._id && onDelete(achievement._id)}
+            className="px-3 py-1.5 rounded-md text-red-600 hover:text-red-700 hover:bg-red-50 text-sm font-medium transition-colors"
+          >
+            Delete
+          </button>
         </div>
       </div>
-      
-      {/* Hover Detail Popup */}
-      {isHovering && (
-        <div className="absolute z-20 -right-64 top-0 w-60 bg-white shadow-lg rounded-lg border border-blue-100 p-4 animate-fadeIn">
-          <div className="absolute -left-2 top-8 transform rotate-45 w-3 h-3 bg-white border-l border-t border-blue-100"></div>
-          
-          {/* Header with icon and title */}
-          <div className="flex items-center mb-3 border-b border-gray-50">
-           
-            <Text className="font-semibold text-gray-800 text-sm leading-tight">{achievement.title}</Text>
-          </div>
-          
-          {/* Description */}
-          <Text className="text-xs text-gray-600 mb-3 leading-relaxed">{achievement.description}</Text>
-          
-          {/* Unlocked date - only show if unlocked */}
-          {unlocked && unlocked_at && (
-            <div className="flex items-center mb-3 bg-blue-50 rounded-md p-2">
-              <Icon name="calendar" size={30} className="text-blue-500 mr-2" />
-              <Text className="text-xs text-gray-700">
-                Đạt được: {formatDate(unlocked_at)}
-              </Text>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-};
+    </motion.div>
+  )
+}
 
-export default AchievementCard; 
+export default AchievementCard
