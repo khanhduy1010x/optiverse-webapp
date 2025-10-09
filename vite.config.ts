@@ -6,7 +6,6 @@ import mkcert from 'vite-plugin-mkcert';
 
 export default defineConfig(({ mode }): UserConfig => {
   const env = loadEnv(mode, process.cwd(), '');
-
   const isProd = mode === 'production';
   env.VITE_APP_ENV = mode;
 
@@ -14,21 +13,38 @@ export default defineConfig(({ mode }): UserConfig => {
 
   return {
     plugins: [react(), tailwindcss(), svgr(), ...(isProd ? [] : [mkcert()])],
+
     server: {
       host: '0.0.0.0',
       https: isProd ? undefined : {},
       port: Number(env.VITE_PORT) || 5173,
       allowedHosts: true,
     },
+
     build: {
       outDir: 'dist',
+      minify: 'esbuild',
+      cssMinify: 'esbuild',
+      target: 'esnext',
       sourcemap: false,
+      chunkSizeWarningLimit: 1500,
+      reportCompressedSize: false,
       rollupOptions: {
         external: ['xlsx'],
+        output: {
+          manualChunks: undefined,
+        },
       },
+      emptyOutDir: true,
     },
+
     optimizeDeps: {
       exclude: ['xlsx'],
+      esbuildOptions: {
+        target: 'esnext',
+
+        supported: { 'top-level-await': true },
+      },
     },
   };
 });
