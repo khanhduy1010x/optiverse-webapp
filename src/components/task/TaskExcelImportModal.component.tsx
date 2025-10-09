@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react';
-import * as XLSX from 'xlsx';
+// import * as XLSX from 'xlsx';
 import { toast } from 'react-toastify';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
 import taskService from '../../services/task.service';
@@ -144,7 +144,7 @@ const parseDateTimeFlexible = (s?: any): string | undefined => {
     const y = Number(m[3]);
     const h = Number(m[4]);
     const mi = Number(m[5]);
-    if (d>=1 && d<=31 && mo>=1 && mo<=12 && h>=0 && h<=23 && mi>=0 && mi<=59) {
+    if (d >= 1 && d <= 31 && mo >= 1 && mo <= 12 && h >= 0 && h <= 23 && mi >= 0 && mi <= 59) {
       const dt = new Date(y, mo - 1, d, h, mi, 0, 0);
       return dt.toISOString();
     }
@@ -156,7 +156,7 @@ const parseDateTimeFlexible = (s?: any): string | undefined => {
     const d = Number(m2[3]);
     const h = Number(m2[4]);
     const mi = Number(m2[5]);
-    if (d>=1 && d<=31 && mo>=1 && mo<=12 && h>=0 && h<=23 && mi>=0 && mi<=59) {
+    if (d >= 1 && d <= 31 && mo >= 1 && mo <= 12 && h >= 0 && h <= 23 && mi >= 0 && mi <= 59) {
       const dt = new Date(y, mo - 1, d, h, mi, 0, 0);
       return dt.toISOString();
     }
@@ -238,7 +238,8 @@ const normalizeKeys = (row: Record<string, any>): Record<string, any> => {
   return out;
 };
 
-export const TaskExcelImportModal: React.FC<TaskExcelImportModalProps> = ({ isOpen, onClose, onImported }) => {
+export const TaskExcelImportModal: React.FC<TaskExcelImportModalProps> = async ({ isOpen, onClose, onImported }) => {
+  const XLSX = await import('xlsx')
   const { t } = useAppTranslate('task');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [fileName, setFileName] = useState<string>('');
@@ -250,7 +251,7 @@ export const TaskExcelImportModal: React.FC<TaskExcelImportModalProps> = ({ isOp
   const taskTemplateHeaders = useMemo(
     () => [
       'title',
-      'description', 
+      'description',
       'start_date',
       'start_time',
       'end_date',
@@ -360,7 +361,7 @@ export const TaskExcelImportModal: React.FC<TaskExcelImportModalProps> = ({ isOp
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
           </button>
         </div>
 

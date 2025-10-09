@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { GOOGLE_AUTH_CONFIG } from '../../config/google-auth.config';
 import authService from '../../services/auth.service';
 import { setUser, login } from '../../store/slices/auth.slice';
 import { AppDispatch } from '../../store';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
+import { GOOGLE_CLIENT_ID, GOOGLE_REDIRECT_URI } from '../../config/env.config';
 
 /**
  * Thu thập thông tin về trình duyệt và hệ điều hành dưới dạng chuỗi đơn giản
@@ -144,7 +144,7 @@ export function useLoginForm() {
     setIsGoogleLoginLoading(true);
 
     try {
-      const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_AUTH_CONFIG.CLIENT_ID}&redirect_uri=${encodeURIComponent(GOOGLE_AUTH_CONFIG.REDIRECT_URI)}&response_type=code&scope=email profile`;
+      const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(GOOGLE_REDIRECT_URI)}&response_type=code&scope=email profile`;
 
       const popup = window.open(
         googleAuthUrl,
@@ -152,8 +152,7 @@ export function useLoginForm() {
         'width=500,height=600,menubar=no,toolbar=no,location=no'
       );
 
-      if (!popup)
-        throw new Error(t('popup_blocked'));
+      if (!popup) throw new Error(t('popup_blocked'));
 
       const messageHandler = async (event: MessageEvent) => {
         if (event.origin !== window.location.origin) return;

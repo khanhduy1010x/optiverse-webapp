@@ -1,29 +1,23 @@
-import axios, {
-  AxiosInstance,
-  InternalAxiosRequestConfig,
-  AxiosResponse,
-  AxiosError,
-} from 'axios';
+import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import {
-  AUTH_ERROR_EVENT,
   TOKEN_REFRESH_SUCCESS,
   SESSION_EXPIRED_EVENT,
 } from '../constants/auth.constants';
 import { logout } from '../store/slices/auth.slice';
-import { 
-  achievementResponseInterceptor, 
-  achievementErrorInterceptor 
+import {
+  achievementResponseInterceptor,
+  achievementErrorInterceptor,
 } from '../utils/achievementInterceptor';
+import { BASE_URL } from '../config/env.config';
 
 const api: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_URL_BASE,
+  baseURL: BASE_URL,
   timeout: 50000,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-let isRefreshing = false;
 let hasAttemptedRefresh = false;
 let refreshSuccessTimestamp = 0;
 let failedQueue: Array<{
@@ -113,8 +107,6 @@ api.interceptors.request.use(
     return Promise.reject(error);
   }
 );
-
-let tokenRefreshPromise: Promise<void> | null = null;
 
 if (typeof window !== 'undefined') {
   window.addEventListener(TOKEN_REFRESH_SUCCESS, () => {
