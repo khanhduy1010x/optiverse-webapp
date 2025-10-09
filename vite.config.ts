@@ -46,5 +46,8 @@ export default defineConfig(({ mode }): UserConfig => {
         supported: { 'top-level-await': true },
       },
     },
+    define: {
+      'import.meta.env.VITE_APP_ENV': JSON.stringify(mode),
+    },
   };
 });

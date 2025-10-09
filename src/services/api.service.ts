@@ -25,7 +25,6 @@ let failedQueue: Array<{
   reject: (reason?: any) => void;
   config: InternalAxiosRequestConfig;
 }> = [];
-
 const processQueue = (error: any = null, token: string | null = null) => {
   console.log(`Processing queue with ${failedQueue.length} pending requests`);
   failedQueue.forEach(request => {
