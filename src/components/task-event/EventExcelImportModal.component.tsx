@@ -6,7 +6,7 @@ import { useAppSelector } from '../../store/hooks';
 import type { CreateTaskEventRequest } from '../../types/task-events/request/create-task-event.request';
 import type { RepeatEndType, RepeatType, RepeatUnit } from '../../types/task-events/task-events.types';
 import type { RootState } from '../../store';
-
+import * as XLSX from 'xlsx'
 interface EventExcelImportModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -258,7 +258,6 @@ const normalizeKeys = (row: Record<string, any>): Record<string, any> => {
 
 
 export const EventExcelImportModal: React.FC<EventExcelImportModalProps> = async ({ isOpen, onClose, taskId, onImported }) => {
-  const XLSX = await import('xlsx')
 
   const { t } = useAppTranslate('task');
   const userId = useAppSelector((state: RootState) => state.auth.user?._id);

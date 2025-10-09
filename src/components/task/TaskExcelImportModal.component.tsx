@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react';
-// import * as XLSX from 'xlsx';
+import * as XLSX from 'xlsx';
 import { toast } from 'react-toastify';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
 import taskService from '../../services/task.service';
@@ -239,7 +239,6 @@ const normalizeKeys = (row: Record<string, any>): Record<string, any> => {
 };
 
 export const TaskExcelImportModal: React.FC<TaskExcelImportModalProps> = async ({ isOpen, onClose, onImported }) => {
-  const XLSX = await import('xlsx')
   const { t } = useAppTranslate('task');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [fileName, setFileName] = useState<string>('');
