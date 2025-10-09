@@ -238,7 +238,7 @@ const normalizeKeys = (row: Record<string, any>): Record<string, any> => {
   return out;
 };
 
-export const TaskExcelImportModal: React.FC<TaskExcelImportModalProps> = async ({ isOpen, onClose, onImported }) => {
+export const TaskExcelImportModal: React.FC<TaskExcelImportModalProps> = ({ isOpen, onClose, onImported }) => {
   const { t } = useAppTranslate('task');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [fileName, setFileName] = useState<string>('');
