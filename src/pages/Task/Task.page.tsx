@@ -18,7 +18,6 @@ import { CircleButton } from '../../components/common/Button.component';
 import { GROUP_CLASSNAMES } from '../../styles/group-class-name.style';
 import TaskExcelImportModal from '../../components/task/TaskExcelImportModal.component';
 import { CreateTaskEventModalForm } from '../../components/task-event/CreateTaskEventModal.component';
-import * as XLSX from 'xlsx';
 
 // Hooks
 import { useTaskState } from '../../hooks/task/useTaskState.hook';
@@ -120,10 +119,10 @@ const TaskPage: React.FC = () => {
       setSelectedMenu(menu as 'task' | 'task-event' | 'task-settings');
     }
   }, [searchParams]);
-  
+
   // State mới để theo dõi tab đang được chọn
   const [activeTab, setActiveTab] = useState<TaskStatusTab>('all');
-  
+
   // State để lưu trữ các task đã được lọc theo tab
   const [tabFilteredTasks, setTabFilteredTasks] = useState<Task[]>([]);
 
@@ -143,10 +142,10 @@ const TaskPage: React.FC = () => {
     setShowDeleteConfirm
   );
 
-  const { 
-    fetchTasks, 
-    handleTaskClick, 
-    handleTaskUpdate, 
+  const {
+    fetchTasks,
+    handleTaskClick,
+    handleTaskUpdate,
     handleDeleteTask,
     filterTasksByStatus,
     applyFilters,
@@ -222,7 +221,7 @@ const TaskPage: React.FC = () => {
       setLoading(true);
       console.log('Fetching tasks and checking for overdue tasks');
       await fetchTasks();
-      
+
       // Force check for overdue tasks after fetching
       setTimeout(() => {
         console.log('Triggering force check for overdue tasks after fetch');
@@ -268,7 +267,7 @@ const TaskPage: React.FC = () => {
     setStartTime('');
     setEndTime('');
     setSelectedTags([]);
-    
+
     // Hiển thị form
     setShowCreateTaskForm(true);
     setShowEditTaskForm(false);
@@ -341,7 +340,7 @@ const TaskPage: React.FC = () => {
   useEffect(() => {
     console.log('Loading task data and user tags...');
     fetchTasksAndCheckOverdue();
-    
+
     // Add debug logging for tag fetching
     fetchUserTags()
       .then(tags => {
@@ -419,7 +418,7 @@ const TaskPage: React.FC = () => {
 
     try {
       setLoading(true);
-      
+
       // Format data for API update
       const dataToUpdate = {
         title: updatedTask.title,
@@ -442,34 +441,34 @@ const TaskPage: React.FC = () => {
       });
 
       // Call API to update task
-        const response = await taskService.updateTask(taskToEdit._id, dataToUpdate);
-        
-        if (response && response.data && response.data.task) {
-          console.log('Task updated successfully:', response.data.task);
-          
+      const response = await taskService.updateTask(taskToEdit._id, dataToUpdate);
+
+      if (response && response.data && response.data.task) {
+        console.log('Task updated successfully:', response.data.task);
+
         // Update tags if needed
-          if (updatedTask.tags && updatedTask.tags.length > 0) {
-            const currentTags = taskTags[taskToEdit._id] || [];
-            await updateTaskTags(taskToEdit._id, updatedTask.tags, currentTags);
-          }
-          
-        // Refresh data and update task streak
-          await fetchTasksAndCheckOverdue();
-        await updateTaskStreak();
-        
-          return true;
-        } else {
-          console.error('API response is invalid:', response);
-        // Revert optimistic update on failure
-          await fetchTasksAndCheckOverdue();
-          throw new Error('Failed to update task: Invalid response');
+        if (updatedTask.tags && updatedTask.tags.length > 0) {
+          const currentTags = taskTags[taskToEdit._id] || [];
+          await updateTaskTags(taskToEdit._id, updatedTask.tags, currentTags);
         }
+
+        // Refresh data and update task streak
+        await fetchTasksAndCheckOverdue();
+        await updateTaskStreak();
+
+        return true;
+      } else {
+        console.error('API response is invalid:', response);
+        // Revert optimistic update on failure
+        await fetchTasksAndCheckOverdue();
+        throw new Error('Failed to update task: Invalid response');
+      }
     } catch (error: any) {
       console.error('Failed to update task:', error);
-      
+
       // Revert optimistic update on error
       await fetchTasksAndCheckOverdue();
-      
+
       // Show user-friendly error message
       if (error.response) {
         console.error('Error response:', error.response.status, error.response.data);
@@ -485,7 +484,7 @@ const TaskPage: React.FC = () => {
       } else {
         alert(t('error_network'));
       }
-      
+
       return false;
     } finally {
       setLoading(false);
@@ -565,7 +564,7 @@ const TaskPage: React.FC = () => {
     setEndTime('');
     setSelectedTags([]);
     setTaskToEdit(null);
-    
+
     // Close modals
     setShowCreateTaskForm(false);
     setShowCreateTaskEventModal(false);
@@ -582,7 +581,7 @@ const TaskPage: React.FC = () => {
         {/* Main Content */}
         <View className={GROUP_CLASSNAMES.profileMainContent}>
           <div className="p-8">
-            
+
 
             {selectedMenu === 'task' ? (
               <>
@@ -625,10 +624,10 @@ const TaskPage: React.FC = () => {
 
                 {/* Task Import Modal */}
                 <TaskExcelImportModal
-                isOpen={isTaskImportOpen}
+                  isOpen={isTaskImportOpen}
                   onClose={handleCloseTaskImport}
-                 onImported={handleTaskImported}
-               />
+                  onImported={handleTaskImported}
+                />
               </>
             ) : selectedMenu === 'task-event' ? (
               <TaskEvent />
@@ -688,32 +687,30 @@ const TaskPage: React.FC = () => {
             <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-[2100] bg-white rounded-lg shadow-lg border border-gray-200 p-1 flex">
               <button
                 onClick={() => switchModalType('task')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  modalType === 'task' 
-                    ? 'bg-blue-500 text-white' 
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${modalType === 'task'
+                    ? 'bg-blue-500 text-white'
                     : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
-                }`}
+                  }`}
               >
                 {t('create_task')}
               </button>
               <button
                 onClick={() => switchModalType('event')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  modalType === 'event' 
-                    ? 'bg-blue-500 text-white' 
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${modalType === 'event'
+                    ? 'bg-blue-500 text-white'
                     : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
-                }`}
+                  }`}
               >
                 {t('create_event')}
               </button>
             </div>
           )}
-          
+
           <CreateTaskForm
             onClose={closeAllModals}
             onSave={async (taskData) => {
               try {
-                
+
                 const response = await taskService.createTask({
                   title: taskData.title || '',
                   description: taskData.description || '',
@@ -725,17 +722,17 @@ const TaskPage: React.FC = () => {
 
                 if (response && response._id) {
                   console.log('Task created successfully:', response);
-                  
+
                   // Update task streak when task is created
                   await updateTaskStreak();
-                  
+
                   // Add tags if any
                   if (taskData.tags && taskData.tags.length > 0) {
                     for (const tag of taskData.tags) {
                       await taskService.createTaskTag(response._id, tag._id);
                     }
                   }
-                  
+
                   // Close form and refresh tasks
                   closeAllModals();
                   fetchTasksAndCheckOverdue();
@@ -780,27 +777,25 @@ const TaskPage: React.FC = () => {
             <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-[2100] bg-white rounded-lg shadow-lg border border-gray-200 p-1 flex">
               <button
                 onClick={() => switchModalType('task')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  modalType === 'task' 
-                    ? 'bg-blue-500 text-white' 
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${modalType === 'task'
+                    ? 'bg-blue-500 text-white'
                     : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
-                }`}
+                  }`}
               >
                 {t('create_task')}
               </button>
               <button
                 onClick={() => switchModalType('event')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  modalType === 'event' 
-                    ? 'bg-blue-500 text-white' 
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${modalType === 'event'
+                    ? 'bg-blue-500 text-white'
                     : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
-                }`}
+                  }`}
               >
                 {t('create_event')}
               </button>
             </div>
           )}
-          
+
           <CreateTaskEventModalForm
             isOpen={showCreateTaskEventModal}
             onClose={closeAllModals}
@@ -817,7 +812,7 @@ const TaskPage: React.FC = () => {
         <EditTaskForm
           onClose={() => setShowEditTaskForm(false)}
           onSave={async (updatedTask) => {
-            const result = await handleUpdateTask({...updatedTask, start_time: formatDateToISOString(updatedTask.start_time), end_time: formatDateToISOString(updatedTask.end_time)});
+            const result = await handleUpdateTask({ ...updatedTask, start_time: formatDateToISOString(updatedTask.start_time), end_time: formatDateToISOString(updatedTask.end_time) });
             if (result) {
               setShowEditTaskForm(false); // Đóng form khi lưu thành công
               return true;

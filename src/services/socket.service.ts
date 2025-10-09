@@ -1,4 +1,5 @@
 import { io, Socket } from 'socket.io-client';
+import { BASE_URL } from '../config/env.config';
 
 class SocketService {
   private socket: Socket | null = null;
@@ -16,7 +17,7 @@ class SocketService {
 
     this.currentUserId = localStorage.getItem('user_id');
 
-    this.socket = io(`${import.meta.env.VITE_URL_BASE}`, {
+    this.socket = io(`${BASE_URL}`, {
       path: '/productivity/socket.io',
       transports: ['websocket'],
     });

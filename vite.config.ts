@@ -1,14 +1,34 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import tailwindcss from "@tailwindcss/vite";
-import mkcert from 'vite-plugin-mkcert'
+import { defineConfig, loadEnv, type UserConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 import svgr from '@svgr/rollup';
-// https://vite.dev/config/
-export default defineConfig({
-  plugins: [react(), tailwindcss(),svgr(),mkcert()],
-  server: {
-    host: true,
-    allowedHosts: true
-  },
-});
+import mkcert from 'vite-plugin-mkcert';
 
+export default defineConfig(({ mode }): UserConfig => {
+  const env = loadEnv(mode, process.cwd(), '');
+
+  const isProd = mode === 'production';
+  env.VITE_APP_ENV = mode;
+
+  console.log(`🚀 Running in ${isProd ? 'production' : 'development'} mode`);
+
+  return {
+    plugins: [react(), tailwindcss(), svgr(), ...(isProd ? [] : [mkcert()])],
+    server: {
+      host: '0.0.0.0',
+      https: isProd ? undefined : {},
+      port: Number(env.VITE_PORT) || 5173,
+      allowedHosts: true,
+    },
+    build: {
+      outDir: 'dist',
+      sourcemap: false,
+      rollupOptions: {
+        external: ['xlsx'],
+      },
+    },
+    optimizeDeps: {
+      exclude: ['xlsx'],
+    },
+  };
+});

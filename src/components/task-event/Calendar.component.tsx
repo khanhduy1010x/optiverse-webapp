@@ -30,7 +30,6 @@ import EditTaskForm from '../../pages/Task/EditTaskForm.screen';
 import { convertTaskEventToTask, convertTaskToTaskEvent } from '../../utils/task-event-converter.utils';
 import { Task } from '../../types/task/response/task.response';
 import { Tag } from '../../types/task/response/tag.response';
-import * as XLSX from 'xlsx';
 import { EventExcelImportModal } from './EventExcelImportModal.component';
 import { useTaskDeadlineMarkers } from '../../hooks/task/useTaskDeadlineMarkers.hook';
 import { useAppSelector } from '../../store/hooks';
@@ -58,11 +57,11 @@ export const Calendar: React.FC<CalendarProps> = ({
   refreshTaskEvents
 }) => {
   const { t } = useAppTranslate('task');
-  
+
   // Get user_id from Redux store
   const user = useAppSelector((state) => state.auth.user);
   const userId = user?._id;
-  
+
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewType, setViewType] = useState<ViewType>('Week');
   const [showSidebar, setShowSidebar] = useState(false);
@@ -86,14 +85,14 @@ export const Calendar: React.FC<CalendarProps> = ({
   const [isRecurringDeleteOpen, setIsRecurringDeleteOpen] = useState(false);
   const [eventToDelete, setEventToDelete] = useState<TaskEvent | null>(null);
   const [showRepeatOptions, setShowRepeatOptions] = useState(false);
-  
+
   // Task Detail Modal states
   const [showTaskDetail, setShowTaskDetail] = useState(false);
   const [showEditTaskForm, setShowEditTaskForm] = useState(false);
   const [showDeleteTaskConfirm, setShowDeleteTaskConfirm] = useState(false);
   const [selectedTaskEvent, setSelectedTaskEvent] = useState<TaskEvent | null>(null);
   const [selectedSource, setSelectedSource] = useState<'event' | 'task' | null>(null);
-  
+
   // EditTaskForm states
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');
@@ -105,14 +104,14 @@ export const Calendar: React.FC<CalendarProps> = ({
   const [editShowNewTagForm, setEditShowNewTagForm] = useState(false);
   const [editNewTagName, setEditNewTagName] = useState('');
   const [editNewTagColor, setEditNewTagColor] = useState('#3B82F6');
-  
+
   // Tag management states
   const [allTags, setAllTags] = useState<Tag[]>([]);
   const [taskTags, setTaskTags] = useState<{ [taskId: string]: Tag[] }>({});
   const [tasks, setTasks] = useState<Task[]>([]);
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
   const [filterTags, setFilterTags] = useState<string[]>([]);
-  
+
   // Initialize tag operations hook
   const tagOperations = useTagOperations(
     tasks,
@@ -138,7 +137,7 @@ export const Calendar: React.FC<CalendarProps> = ({
   useEffect(() => {
     fetchUserTags();
   }, []);
-  
+
   // Reset edit form when closing
   const resetEditForm = () => {
     setEditTitle('');
@@ -152,28 +151,28 @@ export const Calendar: React.FC<CalendarProps> = ({
     setEditNewTagName('');
     setEditNewTagColor('#3B82F6');
   };
-  
+
   // Thêm state cho chức năng All day
   const [isAllDay, setIsAllDay] = useState(false);
   const [eventEndDate, setEventEndDate] = useState<Date | null>(null);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
- 
- // Event import modal state
- const [isEventImportOpen, setIsEventImportOpen] = useState(false);
- const openEventImport = () => setIsEventImportOpen(true);
- const closeEventImport = () => setIsEventImportOpen(false);
- 
- // Download Event Template
- const handleDownloadEventTemplate = () => {
-   // Download the pre-made template file from styles/task directory
-   const templatePath = '/src/styles/task/Task Event Template.xlsx';
-   const link = document.createElement('a');
-   link.href = templatePath;
-   link.download = 'Task Event Template.xlsx';
-   document.body.appendChild(link);
-   link.click();
-   document.body.removeChild(link);
- };
+
+  // Event import modal state
+  const [isEventImportOpen, setIsEventImportOpen] = useState(false);
+  const openEventImport = () => setIsEventImportOpen(true);
+  const closeEventImport = () => setIsEventImportOpen(false);
+
+  // Download Event Template
+  const handleDownloadEventTemplate = () => {
+    // Download the pre-made template file from styles/task directory
+    const templatePath = '/src/styles/task/Task Event Template.xlsx';
+    const link = document.createElement('a');
+    link.href = templatePath;
+    link.download = 'Task Event Template.xlsx';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
   const [repeatType, setRepeatType] = useState<RepeatType>('none');
   const [customRepeatFrequency, setCustomRepeatFrequency] = useState(1);
   const [customRepeatUnit, setCustomRepeatUnit] = useState<'day' | 'week' | 'month' | 'year'>('week');
@@ -182,15 +181,15 @@ export const Calendar: React.FC<CalendarProps> = ({
   const [repeatEndDate, setRepeatEndDate] = useState<Date | null>(null);
   const [repeatOccurrences, setRepeatOccurrences] = useState(10);
   const [showCustomRepeatModal, setShowCustomRepeatModal] = useState(false);
-  
+
   const [pendingUpdateData, setPendingUpdateData] = useState<TaskEvent | null>(null);
-  
+
   // Tính toán khoảng thời gian hiển thị dựa trên loại view và ngày hiện tại
   const dateRange = useMemo(() => {
     try {
       const startDate = new Date(currentDate);
       const endDate = new Date(currentDate);
-      
+
       if (viewType === 'Day') {
         // Hiển thị một ngày
         startDate.setHours(0, 0, 0, 0);
@@ -200,14 +199,14 @@ export const Calendar: React.FC<CalendarProps> = ({
         const day = currentDate.getDay(); // 0 = Chủ nhật, 6 = Thứ 7
         startDate.setDate(currentDate.getDate() - day);
         startDate.setHours(0, 0, 0, 0);
-        
+
         endDate.setDate(startDate.getDate() + 6);
         endDate.setHours(23, 59, 59, 999);
       } else if (viewType === 'Month') {
         // Hiển thị một tháng
         startDate.setDate(1);
         startDate.setHours(0, 0, 0, 0);
-        
+
         endDate.setMonth(currentDate.getMonth() + 1);
         endDate.setDate(0); // Ngày cuối cùng của tháng hiện tại
         endDate.setHours(23, 59, 59, 999);
@@ -216,11 +215,11 @@ export const Calendar: React.FC<CalendarProps> = ({
         const year = currentDate.getFullYear();
         startDate.setFullYear(year, 0, 1);
         startDate.setHours(0, 0, 0, 0);
-        
+
         endDate.setFullYear(year, 11, 31);
         endDate.setHours(23, 59, 59, 999);
       }
-      
+
       return { startDate, endDate };
     } catch (error) {
       console.error('Error in dateRange calculation:', error);
@@ -258,15 +257,15 @@ export const Calendar: React.FC<CalendarProps> = ({
       return deadlineTasks;
     });
   }, [deadlineTasks]);
-  
+
   // Sử dụng hook useCalendarEventLayout ở cấp cao nhất của component
   const layoutResult = useCalendarEventLayout({
     events: taskEvents || [],
-        startDate: dateRange.startDate,
-        endDate: dateRange.endDate,
-        viewType: viewType === 'Year' ? 'Month' : viewType // Sử dụng Month view cho Year view
-      });
-  
+    startDate: dateRange.startDate,
+    endDate: dateRange.endDate,
+    viewType: viewType === 'Year' ? 'Month' : viewType // Sử dụng Month view cho Year view
+  });
+
   // Sử dụng kết quả từ hook trong useMemo
   const eventsWithLayout = useMemo(() => {
     try {
@@ -276,7 +275,7 @@ export const Calendar: React.FC<CalendarProps> = ({
       return [];
     }
   }, [layoutResult]);
-  
+
   // Generate time options for dropdown
   const timeOptions = [
     '00:00am', '00:15am', '00:30am', '00:45am',
@@ -304,7 +303,7 @@ export const Calendar: React.FC<CalendarProps> = ({
     '10:00pm', '10:15pm', '10:30pm', '10:45pm',
     '11:00pm', '11:15pm', '11:30pm', '11:45pm',
   ];
-  
+
   // Fetch the task data when the component mounts - removed since we no longer need taskId
   // useEffect(() => {
   //   const fetchTask = async () => {
@@ -320,13 +319,13 @@ export const Calendar: React.FC<CalendarProps> = ({
   //   
   //   fetchTask();
   // }, [taskId]);
-  
+
   // Update current time every minute for the time indicator
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 60000); // Update every minute
-    
+
     return () => {
       clearInterval(timer);
     };
@@ -344,7 +343,7 @@ export const Calendar: React.FC<CalendarProps> = ({
       } else if (viewType === 'Year') {
         newDate.setFullYear(currentDate.getFullYear() - 1);
       }
-      
+
       // Đảm bảo ngày hợp lệ
       console.log('Navigating to previous date:', newDate);
       setCurrentDate(newDate);
@@ -365,7 +364,7 @@ export const Calendar: React.FC<CalendarProps> = ({
       } else if (viewType === 'Year') {
         newDate.setFullYear(currentDate.getFullYear() + 1);
       }
-      
+
       // Đảm bảo ngày hợp lệ và không có giới hạn về tương lai
       console.log('Navigating to next date:', newDate);
       setCurrentDate(newDate);
@@ -390,10 +389,10 @@ export const Calendar: React.FC<CalendarProps> = ({
   const getEndTimeOptions = () => {
     const startTimeIndex = timeOptions.findIndex(time => time.toLowerCase() === newEventStartTime.toLowerCase());
     if (startTimeIndex === -1) return [];
-    
+
     // Chỉ hiển thị các thời gian sau thời gian bắt đầu
     const availableTimes = timeOptions.slice(startTimeIndex + 1);
-    
+
     // Tạo danh sách tùy chọn với thời lượng
     return availableTimes.map((time, index) => {
       // Tính toán thời lượng
@@ -404,28 +403,28 @@ export const Calendar: React.FC<CalendarProps> = ({
       };
     });
   };
-  
+
   // Tính khoảng thời gian giữa hai mốc thời gian
   const getTimeDuration = (startTime: string, endTime: string): string => {
     // Chuyển đổi thành đối tượng Date để tính toán
     const today = new Date();
     const start = parseTimeString12h(startTime);
     const end = parseTimeString12h(endTime);
-    
+
     const startDate = new Date(today);
     startDate.setHours(start[0], start[1], 0, 0);
-    
+
     const endDate = new Date(today);
     endDate.setHours(end[0], end[1], 0, 0);
-    
+
     // Nếu thời gian kết thúc là ngày hôm sau
     if (endDate < startDate) {
       endDate.setDate(endDate.getDate() + 1);
     }
-    
+
     // Tính hiệu thời gian tính bằng phút
     const diffMinutes = Math.round((endDate.getTime() - startDate.getTime()) / (60 * 1000));
-    
+
     if (diffMinutes < 60) {
       return `${diffMinutes} mins`;
     } else if (diffMinutes === 60) {
@@ -444,15 +443,15 @@ export const Calendar: React.FC<CalendarProps> = ({
       }
     }
   };
-  
+
   // Hàm phân tích chuỗi thời gian 12h thành [giờ, phút] ở định dạng 24h
   const parseTimeString12h = (timeStr: string): [number, number] => {
     const isPM = timeStr.toLowerCase().includes('pm');
     const timeParts = timeStr.toLowerCase().replace('am', '').replace('pm', '').split(':');
-    
+
     let hours = parseInt(timeParts[0], 10);
     const minutes = parseInt(timeParts[1], 10);
-    
+
     // Special handling for 0:XX format (midnight and noon)
     if (hours === 0) {
       hours = isPM ? 12 : 0;
@@ -461,7 +460,7 @@ export const Calendar: React.FC<CalendarProps> = ({
     } else if (!isPM && hours === 12) {
       hours = 0;
     }
-    
+
     return [hours, minutes];
   };
 
@@ -483,16 +482,16 @@ export const Calendar: React.FC<CalendarProps> = ({
   const handleAddEvent = () => {
     setSelectedEvent(undefined);
     setIsAddScheduleOpen(true);
-    
+
     // Sử dụng ngày hiện tại làm mặc định
     setSelectedDate(new Date());
-    
+
     // Reset endDate khi mở modal mới
     setEventEndDate(null);
-    
+
     // Reset chế độ All day
     setIsAllDay(false);
-    
+
     // Reset các trạng thái lặp lại
     setRepeatType('none');
     setShowRepeatOptions(false);
@@ -502,47 +501,47 @@ export const Calendar: React.FC<CalendarProps> = ({
     setRepeatEndType('never');
     setRepeatEndDate(null);
     setRepeatOccurrences(10);
-    
+
     // Sử dụng thời gian mặc định
     setNewEventStartTime('09:00am');
     setNewEventTitle('');
-    
+
     // End time sẽ được tự động cập nhật thông qua useEffect
-    
+
     // Tạo đối tượng event tạm thời với các giá trị mặc định
-      const tempEvent: Partial<TaskEvent> = {
-        user_id: userId,
-        title: '',
+    const tempEvent: Partial<TaskEvent> = {
+      user_id: userId,
+      title: '',
       start_time: new Date(),
       end_time: new Date(),
-        repeat_type: 'none'
-      };
-      
-      // setSelectedEvent(tempEvent as TaskEvent); // XÓA đoạn này
+      repeat_type: 'none'
+    };
+
+    // setSelectedEvent(tempEvent as TaskEvent); // XÓA đoạn này
   };
 
   // Hàm mở modal thêm mới event khi nhấp vào một ô trong lịch
   const handleAddSchedule = (date?: Date, hour?: number) => {
     setSelectedEvent(undefined);
     setIsAddScheduleOpen(true);
-    
+
     // Sử dụng ngày được chọn hoặc ngày hiện tại
     const selectedDateTime = date ? new Date(date) : new Date();
-    
+
     // Nếu có giờ được chỉ định, cập nhật giờ cho ngày được chọn
     if (hour !== undefined) {
       selectedDateTime.setHours(hour, 0, 0, 0);
     }
-    
+
     setSelectedDate(selectedDateTime);
-    
+
     // Thiết lập ngày kết thúc mặc định là cùng ngày với ngày bắt đầu
     const defaultEndDate = new Date(selectedDateTime);
     setEventEndDate(defaultEndDate);
-    
+
     // Reset chế độ All day
     setIsAllDay(false);
-    
+
     // Reset các trạng thái lặp lại
     setRepeatType('none');
     setShowRepeatOptions(false);
@@ -552,25 +551,25 @@ export const Calendar: React.FC<CalendarProps> = ({
     setRepeatEndType('never');
     setRepeatEndDate(null);
     setRepeatOccurrences(10);
-    
+
     // Định dạng thời gian bắt đầu dựa trên giờ được chọn
     const hours = selectedDateTime.getHours();
     const isPM = hours >= 12;
     const hour12 = hours % 12 || 12;
     const formattedHour = hour12.toString().padStart(2, '0');
     const formattedStartTime = `${formattedHour}:00${isPM ? 'pm' : 'am'}`;
-    
+
     // Thiết lập thời gian kết thúc mặc định là 1 giờ sau thời gian bắt đầu
     const endHour = (hours + 1) % 24;
     const endIsPM = endHour >= 12;
     const endHour12 = endHour % 12 || 12;
     const formattedEndHour = endHour12.toString().padStart(2, '0');
     const formattedEndTime = `${formattedEndHour}:00${endIsPM ? 'pm' : 'am'}`;
-    
+
     setNewEventStartTime(formattedStartTime);
     setNewEventEndTime(formattedEndTime);
     setNewEventTitle('');
-    
+
     // Tạo đối tượng event tạm thời với các giá trị mặc định
     const tempEvent: Partial<TaskEvent> = {
       user_id: userId,
@@ -579,7 +578,7 @@ export const Calendar: React.FC<CalendarProps> = ({
       end_time: new Date(selectedDateTime.getTime() + 60 * 60 * 1000), // Mặc định kéo dài 1 giờ
       repeat_type: 'none'
     };
-    
+
     setSelectedEvent(tempEvent as TaskEvent);
   };
 
@@ -659,11 +658,11 @@ export const Calendar: React.FC<CalendarProps> = ({
   };
 
   // Handler cho EditTaskForm modal
-  const handleEditTaskFormSave = async (updatedData: { 
-    title: string; 
-    description: string; 
-    status: string; 
-    priority: string; 
+  const handleEditTaskFormSave = async (updatedData: {
+    title: string;
+    description: string;
+    status: string;
+    priority: string;
     tags: Tag[];
     start_time?: string | Date;
     end_time?: string | Date;
@@ -777,7 +776,7 @@ export const Calendar: React.FC<CalendarProps> = ({
         month: 'long',
         year: 'numeric'
       };
-      
+
       if (viewType === 'Day') {
         options.day = 'numeric';
         return currentDate.toLocaleDateString('en-US', options);
@@ -785,10 +784,10 @@ export const Calendar: React.FC<CalendarProps> = ({
         try {
           const startOfWeek = new Date(currentDate);
           startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
-          
+
           const endOfWeek = new Date(startOfWeek);
           endOfWeek.setDate(startOfWeek.getDate() + 6);
-          
+
           if (startOfWeek.getMonth() === endOfWeek.getMonth()) {
             return `${startOfWeek.toLocaleDateString('en-US', { month: 'long' })} ${startOfWeek.getFullYear()}`;
           } else if (startOfWeek.getFullYear() === endOfWeek.getFullYear()) {
@@ -805,7 +804,7 @@ export const Calendar: React.FC<CalendarProps> = ({
       } else if (viewType === 'Year') {
         return currentDate.getFullYear().toString();
       }
-      
+
       return '';
     } catch (error) {
       console.error('Error in getViewTitle:', error);
@@ -831,14 +830,14 @@ export const Calendar: React.FC<CalendarProps> = ({
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return `${days[eventEndDate.getDay()]}, ${months[eventEndDate.getMonth()]} ${eventEndDate.getDate()}`;
   };
-  
+
   // Cập nhật renderCalendarView và các hàm liên quan...
 
   const renderCalendarView = () => {
     try {
       // Tạo một hàm rỗng để thay thế handleAddSchedule
-      const emptyFunction = () => {};
-      
+      const emptyFunction = () => { };
+
       switch (viewType) {
         case 'Day':
           return (
@@ -898,7 +897,7 @@ export const Calendar: React.FC<CalendarProps> = ({
   const handleRepeatTypeChange = (type: RepeatType) => {
     setRepeatType(type);
     setShowRepeatOptions(false);
-    
+
     // Reset repeat-related settings when changing type
     if (type === 'none') {
       setCustomRepeatDays([]);
@@ -907,7 +906,7 @@ export const Calendar: React.FC<CalendarProps> = ({
       setRepeatOccurrences(10);
       setCustomRepeatFrequency(1);
       setCustomRepeatUnit('week');
-    } 
+    }
     // Set default values based on the selected repeat type
     else if (type === 'weekly') {
       // For weekly, set the current day of week
@@ -915,7 +914,7 @@ export const Calendar: React.FC<CalendarProps> = ({
       // Set default end type to never
       setRepeatEndType('never');
       setRepeatOccurrences(10);
-    } 
+    }
     else if (type === 'daily' || type === 'monthly' || type === 'yearly') {
       // For other types, clear repeat days
       setCustomRepeatDays([]);
@@ -939,13 +938,13 @@ export const Calendar: React.FC<CalendarProps> = ({
   const handleRepeatDayToggle = (day: number) => {
     const updatedDays = [...customRepeatDays];
     const index = updatedDays.indexOf(day);
-    
+
     if (index >= 0) {
       updatedDays.splice(index, 1);
     } else {
       updatedDays.push(day);
     }
-    
+
     setCustomRepeatDays(updatedDays);
   };
 
@@ -956,7 +955,7 @@ export const Calendar: React.FC<CalendarProps> = ({
     const dayOfWeek = selectedDate.getDay();
     const weekNumber = Math.ceil(dayOfMonth / 7);
     const isLastWeek = dayOfMonth > 24; // Ước lượng tuần cuối cùng của tháng
-    
+
     switch (repeatType) {
       case 'none':
         return 'Does not repeat';
@@ -980,12 +979,12 @@ export const Calendar: React.FC<CalendarProps> = ({
         let text = '';
         if (customRepeatFrequency && customRepeatUnit) {
           text = `Every ${customRepeatFrequency} ${customRepeatUnit}${customRepeatFrequency > 1 ? 's' : ''}`;
-          
+
           if (customRepeatUnit === 'week' && customRepeatDays && Array.isArray(customRepeatDays) && customRepeatDays.length > 0) {
             const dayNames = customRepeatDays.map(day => days[day]);
             text += ` on ${dayNames.join(', ')}`;
           }
-          
+
           if (repeatEndType === 'on' && repeatEndDate) {
             text += ` until ${repeatEndDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
           } else if (repeatEndType === 'after' && repeatOccurrences) {
@@ -1014,13 +1013,13 @@ export const Calendar: React.FC<CalendarProps> = ({
   const handleSaveCustomRepeat = () => {
     // Thiết lập repeat_type là 'custom'
     setRepeatType('custom');
-    
+
     // Đảm bảo có repeat_days nếu đang chọn tùy chỉnh theo tuần
     if (customRepeatUnit === 'week' && customRepeatDays && Array.isArray(customRepeatDays) && customRepeatDays.length === 0) {
       // Nếu chưa chọn ngày nào, mặc định chọn ngày hiện tại trong tuần
       setCustomRepeatDays([selectedDate.getDay()]);
     }
-    
+
     // Đảm bảo có repeat_end_type
     if (!repeatEndType || repeatEndType === 'never') {
       setRepeatEndType('never');
@@ -1034,7 +1033,7 @@ export const Calendar: React.FC<CalendarProps> = ({
       // Nếu chọn kết thúc sau một số lần lặp lại nhưng chưa thiết lập số lần
       setRepeatOccurrences(10); // Mặc định 10 lần
     }
-    
+
     // Log thông tin để debug
     console.log('Custom repeat settings:', {
       repeatType: 'custom',
@@ -1045,7 +1044,7 @@ export const Calendar: React.FC<CalendarProps> = ({
       repeatEndDate,
       repeatOccurrences
     });
-    
+
     // Đóng modal tùy chỉnh
     setShowCustomRepeatModal(false);
     // Đóng dropdown repeat options
@@ -1062,27 +1061,27 @@ export const Calendar: React.FC<CalendarProps> = ({
   const handleCreateNewEvent = async () => {
     // Logic to create a new event would go here
     if (!newEventTitle.trim()) return;
-    
+
     try {
       console.log('Creating new task event with all day:', isAllDay);
       console.log('User ID:', userId);
       console.log('Repeat type:', repeatType);
       console.log('Custom repeat days:', customRepeatDays);
-      
+
       // Reset form và đóng modal trước khi gọi API để UX mượt mà hơn
       const savedTitle = newEventTitle.trim();
       setNewEventTitle('');
       setIsAddScheduleOpen(false);
-      
+
       // Xử lý tạo event - chỉ tạo 1 event gốc, virtual instances sẽ được tạo tự động
       // Parse time strings like "9:30am" to hours and minutes
       const [startHours, startMinutes] = parseTimeString(newEventStartTime);
       const [endHours, endMinutes] = parseTimeString(newEventEndTime);
-      
+
       // Sử dụng selectedDate làm ngày bắt đầu
       const startTime = new Date(selectedDate);
       startTime.setHours(startHours, startMinutes);
-      
+
       // Xử lý end time - luôn sử dụng cùng ngày với selectedDate cho single event
       // eventEndDate sẽ được sử dụng cho repeat_end_date thay vì end_time
       let endTime: Date;
@@ -1095,7 +1094,7 @@ export const Calendar: React.FC<CalendarProps> = ({
         endTime = new Date(selectedDate);
         endTime.setHours(endHours, endMinutes);
       }
-      
+
       // Chuẩn bị dữ liệu event gốc với đầy đủ thông tin recurring
       const newEventData: TaskEvent = {
         _id: '', // Sẽ được tạo bởi backend
@@ -1107,8 +1106,8 @@ export const Calendar: React.FC<CalendarProps> = ({
         all_day: isAllDay,
         repeat_type: repeatType,
         repeat_interval: repeatType === 'custom' ? customRepeatFrequency : 1,
-        repeat_days: (repeatType === 'weekly' || repeatType === 'custom') ? 
-          (customRepeatDays.length > 0 ? customRepeatDays : [selectedDate.getDay()]) : 
+        repeat_days: (repeatType === 'weekly' || repeatType === 'custom') ?
+          (customRepeatDays.length > 0 ? customRepeatDays : [selectedDate.getDay()]) :
           [],
         repeat_end_type: repeatEndType,
         repeat_end_date: repeatEndType === 'on' && (repeatEndDate || eventEndDate) ? (repeatEndDate || eventEndDate) || undefined : undefined,
@@ -1116,7 +1115,7 @@ export const Calendar: React.FC<CalendarProps> = ({
         location: '',
         guests: []
       };
-      
+
       // Thêm thông tin chi tiết nếu là custom repeat
       if (repeatType === 'custom') {
         console.log('Creating custom recurring event with:');
@@ -1126,15 +1125,15 @@ export const Calendar: React.FC<CalendarProps> = ({
         console.log('- End type:', repeatEndType);
         console.log('- End date:', repeatEndDate);
         console.log('- Occurrences:', repeatOccurrences);
-        
+
         // Đảm bảo có repeat_days nếu là custom với đơn vị tuần
         if (customRepeatUnit === 'week' && (!newEventData.repeat_days || newEventData.repeat_days.length === 0)) {
           newEventData.repeat_days = [selectedDate.getDay()];
         }
       }
-      
+
       console.log('Creating single task event (original):', newEventData);
-      
+
       // Sử dụng addEvent từ useTaskEventList để tạo event gốc
       // Virtual instances sẽ được tạo tự động bởi generateRecurringEvents
       try {
@@ -1151,18 +1150,18 @@ export const Calendar: React.FC<CalendarProps> = ({
       toast.error(t('error_generic_with_message', { message: error?.message || t('error_server_generic') }));
     }
   };
-  
+
   // Helper function to parse time strings like "9:30am" to hours and minutes
   const parseTimeString = (timeStr: string): [number, number] => {
     const isPM = timeStr.toLowerCase().includes('pm');
     const timeParts = timeStr.toLowerCase().replace('am', '').replace('pm', '').split(':');
-    
+
     let hours = parseInt(timeParts[0], 10);
     const minutes = parseInt(timeParts[1] || '0', 10);
-    
+
     if (isPM && hours < 12) hours += 12;
     if (!isPM && hours === 12) hours = 0;
-    
+
     return [hours, minutes];
   };
 
@@ -1183,72 +1182,72 @@ export const Calendar: React.FC<CalendarProps> = ({
   const formatTimeInput = (input: string): string => {
     // Loại bỏ khoảng trắng
     input = input.trim();
-    
+
     // Kiểm tra nếu đã có am/pm
     if (input.toLowerCase().includes('am') || input.toLowerCase().includes('pm')) {
       return input;
     }
-    
+
     // Xử lý định dạng 24h (ví dụ: 14:30, 14, 14.30)
     const timeRegex = /^(\d{1,2})(?::|\.)?(0[0-9]|[0-5][0-9])?$/;
     const match = input.match(timeRegex);
-    
+
     if (match) {
       let hours = parseInt(match[1], 10);
       const minutes = match[2] ? match[2] : '00';
-      
+
       // Nếu giờ > 24, không hợp lệ
       if (hours >= 24) return input;
-      
+
       // Xác định am/pm và chuyển sang định dạng 12h
       const isPM = hours >= 12;
-      
+
       // Use 0 instead of 12 for midnight and noon
       hours = hours % 12;
-      
+
       return `${hours}:${minutes}${isPM ? 'pm' : 'am'}`;
     }
-    
+
     // Trả về nguyên bản nếu không nhận dạng được
     return input;
   };
-  
+
   // Xử lý nhập giờ bắt đầu
   const handleStartTimeInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setStartTimeInput(value);
   };
-  
+
   // Xử lý nhập giờ kết thúc
   const handleEndTimeInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setEndTimeInput(value);
   };
-  
+
   // Xử lý khi blur ra khỏi ô nhập
   const handleStartTimeBlur = () => {
     const formattedTime = formatTimeInput(startTimeInput);
     setStartTimeInput(formattedTime);
-    
+
     // Cập nhật giờ bắt đầu thực tế nếu định dạng hợp lệ
-    if (timeOptions.includes(formattedTime) || 
-        timeOptions.some(t => t.toLowerCase() === formattedTime.toLowerCase())) {
+    if (timeOptions.includes(formattedTime) ||
+      timeOptions.some(t => t.toLowerCase() === formattedTime.toLowerCase())) {
       setNewEventStartTime(formattedTime);
     }
   };
-  
+
   // Xử lý khi blur ra khỏi ô nhập
   const handleEndTimeBlur = () => {
     const formattedTime = formatTimeInput(endTimeInput);
     setEndTimeInput(formattedTime);
-    
+
     // Cập nhật giờ kết thúc thực tế nếu định dạng hợp lệ
-    if (timeOptions.includes(formattedTime) || 
-        timeOptions.some(t => t.toLowerCase() === formattedTime.toLowerCase())) {
+    if (timeOptions.includes(formattedTime) ||
+      timeOptions.some(t => t.toLowerCase() === formattedTime.toLowerCase())) {
       setNewEventEndTime(formattedTime);
     }
   };
-  
+
   // Xử lý khi nhấn Enter
   const handleTimeKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, isStart: boolean) => {
     if (e.key === 'Enter') {
@@ -1265,7 +1264,7 @@ export const Calendar: React.FC<CalendarProps> = ({
   useEffect(() => {
     setStartTimeInput(newEventStartTime);
   }, [newEventStartTime]);
-  
+
   useEffect(() => {
     setEndTimeInput(newEventEndTime);
   }, [newEventEndTime]);
@@ -1279,7 +1278,7 @@ export const Calendar: React.FC<CalendarProps> = ({
         return 'Daily';
       case 'weekly':
         if (customRepeatDays && customRepeatDays.length > 0) {
-          const dayNames = customRepeatDays.map(day => 
+          const dayNames = customRepeatDays.map(day =>
             ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][day]
           );
           return `Weekly on ${dayNames.join(', ')}`;
@@ -1293,14 +1292,14 @@ export const Calendar: React.FC<CalendarProps> = ({
         let text = '';
         if (customRepeatFrequency && customRepeatUnit) {
           text = `Every ${customRepeatFrequency} ${customRepeatUnit}${customRepeatFrequency > 1 ? 's' : ''}`;
-          
+
           if (customRepeatUnit === 'week' && customRepeatDays && customRepeatDays.length > 0) {
-            const dayNames = customRepeatDays.map(day => 
+            const dayNames = customRepeatDays.map(day =>
               ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][day]
             );
             text += ` on ${dayNames.join(', ')}`;
           }
-          
+
           if (repeatEndType === 'on' && repeatEndDate) {
             text += ` until ${repeatEndDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
           } else if (repeatEndType === 'after' && repeatOccurrences) {
@@ -1378,7 +1377,7 @@ export const Calendar: React.FC<CalendarProps> = ({
     <div className="flex h-full bg-gray-50 relative">
       {/* Task Overdue Notifier - removed since we no longer have task data */}
       {/* {task && <TaskOverdueNotifier tasks={[task]} taskEvents={taskEvents} />} */}
-      
+
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
@@ -1391,10 +1390,10 @@ export const Calendar: React.FC<CalendarProps> = ({
           handlePrevious={handlePrevious}
           handleNext={handleNext}
           handleToday={handleToday}
-         onOpenEventImport={openEventImport}
-         onDownloadEventTemplate={handleDownloadEventTemplate}
+          onOpenEventImport={openEventImport}
+          onDownloadEventTemplate={handleDownloadEventTemplate}
         />
-        
+
         {/* Calendar View */}
         <div className="flex-1 overflow-auto bg-white shadow-sm">
           {loading ? (
@@ -1408,7 +1407,7 @@ export const Calendar: React.FC<CalendarProps> = ({
             <div className="flex items-center justify-center h-full">
               <div className="text-center text-red-500">
                 <p>{error}</p>
-                <button 
+                <button
                   onClick={refreshTaskEvents}
                   className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                 >
@@ -1421,9 +1420,9 @@ export const Calendar: React.FC<CalendarProps> = ({
           )}
         </div>
       </div>
-      
+
       {/* Global FAB removed: using page-level CircleButton in Task.page.tsx */}
-      
+
       {/* Create Event Modal */}
       {isAddScheduleOpen && (
         <CreateTaskEventModalForm
@@ -1435,23 +1434,23 @@ export const Calendar: React.FC<CalendarProps> = ({
           addEvent={addEvent}
         />
       )}
-      
+
       {/* Add Event Modal */}
       {isModalOpen && selectedEvent && (
         <UpdateTaskEventModalForm
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        taskEvent={selectedEvent}
-        onSuccess={() => {
-          setIsModalOpen(false);
-        }}
-        updateEvent={(eventId: string, event: TaskEvent, option: 'all' | 'this' = 'this') => {
-          // Forward the option selected in UpdateTaskEventModalForm
-          updateEvent(eventId, event, option);
-        }}
-      />
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          taskEvent={selectedEvent}
+          onSuccess={() => {
+            setIsModalOpen(false);
+          }}
+          updateEvent={(eventId: string, event: TaskEvent, option: 'all' | 'this' = 'this') => {
+            // Forward the option selected in UpdateTaskEventModalForm
+            updateEvent(eventId, event, option);
+          }}
+        />
       )}
-      
+
 
 
       {/* TaskDetail Modal */}
@@ -1521,9 +1520,9 @@ export const Calendar: React.FC<CalendarProps> = ({
             setEventToDelete(null);
           }}
           onConfirm={() => {
-              if (eventToDelete?._id) {
-                removeEvent(eventToDelete._id, 'this', eventToDelete.start_time as any);
-              }
+            if (eventToDelete?._id) {
+              removeEvent(eventToDelete._id, 'this', eventToDelete.start_time as any);
+            }
             setIsDeleteConfirmOpen(false);
             setEventToDelete(null);
           }}
