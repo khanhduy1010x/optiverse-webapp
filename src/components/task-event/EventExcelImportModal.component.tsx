@@ -320,6 +320,18 @@ export const EventExcelImportModal: React.FC<EventExcelImportModalProps> = ({ is
 
     let createdCount = 0;
     const rowErrors: { rowIndex: number; message: string }[] = [];
+    const rowSuccesses: { rowIndex: number; title?: string }[] = [];
+
+    const getErrorMessage = (e: any): string => {
+      if (!e) return t('unknown_error');
+      if (typeof e.message === 'string' && e.message) return e.message;
+      const m = e?.response?.data?.message;
+      if (Array.isArray(m)) return m.join('; ');
+      if (typeof m === 'string' && m) return m;
+      const err = e?.response?.data?.error;
+      if (typeof err === 'string' && err) return err;
+      return t('unknown_error');
+    };
 
     for (let i = 0; i < rows.length; i++) {
       const rRaw = rows[i] as any;
@@ -420,93 +432,97 @@ export const EventExcelImportModal: React.FC<EventExcelImportModalProps> = ({ is
 
         await taskEventService.createTaskEvent(payload);
         createdCount += 1;
+        rowSuccesses.push({ rowIndex, title });
       } catch (e: any) {
         console.error('Row error', e);
-        rowErrors.push({ rowIndex, message: e?.message || t('unknown_error') });
+        rowErrors.push({ rowIndex, message: getErrorMessage(e) });
       }
-    }
 
-    setProcessing(false);
-    setErrors(rowErrors);
+      setProcessing(false);
+      setErrors(rowErrors);
 
-    if (createdCount > 0) {
-      toast.success(t('import_success', { count: createdCount }));
-    }
-    if (rowErrors.length > 0) {
-      rowErrors.slice(0, 3).forEach(er => toast.error(t('row_error', { index: er.rowIndex, message: er.message })));
-    }
+      if (createdCount > 0) {
+        // Summary
+        toast.success(t('import_success', { count: createdCount }));
+        // Per-row success notifications
+        rowSuccesses.forEach(s => toast.success(`Row ${s.rowIndex}: Imported successfully${s.title ? ` - ${s.title}` : ''}`));
+      }
+      if (rowErrors.length > 0) {
+        // Show all row errors with their reasons
+        rowErrors.forEach(er => toast.error(t('row_error', { index: er.rowIndex, message: er.message })));
+      }
 
-    // Gọi callback để refresh events trên UI
-    onImported?.({ createdCount, errors: rowErrors });
+      // Gọi callback để refresh events trên UI
+      onImported?.({ createdCount, errors: rowErrors });
 
-    // Đóng modal nếu không có lỗi
-    if (rowErrors.length === 0) {
-      onClose();
-    }
-  };
+      // Đóng modal nếu không có lỗi
+      if (rowErrors.length === 0) {
+        onClose();
+      }
+    };
 
-  if (!isOpen) return null;
+    if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-2xl bg-white rounded-lg shadow-lg p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">{t('import_excel')}</h2>
-          <button aria-label={t('close')} onClick={onClose} className="text-gray-500 hover:text-gray-700">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
-          </button>
-        </div>
-
-        <div className="space-y-4">
-          <div className="flex items-center space-x-2">
-            <button onClick={handleChooseFile} className="px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm border">
-              {t('choose_file')}
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div className="w-full max-w-2xl bg-white rounded-lg shadow-lg p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold">{t('import_excel')}</h2>
+            <button aria-label={t('close')} onClick={onClose} className="text-gray-500 hover:text-gray-700">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
             </button>
-            {fileName && (
-              <span className="text-sm text-gray-600 truncate">{fileName}</span>
-            )}
-            <input ref={fileInputRef} type="file" accept=".xlsx" className="hidden" onChange={onFileChange} />
           </div>
 
-          <p className="text-xs text-gray-500">{t('template_columns')}</p>
-
-          <div className="rounded-md border border-gray-200 bg-gray-50 p-3">
-            <div className="text-xs font-medium text-gray-700 mb-2">{t('template_sheet_name')}</div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-              {eventTemplateHeaders.map((key) => (
-                <span key={key} className="inline-flex items-center rounded-md bg-white px-2 py-1 text-xs font-medium text-gray-700 shadow ring-1 ring-gray-200">
-                  {t(`column_${key}` as any)}
-                </span>
-              ))}
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <button onClick={handleChooseFile} className="px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm border">
+                {t('choose_file')}
+              </button>
+              {fileName && (
+                <span className="text-sm text-gray-600 truncate">{fileName}</span>
+              )}
+              <input ref={fileInputRef} type="file" accept=".xlsx" className="hidden" onChange={onFileChange} />
             </div>
-          </div>
 
-          {(parsing || processing) && (
-            <div className="text-sm text-gray-700">{parsing ? t('parsing_file') : t('processing')}</div>
-          )}
+            <p className="text-xs text-gray-500">{t('template_columns')}</p>
 
-          <div className="flex items-center justify-end space-x-2">
-            <button onClick={onClose} className="px-3 py-2 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm">
-              {t('cancel')}
-            </button>
-            <button disabled={parsing || processing || !rows.length} onClick={processImport} className={`px-3 py-2 rounded-md text-white text-sm ${parsing || processing || !rows.length ? 'bg-green-300' : 'bg-green-500 hover:bg-green-600'}`}>
-              {t('start_import')}
-            </button>
-          </div>
-
-          {errors.length > 0 && (
-            <div className="mt-2 p-3 border rounded-md bg-red-50 border-red-200">
-              <ul className="list-disc ml-4 text-sm text-red-700 space-y-1 max-h-40 overflow-y-auto">
-                {errors.map(er => (
-                  <li key={er.rowIndex}>{t('row_error', { index: er.rowIndex, message: er.message })}</li>
+            <div className="rounded-md border border-gray-200 bg-gray-50 p-3">
+              <div className="text-xs font-medium text-gray-700 mb-2">{t('template_sheet_name')}</div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                {eventTemplateHeaders.map((key) => (
+                  <span key={key} className="inline-flex items-center rounded-md bg-white px-2 py-1 text-xs font-medium text-gray-700 shadow ring-1 ring-gray-200">
+                    {t(`column_${key}` as any)}
+                  </span>
                 ))}
-              </ul>
+              </div>
             </div>
-          )}
+
+            {(parsing || processing) && (
+              <div className="text-sm text-gray-700">{parsing ? t('parsing_file') : t('processing')}</div>
+            )}
+
+            <div className="flex items-center justify-end space-x-2">
+              <button onClick={onClose} className="px-3 py-2 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm">
+                {t('cancel')}
+              </button>
+              <button disabled={parsing || processing || !rows.length} onClick={processImport} className={`px-3 py-2 rounded-md text-white text-sm ${parsing || processing || !rows.length ? 'bg-green-300' : 'bg-green-500 hover:bg-green-600'}`}>
+                {t('start_import')}
+              </button>
+            </div>
+
+            {errors.length > 0 && (
+              <div className="mt-2 p-3 border rounded-md bg-red-50 border-red-200">
+                <ul className="list-disc ml-4 text-sm text-red-700 space-y-1 max-h-40 overflow-y-auto">
+                  {errors.map(er => (
+                    <li key={er.rowIndex}>{t('row_error', { index: er.rowIndex, message: er.message })}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
-  );
-};
-
+    );
+  };
+}
 export default EventExcelImportModal;

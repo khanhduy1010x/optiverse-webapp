@@ -299,6 +299,18 @@ export const TaskExcelImportModal: React.FC<TaskExcelImportModalProps> = ({ isOp
     setErrors([]);
     let createdCount = 0;
     const rowErrors: TaskImportParseError[] = [];
+    const rowSuccesses: { rowIndex: number; title?: string }[] = [];
+
+    const getErrorMessage = (e: any): string => {
+      if (!e) return t('unknown_error');
+      if (typeof e.message === 'string' && e.message) return e.message;
+      const m = e?.response?.data?.message;
+      if (Array.isArray(m)) return m.join('; ');
+      if (typeof m === 'string' && m) return m;
+      const err = e?.response?.data?.error;
+      if (typeof err === 'string' && err) return err;
+      return t('unknown_error');
+    };
 
     // Fetch tags once to reduce calls
     let existingTags = await tagService.fetchAllUserTags();
@@ -325,9 +337,10 @@ export const TaskExcelImportModal: React.FC<TaskExcelImportModalProps> = ({ isOp
 
         const createdTask = await taskService.createTask(taskPayload);
         createdCount += 1;
+        rowSuccesses.push({ rowIndex, title });
       } catch (e: any) {
         console.error('Row error', e);
-        rowErrors.push({ rowIndex, message: e?.message || t('unknown_error') });
+        rowErrors.push({ rowIndex, message: getErrorMessage(e) });
       }
     }
 
@@ -335,10 +348,14 @@ export const TaskExcelImportModal: React.FC<TaskExcelImportModalProps> = ({ isOp
     setErrors(rowErrors);
 
     if (createdCount > 0) {
+      // Summary
       toast.success(t('import_success', { count: createdCount }));
+      // Per-row success notifications
+      rowSuccesses.forEach(s => toast.success(`Row ${s.rowIndex}: Imported successfully${s.title ? ` - ${s.title}` : ''}`));
     }
     if (rowErrors.length > 0) {
-      rowErrors.slice(0, 3).forEach(er => toast.error(t('row_error', { index: er.rowIndex, message: er.message })));
+      // Show all row errors with their reasons
+      rowErrors.forEach(er => toast.error(t('row_error', { index: er.rowIndex, message: er.message })));
     }
 
     onImported?.({ createdCount, errors: rowErrors });
