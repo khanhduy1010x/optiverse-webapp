@@ -74,10 +74,10 @@ const FriendSuggestions: React.FC<FriendSuggestionsProps> = ({
           </svg>
         </div>
         <h3 className="text-xl font-semibold text-gray-800 mb-2">
-          Không có gợi ý kết bạn
+          Không có Friend suggestion
         </h3>
         <p className="text-gray-500 mb-6">
-          Hiện tại không có gợi ý kết bạn nào cho bạn. Hãy thử lại sau!
+          Hiện tại không có Friend suggestion nào cho bạn. Hãy thử lại sau!
         </p>
         <button
           onClick={onRefresh}
@@ -107,7 +107,7 @@ const FriendSuggestions: React.FC<FriendSuggestionsProps> = ({
                 {suggestion.friendInfo?.avatar_url ? (
                   <img
                     src={suggestion.friendInfo.avatar_url}
-                    alt={suggestion.friendInfo.full_name || 'Gợi ý kết bạn'}
+                    alt={suggestion.friendInfo.full_name || 'Friend suggestion'}
                     className="w-16 h-16 rounded-full object-cover mr-4"
                     onError={e => {
                       e.currentTarget.onerror = null;

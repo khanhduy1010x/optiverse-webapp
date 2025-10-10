@@ -355,8 +355,8 @@ class FriendServiceClass {
   }
 
   /**
-   * Lấy danh sách gợi ý kết bạn (friends of friends)
-   * @returns Promise<Friend[]> - Danh sách gợi ý kết bạn
+   * Lấy danh sách Friend suggestion (friends of friends)
+   * @returns Promise<Friend[]> - Danh sách Friend suggestion
    */
   async getFriendSuggestions(): Promise<Friend[]> {
     try {

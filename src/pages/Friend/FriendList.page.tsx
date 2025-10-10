@@ -160,7 +160,7 @@ const FriendList: React.FC = () => {
         }
       } else if (result.tab === 'suggestions') {
         await fetchSuggestions();
-        toast.success('Đã làm mới danh sách gợi ý kết bạn');
+        toast.success('Đã làm mới danh sách Friend suggestion');
       }
     } catch (e) {
       toast.error(t('failed_to_refresh'));

@@ -37,7 +37,7 @@ const FriendSidebar: React.FC<FriendSidebarProps> = ({
     },
     {
       key: 'suggestions',
-      label: 'Gợi ý kết bạn',
+      label: 'Friend suggestion',
       icon: 'star' as IconName,
       path: 'suggestions',
     },

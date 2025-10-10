@@ -10,7 +10,7 @@ export interface FriendState {
   sentRequests: Friend[];
   pendingRequests: Friend[];
   searchedUsers: UserDto[];
-  suggestions: Friend[]; // Danh sách gợi ý kết bạn
+  suggestions: Friend[]; // Danh sách Friend suggestion
   users: Record<string, UserDto>; // Lưu thông tin user theo userId
   error: string | null;
   loading: boolean;
