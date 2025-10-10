@@ -30,19 +30,15 @@ export default defineConfig(({ mode }): UserConfig => {
       chunkSizeWarningLimit: 1500,
       reportCompressedSize: false,
       rollupOptions: {
-        external: ['xlsx'],
         output: {
           manualChunks: undefined,
         },
       },
       emptyOutDir: true,
     },
-
     optimizeDeps: {
-      exclude: ['xlsx'],
       esbuildOptions: {
         target: 'esnext',
-
         supported: { 'top-level-await': true },
       },
     },

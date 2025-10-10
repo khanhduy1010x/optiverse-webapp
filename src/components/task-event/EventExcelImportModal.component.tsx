@@ -1,15 +1,15 @@
 import React, { useMemo, useRef, useState } from 'react';
+import * as XLSX from 'xlsx';
 import { toast } from 'react-toastify';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
 import { taskEventService } from '../../services/task-event.service';
-import { useAppSelector } from '../../store/hooks';
 import type { CreateTaskEventRequest } from '../../types/task-events/request/create-task-event.request';
 import type { RepeatEndType, RepeatType, RepeatUnit } from '../../types/task-events/task-events.types';
-import type { RootState } from '../../store';
 
 interface EventExcelImportModalProps {
   isOpen: boolean;
   onClose: () => void;
+  taskId: string;
   onImported?: (result: { createdCount: number; errors: { rowIndex: number; message: string }[] }) => void;
 }
 
@@ -256,12 +256,8 @@ const normalizeKeys = (row: Record<string, any>): Record<string, any> => {
   return out;
 };
 
-
-export const EventExcelImportModal: React.FC<EventExcelImportModalProps> = async ({ isOpen, onClose, taskId, onImported }) => {
-  const XLSX = await import('xlsx')
-
+export const EventExcelImportModal: React.FC<EventExcelImportModalProps> = ({ isOpen, onClose, taskId, onImported }) => {
   const { t } = useAppTranslate('task');
-  const userId = useAppSelector((state: RootState) => state.auth.user?._id);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [fileName, setFileName] = useState<string>('');
   const [parsing, setParsing] = useState(false);
@@ -401,7 +397,7 @@ export const EventExcelImportModal: React.FC<EventExcelImportModalProps> = async
             : undefined);
 
         const payload: CreateTaskEventRequest = {
-          user_id: userId || '',
+          task_id: taskId,
           title,
           start_time: startISO,
           end_time: endISO,
