@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import { SearchUsersProps } from '../../../types/friend/props/component.props';
 import { GROUP_CLASSNAMES } from '../../../styles/group-class-name.style';
 import {
@@ -9,6 +10,10 @@ import { useAppTranslate } from '../../../hooks/useAppTranslate';
 
 const SearchUsers: React.FC<SearchUsersProps> = props => {
   const { t } = useAppTranslate('friend');
+  // Get current user from Redux store
+  const { currentUser } = useSelector((state: any) => state.auth);
+  const currentUserId = currentUser?._id || localStorage.getItem('user_id');
+  
   const {
     username,
     selectedDomain,
@@ -51,7 +56,11 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
   // Làm mới trạng thái của users khi có thay đổi
   useEffect(() => {
     const updateUserStatuses = async () => {
-      if (!searchedUsers?.length) return;
+      if (!searchedUsers?.length || !currentUserId) return;
+
+      console.log('=== DEBUG: Starting updateUserStatuses ===');
+      console.log('searchedUsers:', searchedUsers);
+      console.log('currentUserId:', currentUserId);
 
       try {
         const statuses: Record<string, string> = {};
@@ -60,111 +69,102 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
         // Xử lý từng người dùng được search
         for (const user of searchedUsers) {
           const userId = user.userId || user._id;
+          console.log(`=== Processing user ${userId} ===`);
 
           // Kiểm tra xem có phải chính mình không
-          if (user.is_self) {
+          if (user.is_self || userId === currentUserId) {
             statuses[userId] = 'self';
+            console.log(`User ${userId} is self`);
             continue;
           }
 
-          // Lấy dữ liệu mối quan hệ từ backend cho user này
-          const relationshipData =
-            await FriendService.getAllRelationshipsWithUser(userId);
+          // Set loading state
+          statuses[userId] = 'loading';
+          console.log(`Set user ${userId} to loading`);
 
-          if (relationshipData.isFriend && relationshipData.friendRelation) {
-            // Là bạn bè - cả hai chiều
-            statuses[userId] = 'friend';
-            relations[userId] = relationshipData.friendRelation;
-          } else if (relationshipData.pendingIncoming) {
-            // Người này đã gửi lời mời kết bạn cho mình
-            statuses[userId] = 'pending_incoming';
-            relations[userId] = relationshipData.pendingIncoming;
-          } else if (relationshipData.sentRequest) {
-            // Mình đã gửi lời mời kết bạn cho người này
-            statuses[userId] = 'sent';
-            relations[userId] = relationshipData.sentRequest;
-          } else {
-            // Không có mối quan hệ nào
-            statuses[userId] = 'none';
+          try {
+            // Lấy dữ liệu mối quan hệ từ backend cho user này
+            const relationshipData =
+              await FriendService.getAllRelationshipsWithUser(userId);
+
+            console.log(`API response for user ${userId}:`, relationshipData);
+
+            if (relationshipData.isFriend && relationshipData.friendRelation) {
+              // Là bạn bè - cả hai chiều
+              statuses[userId] = 'friend';
+              relations[userId] = relationshipData.friendRelation;
+              console.log(`User ${userId} is friend`);
+            } else if (relationshipData.pendingIncoming) {
+              // Người này đã gửi lời mời kết bạn cho mình
+              statuses[userId] = 'pending_incoming';
+              relations[userId] = relationshipData.pendingIncoming;
+              console.log(`User ${userId} has pending incoming request`);
+            } else if (relationshipData.sentRequest) {
+              // Mình đã gửi lời mời kết bạn cho người này
+              statuses[userId] = 'sent';
+              relations[userId] = relationshipData.sentRequest;
+              console.log(`User ${userId} has sent request`);
+            } else {
+              // Không có mối quan hệ nào
+              statuses[userId] = 'none';
+              console.log(`User ${userId} has no relationship`);
+            }
+          } catch (error) {
+            console.error(`Error fetching relationship for user ${userId}:`, error);
+            // Nếu có lỗi khi gọi API, thử kiểm tra từ dữ liệu local
+            try {
+              // Kiểm tra trong danh sách bạn bè
+              const isFriend = friends?.some(
+                (friend: any) => friend.userId === userId || friend._id === userId
+              );
+              if (isFriend) {
+                statuses[userId] = 'friend';
+                console.log(`User ${userId} found in local friends list`);
+                continue;
+              }
+
+              // Kiểm tra trong danh sách đã gửi request
+              const hasSentRequest = sentRequests?.some(
+                (request: any) => request.receiverId === userId
+              );
+              if (hasSentRequest) {
+                statuses[userId] = 'sent';
+                console.log(`User ${userId} found in local sent requests`);
+                continue;
+              }
+
+              // Kiểm tra trong danh sách pending requests
+              const hasPendingRequest = pendingRequests?.some(
+                (request: any) => request.senderId === userId
+              );
+              if (hasPendingRequest) {
+                statuses[userId] = 'pending_incoming';
+                console.log(`User ${userId} found in local pending requests`);
+                continue;
+              }
+
+              // Không có mối quan hệ nào
+              statuses[userId] = 'none';
+              console.log(`User ${userId} has no relationship (from local data)`);
+            } catch (localError) {
+              console.error(`Error checking local data for user ${userId}:`, localError);
+              statuses[userId] = 'none';
+            }
           }
         }
 
-        console.log('Updated user statuses from backend:', statuses);
-        console.log('Updated user relations from backend:', relations);
+        console.log('=== Final statuses ===:', statuses);
+        console.log('=== Final relations ===:', relations);
 
-        setUserStatuses(statuses);
-        setUserRelations(relations);
+        setUserStatuses(prev => ({ ...prev, ...statuses }));
+        setUserRelations(prev => ({ ...prev, ...relations }));
       } catch (error) {
-        console.error('Error updating user statuses from backend:', error);
-
-        // Fallback to local state if backend call fails
-        const statuses: Record<string, string> = {};
-        const relations: Record<string, any> = {};
-
-        for (const user of searchedUsers) {
-          const userId = user.userId || user._id;
-
-          // Check if this is the current user
-          if (user.is_self) {
-            statuses[userId] = 'self';
-            continue;
-          }
-
-          // Check friendship status from props
-          const friendRelation = friends.find(
-            f => f.friend_id === userId || f.user_id === userId
-          );
-          if (friendRelation) {
-            statuses[userId] = 'friend';
-            relations[userId] = friendRelation;
-            continue;
-          }
-
-          // Check pending requests
-          const pendingIncoming = pendingRequests.find(
-            r => r.user_id === userId
-          );
-          if (pendingIncoming) {
-            statuses[userId] = 'pending_incoming';
-            relations[userId] = pendingIncoming;
-            continue;
-          }
-
-          // Check sent requests
-          const sentRequest = sentRequests.find(r => r.friend_id === userId);
-          if (sentRequest) {
-            statuses[userId] = 'sent';
-            relations[userId] = sentRequest;
-            continue;
-          }
-
-          // Default case - no relationship yet
-          statuses[userId] = 'none';
-        }
-
-        setUserStatuses(statuses);
-        setUserRelations(relations);
+        console.error('Error updating user statuses:', error);
       }
     };
 
     updateUserStatuses();
-
-    // Auto refresh status every 10 seconds
-    const intervalId = setInterval(() => {
-      if (searchedUsers?.length) {
-        console.log('Auto refreshing search results friend status...');
-        updateUserStatuses();
-      }
-    }, 10000);
-
-    return () => clearInterval(intervalId);
-  }, [
-    searchedUsers,
-    friends,
-    sentRequests,
-    pendingRequests,
-    refreshFriendData,
-  ]);
+  }, [searchedUsers, currentUserId, friends, sentRequests, pendingRequests]);
 
   // Hàm wrapper để xử lý friend actions và refresh data
   const handleAddFriendWithRefresh = async (userId: string) => {
@@ -186,23 +186,41 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
       // Sau đó gọi API
       await onAddFriend(userId);
 
+      // Clear cache để đảm bảo dữ liệu mới
+      FriendService.clearCache();
+
       // Lấy thông tin mới từ backend
       const relationshipData =
         await FriendService.getAllRelationshipsWithUser(userId);
 
+      // Cập nhật state dựa trên response từ backend
       if (relationshipData.sentRequest) {
+        setUserStatuses(prev => ({ ...prev, [userId]: 'sent' }));
         setUserRelations(prev => ({
           ...prev,
           [userId]: relationshipData.sentRequest,
         }));
+      } else {
+        // Nếu không có sentRequest, có thể đã trở thành bạn ngay lập tức
+        if (relationshipData.isFriend && relationshipData.friendRelation) {
+          setUserStatuses(prev => ({ ...prev, [userId]: 'friend' }));
+          setUserRelations(prev => ({
+            ...prev,
+            [userId]: relationshipData.friendRelation,
+          }));
+        }
       }
 
       // Refresh global data
       refreshFriendData();
     } catch (error) {
       console.error('Error adding friend:', error);
-      // Nếu có lỗi, khôi phục lại trạng thái ban đầu
-      setUserStatuses(prev => ({ ...prev, [userId]: 'none' }));
+      // Nếu có lỗi, khôi phục lại trạng thái ban đầu (không có quan hệ)
+      setUserStatuses(prev => {
+        const newStatuses = { ...prev };
+        delete newStatuses[userId]; // Xóa status để về default case
+        return newStatuses;
+      });
       setUserRelations(prev => {
         const newRelations = { ...prev };
         delete newRelations[userId];
@@ -248,6 +266,9 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
       console.log('Accepting friend request:', relation);
       await onAcceptRequest(requestId);
 
+      // Clear cache để đảm bảo dữ liệu mới
+      FriendService.clearCache();
+
       // Lấy dữ liệu mới từ backend
       const relationshipData =
         await FriendService.getAllRelationshipsWithUser(userId);
@@ -292,8 +313,12 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
     setIsProcessingAction(prev => ({ ...prev, [userId]: true }));
 
     try {
-      // Cập nhật UI trước khi gọi API
-      setUserStatuses(prev => ({ ...prev, [userId]: 'none' }));
+      // Cập nhật UI trước khi gọi API - xóa status để về default case
+      setUserStatuses(prev => {
+        const newStatuses = { ...prev };
+        delete newStatuses[userId];
+        return newStatuses;
+      });
       setUserRelations(prev => {
         const newRelations = { ...prev };
         delete newRelations[userId];
@@ -302,6 +327,9 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
 
       // Sau đó gọi API
       await onCancelRequest(requestId);
+
+      // Clear cache để đảm bảo dữ liệu mới
+      FriendService.clearCache();
 
       // Lấy dữ liệu mới từ backend để đảm bảo cập nhật
       const relationshipData =
@@ -362,8 +390,12 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
     try {
       console.log('Removing friend relation:', relation);
 
-      // Cập nhật UI trước khi gọi API
-      setUserStatuses(prev => ({ ...prev, [userId]: 'none' }));
+      // Cập nhật UI trước khi gọi API - xóa status để về default case
+      setUserStatuses(prev => {
+        const newStatuses = { ...prev };
+        delete newStatuses[userId];
+        return newStatuses;
+      });
       setUserRelations(prev => {
         const newRelations = { ...prev };
         delete newRelations[userId];
@@ -372,6 +404,9 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
 
       // Sau đó gọi API
       await onRemoveFriend(friendId);
+
+      // Clear cache để đảm bảo dữ liệu mới
+      FriendService.clearCache();
 
       // Lấy dữ liệu mới từ backend để đảm bảo cập nhật
       const relationshipData =
@@ -424,7 +459,7 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
     }
 
     // Sử dụng trạng thái đã lưu trong state
-    const status = userStatuses[userId] || 'loading';
+    const status = userStatuses[userId] || 'none';
 
     // Nếu đang loading, hiển thị nút loading
     if (status === 'loading') {
@@ -459,7 +494,7 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
             <button
               onClick={() => handleAddFriendWithRefresh(userId)}
               className="px-4 py-2 bg-[#21b4ca] text-white rounded-lg hover:bg-[#1c9eb1] transition-colors duration-300 flex items-center gap-2"
-              disabled={loading}
+              disabled={isProcessingAction[userId]}
             >
               <svg
                 className="w-4 h-4"
@@ -484,7 +519,7 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
           <button
             onClick={() => handleRemoveFriendWithRefresh(relation._id)}
             className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-300 flex items-center gap-1"
-            disabled={loading}
+            disabled={isProcessingAction[userId]}
           >
             {t('remove_friend')}
           </button>
@@ -499,7 +534,7 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
             <button
               onClick={() => handleAddFriendWithRefresh(userId)}
               className="px-4 py-2 bg-[#21b4ca] text-white rounded-lg hover:bg-[#1c9eb1] transition-colors duration-300 flex items-center gap-2"
-              disabled={loading}
+              disabled={isProcessingAction[userId]}
             >
               <svg
                 className="w-4 h-4"
@@ -524,7 +559,7 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
           <button
             onClick={() => handleAcceptFriendWithRefresh(relation._id)}
             className="px-4 py-2 bg-[#21b4ca] text-white rounded-lg hover:bg-[#1c9eb1] transition-colors duration-300 flex items-center gap-2 cursor-pointer"
-            disabled={loading}
+            disabled={isProcessingAction[userId]}
           >
             <svg
               className="w-4 h-4"
@@ -552,7 +587,7 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
             <button
               onClick={() => handleAddFriendWithRefresh(userId)}
               className="px-4 py-2 bg-[#21b4ca] text-white rounded-lg hover:bg-[#1c9eb1] transition-colors duration-300 flex items-center gap-2"
-              disabled={loading}
+              disabled={isProcessingAction[userId]}
             >
               <svg
                 className="w-4 h-4"
@@ -577,7 +612,7 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
           <button
             onClick={() => handleCancelRequestWithRefresh(relation._id)}
             className="px-4 py-2 bg-[#607D8B] text-white rounded-lg hover:bg-red-500 transition-colors duration-300 flex items-center gap-2 cursor-pointer"
-            disabled={loading}
+            disabled={isProcessingAction[userId]}
           >
             <svg
               className="w-4 h-4"
@@ -597,12 +632,13 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
           </button>
         );
 
+      case 'none':
       default:
         return (
           <button
             onClick={() => handleAddFriendWithRefresh(userId)}
             className="px-4 py-2 bg-[#21b4ca] cursor-pointer text-white rounded-lg hover:bg-[#1c9eb1] transition-colors duration-300 flex items-center gap-2"
-            disabled={loading}
+            disabled={isProcessingAction[userId]}
           >
             <svg
               className="w-4 h-4"
@@ -618,7 +654,7 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
                 d="M12 4v16m8-8H4"
               />
             </svg>
-            {t('Add Friend')}
+            {t('add_friend')}
           </button>
         );
     }

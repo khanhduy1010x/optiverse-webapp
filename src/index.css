@@ -31,6 +31,23 @@ body.font-pixel {
   background: #a0aec0;
 }
 
+/* Custom scrollbar cho Blog List */
+.blog-list-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  background: transparent;
+}
+.blog-list-scrollbar::-webkit-scrollbar-thumb {
+  background: #21B4CA;
+  border-radius: 4px;
+}
+.blog-list-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: #1a9bb0;
+}
+.blog-list-scrollbar::-webkit-scrollbar-track {
+  background: rgba(33, 180, 202, 0.1);
+  border-radius: 4px;
+}
+
 /* Custom scrollbar rõ ràng hơn */
 .custom-scrollbar-3::-webkit-scrollbar {
   width: 6px;
@@ -63,4 +80,18 @@ body.font-pixel {
 }
 .custom-scrollbar-4::-webkit-scrollbar-track {
   background-color: #f1f1f1;
+}
+
+/* Fix for black images in blog posts */
+img {
+  filter: none !important;
+  opacity: 1 !important;
+  background-color: transparent !important;
+  mix-blend-mode: normal !important;
+}
+
+/* Ensure images display correctly in dark mode */
+.dark img {
+  filter: none !important;
+  opacity: 1 !important;
 }

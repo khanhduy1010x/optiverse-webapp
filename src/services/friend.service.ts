@@ -306,6 +306,16 @@ class FriendServiceClass {
     // Chỉ giữ lại cache user info vì nó ít thay đổi
   }
 
+  // Xóa cache relationships cụ thể
+  clearRelationshipsCache(): void {
+    console.log('Clearing relationships cache');
+    Object.keys(this.cache).forEach(key => {
+      if (key.startsWith('relationships_')) {
+        delete this.cache[key];
+      }
+    });
+  }
+
   // Lấy tất cả mối quan hệ (cả hai chiều) liên quan đến một user
   async getAllRelationshipsWithUser(userId: string): Promise<{
     isFriend: boolean;
@@ -314,36 +324,59 @@ class FriendServiceClass {
     sentRequest?: Friend;
   }> {
     try {
-      // Xóa cache trước khi lấy dữ liệu mới
-      this.clearCache();
+      // Tạm thời tắt cache để luôn gọi API mới
+      console.log(`getAllRelationshipsWithUser: Gọi API cho user ${userId}`);
       
-      // Lấy tất cả dữ liệu bạn bè từ backend
-      const [allFriends, allSentRequests, allPendingRequests] = await Promise.all([
-        this.viewAllFriends(),
-        this.viewAllSent(),
-        this.viewAllPending()
-      ]);
-      
-      // Kiểm tra xem có là bạn bè hay không (cả hai chiều)
-      const friendRelation = allFriends.find(f => 
-        f.friend_id === userId || f.user_id === userId
-      );
-      
-      // Kiểm tra xem có yêu cầu đang pending không
-      const pendingIncoming = allPendingRequests.find(r => r.user_id === userId);
-      
-      // Kiểm tra xem có sent request không
-      const sentRequest = allSentRequests.find(r => r.friend_id === userId);
-      
-      return {
-        isFriend: !!friendRelation,
+      const response: AxiosResponse<ApiResponse<{
+        isFriend: boolean;
+        friendRelation?: Friend;
+        pendingIncoming?: Friend;
+        sentRequest?: Friend;
+      }>> = await api.get(`/productivity/friend/relationships/${userId}`);
+
+      console.log(`getAllRelationshipsWithUser: API response cho user ${userId}:`, response.data.data);
+
+      const { isFriend, friendRelation, pendingIncoming, sentRequest } = response.data.data;
+
+      const result = {
+        isFriend,
         friendRelation,
         pendingIncoming,
         sentRequest
       };
+
+      // Tạm thời không cache để đảm bảo luôn có dữ liệu mới
+      // this.saveToCache(cacheKey, result);
+      return result;
     } catch (error) {
       console.error(`Error getting relationships with user ${userId}:`, error);
       return { isFriend: false };
+    }
+  }
+
+  /**
+   * Lấy danh sách Friend suggestion (friends of friends)
+   * @returns Promise<Friend[]> - Danh sách Friend suggestion
+   */
+  async getFriendSuggestions(): Promise<Friend[]> {
+    try {
+      const cacheKey = 'friend_suggestions';
+      const cached = this.getFromCache<Friend[]>(cacheKey);
+
+      if (cached) {
+        return cached;
+      }
+
+      const response: AxiosResponse<ApiResponse<Friend[]>> = await api.get(
+        '/productivity/friend/suggestions'
+      );
+
+      const suggestions = response.data.data;
+      this.saveToCache(cacheKey, suggestions, 30000); // Cache 30 giây cho suggestions
+      return suggestions;
+    } catch (error) {
+      console.error('Error getting friend suggestions:', error);
+      return [];
     }
   }
 }

@@ -53,6 +53,14 @@ import BannedModal from './components/BannedModal';
 import TaskStatistic from './pages/Task/TaskStatistic.page';
 import UserAchievementPage from './pages/user/UserAchievement.page';
 import AchievementManagement from './pages/Achievement/AchievementManagement.page';
+import { 
+  BlogHomePage, 
+  BlogPostPage, 
+  BlogCreatePage, 
+  BlogEditPage 
+} from './pages/Blog';
+import BlogBookmarksPage from './pages/Blog/BlogBookmarks.page';
+import BlogReportsPage from './pages/Blog/BlogReports.page';
 
 declare global {
   interface Window {
@@ -291,6 +299,57 @@ const AppContent: React.FC = () => {
               </ProtectedRoute>
             }
           />
+
+          {/* Blog routes */}
+          <Route
+            path="/blog"
+            element={
+              <ProtectedRoute>
+                <BlogHomePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/blog/post/:id"
+            element={
+              <ProtectedRoute>
+                <BlogPostPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/blog/create"
+            element={
+              <ProtectedRoute>
+                <BlogCreatePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/blog/edit/:id"
+            element={
+              <ProtectedRoute>
+                <BlogEditPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/blog/bookmarks"
+            element={
+              <ProtectedRoute>
+                <BlogBookmarksPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/blog/reports"
+            element={
+              <AdminRoute>
+                <BlogReportsPage />
+              </AdminRoute>
+            }
+          />
+
         </Routes>
       </div>
     </div>

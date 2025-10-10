@@ -52,7 +52,7 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
     otherUser?.full_name || otherUser?.email || 'Unknown User';
 
   // Lấy chữ cái đầu tiên của tên để hiển thị khi không có avatar
-  const initial = displayName.charAt(0).toUpperCase();
+  const initial = displayName?.charAt(0)?.toUpperCase() || 'U';
 
   // Format thời gian tin nhắn cuối cùng
   const formatLastMessageTime = (timestamp?: number): string => {

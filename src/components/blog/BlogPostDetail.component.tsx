@@ -1,0 +1,372 @@
+import React, { useState, useEffect } from 'react';
+import { BlogPostDetailProps } from '../../types/blog/props/component.props';
+import { formatDistanceToNow, format } from 'date-fns';
+import { vi } from 'date-fns/locale';
+import ImageGrid from './ImageGrid.component';
+import SimpleImageViewer from './SimpleImageViewer.component';
+
+const BlogPostDetail: React.FC<BlogPostDetailProps> = ({
+  post,
+  onLike,
+  onBookmark,
+  onShare,
+  onReport,
+  onDelete,
+  onTagClick,
+  isAdmin = false,
+  currentUserId,
+  className = ''
+}) => {
+  // Debug: Log post data
+  console.log('BlogPostDetail - Post data:', post);
+  console.log('BlogPostDetail - Post content:', post.content);
+  
+  const [isLiked, setIsLiked] = useState(post.isLiked || false);
+  const [isBookmarked, setIsBookmarked] = useState(post.isBookmarked || false);
+  const [likeCount, setLikeCount] = useState(post.likeCount);
+  const [isImageViewerOpen, setIsImageViewerOpen] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState('');
+
+
+  // Đồng bộ state với props khi post thay đổi
+  useEffect(() => {
+    setIsLiked(post.isLiked || false);
+    setIsBookmarked(post.isBookmarked || false);
+    setLikeCount(post.likeCount);
+  }, [post.isLiked, post.isBookmarked, post.likeCount]);
+
+  const formatDate = (timestamp: number) => {
+    return format(new Date(timestamp), 'dd MMMM yyyy', { locale: vi });
+  };
+
+  const formatRelativeDate = (timestamp: number) => {
+    return formatDistanceToNow(new Date(timestamp), {
+      addSuffix: true,
+      locale: vi
+    });
+  };
+
+  const calculateReadTime = (content: string) => {
+    const wordsPerMinute = 200;
+    const words = content.split(' ').length;
+    const readTime = Math.ceil(words / wordsPerMinute);
+    return readTime;
+  };
+
+
+
+  const handleDelete = () => {
+    if (onDelete && window.confirm('Bạn có chắc chắn muốn xóa bài viết này?')) {
+      onDelete(post.id);
+    }
+  };
+
+
+
+  const handleLike = () => {
+    if (onLike) {
+      onLike(post.id);
+      // State sẽ được cập nhật thông qua useEffect khi props thay đổi
+    }
+  };
+
+  const handleBookmark = () => {
+    if (onBookmark) {
+      onBookmark(post.id);
+      // State sẽ được cập nhật thông qua useEffect khi props thay đổi
+    }
+  };
+
+  const handleShare = () => {
+    if (onShare) {
+      onShare(post);
+    } else {
+      // Default share functionality
+      if (navigator.share) {
+        navigator.share({
+          title: post.title,
+          text: post.excerpt,
+          url: window.location.href
+        });
+      } else {
+        // Fallback to clipboard
+        navigator.clipboard.writeText(window.location.href);
+        // You might want to show a toast notification here
+      }
+    }
+  };
+
+  const handleImageClick = (imageUrl: string) => {
+    setSelectedImageUrl(imageUrl);
+    setIsImageViewerOpen(true);
+  };
+
+  const handleCloseImageViewer = () => {
+    setIsImageViewerOpen(false);
+    setSelectedImageUrl('');
+  };
+
+  return (
+    <>
+      <article className={`max-w-4xl mx-auto ${className}`}>
+      {/* Header */}
+      <header className="mb-8">
+
+
+        {/* Title */}
+        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4 leading-tight">
+          {post.title}
+        </h1>
+
+
+
+        {/* Author and Meta Info */}
+        <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-6">
+          <div className="flex items-center space-x-4">
+            {post.author && (
+              <>
+                <div className="flex-shrink-0">
+                  {post.author.avatar ? (
+                    <img
+                      className="h-12 w-12 rounded-full object-cover"
+                      src={post.author.avatar}
+                      alt={post.author.displayName}
+                    />
+                  ) : (
+                    <div className="h-12 w-12 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
+                      <span className="text-lg font-medium text-gray-700 dark:text-gray-300">
+                        {post.author.displayName?.charAt(0)?.toUpperCase() || 'U'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <div className="flex items-center">
+                    <p className="text-lg font-medium text-gray-900 dark:text-white">
+                      {post.author.displayName || 'Unknown User'}
+                    </p>
+                    {post.author.isVerified && (
+                      <svg
+                        className="ml-1 h-5 w-5 text-blue-500"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    )}
+                  </div>
+                  <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 space-x-2">
+                    <span>{formatDate(post.publishedAt || post.createdAt)}</span>
+                    <span>•</span>
+                    <span>{calculateReadTime(post.content)} phút đọc</span>
+                    <span>•</span>
+                    <span>{formatRelativeDate(post.publishedAt || post.createdAt)}</span>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={handleLike}
+              className={`inline-flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
+                isLiked
+                  ? 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+              }`}
+            >
+              <svg
+                className={`h-4 w-4 mr-1 ${isLiked ? 'fill-current' : ''}`}
+                fill={isLiked ? 'currentColor' : 'none'}
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                />
+              </svg>
+              {likeCount}
+            </button>
+
+            <button
+              onClick={handleBookmark}
+              className={`inline-flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
+                isBookmarked
+                  ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+              }`}
+            >
+              <svg
+                className={`h-4 w-4 ${isBookmarked ? 'fill-current' : ''}`}
+                fill={isBookmarked ? 'currentColor' : 'none'}
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                />
+              </svg>
+            </button>
+
+            <button
+              onClick={handleShare}
+              className="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
+                />
+              </svg>
+            </button>
+
+            {onReport && !isAdmin && currentUserId !== post.author?.userId && (
+              <button
+                onClick={() => onReport(post.id, post.title)}
+                className="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-red-100 dark:hover:bg-red-900 hover:text-red-700 dark:hover:text-red-300 transition-colors duration-200"
+                title="Tố cáo bài viết"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6H8.5l-1 1H5a2 2 0 01-2-2zm9-13.5V9"
+                  />
+                </svg>
+              </button>
+            )}
+
+            {/* Delete button - chỉ hiển thị cho admin hoặc tác giả */}
+            {onDelete && (isAdmin || currentUserId === post.author?.userId) && (
+              <button
+                onClick={handleDelete}
+                className="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-800 transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
+                title={isAdmin ? "Xóa bài viết (Admin)" : "Xóa bài viết của bạn"}
+              >
+                <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+                Xóa
+              </button>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* Images */}
+      {post.images && post.images.length > 0 && (
+        <div className="mb-8">
+          <ImageGrid 
+            images={post.images} 
+            alt={post.title}
+            className="max-w-full"
+            onClick={handleImageClick}
+          />
+        </div>
+      )}
+
+      {/* Content */}
+      <div className="w-full mb-8">
+        <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 border-b-2 border-blue-500 pb-2">
+          📝 Nội dung bài viết
+        </h3>
+        <div className="w-full min-h-[150px] p-8 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 rounded-xl border-2 border-blue-200 dark:border-blue-600 shadow-lg">
+          <div className="text-lg text-gray-900 dark:text-gray-100 leading-relaxed whitespace-pre-wrap font-medium">
+            {post.content ? (
+              <div className="text-xl leading-8">{post.content}</div>
+            ) : (
+              <div className="text-red-600 dark:text-red-400 text-xl font-bold text-center py-8">
+                ❌ KHÔNG CÓ NỘI DUNG HOẶC KHÔNG TẢI ĐƯỢC
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Tags */}
+      {post.tags && post.tags.length > 0 && (
+        <div className="border-t border-gray-200 dark:border-gray-700 pt-6 mb-8">
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Tags</h3>
+          <div className="flex flex-wrap gap-2">
+            {post.tags.map((tag) => (
+              <span
+                key={tag}
+                onClick={() => onTagClick?.(tag)}
+                className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200 cursor-pointer"
+              >
+                #{tag}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Stats */}
+      <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+        <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+          <div className="flex items-center space-x-6">
+            <div className="flex items-center space-x-1">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+              <span>{post.viewCount} lượt xem</span>
+            </div>
+            
+            <div className="flex items-center space-x-1">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+              <span>{post.commentCount} bình luận</span>
+            </div>
+
+            <div className="flex items-center space-x-1">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+              </svg>
+              <span>{post.bookmarkCount} lưu</span>
+            </div>
+          </div>
+
+          {post.updatedAt !== post.createdAt && (
+            <div>
+              <span>Cập nhật lần cuối: {formatRelativeDate(post.updatedAt)}</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+
+      </article>
+      
+      {/* Simple Image Viewer */}
+      <SimpleImageViewer
+        imageUrl={selectedImageUrl}
+        isOpen={isImageViewerOpen}
+        onClose={handleCloseImageViewer}
+      />
+    </>
+  );
+};
+
+export default BlogPostDetail;

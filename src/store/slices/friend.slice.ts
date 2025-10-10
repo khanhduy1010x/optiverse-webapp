@@ -7,6 +7,7 @@ const initialState: FriendState = {
   sentRequests: [],
   pendingRequests: [],
   searchedUsers: [],
+  suggestions: [], // Khởi tạo suggestions
   users: {}, // Khởi tạo users
   error: null,
   loading: false,
@@ -30,6 +31,10 @@ const friendSlice = createSlice({
     },
     setSearchedUsers: (state, action: PayloadAction<UserDto[]>) => {
       state.searchedUsers = action.payload;
+      state.loading = false;
+    },
+    setSuggestions: (state, action: PayloadAction<Friend[]>) => {
+      state.suggestions = action.payload;
       state.loading = false;
     },
     setUser: (state, action: PayloadAction<UserDto>) => {
@@ -79,6 +84,7 @@ export const {
   setSentRequests,
   setPendingRequests,
   setSearchedUsers,
+  setSuggestions,
   setUser, // Xuất setUser
   setError,
   setLoading,

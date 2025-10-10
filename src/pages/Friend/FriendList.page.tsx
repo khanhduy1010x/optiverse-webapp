@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
 import FriendService from '../../services/friend.service';
 import {
   setFriends,
   setSearchedUsers,
   setError,
   setLoading,
+  setSuggestions,
 } from '../../store/slices/friend.slice';
 import {
   FriendSidebar,
@@ -16,6 +19,7 @@ import {
   SearchUsers,
   ErrorDisplay,
 } from './components';
+import FriendSuggestions from './components/FriendSuggestions.screen';
 import { useFriendList } from '../../hooks/friend/useFriendList.hook';
 import { toast } from 'react-toastify';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
@@ -50,6 +54,10 @@ const FriendList: React.FC = () => {
     forceRefreshAllData,
   } = useFriendList();
 
+  // Suggestions state
+  const suggestions = useSelector((state: RootState) => state.friend.suggestions);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+
   // Render user info with name if available
   const renderUserInfo = (userId: string, showId: boolean = false) => {
     const user = users[userId];
@@ -77,6 +85,34 @@ const FriendList: React.FC = () => {
     );
   };
 
+  // Fetch suggestions
+  const fetchSuggestions = async () => {
+    try {
+      setSuggestionsLoading(true);
+      dispatch(setError(null));
+      const suggestionsData = await FriendService.getFriendSuggestions();
+      dispatch(setSuggestions(suggestionsData));
+    } catch (error: any) {
+      console.error('Error fetching suggestions:', error);
+      dispatch(setError(error.message || 'Failed to fetch suggestions'));
+    } finally {
+      setSuggestionsLoading(false);
+    }
+  };
+
+  // Handle add friend from suggestions
+  const handleAddFriendFromSuggestion = async (friendId: string) => {
+    try {
+      await handleAddFriend(friendId);
+      // Refresh suggestions after adding friend
+      await fetchSuggestions();
+      toast.success('Đã gửi lời mời kết bạn!');
+    } catch (error: any) {
+      console.error('Error adding friend from suggestion:', error);
+      toast.error('Không thể gửi lời mời kết bạn');
+    }
+  };
+
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
     if (tab === 'pending') {
@@ -85,6 +121,8 @@ const FriendList: React.FC = () => {
       fetchSentRequests();
     } else if (tab === 'friends') {
       fetchData();
+    } else if (tab === 'suggestions') {
+      fetchSuggestions();
     }
   };
 
@@ -120,6 +158,9 @@ const FriendList: React.FC = () => {
         } else {
           toast.info(t('search_results_up_to_date'));
         }
+      } else if (result.tab === 'suggestions') {
+        await fetchSuggestions();
+        toast.success('Đã làm mới danh sách Friend suggestion');
       }
     } catch (e) {
       toast.error(t('failed_to_refresh'));
@@ -175,6 +216,16 @@ const FriendList: React.FC = () => {
             loading={loading}
             onCancelRequest={handleCancelFriendRequest}
             renderUserInfo={renderUserInfo}
+          />
+        )}
+
+        {/* Friend Suggestions */}
+        {activeTab === 'suggestions' && (
+          <FriendSuggestions
+            suggestions={suggestions}
+            loading={suggestionsLoading}
+            onAddFriend={handleAddFriendFromSuggestion}
+            onRefresh={fetchSuggestions}
           />
         )}
 

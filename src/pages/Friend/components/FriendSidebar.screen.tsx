@@ -36,6 +36,12 @@ const FriendSidebar: React.FC<FriendSidebarProps> = ({
       path: 'sent',
     },
     {
+      key: 'suggestions',
+      label: 'Friend suggestion',
+      icon: 'star' as IconName,
+      path: 'suggestions',
+    },
+    {
       key: 'search',
       label: t('search_users'),
       icon: 'search' as IconName,
