@@ -1,67 +1,112 @@
 import React, { useState } from 'react';
-import { Button } from '../../components/common/Button.component';
-import { VerifyCodeFormProps } from '../../types/auth/props/component.props';
+import Button from '../../components/common/Button.component';
 import { OTPInputField } from '../../components/common/Input.component';
 import { useVerifyForm } from '../../hooks/auth/useVerify.hook';
 import { RegisterForm } from '../../types/auth/auth.types';
 import { validateOTP } from '../../utils/validate.util';
+import { useNavigate } from 'react-router-dom';
+import Icon from '../../components/common/Icon/Icon.component';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
+import { useVerifyPassWord } from '../../hooks/auth/useVerifyResetPassword.hook';
 
-const VerifyCodeFormRegister: React.FC<VerifyCodeFormProps> = ({
-  onSwitch,
-  data,
-}) => {
-  const [message, setMessage] = useState<{
-    type: 'info' | 'error';
-    message: string;
-  }>({
-    type: 'info',
-    message: 'We sent a 6-digit code to your email. Please enter it below:',
+interface VerifyCodeFormRegisterProps {
+  email: string;
+  onChangeEmail?: () => void;
+}
+
+const VerifyCodeFormRegister: React.FC<VerifyCodeFormRegisterProps> = ({ email, onChangeEmail }) => {
+  const { t } = useAppTranslate('auth');
+  const navigate = useNavigate();
+
+  const [message, setMessage] = useState({
+    type: 'info' as 'info' | 'error',
+    message: t('verify_sent_message') || 'We sent a 6-digit code to your email. Please enter it below:',
   });
+
   const { onSubmit, control, handleSubmit, handleResend } = useVerifyForm({
-    email: data,
-    initMessage: message,
-    setMessage: setMessage,
-    onRedirect: () => onSwitch('login'),
+    email,
+    setMessage,
+    onRedirect: () => navigate('/login'),
   });
 
   return (
-    <div className="space-y-6 w-full">
-      <h2 className="text-2xl font-bold text-white text-center tracking-widest mb-6">Verification Code</h2>
-      <p
-        className={`text-center mb-4 ${
-          message.type === 'error' ? 'text-red-400' : 'text-white'
-        }`}
-      >
-        {message.message}
-      </p>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="flex gap-3 justify-center mb-6">
+    <div className="flex w-full flex-col gap-8 p-6 md:w-1/2 md:p-10">
+      {/* HEADER */}
+      <div className="space-y-4">
+        <button className="items-center group hover:text-gray-500" onClick={() => navigate("/")}>
+          <Icon name="backHome" size={24} />
+        </button>
+
+        <h2 className="text-3xl font-bold leading-tight text-gray-900 md:text-4xl">
+          {t('verify_title') || 'Verify your email'}
+        </h2>
+        <p className="text-sm text-gray-500 md:text-base">
+          {t('verify_description') || 'Please enter the verification code sent to your email.'}
+        </p>
+      </div>
+
+      {/* MESSAGE */}
+      <div>
+        <p
+          className={`text-sm text-center px-4 py-3 rounded-lg transition-all duration-200 ${message.type === "error"
+            ? "text-red-600"
+            : "bg-gray-50 text-gray-600"
+            }`}
+        >
+          {message.message}
+        </p>
+      </div>
+
+      {/* FORM */}
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+        {/* OTP FIELD */}
+        <div className="flex justify-center">
           <OTPInputField<RegisterForm>
             name="code"
             control={control}
-            label="Enter OTP"
+            label={t('verify_label') || 'Enter OTP'}
             rules={{
-              required: 'OTP is required',
-              validate: v => validateOTP(v),
+              required: t('verify_required') || 'OTP is required',
+              validate: (v) => validateOTP(v),
             }}
             otpLength={6}
           />
         </div>
+
+        {/* SUBMIT BUTTON */}
         <Button
-          title="Verify"
-          className="w-full"
-          inverted
+          type="submit"
+          title={t('verify_button') || 'Verify'}
+          className="w-full rounded-full bg-black px-6 py-3 text-sm font-semibold text-white transition hover:bg-black/80"
+          inverted={true}
         />
       </form>
-      <p className="text-center text-white">
-        Didn't receive the code?{' '}
-        <span
-          onClick={handleResend}
-          className="text-[#a6baff] hover:underline cursor-pointer transition-all"
+
+      {/* FOOTER */}
+      <div className="space-y-2 text-center text-sm text-gray-600">
+        <p>
+          {t('verify_not_received') || "Didn't receive the code?"}{' '}
+          <span
+            onClick={handleResend}
+            className="cursor-pointer font-semibold text-black hover:underline"
+          >
+            {t('verify_resend') || 'Resend'}
+          </span>
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            if (onChangeEmail) {
+              onChangeEmail();
+            } else {
+              navigate('/register');
+            }
+          }}
+          className="font-semibold text-black hover:underline"
         >
-          Resend
-        </span>
-      </p>
+          {t('verify_change_email') || 'Change email'}?
+        </button>
+      </div>
     </div>
   );
 };

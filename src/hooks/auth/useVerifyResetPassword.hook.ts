@@ -12,12 +12,14 @@ interface UseVerifyFormProps {
     }>
   >;
   onRedirect: () => void;
+  setToken?: (token: string) => void;
 }
 
-export function useVerifyForm({
+export function useVerifyPassWord({
   email,
   setMessage,
   onRedirect,
+  setToken,
 }: UseVerifyFormProps) {
   const { t } = useAppTranslate('auth');
   const { handleSubmit, control, watch, setError } = useForm<RegisterForm>();
@@ -31,30 +33,20 @@ export function useVerifyForm({
         message: t('verify_sent_message_with_email', { email }),
       });
 
-      await authService.verifyCode({
+      const resp = await authService.verifyCode({
         email: email,
         otp: watch('code'),
-        type: 'register',
+        type: 'forgot',
       });
-
-      let seconds = 3;
-      setMessage({
-        type: 'info',
-        message: t('verify_success_redirecting', { seconds }),
-      });
-
-      const countdown = setInterval(() => {
-        seconds -= 1;
-        if (seconds > 0) {
-          setMessage({
-            type: 'info',
-            message: t('verify_success_redirecting', { seconds }),
-          });
-        } else {
-          clearInterval(countdown);
-          onRedirect();
-        }
-      }, 1000);
+      const resetToken = resp.data.reset_token || null;
+      if (resetToken && setToken) {
+        setToken(resetToken);
+        onRedirect();
+      } else {
+        setError('code', {
+          message: t('verify_error_invalid'),
+        });
+      }
     } catch (error: any) {
       setError('code', {
         message: error?.response?.data?.message || t('verify_error_invalid'),
@@ -66,7 +58,7 @@ export function useVerifyForm({
     try {
       await authService.resendCode({
         email: email,
-        type: 'register',
+        type: 'forgot',
       });
       setMessage({
         type: 'info',

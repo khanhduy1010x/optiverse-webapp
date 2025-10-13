@@ -197,21 +197,25 @@ export const OTPInputField = <T extends FieldValues>({
       style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: 8,
+        gap: 12,
         alignItems: 'center',
       }}
     >
+
+
       {label && (
-        <label
-          htmlFor={name}
-          style={{
-            color: error ? COLORS.red500 : theme.components.button.default.text,
-          }}
-        >
-          {error ? `${error.message}` : label}
-        </label>
+        <div className="flex items-center gap-4 w-full justify-center mb-3">
+          <span className="h-px flex-1 bg-gray-200" />
+          <span className="text-xs uppercase tracking-[0.4em] text-gray-400 whitespace-nowrap">
+            {label}
+          </span>
+          <span className="h-px flex-1 bg-gray-200" />
+        </div>
       )}
-      <div style={{ display: 'flex', gap: 8 }}>
+
+
+
+      <div style={{ display: 'flex', gap: 24 }}>
         {[...Array(otpLength)].map((_, i) => (
           <input
             key={i}
@@ -230,15 +234,14 @@ export const OTPInputField = <T extends FieldValues>({
               textAlign: 'center',
               fontSize: '1.25rem',
               border: '2px solid',
-              borderColor: error
-                ? COLORS.red500
-                : theme.components.button.default.text,
+              borderColor: error ? COLORS.red500 : theme.components.button.default.text,
               borderRadius: '6px',
             }}
           />
         ))}
       </div>
     </div>
+
   );
 };
 

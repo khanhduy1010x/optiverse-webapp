@@ -1,8 +1,10 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 const GoogleCallback = () => {
   const navigate = useNavigate();
+  const { t } = useAppTranslate('auth');
 
   useEffect(() => {
     const processCallback = () => {
@@ -34,9 +36,9 @@ const GoogleCallback = () => {
 
   return (
     <div className="flex items-center justify-center h-screen">
-      <p>Processing login, please wait...</p>
+      <p>{t('google_processing')}</p>
     </div>
   );
 };
 
-export default GoogleCallback; 
+export default GoogleCallback;

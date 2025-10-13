@@ -1,117 +1,131 @@
-import React, { useState, useRef } from 'react';
-import { VerifyCodeFormProps } from '../../types/auth/props/component.props';
-import {
-  handleChangeOTP,
-  handleKeyDownOTP,
-} from '../../utils/keyboard/keyboard-handler.util';
-import authService from '../../services/auth.service';
-import { VerifyCodeResponse } from '../../types/auth/response/auth.reponse';
-import { Button } from '../../components/common/Button.component';
+import React, { useEffect, useState } from "react";
+import Button from "../../components/common/Button.component";
+import Icon from "../../components/common/Icon/Icon.component";
+import { OTPInputField } from "../../components/common/Input.component";
+import { useAppTranslate } from "../../hooks/useAppTranslate";
+import { useNavigate } from "react-router-dom";
+import { RegisterForm } from "../../types/auth/auth.types";
+import { validateOTP } from "../../utils/validate.util";
+import { useVerifyPassWord } from "../../hooks/auth/useVerifyResetPassword.hook";
+
+interface VerifyCodeFormProps {
+  data: string;
+  onSwitch: (view: "reset" | "login") => void;
+  setToken?: (token: string) => void;
+  onChangeEmail?: () => void;
+}
 
 const VerifyCodeForm: React.FC<VerifyCodeFormProps> = ({
   data,
   onSwitch,
   setToken,
+  onChangeEmail,
 }) => {
-  const [code, setCode] = useState<string[]>(Array(6).fill(''));
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const { t } = useAppTranslate("auth");
+  const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const otp = code.join('');
-    if (otp.length !== 6) {
-      setMessage('Please enter a 6-digit code');
-      return;
-    }
+  const [message, setMessage] = useState({
+    type: "info" as "info" | "error",
+    message: t("verify_sent_message_with_email", { email: data }),
+  });
 
-    setLoading(true);
-    setMessage('');
+  useEffect(() => {
+    setMessage(prev =>
+      prev.type === "info"
+        ? {
+            ...prev,
+            message: t("verify_sent_message_with_email", { email: data }),
+          }
+        : prev
+    );
+  }, [data, t]);
 
-    const result = await authService.verifyCode({
-      email: data,
-      otp: otp,
-      type: 'forgot',
-    });
-
-    const token = result.data.reset_token;
-
-    if (setToken) setToken(token);
-    setMessage('OTP verified. Redirecting...');
-    onSwitch('reset');
-    setLoading(false);
-  };
-
-  const handleResend = async () => {
-    try {
-      const res = await fetch('http://localhost:81/core/auth/verify-account', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: data }),
-      });
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.message || 'Resend failed');
-      alert('Code has been resent to your email.');
-    } catch (err) {
-      const error = err as Error;
-      setMessage(error.message || 'An error occurred');
-    }
-  };
+  const { onSubmit, control, handleSubmit, handleResend } = useVerifyPassWord({
+    email: data,
+    setMessage,
+    onRedirect: () => onSwitch("reset"),
+    setToken,
+  });
 
   return (
-    <div className="space-y-6 w-full">
-      <h2 className="text-2xl font-bold text-white text-center tracking-widest mb-6">Verification Code</h2>
-      <p className="text-white text-center mb-4">
-        We sent a 6-digit code to <strong className="text-[#00eaff]">{data}</strong>. Please enter it
-        below:
-      </p>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="flex gap-3 justify-center mb-6">
-          {code.map((digit, i) => (
-            <input
-              key={i}
-              type="text"
-              maxLength={1}
-              value={digit}
-              onChange={e =>
-                handleChangeOTP(
-                  i,
-                  e.target.value,
-                  code,
-                  setCode,
-                  inputRefs.current
-                )
-              }
-              onKeyDown={e => handleKeyDownOTP(i, e, code, inputRefs.current)}
-              ref={el => {
-                inputRefs.current[i] = el;
-              }}
-              className="w-12 h-12 text-center text-white bg-[#18223a] border border-[#00eaff40] focus:border-[#00eaff] rounded-md outline-none transition-all text-lg font-bold"
-              required
-            />
-          ))}
+    <div className="flex w-full flex-col gap-8 p-6 md:w-1/2 md:p-10">
+      {/* HEADER */}
+      <div className="space-y-4">
+        <button
+          className="items-center group hover:text-gray-500"
+          onClick={() => navigate("/")}
+        >
+          <Icon name="backHome" size={24} />
+        </button>
+
+        <h2 className="text-3xl font-bold leading-tight text-gray-900 md:text-4xl">
+          {t("verify_title")}
+        </h2>
+        <p className="text-sm text-gray-500 md:text-base">
+          {t("verify_description")}
+        </p>
+      </div>
+
+      {/* MESSAGE */}
+      <div>
+        <p
+          className={`text-sm text-center px-4 py-3 rounded-lg transition-all duration-200 ${message.type === "error"
+            ? "text-red-600"
+            : "bg-gray-50 text-gray-600"
+            }`}
+        >
+          {message.message}
+        </p>
+      </div>
+
+      {/* FORM */}
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+        <div className="flex justify-center">
+          <OTPInputField<RegisterForm>
+            name="code"
+            control={control}
+            label={t("verify_label")}
+            rules={{
+              required: t("verify_required"),
+              validate: (v) => validateOTP(v),
+            }}
+            otpLength={6}
+          />
         </div>
+
         <Button
           type="submit"
-          disabled={loading}
-          title={loading ? 'Verifying...' : 'Verify'}
-          className="w-full"
+          title={t("verify_button")}
+          className="w-full rounded-full bg-black px-6 py-3 text-sm font-semibold text-white transition hover:bg-black/80"
           inverted
         />
-        {message && (
-          <p className="text-center text-sm text-white">{message}</p>
-        )}
       </form>
-      <p className="text-center text-white">
-        Did not receive the code?{' '}
-        <span
-          onClick={handleResend}
-          className="text-[#a6baff] hover:underline cursor-pointer transition-all"
+
+      {/* FOOTER */}
+      <div className="space-y-2 text-center text-sm text-gray-600">
+        <p>
+          {t("verify_not_received")}{" "}
+          <span
+            onClick={handleResend}
+            className="cursor-pointer font-semibold text-black hover:underline"
+          >
+            {t("verify_resend")}
+          </span>
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            if (onChangeEmail) {
+              onChangeEmail();
+            } else {
+              navigate("/forgot");
+            }
+          }}
+          className="font-semibold text-black hover:underline"
         >
-          Resend
-        </span>
-      </p>
+          {t("verify_change_email")}?
+        </button>
+      </div>
     </div>
   );
 };

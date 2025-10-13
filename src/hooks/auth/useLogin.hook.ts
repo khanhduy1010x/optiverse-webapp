@@ -95,6 +95,10 @@ export function useLoginForm() {
   const [isEmailLoginLoading, setIsEmailLoginLoading] = useState(false);
   const [isGoogleLoginLoading, setIsGoogleLoginLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [focusedField, setFocusedField] = useState<'email' | 'password' | null>(
+    null
+  );
 
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
@@ -144,7 +148,9 @@ export function useLoginForm() {
     setIsGoogleLoginLoading(true);
 
     try {
-      const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(GOOGLE_REDIRECT_URI)}&response_type=code&scope=email profile`;
+      const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(
+        GOOGLE_REDIRECT_URI
+      )}&response_type=code&scope=email profile`;
 
       const popup = window.open(
         googleAuthUrl,
@@ -154,52 +160,66 @@ export function useLoginForm() {
 
       if (!popup) throw new Error(t('popup_blocked'));
 
+      let popupClosedManually = false;
+
+      let stillLoading = true;
+
+      const cleanup = () => {
+        stillLoading = false;
+        setIsGoogleLoginLoading(false);
+        window.removeEventListener('message', messageHandler);
+        clearInterval(popupChecker);
+      };
+
       const messageHandler = async (event: MessageEvent) => {
         if (event.origin !== window.location.origin) return;
 
         if (event.data.type === 'googleCallback' && event.data.code) {
           try {
-            // Thu thập thông tin thiết bị dưới dạng chuỗi đơn giản
             const device_info = getDeviceInfo();
-
-            // Truyền thêm device_info vào hàm đăng nhập Google
             await authService.loginWithGoogle(event.data.code, device_info);
-
-            // Lấy thông tin người dùng sau khi login thành công
             const userInfo = await authService.getUserInfo();
             dispatch(setUser(userInfo));
-
             navigate('/dashboard', { replace: true });
-            popup.close();
           } catch (err) {
             setError(t('google_login_failed'));
             console.error('Google login error:', err);
           } finally {
-            setIsGoogleLoginLoading(false);
-            window.removeEventListener('message', messageHandler);
+            cleanup();
+            popup.close();
           }
         }
       };
 
       window.addEventListener('message', messageHandler);
 
+      const popupChecker = setInterval(() => {
+        if (popup.closed && stillLoading) {
+          popupClosedManually = true;
+          cleanup();
+          setError(t('google_login_cancelled') || 'Google login cancelled');
+        }
+      }, 500);
+
       setTimeout(() => {
-        if (isGoogleLoginLoading) {
-          setError(t('google_login_timeout'));
-          setIsGoogleLoginLoading(false);
-          window.removeEventListener('message', messageHandler);
+        if (stillLoading) {
+          cleanup();
+          setError(t('google_login_timeout') || 'Google login timed out.');
+          if (!popup.closed) popup.close();
         }
       }, 60000);
     } catch (err) {
+      console.error('Google login error:', err);
       setError(t('google_login_open_failed'));
       setIsGoogleLoginLoading(false);
-      console.error('Google login error:', err);
     }
   };
 
   const disabled = isEmailLoginLoading || isGoogleLoginLoading;
 
   return {
+    setFocusedField,
+    focusedField,
     email,
     password,
     setEmail,
@@ -211,5 +231,7 @@ export function useLoginForm() {
     handleInputChange,
     handleGoogleLogin,
     disabled,
+    showPassword,
+    setShowPassword,
   };
 }

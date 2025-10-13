@@ -9,7 +9,6 @@ import {
 } from 'react-router-dom';
 import Dashboard from './pages/Dashboard/Dashboard.page';
 import FlashcardStatistic from './pages/Flashcard/FlashcardStatistic.page';
-import AuthContainer from './pages/Auth/AuthContainer.page';
 import GoogleCallback from './pages/Auth/GoogleCallback.page';
 import FlashcardDeckList from './pages/Flashcard/FlashcardDeckList.page';
 import './App.css';
@@ -47,20 +46,22 @@ import UserManagement from './pages/Admin/UserManagement';
 import SystemSettings from './pages/Admin/SystemSettings';
 import AdminLayout from './pages/Admin/AdminLayout';
 import { useEffect, useState } from 'react';
-import Modal from 'react-modal';
-import { GROUP_CLASSNAMES } from './styles';
 import BannedModal from './components/BannedModal';
 import TaskStatistic from './pages/Task/TaskStatistic.page';
 import UserAchievementPage from './pages/user/UserAchievement.page';
 import AchievementManagement from './pages/Achievement/AchievementManagement.page';
-import { 
-  BlogHomePage, 
-  BlogPostPage, 
-  BlogCreatePage, 
-  BlogEditPage 
+import {
+  BlogHomePage,
+  BlogPostPage,
+  BlogCreatePage,
+  BlogEditPage
 } from './pages/Blog';
 import BlogBookmarksPage from './pages/Blog/BlogBookmarks.page';
 import BlogReportsPage from './pages/Blog/BlogReports.page';
+import Login from './pages/Auth/Login.screen';
+import RegisterContainer from './pages/Auth/RegisterContainer';
+import HomePage from './pages/Auth/HomePage.page';
+import ForgotPasswordContainer from './pages/Auth/ForgotPasswordContainer.page';
 
 declare global {
   interface Window {
@@ -80,6 +81,12 @@ const AppContent: React.FC = () => {
     location.pathname !== '/' &&
     !location.pathname.startsWith('/template') &&
     !location.pathname.startsWith('/auth/google') &&
+    !location.pathname.startsWith('/login') &&
+    !location.pathname.startsWith('/register') &&
+    !location.pathname.startsWith('/forgot') &&
+
+
+
     !location.pathname.startsWith('/forgot-password');
 
   const activeSection = getMainSidebarActiveSection(location.pathname);
@@ -105,35 +112,37 @@ const AppContent: React.FC = () => {
             path="/"
             element={
               <PublicRoute restricted={true}>
-                <AuthContainer initialView={initialView} />
+                <HomePage />
               </PublicRoute>
             }
           />
           <Route path="/auth/google/callback" element={<GoogleCallback />} />
+
           <Route
-            path="/forgot-password"
+            path="/forgot"
             element={
               <PublicRoute restricted={true}>
-                <AuthContainer initialView="forgot" />
+                <ForgotPasswordContainer />
               </PublicRoute>
             }
           />
           <Route
-            path="/reset-password"
+            path="/login"
             element={
               <PublicRoute restricted={true}>
-                <AuthContainer initialView="verify" />
+                <Login />
               </PublicRoute>
             }
           />
           <Route
-            path="*"
+            path="/register"
             element={
               <PublicRoute restricted={true}>
-                <AuthContainer initialView={initialView} />
+                <RegisterContainer />
               </PublicRoute>
             }
           />
+
 
           {/* Protected routes - require authentication */}
           <Route
@@ -158,7 +167,7 @@ const AppContent: React.FC = () => {
             <Route path="users" element={<UserManagement />} />
             <Route path="settings" element={<SystemSettings />} />
             <Route path="achievements" element={<AchievementManagement />} />
-            
+
           </Route>
 
           <Route

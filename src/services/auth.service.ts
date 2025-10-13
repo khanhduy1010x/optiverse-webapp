@@ -113,19 +113,7 @@ class AuthService {
       const data = response.data.data;
       return data;
     } catch (error: any) {
-      if (
-        error.response.data.code === ErrorDetails[ErrorCode.EMAIL_EXISTS].code
-      ) {
-        throw {
-          type: 'email',
-          message: 'exists. Try another email.',
-        };
-      }
-
-      throw {
-        type: 'form',
-        message: 'Something went wrong on our side. Please try again later.',
-      };
+      throw error;
     }
   }
 
@@ -140,10 +128,9 @@ class AuthService {
       );
       const data = response.data.data;
       return data;
-    } catch (error) {
-      console.error('Lỗi khi fetch API:', error);
+    } catch (e) {
+      throw e;
     }
-    return null;
   }
 
   public async verifyCode(verifyRequest: VerifyRequest): Promise<any> {

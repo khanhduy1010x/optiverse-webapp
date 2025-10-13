@@ -1,104 +1,237 @@
-import React from 'react';
-import COLORS from '../../constants/colors.constant';
-import { Button } from '../../components/common/Button.component';
-import { RegisterFormProps } from '../../types/auth/props/component.props';
-import { GROUP_CLASSNAMES } from '../../styles';
-import { useRegisterForm } from '../../hooks/auth/useRegister.hook';
-import InputField, {
-  PasswordInputField,
-} from '../../components/common/Input.component';
-import { RegisterForm } from '../../types/auth/auth.types';
-import { isNotEmpty } from '../../utils/validate.util';
+import { useNavigate } from "react-router-dom";
+import Icon from "../../components/common/Icon/Icon.component";
+import { useRegisterForm } from "../../hooks/auth/useRegister.hook";
+import Button from "../../components/common/Button.component";
+import { useAppTranslate } from "../../hooks/useAppTranslate";
 
-const RegisterFormScreen: React.FC<RegisterFormProps> = ({
-  onSwitch,
-  setData,
-}) => {
-  const { onSubmit, control, handleSubmit, watch } = useRegisterForm({
-    onSuccess: (email: string) => {
-      setData(email);
-      onSwitch('verify-register');
-    },
-  });
+interface RegisterScreenProps {
+  onSuccess: (email: string) => void;
+}
+export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onSuccess }) => {
+  const { t } = useAppTranslate("auth");
 
-  return (
-    <div >
-      <h2 className="w-full text-2xl font-bold text-white text-center tracking-widest mb-6">
-        Register
-      </h2>
-      <form onSubmit={handleSubmit(onSubmit)} className="grid gap-5">
-        <div>
-          <label className="block text-white font-medium mb-1" htmlFor="full_name">Full name</label>
-          <InputField<RegisterForm>
-            name="full_name"
-            control={control}
-            label={undefined}
-            placeholder="Enter your full name"
-            className="w-full px-4 py-2 !rounded-md !bg-[#18223a] !border !border-[#00eaff40] !focus:border-[#00eaff] !text-white outline-none transition-all !placeholder:text-white"
-            rules={{
-              required: 'is required',
-              minLength: {
-                value: 10,
-                message: 'at least 10 characters',
-              },
-              setValueAs: v => v.trim(),
-              validate: v => isNotEmpty(v) || 'not only white space',
-            }}
-          />
-        </div>
-        <div>
-          <label className="block text-white font-medium mb-1" htmlFor="email">Email</label>
-          <InputField<RegisterForm>
-            name="email"
-            control={control}
-            label={undefined}
-            placeholder="you@example.com"
-            className="w-full px-4 py-2 !rounded-md !bg-[#18223a] !border !border-[#00eaff40] !focus:border-[#00eaff] !text-white outline-none transition-all !placeholder:text-white"
-            rules={{
-              required: 'is required',
-              pattern: {
-                value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                message: 'is invalid',
-              },
-              setValueAs: v => v.trim(),
-              validate: v => isNotEmpty(v) || 'not only white space',
-            }}
-          />
-        </div>
-        <div>
-          <label className="block text-white font-medium mb-1" htmlFor="password">Password</label>
-          <PasswordInputField<RegisterForm>
-            control={control}
-            name="password"
-            label={undefined}
-            placeholder="Enter password"
-            className="w-full px-4 py-2 !rounded-md !bg-[#18223a] !border !border-[#00eaff40] !focus:border-[#00eaff] !text-white !outline-none transition-all !placeholder:text-white"
-          />
-        </div>
-        <div>
-          <label className="block text-white font-medium mb-1" htmlFor="confirmPassword">Confirm Password</label>
-          <PasswordInputField<RegisterForm>
-            control={control}
-            name="confirmPassword"
-            label={undefined}
-            placeholder="Enter password"
-            className="w-full px-4 py-2 !rounded-md !bg-[#18223a] !border !border-[#00eaff40] !focus:border-[#00eaff] !text-white outline-none transition-all !placeholder:text-white"
-            rules={{
-              validate: value =>
-                value === watch('password') || 'does not match password',
-            }}
-          />
-        </div>
-        <Button title="Create Account" className="w-full py-2 rounded-md bg-[#10182a] border border-[#00eaff] text-white font-bold tracking-wide hover:bg-[#00eaff20] transition-all" inverted={false} />
-      </form>
-      <p
-        onClick={() => onSwitch('login')}
-        className="text-[#a6baff] hover:underline text-center cursor-pointer mt-6 transition-all"
+  const navigate = useNavigate()
+  const {
+    formData,
+    errors,
+    handleChange,
+    onSubmit,
+    focusedField,
+    setFocusedField,
+    showPassword,
+    setShowPassword,
+    showConfirm,
+    setShowConfirm,
+    strength,
+    strengthLabel,
+    strengthColor,
+    isFormValid,
+    loading
+  } = useRegisterForm({ onSuccess });
+  const floatingLabel = (field: string, label: string, value: string) => {
+    const isFocused = focusedField === field;
+    const hasValue = value.trim() !== "";
+    return (
+      <label
+        htmlFor={field}
+        className={`absolute select-none pointer-events-none left-4 px-1 transition-all duration-200 ease-out ${isFocused || hasValue
+          ? "text-xs -top-2 bg-white text-black font-medium"
+          : "top-1/2 text-gray-500 text-[15px] -translate-y-1/2"
+          }`}
       >
-        Already have an account ? Login
-      </p>
+        {label}
+      </label>
+    );
+  };
+  return (
+    <div className="relative flex w-full flex-col gap-8 p-6 md:w-1/2 md:p-10">
+
+      {loading && (
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm">
+          <div className="w-10 h-10 border-4 border-black/20 border-t-black rounded-full animate-spin mb-4" />
+          <p className="text-sm font-medium text-gray-800">{t("register_loading")}</p>
+        </div>
+      )}
+      <div className="space-y-4">
+        <button className="items-center group hover:text-gray-500" onClick={() => navigate("/")}>
+          <Icon name="backHome" size={24} />
+        </button>
+
+        <h2 className="text-3xl font-bold leading-tight text-gray-900 md:text-4xl">
+          {t("register_title")}
+        </h2>
+        <p className="text-sm text-gray-500 md:text-base">
+          {t("register_description")}
+        </p>
+      </div>
+
+
+      <div>
+        <button
+          type="button"
+          onClick={() => { navigate('/login') }}
+          className="font-semibold text-gray-900 underline transition hover:text-black"
+        >
+          {t("register_already_have")}
+        </button>
+      </div>
+
+
+      <form onSubmit={onSubmit} className="space-y-5">
+        {errors.email_exits && (
+          <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
+            - {errors.email_exits}
+          </div>
+        )}
+        <div className="relative flex flex-col">
+          <div className="relative">
+            {floatingLabel("full_name", t("register_full_name"), formData.full_name)}
+            <input
+              id="full_name"
+              value={formData.full_name}
+              onChange={(e) => handleChange("full_name", e.target.value)}
+              onFocus={() => setFocusedField("full_name")}
+              onBlur={() => setFocusedField(null)}
+              className={`w-full rounded-full border-2 bg-white px-4 py-3 text-sm text-gray-700 outline-none transition-all duration-200 ease-out ${focusedField === "full_name"
+                ? "border-black"
+                : "border-gray-200 focus:border-black"
+                }`}
+            />
+          </div>
+          {errors.full_name && (
+            <p className="mt-1 px-2 text-xs text-red-500">- {errors.full_name}</p>
+          )}
+        </div>
+
+
+        <div className="relative flex flex-col">
+          <div className="relative">
+            {floatingLabel("email", t("register_email"), formData.email)}
+            <input
+              id="email"
+              value={formData.email}
+              onChange={(e) => handleChange("email", e.target.value)}
+              onFocus={() => setFocusedField("email")}
+              onBlur={() => setFocusedField(null)}
+              className={`w-full rounded-full border-2 bg-white px-4 py-3 text-sm text-gray-700 outline-none transition-all duration-200 ease-out ${focusedField === "email"
+                ? "border-black"
+                : "border-gray-200 focus:border-black"
+                }`}
+            />
+          </div>
+          {errors.email && (
+            <p className="mt-1 px-2 text-xs text-red-500">- {errors.email}</p>
+          )}
+        </div>
+
+
+        <div className="relative flex flex-col">
+          <div className="relative">
+            {floatingLabel("password", t("password_placeholder"), formData.password)}
+            <input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              value={formData.password}
+              onChange={(e) => handleChange("password", e.target.value)}
+              onFocus={() => setFocusedField("password")}
+              onBlur={() => setFocusedField(null)}
+              className={`w-full rounded-full border-2 bg-white px-4 pr-12 py-3 text-sm text-gray-700 outline-none transition-all duration-200 ease-out ${focusedField === "password"
+                ? "border-black"
+                : "border-gray-200 focus:border-black"
+                }`}
+            />
+            <button
+              type="button"
+              tabIndex={-1}
+              className="absolute top-1/2 -translate-y-1/2 right-5"
+              onClick={() => setShowPassword((p) => !p)}
+            >
+              <Icon name={showPassword ? "eye" : "hiddenEye"} className="text-gray-500" />
+            </button>
+          </div>
+          <div className="px-4 pt-2">
+            <p className="text-xs text-gray-500 text-center md:text-left leading-relaxed   italic">
+              {t('register_password_hint')}
+            </p>
+          </div>
+
+
+          {formData.password && (
+            <div className="flex items-center gap-2 px-4 mt-2">
+              <div className="w-full h-1 rounded-full bg-gray-200 overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-300 ease-out"
+                  style={{
+                    width: `${Math.max((strength / 4) * 100, 10)}%`,
+                    backgroundColor:
+                      formData.password.length < 6 ? "#ef4444" : strengthColor,
+                  }}
+                />
+              </div>
+              <span
+                className="text-[11px] font-medium"
+                style={{
+                  color:
+                    formData.password.length < 6 ? "#ef4444" : strengthColor,
+                }}
+              >
+                {formData.password.length < 6
+                  ? t("register_strength_weak")
+                  : strengthLabel}
+              </span>
+            </div>
+          )}
+
+          {errors.password && (
+            <p className="mt-1 px-2 text-xs text-red-500">- {errors.password}</p>
+          )}
+        </div>
+
+
+        <div className="relative flex flex-col mb-6">
+          <div className="relative">
+            {floatingLabel("confirmPassword", t("register_confirm_password"), formData.confirmPassword)}
+            <input
+              id="confirmPassword"
+              type={showConfirm ? "text" : "password"}
+              value={formData.confirmPassword}
+              onChange={(e) => handleChange("confirmPassword", e.target.value)}
+              onFocus={() => setFocusedField("confirmPassword")}
+              onBlur={() => setFocusedField(null)}
+              className={`w-full rounded-full border-2 bg-white px-4 pr-12 py-3 text-sm text-gray-700 outline-none transition-all duration-200 ease-out ${focusedField === "confirmPassword"
+                ? "border-black"
+                : "border-gray-200 focus:border-black"
+                }`}
+            />
+            <button
+              type="button"
+              className="absolute top-1/2 -translate-y-1/2 right-5"
+              onClick={() => setShowConfirm((p) => !p)}
+            >
+              <Icon name={showConfirm ? "eye" : "hiddenEye"} className="text-gray-500" />
+            </button>
+          </div>
+          {errors.confirmPassword && (
+            <p className="mt-1 px-2 text-xs text-red-500">
+              - {errors.confirmPassword}
+            </p>
+          )}
+        </div>
+
+        <div className="pl-2"> <p className="text-xs text-gray-400">
+          {t("login_terms_prefix")}{" "}
+          <span className="font-medium text-gray-600 underline">
+            {t("login_terms_tos")}
+          </span>{" "}
+          {t("login_terms_and")}{" "}
+          <span className="font-medium text-gray-600 underline">
+            {t("login_terms_privacy")}
+          </span>
+          , {t("login_terms_suffix")}
+        </p></div>
+        <Button type="submit" title={t("register_submit")} disabled={!isFormValid}
+          className={`w-full rounded-full px-6 py-3 text-sm font-semibold transition-all duration-300 ${isFormValid ? "bg-black text-white hover:bg-black/80" : "bg-gray-200 text-gray-400 cursor-not-allowed"} !disabled:bg-gray-200 !disabled:text-gray-400 disabled:cursor-not-allowed `} inverted={true} />
+      </form>
     </div>
   );
-};
-
-export default RegisterFormScreen;
+}
