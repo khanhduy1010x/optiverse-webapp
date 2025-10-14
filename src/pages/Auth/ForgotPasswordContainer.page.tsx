@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAppTranslate } from "../../hooks/useAppTranslate";
 import ForgotPassword from "./ForgotPassword.screen";
-import VerifyCodeForm from "./VerifyCode.screen";
+import VerifyOtpScreen from "./VerifyOtp.screen";
 import ResetPasswordForm from "./ResetPassword.screen";
 import { useForgotPasswordContainer } from "../../hooks/auth/useForgotPasswordContainer";
-import { useNavigate } from "react-router-dom";
 
 const ForgotPasswordContainer: React.FC = () => {
     const { t } = useAppTranslate("auth");
@@ -15,6 +15,7 @@ const ForgotPasswordContainer: React.FC = () => {
         resetToken,
         setResetToken } = useForgotPasswordContainer();
     const navigate = useNavigate()
+
     return (
         <div className="mx-auto flex w-full flex-col overflow-hidden h-screen bg-white shadow-2xl md:flex-row">
             {step === "forgot" && (
@@ -26,24 +27,23 @@ const ForgotPasswordContainer: React.FC = () => {
                 />
             )}
 
-            {step === "verify" && (
-                <VerifyCodeForm
-                    data={email}
+            {step === "verify" && email && (
+                <VerifyOtpScreen
+                    email={email}
+                    type="forgot"
                     onChangeEmail={() => {
                         setEmail('');
                         setResetToken('');
                         setStep('forgot');
                     }}
-                    setToken={(token) => {
+                    onToken={(token) => {
                         setResetToken(token);
                     }}
-                    onSwitch={(nextStep) => {
-                        if (nextStep === "reset") setStep("reset");
-                    }}
+                    onSuccess={() => setStep("reset")}
                 />
             )}
 
-            {step === "reset" && (
+            {step === "reset" && resetToken && (
                 <ResetPasswordForm
                     resetToken={resetToken}
                     onSuccess={() => navigate('/login')}

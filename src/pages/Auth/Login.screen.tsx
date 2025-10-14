@@ -4,6 +4,7 @@ import { useAppTranslate } from "../../hooks/useAppTranslate";
 import Icon from "../../components/common/Icon/Icon.component";
 import Button from "../../components/common/Button.component";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 
 export const Login: React.FC = () => {
   const { t } = useAppTranslate("auth");
@@ -43,7 +44,12 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div className="mx-auto flex w-full flex-col overflow-hidden h-screen bg-white shadow-2xl md:flex-row">
+    <motion.div
+      initial={{ opacity: 0, y: -80 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -80 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      className="mx-auto flex w-full flex-col overflow-hidden h-screen bg-white shadow-2xl md:flex-row">
 
 
       <div className="flex w-full flex-col gap-8 p-6 md:w-1/2 md:p-10">
@@ -105,7 +111,7 @@ export const Login: React.FC = () => {
             {floatingLabel("password", t("password_placeholder"), password)}
             <input
               id="password"
-              type={`${!showPassword ? 'text' : 'password'}`}
+              type={`${showPassword ? 'text' : 'password'}`}
               value={password}
               onChange={handleInputChange(setPassword)}
               onFocus={() => setFocusedField("password")}
@@ -117,7 +123,7 @@ export const Login: React.FC = () => {
               disabled={disabled}
               required
             />
-            <button className="absolute top-0 bottom-0 right-5" type="button" onClick={() => { setShowPassword(!showPassword) }}>            <Icon name={`${showPassword ? 'eye' : 'hiddenEye'}`} />
+            <button className="absolute top-0 bottom-0 right-5" type="button" onClick={() => { setShowPassword(!showPassword) }}>            <Icon name={`${!showPassword ? 'eye' : 'hiddenEye'}`} />
             </button>
           </div>
 
@@ -180,7 +186,7 @@ export const Login: React.FC = () => {
           className="h-full w-full object-cover"
         />
       </div>
-    </div>
+    </motion.div>
   );
 };
 

@@ -50,6 +50,9 @@ class AuthService {
       if (error.response?.status === 401) {
         throw new Error('Invalid email or password. Please try again.');
       }
+      if (error.response?.data.code === 1015) {
+        throw error;
+      }
 
       const errorMessage =
         error.response?.data?.message ||
@@ -134,26 +137,16 @@ class AuthService {
   }
 
   public async verifyCode(verifyRequest: VerifyRequest): Promise<any> {
-    try {
-      const response = await api.post<ApiResponse<any>>(
-        `${this.authPath}/verify-account`,
-        {
-          email: verifyRequest.email,
-          otp: verifyRequest.otp,
-          isVerify: verifyRequest.type === 'register',
-        }
-      );
-      const data = response.data;
-      return data;
-    } catch (error: any) {
-      if (
-        error.response.data.code === ErrorDetails[ErrorCode.INVALID_OTP].code
-      ) {
-        throw Error('Incorrect OTP. Please try again.');
+    const response = await api.post<ApiResponse<any>>(
+      `${this.authPath}/verify-account`,
+      {
+        email: verifyRequest.email,
+        otp: verifyRequest.otp,
+        isVerify: verifyRequest.type === 'register',
       }
-
-      throw Error('Something went wrong on our side. Please try again later.');
-    }
+    );
+    const data = response.data;
+    return data;
   }
 
   public async resetPassword(
@@ -180,19 +173,15 @@ class AuthService {
   }
 
   public async resendCode(request: ResendCodeRequest): Promise<any> {
-    try {
-      const response = await api.post<ApiResponse<any>>(
-        `${this.authPath}/resend-otp`,
-        {
-          email: request.email,
-          isVerify: request.type === 'register',
-        }
-      );
-      const data = response.data;
-      return data;
-    } catch (error: any) {
-      throw Error(error.response.data.message);
-    }
+    const response = await api.post<ApiResponse<any>>(
+      `${this.authPath}/resend-otp`,
+      {
+        email: request.email,
+        isVerify: request.type === 'register',
+      }
+    );
+    const data = response.data;
+    return data;
   }
 
   public async verifyToken() {

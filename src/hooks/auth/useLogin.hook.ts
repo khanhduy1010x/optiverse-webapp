@@ -6,6 +6,7 @@ import { setUser, login } from '../../store/slices/auth.slice';
 import { AppDispatch } from '../../store';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
 import { GOOGLE_CLIENT_ID, GOOGLE_REDIRECT_URI } from '../../config/env.config';
+import { useAppDispatch } from '../../store/hooks';
 
 /**
  * Thu thập thông tin về trình duyệt và hệ điều hành dưới dạng chuỗi đơn giản
@@ -129,6 +130,14 @@ export function useLoginForm() {
         setIsEmailLoginLoading(false);
         return;
       }
+      if (err?.response?.data?.code === 1015) {
+        await authService.resendCode({
+          email,
+          type: 'register',
+        });
+        navigate('/register', { state: { emailVerify: email } });
+        return;
+      }
       console.error('Login error:', err);
       setError(err.message || t('login_failed'));
     } finally {
@@ -140,7 +149,7 @@ export function useLoginForm() {
     (setter: React.Dispatch<React.SetStateAction<string>>) =>
     (e: React.ChangeEvent<HTMLInputElement>) => {
       if (error) setError(null);
-      setter(e.target.value);
+      setter(e.target.value.trim());
     };
 
   const handleGoogleLogin = async () => {

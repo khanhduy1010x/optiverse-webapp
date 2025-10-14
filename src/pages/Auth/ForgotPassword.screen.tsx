@@ -34,7 +34,7 @@ export const ForgotPassword: React.FC<{ onSuccess: (email: string) => void }> = 
         <div className="space-y-4">
           <button
             className="items-center group hover:text-gray-500"
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/login")}
           >
             <Icon name="backHome" size={24} />
           </button>

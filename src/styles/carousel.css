@@ -1,0 +1,109 @@
+/* Carousel Animations */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in-delay {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.8s ease-out;
+}
+
+.animate-fade-in-delay {
+  animation: fade-in-delay 0.8s ease-out 0.2s both;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Carousel specific styles */
+.carousel-container {
+  perspective: 1000px;
+}
+
+.carousel-slide {
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.carousel-slide.active {
+  transform: translateX(0) scale(1);
+  opacity: 1;
+}
+
+.carousel-slide.next {
+  transform: translateX(100%) scale(0.95);
+  opacity: 0;
+}
+
+.carousel-slide.prev {
+  transform: translateX(-100%) scale(0.95);
+  opacity: 0;
+}
+
+/* 3D Carousel animations */
+@keyframes slideInFromRight {
+  from {
+    transform: translateX(100px) scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    transform: translateX(-100px) scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.carousel-3d-enter {
+  animation: slideInFromRight 0.5s ease-out;
+}
+
+.carousel-3d-exit {
+  animation: slideInFromLeft 0.5s ease-out reverse;
+}
+
+/* Card hover effects */
+.carousel-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.carousel-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}

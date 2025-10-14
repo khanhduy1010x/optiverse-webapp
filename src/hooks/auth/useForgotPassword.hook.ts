@@ -1,10 +1,7 @@
 import { useState } from 'react';
 import authService from '../../services/auth.service';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
-
-interface UseForgotPasswordOptions {
-  onSuccess: (email: string) => void;
-}
+import { UseForgotPasswordOptions } from '../../types/auth/props/component.props';
 
 export function useForgotPassword({ onSuccess }: UseForgotPasswordOptions) {
   const { t } = useAppTranslate('auth');

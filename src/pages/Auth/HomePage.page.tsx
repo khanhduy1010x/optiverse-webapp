@@ -3,44 +3,32 @@ import Button from "../../components/common/Button.component";
 import Dropdown from "../../components/common/CustomDropDown.component";
 import { useAppTranslate, useChangeLanguage } from "../../hooks/useAppTranslate";
 import { HighlightKeyword } from "../../components/common/HighlightKeyword";
+import useHomePage from "../../hooks/auth/useHomePage.hook";
+import { Carousel3D } from "../../components/common/Carousel.component";
+import DownloadSection from "./DownloadSection.screen";
+import Footer from "./Footer.screen";
+import "../../styles/carousel.css";
 
 const HomePage: React.FC = () => {
   const { t } = useAppTranslate("auth");
-  const { changeLanguage, i18n } = useChangeLanguage();
+  const { changeLanguage } = useChangeLanguage();
   const navigate = useNavigate()
-  const languageItems = [
-    { label: t("language_option_en"), value: "en" },
-    { label: t("language_option_vi"), value: "vi" },
-    { label: t("language_option_jp"), value: "jp" },
-  ];
-
-  const currentLabel =
-    languageItems.find((item) => item.value === i18n.language)?.label ||
-    t("language_option_en");
-
-  const translations = t("keywords", {
-    returnObjects: true,
-  }) as unknown as Record<string, string>;
-
-  const highlightsDes = {
-    notes: "text-sky-500 border border-sky-300/50 bg-sky-100/40 rounded-full px-3 py-1 font-semibold shadow-sm backdrop-blur-sm leading-[2]",
-    tasks: "text-lime-600 border border-lime-300/50 bg-lime-100/40 rounded-full px-3 py-1 font-semibold shadow-sm backdrop-blur-sm leading-[2]",
-    flashcards: "text-pink-500 border border-pink-300/50 bg-pink-100/40 rounded-full px-3 py-1 font-semibold shadow-sm backdrop-blur-sm leading-[2]",
-    collaborations: "text-cyan-500 border border-cyan-300/50 bg-cyan-100/40 rounded-full px-3 py-1 font-semibold shadow-sm backdrop-blur-sm leading-[2]",
-  };
-
-  const highlightsTitle = {
-    op: "font-bold text-4xl",
-  };
+  const { languageItems,
+    currentLabel,
+    translations,
+    highlightsDes,
+    highlightsTitle,
+    carouselItems } = useHomePage()
 
   return (
     <div
-      className="min-h-screen bg-cover bg-center"
-      style={{ backgroundImage: "url('/Background.png')" }}
+      className="bg-cover bg-center"
     >
-      <div className="min-h-screen">
-        <div className="mx-auto flex h-full flex-col px-6 py-2">
-          {/* Header */}
+
+      <div className=""
+        style={{ backgroundImage: "url('/Background.png')" }}
+      >
+        <div className="mx-auto min-h-screen flex h-full flex-col px-6 py-2">
           <header className="mb-10 flex items-center justify-between rounded-full bg-white/50 px-6 py-3 backdrop-blur relative z-50">
             <div className="flex items-center gap-3">
               <span className="flex h-9 w-9 items-center justify-center rounded-full bg-black text-white text-lg font-semibold">
@@ -76,32 +64,28 @@ const HomePage: React.FC = () => {
             </div>
           </header>
 
-          {/* Main */}
-          <main className="flex flex-1 items-start justify-end pb-12 pl-12 pt-16 relative z-[0]">
-            <div className="max-w-2xl rounded-[40px] bg-white/40 p-10 shadow-2xl backdrop-blur-xs">
-              <h1 className="text-3xl">
-                <HighlightKeyword
-                  text={t("comming_title")}
-                  highlights={highlightsTitle}
-                  translations={translations}
+          {/* Main Content */}
+          <div className="flex-1 px-6 pb-12 pt-8 ">
+            <div className="h-full">
+              {/* 3D Carousel Section */}
+              <div className="w-full h-full flex items-center backdrop-blur-md bg-black/10 rounded-3xl shadow-lg p-6 mb-16">
+                <Carousel3D
+                  items={carouselItems}
+                  autoPlay={true}
+                  interval={4000}
+                  onSlideChange={(index) => console.log('Slide changed to:', index)}
+                  className="w-full"
                 />
-              </h1>
-              <p className="mt-6 text-base leading-7 text-gray-600 sm:text-lg">
-                <HighlightKeyword
-                  text={t("comming_description")}
-                  highlights={highlightsDes}
-                  translations={translations}
-                />
-              </p>
-
-              <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-                <Button className="w-full rounded-full bg-black px-12 py-3 text-sm font-semibold text-white transition hover:bg-black/80">
-                  {t("sg_now")}
-                </Button>
               </div>
             </div>
-          </main>
+          </div>
         </div>
+
+        {/* Download Section */}
+        <DownloadSection />
+
+        {/* Footer */}
+        <Footer />
       </div>
     </div>
   );

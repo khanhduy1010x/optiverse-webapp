@@ -1,8 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import Icon from "../../components/common/Icon/Icon.component";
-import { useRegisterForm } from "../../hooks/auth/useRegister.hook";
 import Button from "../../components/common/Button.component";
 import { useAppTranslate } from "../../hooks/useAppTranslate";
+import { useRegister } from "../../hooks/auth/useRegister.hook";
 
 interface RegisterScreenProps {
   onSuccess: (email: string) => void;
@@ -27,7 +27,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onSuccess }) => 
     strengthColor,
     isFormValid,
     loading
-  } = useRegisterForm({ onSuccess });
+  } = useRegister({ onSuccess });
   const floatingLabel = (field: string, label: string, value: string) => {
     const isFocused = focusedField === field;
     const hasValue = value.trim() !== "";
@@ -110,7 +110,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ onSuccess }) => 
             <input
               id="email"
               value={formData.email}
-              onChange={(e) => handleChange("email", e.target.value)}
+              onChange={(e) => handleChange("email", e.target.value.trim())}
               onFocus={() => setFocusedField("email")}
               onBlur={() => setFocusedField(null)}
               className={`w-full rounded-full border-2 bg-white px-4 py-3 text-sm text-gray-700 outline-none transition-all duration-200 ease-out ${focusedField === "email"

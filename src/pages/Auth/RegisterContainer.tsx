@@ -1,26 +1,46 @@
-import React, { useEffect, useState } from "react";
-import { RegisterFormProps } from "../../types/auth/props/component.props";
+import React, { useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAppTranslate } from "../../hooks/useAppTranslate";
 import { RegisterScreen } from "./Register.screen";
-import VerifyCodeFormRegister from "./VerifyCodeRegister.screen";
+import VerifyOtpScreen from "./VerifyOtp.screen";
 import useRegisterContainer from "../../hooks/auth/useRegisterContainer.hook";
+import { motion } from "framer-motion";
 
 const RegisterContainer: React.FC = () => {
     const { t } = useAppTranslate("auth");
+    const navigate = useNavigate();
     const { isShowOTPScreen,
         setIsShowOTPScreen,
         email,
         setEmail } = useRegisterContainer();
+    const location = useLocation();
+
+
+    const emailVerify = location.state?.emailVerify;
+    useEffect(() => {
+        if (emailVerify) {
+            setEmail(emailVerify);
+            setIsShowOTPScreen(true);
+
+        }
+    }, []);
     return (
-        <div className="mx-auto flex w-full flex-col overflow-hidden h-screen bg-white shadow-2xl md:flex-row">
+        <motion.div
+            initial={{ opacity: 0, y: -80 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -80 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            className="mx-auto flex w-full flex-col overflow-hidden h-screen bg-white shadow-2xl md:flex-row">
             {/* Form Section */}
             {isShowOTPScreen && email ? (
-                <VerifyCodeFormRegister
+                <VerifyOtpScreen
                     email={email}
+                    type="register"
                     onChangeEmail={() => {
                         setEmail(undefined);
                         setIsShowOTPScreen(false);
                     }}
+                    onSuccess={() => navigate("/login")}
                 />
             ) : (
                 <RegisterScreen
@@ -39,7 +59,7 @@ const RegisterContainer: React.FC = () => {
                     className="h-full w-full object-cover"
                 />
             </div>
-        </div>
+        </motion.div>
 
     );
 };

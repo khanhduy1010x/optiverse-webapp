@@ -1,16 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import authService from '../../services/auth.service';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
-
-type ResetMessage = {
-  type: 'success' | 'error';
-  text: string;
-} | null;
-
-interface UseResetPasswordFormProps {
-  token: string;
-  onSuccess: () => void;
-}
+import {
+  ResetMessage,
+  UseResetPasswordFormProps,
+} from '../../types/auth/props/component.props';
 
 export function useResetPasswordForm({
   token,
@@ -24,6 +18,15 @@ export function useResetPasswordForm({
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current);
+      }
+    };
+  }, []);
 
   const resetMessage = (type: 'success' | 'error', text: string) => {
     setMessage({ type, text });
@@ -60,15 +63,18 @@ export function useResetPasswordForm({
       resetMessage('success', t('reset_success'));
 
       let seconds = 3;
-      const countdownInterval = setInterval(() => {
-        resetMessage(
-          'success',
-          t('reset_success_redirecting', { seconds })
-        );
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current);
+      }
+      countdownRef.current = setInterval(() => {
+        resetMessage('success', t('reset_success_redirecting', { seconds }));
         seconds -= 1;
 
         if (seconds < 0) {
-          clearInterval(countdownInterval);
+          if (countdownRef.current) {
+            clearInterval(countdownRef.current);
+            countdownRef.current = null;
+          }
           onSuccess();
         }
       }, 1000);
@@ -81,6 +87,25 @@ export function useResetPasswordForm({
       setLoading(false);
     }
   };
+  const strength = useMemo(() => {
+    const pwd = newPassword;
+    let score = 0;
+    if (pwd.length >= 6) score++;
+    if (/[A-Z]/.test(pwd)) score++;
+    if (/[0-9]/.test(pwd)) score++;
+    if (/[^A-Za-z0-9]/.test(pwd)) score++;
+    return score;
+  }, [newPassword]);
+
+  const strengthLabels = [
+    t('register_strength_weak'),
+    t('register_strength_fair'),
+    t('register_strength_good'),
+    t('register_strength_strong'),
+  ];
+  const strengthLabel = strengthLabels[strength - 1] || '';
+  const strengthColor =
+    ['#ef4444', '#eab308', '#3b82f6', '#22c55e'][strength - 1] || '#d1d5db';
 
   return {
     newPassword,
@@ -96,5 +121,9 @@ export function useResetPasswordForm({
     showConfirm,
     setShowConfirm,
     loading,
+    strength,
+    strengthLabels,
+    strengthLabel,
+    strengthColor,
   };
 }

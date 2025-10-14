@@ -1,18 +1,12 @@
 import { useState, useMemo } from 'react';
 import authService from '../../services/auth.service';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
+import {
+  RegisterFormData,
+  UseRegisterFormProps,
+} from '../../types/auth/props/component.props';
 
-interface RegisterFormData {
-  full_name: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-}
-interface UseRegisterFormProps {
-  onSuccess: (email: string) => void;
-}
-
-export function useRegisterForm({ onSuccess }: UseRegisterFormProps) {
+export function useRegister({ onSuccess }: UseRegisterFormProps) {
   const { t } = useAppTranslate('auth');
   const [formData, setFormData] = useState<RegisterFormData>({
     full_name: '',
@@ -56,11 +50,15 @@ export function useRegisterForm({ onSuccess }: UseRegisterFormProps) {
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
+    const name = formData.full_name.trim();
 
+    const nameRegex = /^[A-Za-zÀ-ỹ\s]+$/;
     if (!formData.full_name.trim())
       newErrors.full_name = t('register_error_full_name_required');
     else if (formData.full_name.trim().length < 3)
       newErrors.full_name = t('register_error_full_name_min');
+    else if (!nameRegex.test(name))
+      newErrors.full_name = t('register_error_full_name_letters_only');
 
     if (!formData.email.trim())
       newErrors.email = t('register_error_email_required');
