@@ -65,6 +65,8 @@ import { ReactComponent as friend } from './friend.svg';
 import { ReactComponent as profile } from './profile.svg';
 import { ReactComponent as pdf } from './pdf.svg';
 import { ReactComponent as detail } from './detail-user.svg';
+import { ReactComponent as backHome } from './back-home-icon.svg';
+
 
 export const ICONS = {
   add: add,
@@ -134,6 +136,7 @@ export const ICONS = {
   profile: profile,
   pdf: pdf,
   detail: detail,
+  backHome: backHome
 };
 
 export type IconName = keyof typeof ICONS;

@@ -1,9 +1,25 @@
 body {
   font-family: var(--theme-font), 'NotoSans-Regular', 'Inter', sans-serif;
 }
+@layer base {
+  button,
+  [role='button'],
+  .btn {
+    @apply cursor-pointer;
+  }
+}
 
 body.font-pixel {
   letter-spacing: 0.2px;
+}
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0px 1000px white inset !important;
+  -webkit-text-fill-color: #000 !important; /* màu chữ */
+  transition: background-color 5000s ease-in-out 0s;
 }
 
 /* Custom scrollbar cho FolderNote */
@@ -37,7 +53,7 @@ body.font-pixel {
   background: transparent;
 }
 .blog-list-scrollbar::-webkit-scrollbar-thumb {
-  background: #21B4CA;
+  background: #21b4ca;
   border-radius: 4px;
 }
 .blog-list-scrollbar:hover::-webkit-scrollbar-thumb {
