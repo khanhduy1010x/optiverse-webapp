@@ -14,33 +14,34 @@ interface UseAchievementFormReturn {
   // Form data
   formData: AchievementFormData;
   setFormData: React.Dispatch<React.SetStateAction<AchievementFormData>>;
-  
+
   // File handling
   selectedFile: File | null;
   previewUrl: string;
-  
+  fileError: string;
+
   // Rule management
   showRuleForm: boolean;
   editingRule: Rule | undefined;
   editingRuleIndex: number | undefined;
-  
+
   // Validation
   hasError: (field: string) => boolean;
   getError: (field: string) => string | null;
-  
+
   // Event handlers
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
   handleBlur: (fieldName: string) => void;
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleSubmit: (e: React.FormEvent) => void;
-  
+
   // Rule management handlers
   handleAddRule: () => void;
   handleEditRule: (rule: Rule, index: number) => void;
   handleRuleSubmit: (rule: Rule) => void;
   handleDeleteRule: (index: number) => void;
   handleRuleCancel: () => void;
-  
+
   // File utilities
   removeFile: () => void;
 }
@@ -68,6 +69,7 @@ export const useAchievementForm = ({
   // File handling state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
+  const [fileError, setFileError] = useState<string>('');
 
   // Rule form state
   const [showRuleForm, setShowRuleForm] = useState(false);
@@ -187,17 +189,24 @@ export const useAchievementForm = ({
     // Validate file
     const validation = FileUploadUtils.validateFile(file);
     if (!validation.isValid) {
-      alert(validation.error);
+      setFileError(validation.error || 'Invalid file');
+      setSelectedFile(null);
+      setPreviewUrl('');
+      setFormData(prev => ({
+        ...prev,
+        icon_file: undefined
+      }));
       return;
     }
 
+    setFileError('');
     setSelectedFile(file);
-    
+
     // Cleanup previous preview URL
     if (previewUrl && previewUrl.startsWith('blob:')) {
       FileUploadUtils.cleanupPreviewUrl(previewUrl);
     }
-    
+
     // Create new preview URL
     const url = FileUploadUtils.createPreviewUrl(file);
     setPreviewUrl(url);
@@ -212,17 +221,22 @@ export const useAchievementForm = ({
 
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    // Block submit if file error
+    if (fileError) {
+      return;
+    }
+
     // Validate entire form
     const isValid = validateForm(formData);
-    
+
     if (!isValid) {
       return;
     }
 
     // Dữ liệu submit đã có icon_file nếu có chọn file
     onSubmit(formData);
-  }, [formData, validateForm, onSubmit]);
+  }, [formData, validateForm, onSubmit, fileError]);
 
   // Rule management handlers
   const handleAddRule = useCallback(() => {
@@ -281,12 +295,13 @@ export const useAchievementForm = ({
   // File utilities
   const removeFile = useCallback(() => {
     setSelectedFile(null);
-    
+    setFileError('');
+
     // Cleanup preview URL
     if (previewUrl && previewUrl.startsWith('blob:')) {
       FileUploadUtils.cleanupPreviewUrl(previewUrl);
     }
-    
+
     setPreviewUrl('');
     setFormData(prev => ({
       ...prev,
@@ -298,33 +313,34 @@ export const useAchievementForm = ({
     // Form data
     formData,
     setFormData,
-    
+
     // File handling
     selectedFile,
     previewUrl,
-    
+    fileError,
+
     // Rule management
     showRuleForm,
     editingRule,
     editingRuleIndex,
-    
+
     // Validation
     hasError,
     getError,
-    
+
     // Event handlers
     handleInputChange,
     handleBlur,
     handleFileChange,
     handleSubmit,
-    
+
     // Rule management handlers
     handleAddRule,
     handleEditRule,
     handleRuleSubmit,
     handleDeleteRule,
     handleRuleCancel,
-    
+
     // File utilities
     removeFile
   };

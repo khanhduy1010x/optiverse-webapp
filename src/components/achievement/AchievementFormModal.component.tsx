@@ -21,19 +21,20 @@ const AchievementFormModal: React.FC<AchievementFormModalProps> = ({
   const {
     // Form data
     formData,
-    
+
     // File handling
     selectedFile,
     previewUrl,
-    
+    fileError,
+
     // Rules
     showRuleForm,
     editingRuleIndex,
-    
+
     // Validation
     hasError,
     getError,
-    
+
     // Event handlers
     handleInputChange,
     handleFileChange,
@@ -44,7 +45,7 @@ const AchievementFormModal: React.FC<AchievementFormModalProps> = ({
     handleDeleteRule,
     handleRuleSubmit,
     handleRuleCancel,
-    
+
     // Utilities
     removeFile
   } = useAchievementForm({
@@ -60,20 +61,23 @@ const AchievementFormModal: React.FC<AchievementFormModalProps> = ({
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-indigo-600 to-blue-600 px-6 py-4 flex justify-between items-center">
-            <h2 className="text-xl font-bold text-white">
+          <div className="px-6 py-4 flex justify-between items-center" style={{ background: '#22b4ca' }}>
+            <h2 className="text-base font-bold text-white" style={{ color: '#fff' }}>
               {achievement ? 'Edit Achievement' : 'Create New Achievement'}
             </h2>
             <button
               onClick={onCancel}
-              className="text-white hover:text-gray-200 text-2xl font-bold"
+              className="text-white hover:text-gray-200 text-xl font-bold"
             >
               ×
             </button>
           </div>
 
           {/* Form Content */}
-          <div className="overflow-y-auto max-h-[calc(90vh-120px)]">
+          <div
+            className="overflow-y-auto max-h-[calc(90vh-120px)]"
+            style={{scrollbarWidth: 'none' }}><style>{`div::-webkit-scrollbar {display: none;}`}</style>
+
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
               {/* Title Field */}
               <div>
@@ -87,9 +91,8 @@ const AchievementFormModal: React.FC<AchievementFormModalProps> = ({
                   value={formData.title}
                   onChange={handleInputChange}
                   onBlur={() => handleBlur('title')}
-                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 ${
-                    hasError('title') ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 ${hasError('title') ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    }`}
                   placeholder="Enter achievement title"
                 />
                 {hasError('title') && (
@@ -109,9 +112,8 @@ const AchievementFormModal: React.FC<AchievementFormModalProps> = ({
                   onChange={handleInputChange}
                   onBlur={() => handleBlur('description')}
                   rows={4}
-                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 resize-none ${
-                    hasError('description') ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 resize-none ${hasError('description') ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    }`}
                   placeholder="Enter achievement description"
                 />
                 {hasError('description') && (
@@ -132,9 +134,8 @@ const AchievementFormModal: React.FC<AchievementFormModalProps> = ({
                   onChange={handleInputChange}
                   onBlur={() => handleBlur('reward')}
                   min="0"
-                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 ${
-                    hasError('reward') ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 ${hasError('reward') ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    }`}
                   placeholder="Enter reward points"
                 />
                 {hasError('reward') && (
@@ -153,9 +154,8 @@ const AchievementFormModal: React.FC<AchievementFormModalProps> = ({
                   value={formData.logic_operator}
                   onChange={handleInputChange}
                   onBlur={() => handleBlur('logic_operator')}
-                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 ${
-                    hasError('logic_operator') ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 ${hasError('logic_operator') ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    }`}
                 >
                   <option value={LogicOperator.AND}>AND</option>
                   <option value={LogicOperator.OR}>OR</option>
@@ -171,18 +171,21 @@ const AchievementFormModal: React.FC<AchievementFormModalProps> = ({
                   Achievement Image
                 </label>
                 <div className="space-y-4">
-                  <input
-                    type="file"
-                    id="file"
-                    name="file"
-                    onChange={handleFileChange}
-                    accept="image/*"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
-                  />
-                  {hasError('file') && (
-                    <p className="text-sm text-red-600">{getError('file')}</p>
+                  {!previewUrl && (
+                    <>
+                      <input
+                        type="file"
+                        id="file"
+                        name="file"
+                        onChange={handleFileChange}
+                        accept="image/*"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+                      />
+                      {fileError && (
+                        <p className="text-sm text-red-600 mt-2">{fileError}</p>
+                      )}
+                    </>
                   )}
-                  
                   {previewUrl && (
                     <div className="relative inline-block">
                       <img
@@ -216,7 +219,7 @@ const AchievementFormModal: React.FC<AchievementFormModalProps> = ({
                     className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
                   />
                 </div>
-                
+
                 {hasError('rules') && (
                   <p className="mb-4 text-sm text-red-600">{getError('rules')}</p>
                 )}
@@ -271,8 +274,10 @@ const AchievementFormModal: React.FC<AchievementFormModalProps> = ({
                 <Button
                   type="submit"
                   title={achievement ? 'Update Achievement' : 'Create Achievement'}
-                  className="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-medium shadow-sm"
+                  style={{ backgroundColor: '#21b4ca', color: '#fff' }}
+                  className="px-6 py-3 rounded-xl font-medium shadow-md hover:opacity-90 transition-all"
                 />
+
               </div>
             </form>
           </div>
