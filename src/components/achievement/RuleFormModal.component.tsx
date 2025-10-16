@@ -50,7 +50,11 @@ const RuleFormModal: React.FC<RuleFormModalProps> = ({
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
       <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-indigo-600 to-blue-600 px-6 py-4 flex justify-between items-center">
+       <div
+  className="px-6 py-4 flex justify-between items-center"
+  style={{ backgroundColor: '#21b4ca' }}
+>
+
           <h2 className="text-xl font-bold text-white">
             {rule ? 'Edit Rule' : 'Create New Rule'}
           </h2>
@@ -119,33 +123,7 @@ const RuleFormModal: React.FC<RuleFormModalProps> = ({
               )}
             </div>
 
-            {/* Operator Selection */}
-            <div>
-              <label htmlFor="operator" className="block text-sm font-medium text-gray-700 mb-2">
-                Operator *
-              </label>
-              <select
-                id="operator"
-                name="operator"
-                value={formData.operator}
-                onChange={handleInputChange}
-                onBlur={() => handleBlur('operator')}
-                className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 ${
-                  hasError('operator') ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                }`}
-                disabled={!formData.field}
-              >
-                {availableOperators.map((operator) => (
-                  <option key={operator} value={operator}>
-                    {OPERATOR_LABELS[operator]}
-                  </option>
-                ))}
-              </select>
-              {hasError('operator') && (
-                <p className="mt-1 text-sm text-red-600">{getError('operator')}</p>
-              )}
-            </div>
-
+            
             {/* Value Field: chỉ hiển thị cho DATE và ENUM */}
             {(selectedField?.value_type === 'DATE' || selectedField?.value_type === 'ENUM') && (
               <div>
@@ -331,11 +309,14 @@ const RuleFormModal: React.FC<RuleFormModalProps> = ({
                 onClick={onCancel}
                 className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-medium transition-colors"
               />
-              <Button
-                type="submit"
-                title={rule ? 'Update Rule' : 'Create Rule'}
-                className="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-medium shadow-sm"
-              />
+      <Button
+  type="submit"
+  title={rule ? 'Update Rule' : 'Create Rule'}
+  style={{ backgroundColor: '#21b4ca', color: '#fff' }}
+  className="px-6 py-3 rounded-xl font-medium shadow-md hover:opacity-90 transition-all"
+/>
+
+
             </div>
           </form>
         </div>
