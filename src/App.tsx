@@ -42,6 +42,7 @@ import TaskWorkspacePage from './pages/WorkspaceTask/Task.workspace.page';
 import TemplateComponent from './pages/Template/TemplateComponent.page';
 import FocusTimerLayout from './pages/FocusTimer/FocusTimerLayout.page';
 import FocusTimerWorkspacePage from './pages/FocusTimer/workspace/FocusTimer.workspace.page';
+import FocusRoomsPage from './pages/FocusTimer/FocusRooms.page';
 import ChatPage from './pages/chat/ChatPage';
 import ChatWorkspacePage from './pages/chat/workspace/Chat.workspace.page';
 import { useNewMessageNotification } from './hooks/chat/useNewMessageNotification';
@@ -144,6 +145,20 @@ const AppContent: React.FC = () => {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/marketplace/favorites"
+              element={
+                <ProtectedRoute>
+                  <MarketplaceFavoritesPage />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="rooms"
+              element={<FocusRoomsPage />}
+            />
+
             <Route
               path="/forgot"
               element={
