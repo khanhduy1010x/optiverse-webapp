@@ -17,7 +17,7 @@ const AdminSidebar: React.FC = () => {
   const adminSubsections = adminSection?.subsections || [];
 
   return (
-    <div className="w-64 border-r border-gray-200 h-screen fixed left-16 top-0 overflow-hidden">
+    <div className="w-64 border-r border-gray-200 fixed left-16 top-14 h-[calc(100vh-56px)] overflow-hidden">
       <div className="h-full flex flex-col">
         {/* Header section */}
         <div className="p-6 border-b border-gray-200">
@@ -35,11 +35,10 @@ const AdminSidebar: React.FC = () => {
               onClick={() => navigate(subsection.path)}
               className={`
                                 px-6 py-3 rounded-lg text-left cursor-pointer transition-all duration-200 flex items-center
-                                ${
-                                  currentPath === subsection.path
-                                    ? 'bg-[#e7f6f7] text-[#21b4ca]'
-                                    : 'text-gray-700 hover:bg-gray-50'
-                                }
+                                ${currentPath === subsection.path
+                  ? 'bg-[#e7f6f7] text-[#21b4ca]'
+                  : 'text-gray-700 hover:bg-gray-50'
+                }
                             `}
             >
               <Icon

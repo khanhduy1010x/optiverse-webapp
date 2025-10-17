@@ -79,12 +79,12 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     label: 'Blog',
     path: '/blog',
-    icon: 'description',
+    icon: 'blog',
     subsections: [
       {
         label: 'Trang chủ Blog',
         path: '/blog',
-        icon: 'description',
+        icon: 'blog',
         parentPath: '/blog',
       },
       {
@@ -102,7 +102,7 @@ export const NAV_SECTIONS: NavSection[] = [
       },
     ],
   },
-  { label: 'Friend', path: '/friends', icon: 'friend' },
+  { label: 'Friend', path: '/friends', icon: 'group' },
   { label: 'Chat', path: '/chat', icon: 'message' },
 
   {
@@ -134,7 +134,6 @@ export const NAV_SECTIONS: NavSection[] = [
         icon: 'trophy',
         parentPath: '/user-profile',
       },
-
     ],
   },
   {
@@ -169,6 +168,19 @@ export const NAV_SECTIONS: NavSection[] = [
       },
     ],
   },
+];
+
+// Optional dynamic extension for workspace context (used by Sidebar)
+export const WORKSPACE_ONLY_SECTIONS: NavSection[] = [
+  { label: 'Members', path: '/workspace-members', icon: 'group' },
+];
+
+// Dedicated minimal navigation for Marketplace context
+export const MARKETPLACE_SECTIONS: NavSection[] = [
+  { label: 'Home', path: '/marketplace', icon: 'home' },
+
+  { label: 'Create', path: '/marketplace/create', icon: 'add_market' },
+  { label: 'Favorites', path: '/marketplace/favorites', icon: 'star' },
 ];
 
 // Map các path con tới path cha để dễ dàng tìm kiếm
@@ -223,6 +235,11 @@ export const getSectionKeyFromPath = (path: string): string => {
 
 // Hàm mới để lấy path hiện tại cho sidebar chính
 export const getMainSidebarActiveSection = (path: string): string => {
+  // Strip workspace prefix: /workspace/:id
+  if (path.startsWith('/workspace/')) {
+    const withoutWs = path.replace(/^\/workspace\/[^/]+/, '') || '/dashboard';
+    path = withoutWs;
+  }
   if (PATH_MAPPING[path]) return PATH_MAPPING[path];
 
   const matchingPrefix = Object.keys(PATH_MAPPING).find(key =>
