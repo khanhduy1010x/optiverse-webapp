@@ -66,8 +66,10 @@ import { ReactComponent as profile } from './profile.svg';
 import { ReactComponent as pdf } from './pdf.svg';
 import { ReactComponent as detail } from './detail-user.svg';
 import { ReactComponent as backHome } from './back-home-icon.svg';
-
-
+import { ReactComponent as logo } from './logo_1.svg';
+import { ReactComponent as chevronDown } from './chevron-down.svg';
+import { ReactComponent as blog } from './blog.svg';
+import { ReactComponent as add_market } from './add_market.svg';
 export const ICONS = {
   add: add,
   adjust: adjust,
@@ -136,7 +138,11 @@ export const ICONS = {
   profile: profile,
   pdf: pdf,
   detail: detail,
-  backHome: backHome
+  backHome: backHome,
+  logo: logo,
+  chevronDown: chevronDown,
+  blog: blog,
+  add_market: add_market,
 };
 
 export type IconName = keyof typeof ICONS;

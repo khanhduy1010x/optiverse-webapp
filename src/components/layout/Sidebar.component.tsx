@@ -1,6 +1,7 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import Icon from '../common/Icon/Icon.component';
-import { NAV_SECTIONS, getMainSidebarActiveSection } from '../common/Navigation/navigation';
+import { NAV_SECTIONS, WORKSPACE_ONLY_SECTIONS, MARKETPLACE_SECTIONS, getMainSidebarActiveSection } from '../common/Navigation/navigation';
 import './Sidebar.css';
 import { useAuthStatus } from '../../hooks/auth/useAuthStatus.hook';
 
@@ -12,23 +13,47 @@ interface SliderBarProps {
 const SliderBar: React.FC<SliderBarProps> = ({ activeSection, onNavClick }) => {
   const normalizedActiveSection = getMainSidebarActiveSection(activeSection);
   const { isAdmin } = useAuthStatus();
+  const location = useLocation();
+  const workspacePrefixMatch = location.pathname.match(/^\/workspace\/([^/]+)/);
+  const workspacePrefix = workspacePrefixMatch ? `/workspace/${workspacePrefixMatch[1]}` : '';
+  const isMarketplace = location.pathname.startsWith('/marketplace');
 
-  // Lọc các mục navigation dựa vào quyền admin
-  const filteredNavSections = NAV_SECTIONS.filter(section => {
+  let baseSections = NAV_SECTIONS.filter(section => {
     if (section.adminOnly) {
       return isAdmin;
     }
     return true;
   });
 
+  if (workspacePrefix) {
+    baseSections = baseSections.filter(s => s.path !== '/friends' && s.path !== '/settings' && s.path !== '/user-profile');
+    baseSections = [
+      ...baseSections,
+      ...WORKSPACE_ONLY_SECTIONS,
+    ];
+  }
+
+  if (isMarketplace) {
+    baseSections = MARKETPLACE_SECTIONS;
+  }
+
   return (
     <div>
-      <div className="slidebar-container w-16 bg-black h-screen py-18 flex flex-col items-center justify-between relative z-10">
-        <div className="slidebar-container flex flex-col items-center justify-between flex-1 w-full">
-          {filteredNavSections.map((section) => (
+      <div className={` w-16 bg-black fixed  h-full top-14 py-18 flex flex-col items-center ${isMarketplace ? 'justify-start' : 'justify-between'} z-10`}>
+        <div className={`slidebar-container flex flex-col items-center ${isMarketplace ? 'justify-start gap-10' : 'justify-between'} flex-1 w-full`}>
+          {baseSections.map((section) => (
             <div key={section.path} className="relative group w-full flex justify-center my-2 ">
               <button
-                onClick={() => onNavClick(section.path)}
+                onClick={() => {
+                  if (isMarketplace) {
+                    onNavClick(section.path);
+                    return;
+                  }
+                  const path = section.path.startsWith('/workspace-')
+                    ? `${workspacePrefix}${section.path.replace('/workspace-', '/')}`
+                    : `${workspacePrefix}${section.path}`;
+                  onNavClick(path);
+                }}
                 className={`group/button slidebar-container flex items-center cursor-pointer justify-center w-12 h-12 rounded-lg transition-all duration-300 ${normalizedActiveSection === section.path
                   ? 'bg-white'
                   : 'hover:bg-white'
