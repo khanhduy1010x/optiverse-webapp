@@ -12,7 +12,7 @@ import notification from './notification.json';
 import error from './error.json';
 import taskEvent from './task-event.json';
 import chat from './chat.json';
-
+import workspace from './workspace.json';
 
 export default {
   common,
@@ -29,4 +29,5 @@ export default {
   error,
   'task-event': taskEvent,
   chat,
+  workspace,
 };

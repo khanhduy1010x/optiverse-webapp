@@ -70,6 +70,11 @@ import { ReactComponent as logo } from './logo_1.svg';
 import { ReactComponent as chevronDown } from './chevron-down.svg';
 import { ReactComponent as blog } from './blog.svg';
 import { ReactComponent as add_market } from './add_market.svg';
+import { ReactComponent as shield } from './shield.svg';
+import { ReactComponent as kick } from './kick.svg';
+import { ReactComponent as ban } from './ban.svg';
+import { ReactComponent as lock } from './lock.svg';
+import { ReactComponent as copy } from './copy.svg';
 export const ICONS = {
   add: add,
   adjust: adjust,
@@ -143,6 +148,11 @@ export const ICONS = {
   chevronDown: chevronDown,
   blog: blog,
   add_market: add_market,
+  shield: shield,
+  kick: kick,
+  ban: ban,
+  lock: lock,
+  copy: copy,
 };
 
 export type IconName = keyof typeof ICONS;

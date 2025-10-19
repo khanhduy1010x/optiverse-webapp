@@ -9,6 +9,7 @@ import themeReducer from './slices/theme.slice';
 import authReducer from './slices/auth.slice';
 import friendReducer from './slices/friend.slice';
 import blogReducer from './slices/blog.slice';
+import workspaceReducer from './slices/workspaceslice';
 
 const persistConfig = {
   key: 'root',
@@ -25,6 +26,7 @@ const rootReducer = combineReducers({
   auth: authReducer,
   friend: friendReducer,
   blog: blogReducer,
+  workspace: workspaceReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

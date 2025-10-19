@@ -48,6 +48,7 @@ import { useNewMessageNotification } from './hooks/chat/useNewMessageNotificatio
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { typingAnimationStyles, countdownAnimationStyles } from './styles/global.style';
+import WorkspaceGuard from './components/auth/WorkspaceGuard';
 import AdminDashboard from './pages/Admin/UserManagement.page';
 import UserManagement from './pages/Admin/UserManagement';
 import SystemSettings from './pages/Admin/SystemSettings';
@@ -193,7 +194,9 @@ const AppContent: React.FC = () => {
               path="/workspace/:workspaceId/dashboard"
               element={
                 <ProtectedRoute>
-                  <DashboardWorkspacePage />
+                  <WorkspaceGuard>
+                    <DashboardWorkspacePage />
+                  </WorkspaceGuard>
                 </ProtectedRoute>
               }
             />
@@ -217,7 +220,9 @@ const AppContent: React.FC = () => {
               path="/workspace/:workspaceId/focus-timer"
               element={
                 <ProtectedRoute>
-                  <FocusTimerWorkspacePage />
+                  <WorkspaceGuard>
+                    <FocusTimerWorkspacePage />
+                  </WorkspaceGuard>
                 </ProtectedRoute>
               }
             />
@@ -242,7 +247,9 @@ const AppContent: React.FC = () => {
               path="/workspace/:workspaceId/flashcard-deck"
               element={
                 <ProtectedRoute>
-                  <FlashcardWorkspacePage />
+                  <WorkspaceGuard>
+                    <FlashcardWorkspacePage />
+                  </WorkspaceGuard>
                 </ProtectedRoute>
               }
             />
@@ -324,7 +331,9 @@ const AppContent: React.FC = () => {
               path="/workspace/:workspaceId/note"
               element={
                 <ProtectedRoute>
-                  <NoteWorkspacePage />
+                  <WorkspaceGuard>
+                    <NoteWorkspacePage />
+                  </WorkspaceGuard>
                 </ProtectedRoute>
               }
             />
@@ -340,7 +349,9 @@ const AppContent: React.FC = () => {
               path="/workspace/:workspaceId/task"
               element={
                 <ProtectedRoute>
-                  <TaskWorkspacePage />
+                  <WorkspaceGuard>
+                    <TaskWorkspacePage />
+                  </WorkspaceGuard>
                 </ProtectedRoute>
               }
             />
@@ -364,7 +375,9 @@ const AppContent: React.FC = () => {
               path="/workspace/:workspaceId/members"
               element={
                 <ProtectedRoute>
-                  <WorkspaceMembersPage />
+                  <WorkspaceGuard>
+                    <WorkspaceMembersPage />
+                  </WorkspaceGuard>
                 </ProtectedRoute>
               }
             />
@@ -384,7 +397,9 @@ const AppContent: React.FC = () => {
               path="/workspace/:workspaceId/chat"
               element={
                 <ProtectedRoute>
-                  <ChatWorkspacePage />
+                  <WorkspaceGuard>
+                    <ChatWorkspacePage />
+                  </WorkspaceGuard>
                 </ProtectedRoute>
               }
             />
@@ -418,7 +433,9 @@ const AppContent: React.FC = () => {
               path="/workspace/:workspaceId/blog"
               element={
                 <ProtectedRoute>
-                  <BlogWorkspacePage />
+                  <WorkspaceGuard>
+                    <BlogWorkspacePage />
+                  </WorkspaceGuard>
                 </ProtectedRoute>
               }
             />

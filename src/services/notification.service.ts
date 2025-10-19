@@ -10,8 +10,8 @@ class NotificationService {
         content: `Your task "${taskTitle}" is overdue!`,
         type: 'task_overdue',
         metadata: {
-          taskId
-        }
+          taskId,
+        },
       });
       return response.data;
     } catch (error) {
@@ -28,8 +28,8 @@ class NotificationService {
         content: `Your task "${taskTitle}" is 75% through its timeframe and still pending!`,
         type: 'task_near_due',
         metadata: {
-          taskId
-        }
+          taskId,
+        },
       });
       return response.data;
     } catch (error) {
@@ -39,7 +39,12 @@ class NotificationService {
   }
 
   // Gửi thông báo nhắc nhở cho task event quá hạn
-  async sendTaskEventOverdueNotification(taskId: string, eventId: string, taskTitle: string, eventTitle: string) {
+  async sendTaskEventOverdueNotification(
+    taskId: string,
+    eventId: string,
+    taskTitle: string,
+    eventTitle: string
+  ) {
     try {
       const response = await api.post<ApiResponse<any>>('/notification', {
         title: 'Event Overdue Reminder',
@@ -47,8 +52,8 @@ class NotificationService {
         type: 'task_event_overdue',
         metadata: {
           taskId,
-          eventId
-        }
+          eventId,
+        },
       });
       return response.data;
     } catch (error) {
@@ -65,8 +70,8 @@ class NotificationService {
         content: `Your event "${eventTitle}" is overdue!`,
         type: 'event_overdue',
         metadata: {
-          eventId
-        }
+          eventId,
+        },
       });
       return response.data;
     } catch (error) {
@@ -89,7 +94,9 @@ class NotificationService {
   // Đánh dấu thông báo là đã đọc
   async markNotificationAsRead(notificationId: string) {
     try {
-      const response = await api.put<ApiResponse<any>>(`/notification/${notificationId}/read`);
+      const response = await api.put<ApiResponse<any>>(
+        `/notification/${notificationId}/read`
+      );
       return response.data;
     } catch (error) {
       console.error('Error marking notification as read:', error);
@@ -100,7 +107,9 @@ class NotificationService {
   // Xóa thông báo
   async deleteNotification(notificationId: string) {
     try {
-      const response = await api.delete<ApiResponse<any>>(`/notification/${notificationId}`);
+      const response = await api.delete<ApiResponse<any>>(
+        `/notification/${notificationId}`
+      );
       return response.data;
     } catch (error) {
       console.error('Error deleting notification:', error);
