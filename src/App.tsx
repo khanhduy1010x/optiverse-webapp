@@ -76,6 +76,9 @@ import WorkspaceMembersPage from './pages/workspace/WorkspaceMembers.page';
 import { Navigate } from 'react-router-dom';
 import MarketplaceHomePage from './pages/Marketplace/Home.page';
 import MyItemsPage from './pages/Marketplace/MyItems.page';
+import MarketplaceCreateNewPage from './pages/Marketplace/CreateNew.page';
+import MarketplaceFavoritesPage from './pages/Marketplace/Favorites.page';
+import { Focus } from 'lucide-react';
 
 declare global {
   interface Window {
@@ -321,6 +324,10 @@ const AppContent: React.FC = () => {
               <Route
                 path="statistics"
                 element={<FocusTimerStatistic />}
+              />
+              <Route
+                path="rooms"
+                element={<FocusRoomsPage />}
               />
             </Route>
 
