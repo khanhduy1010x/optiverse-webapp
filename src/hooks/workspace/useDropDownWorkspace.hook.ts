@@ -23,6 +23,7 @@ export const useDropDownWorkspace = () => {
   // Fetch workspaces on mount
   useEffect(() => {
     dispatch(getAllWorkspaces());
+    console.log(workspaces);
   }, [dispatch, isDropdownOpen]);
 
   // Handlers
