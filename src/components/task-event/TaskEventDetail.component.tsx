@@ -1,7 +1,9 @@
 import React from 'react';
 import Modal from 'react-modal';
 import { TaskEvent } from '../../types/task-events/task-events.types';
+import { Tag } from '../../types/task/response/tag.response';
 import { format } from 'date-fns';
+import { GROUP_CLASSNAMES } from '../../styles';
 
 interface TaskEventDetailProps {
   event: TaskEvent;
@@ -9,6 +11,7 @@ interface TaskEventDetailProps {
   onClose: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  tags?: Tag[];
 }
 
 export const TaskEventDetail: React.FC<TaskEventDetailProps> = ({ 
@@ -16,7 +19,8 @@ export const TaskEventDetail: React.FC<TaskEventDetailProps> = ({
   isOpen, 
   onClose, 
   onEdit, 
-  onDelete 
+  onDelete,
+  tags = []
 }) => {
   if (!isOpen) return null;
 
@@ -69,7 +73,12 @@ export const TaskEventDetail: React.FC<TaskEventDetailProps> = ({
       overlayClassName="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000] flex items-center justify-center min-h-screen"
       ariaHideApp={false}
     >
-      <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-200 transition">
+      <button 
+        type="button"
+        onClick={onClose} 
+        title="Close"
+        className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-200 transition"
+      >
         <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
       </button>
       <div className="flex flex-col items-center text-center mb-6">
@@ -86,9 +95,42 @@ export const TaskEventDetail: React.FC<TaskEventDetailProps> = ({
         )}
         {event.description && <div className="text-gray-700 text-sm mt-2 mb-1 px-2 break-words">{event.description}</div>}
       </div>
+
+      {/* Tags Section */}
+      {tags && tags.length > 0 && (
+        <div className="w-full mt-6 px-2">
+          <div className="flex flex-wrap gap-2 justify-center">
+            {tags.map((tag) => (
+              <span
+                key={tag._id || `temp-${tag.name}-${Math.random().toString(36).substr(2, 9)}`}
+                className={GROUP_CLASSNAMES.tagItem}
+                style={{
+                  backgroundColor: tag.color ? `${tag.color}15` : '#e5e7eb15',
+                  color: tag.color || '#6b7280'
+                }}
+              >
+                {tag.name}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="flex gap-4 mt-6">
-        <button onClick={onEdit} className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-bold shadow hover:scale-105 hover:shadow-lg transition-all text-base">Edit</button>
-        <button onClick={onDelete} className="flex-1 px-4 py-2 bg-gradient-to-r from-pink-500 to-red-500 text-white rounded-xl font-bold shadow hover:scale-105 hover:shadow-lg transition-all text-base">Delete</button>
+        <button 
+          type="button"
+          onClick={onEdit} 
+          className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-bold shadow hover:scale-105 hover:shadow-lg transition-all text-base"
+        >
+          Edit
+        </button>
+        <button 
+          type="button"
+          onClick={onDelete} 
+          className="flex-1 px-4 py-2 bg-gradient-to-r from-pink-500 to-red-500 text-white rounded-xl font-bold shadow hover:scale-105 hover:shadow-lg transition-all text-base"
+        >
+          Delete
+        </button>
       </div>
     </Modal>
   );

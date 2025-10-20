@@ -543,7 +543,7 @@ export const useTaskEventList = () => {
   // Hàm để trigger refresh từ bên ngoài
   const refreshTaskEvents = useCallback(() => {
     console.log('Manual refresh triggered');
-    setRefreshKey(prevKey => prevKey + 1);
+    // setRefreshKey(prevKey => prevKey + 1);
   }, []);
 
   // Hàm thêm sự kiện mới - chỉ lưu 1 event gốc vào database, virtual instances sẽ được tạo tự động

@@ -2,7 +2,6 @@ import { useEffect, useState, useRef } from 'react';
 import { Task } from '../../types/task/response/task.response';
 import notificationService from '../../services/notification.service';
 import taskService from '../../services/task.service';
-import { toast } from 'react-toastify';
 
 export const useTaskReminder = (tasks: Task[]) => {
   const [checkedTasks, setCheckedTasks] = useState<Record<string, boolean>>({});
@@ -18,16 +17,6 @@ export const useTaskReminder = (tasks: Task[]) => {
       
       // Gửi thông báo đến backend
       await notificationService.sendTaskOverdueNotification(task._id, task.title);
-      
-      // Hiển thị toast notification cho người dùng
-      toast.error(`Task "${task.title}" is now overdue!`, {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
       
       // Đánh dấu task đã được kiểm tra
       setCheckedTasks(prev => ({

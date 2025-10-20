@@ -16,6 +16,7 @@ interface CalendarHeaderProps {
   handlePrevious: () => void;
   handleNext: () => void;
   handleToday: () => void;
+  refreshTaskEvents: () => void;
   onOpenEventImport?: () => void;
   onDownloadEventTemplate?: () => void;
 }
@@ -29,6 +30,7 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
   handlePrevious,
   handleNext,
   handleToday,
+  refreshTaskEvents,
   onOpenEventImport,
   onDownloadEventTemplate,
 }) => {
@@ -69,46 +71,55 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
   };
 
   return (
-    <div className="flex flex-col md:flex-row items-center justify-between px-4 md:px-8 py-5 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-t-2xl shadow-md gap-4 md:gap-0">
-      <div className="flex items-center gap-2 relative w-full md:w-auto">
+    <div className="flex flex-col md:flex-row items-center justify-between px-6 md:px-8 py-4 bg-gradient-to-r from-slate-600 via-slate-700 to-indigo-600 shadow-lg gap-4 md:gap-0">
+      <div className="flex items-center gap-3 relative w-full md:w-auto">
+        {/* Today Button */}
         <button
           onClick={handleToday}
-          className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full font-semibold text-white hover:bg-white/30 border border-white/30 transition-colors flex items-center shadow-sm text-base md:text-lg"
+          className="px-4 py-2 bg-white/15 backdrop-blur-sm rounded-lg font-semibold text-white hover:bg-white/25 border border-white/20 transition-all duration-200 flex items-center shadow-sm text-sm md:text-base hover:shadow-md hover:scale-105"
+          title="Go to today"
         >
-          <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 md:w-5 md:h-5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
           {t('today')}
         </button>
+
+        {/* Navigation Arrows */}
         <button
           onClick={handlePrevious}
-          className="p-2 rounded-full hover:bg-white/30 text-white transition-colors"
+          className="p-2 rounded-lg hover:bg-white/20 text-white transition-all duration-200 hover:shadow-md"
           aria-label={t('previous')}
+          title={t('previous')}
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
+          <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
         </button>
         <button
           onClick={handleNext}
-          className="p-2 rounded-full hover:bg-white/30 text-white transition-colors"
+          className="p-2 rounded-lg hover:bg-white/20 text-white transition-all duration-200 hover:shadow-md"
           aria-label={t('next')}
+          title={t('next')}
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
+          <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
         </button>
+
+        {/* Date Display with Mini Calendar */}
         <div 
           ref={dateTextRef}
           onClick={toggleMiniCalendar}
-          className="text-3xl md:text-4xl font-extrabold text-white ml-4 cursor-pointer hover:bg-white/20 transition-colors flex items-center px-3 py-1 rounded-lg select-none"
+          className="text-2xl md:text-3xl font-bold text-white ml-2 md:ml-4 cursor-pointer hover:bg-white/20 transition-colors flex items-center px-4 py-2 rounded-lg select-none hover:shadow-md"
           aria-label={t('change_date')}
           title={t('change_date')}
         >
-          <svg className="w-6 h-6 mr-2 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 md:w-6 md:h-6 mr-2 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
           {getViewTitle()}
-          <svg className="w-6 h-6 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 md:w-6 md:h-6 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={showMiniCalendarPopup ? "M5 15l7-7 7 7" : "M19 9l-7 7-7-7"} />
           </svg>
         </div>
+
         {/* Mini Calendar Popup */}
         {showMiniCalendarPopup && (
           <div ref={miniCalendarRef} className="absolute top-16 left-0 z-50 shadow-2xl rounded-xl animate-fadeIn">
@@ -123,21 +134,30 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
           </div>
         )}
       </div>
+
+      {/* Right Side - View Type & Actions */}
       <div className="flex items-center gap-3 w-full md:w-auto justify-end">
-        <select
-          value={viewType}
-          onChange={e => setViewType(e.target.value as any)}
-          className="px-4 py-2 rounded-xl border border-gray-300 bg-white text-gray-800 font-semibold shadow focus:outline-none appearance-none cursor-pointer text-base md:text-lg transition-all duration-150 hover:border-blue-400 focus:border-blue-500"
-          style={{ backgroundImage: "url(\"data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='gray' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 0.75rem center", backgroundSize: "1.5em 1.5em", paddingRight: "2.5rem" }}
-          aria-label={t('view_type')}
-        >
-          <option value="Day" className="font-semibold">{t('day')}</option>
-          <option value="Week" className="font-semibold">{t('week')}</option>
-          <option value="Month" className="font-semibold">{t('month')}</option>
-        </select>
-        <div className="flex items-center gap-3">
-          <RefreshButton onClick={handleToday} />
-          {/* Import/Export Dropdown */}
+        {/* View Type Selector - Button Group */}
+        <div className="flex items-center gap-1 bg-white/10 backdrop-blur-sm rounded-lg p-1 border border-white/20">
+          {['Day', 'Week', 'Month'].map((view) => (
+            <button
+              key={view}
+              onClick={() => setViewType(view as ViewType)}
+              className={`px-3 md:px-4 py-2 rounded-md font-semibold text-sm md:text-base transition-all duration-200 ${
+                viewType === view
+                  ? 'bg-white/30 text-white shadow-md'
+                  : 'text-white/70 hover:text-white hover:bg-white/15'
+              }`}
+              title={`${t(view.toLowerCase())} view`}
+            >
+              {t(view.toLowerCase())}
+            </button>
+          ))}
+        </div>
+
+        {/* Refresh & Import/Export */}
+        <div className="flex items-center gap-2">
+          <RefreshButton onClick={refreshTaskEvents} />
           <ImportDropdown
             onDownloadTemplate={onDownloadEventTemplate}
             onOpenImport={onOpenEventImport}

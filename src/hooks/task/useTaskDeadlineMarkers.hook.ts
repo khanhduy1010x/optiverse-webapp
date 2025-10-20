@@ -41,7 +41,7 @@ export const useTaskDeadlineMarkers = (
 
     fetchTasks();
     return () => { mounted = false; };
-  }, []);
+  }, [startDate, endDate]);
 
   const deadlines = useMemo(() => {
     try {
