@@ -54,12 +54,18 @@ export const selectUserWorkspaceRole = createSelector(
 
 export const selectAdminWorkspaces = createSelector(
   selectWorkspaces,
-  workspaces => workspaces.filter(item => item.role === 'admin' && item.status === 'accepted')
+  workspaces =>
+    workspaces.filter(
+      item => item.role === 'admin' && item.status === 'accepted'
+    )
 );
 
 export const selectMemberWorkspaces = createSelector(
   selectWorkspaces,
-  workspaces => workspaces.filter(item => item.role === 'user' && item.status === 'accepted')
+  workspaces =>
+    workspaces.filter(
+      item => item.role === 'user' && item.status === 'accepted'
+    )
 );
 
 export const selectWorkspaceNames = createSelector(
@@ -106,11 +112,11 @@ export const selectWorkspaceForDropdown = createSelector(
   workspaces => [
     { id: 'home', name: 'Home' },
     ...(workspaces
-      ?.filter(item => item.status === 'accepted') // Lọc ra workspace bị ban
+      ?.filter(item => item.status === 'active')
       .map(item => ({
         id: item?.workspace?._id,
         name: item?.workspace?.name,
       }))
-      .filter(item => item.id && item.name) || [])
+      .filter(item => item.id && item.name) || []),
   ]
 );
