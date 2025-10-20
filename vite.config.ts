@@ -16,10 +16,9 @@ export default defineConfig(({ mode }): UserConfig => {
 
     server: {
       host: '0.0.0.0',
-      // https: isProd ? undefined : {},
+      https: isProd ? undefined : {},
       port: Number(env.VITE_PORT) || 5173,
       allowedHosts: true,
-      https: false,
     },
 
     build: {
