@@ -115,7 +115,7 @@ const AppContent: React.FC = () => {
           <SliderBar activeSection={activeSection} onNavClick={handleNavClick} />
         )}
 
-        <div className={`flex-1 transition-all duration-300 ease-in-out h-full w-full pl-16`}>
+        <div className={`flex-1 transition-all duration-300 ease-in-out h-full w-full ${showSidebar && ' pl-16'}`}>
           <Routes>
             {/* Public routes - accessible without authentication */}
             <Route path="/template" element={<TemplateComponent />} />
