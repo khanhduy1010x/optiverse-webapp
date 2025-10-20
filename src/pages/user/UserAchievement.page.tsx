@@ -11,7 +11,7 @@ const UserAchievementPage: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useAppTranslate('profile');
   const selectedMenu = 'achievements';
-  
+
   const {
     unlockedAchievements,
     lockedAchievements,

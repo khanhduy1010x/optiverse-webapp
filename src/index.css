@@ -111,3 +111,34 @@ img {
   filter: none !important;
   opacity: 1 !important;
 }
+
+/* Hide default checkbox */
+input[type='checkbox'] {
+  appearance: none;
+  -webkit-appearance: none; /* For Safari */
+  width: 20px;
+  height: 20px;
+  border: 2px solid #21b4ca; /* Border color for unchecked state */
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
+  display: inline-block;
+  background-color: white; /* Background color for unchecked state */
+}
+
+/* Style the checked state */
+input[type='checkbox']:checked {
+  background-color: white; /* Background color for checked state */
+  border-color: #21b4ca; /* Border color for checked state */
+}
+
+/* Create a custom checkmark using a pseudo-element */
+input[type='checkbox']:checked::before {
+  content: '\2713'; /* Unicode checkmark character */
+  font-size: 16px;
+  color: #21b4ca; /* Color of the checkmark */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
