@@ -3,7 +3,6 @@ import { Task } from '../../types/task/response/task.response';
 import { TaskEvent } from '../../types/task-events/task-events.types';
 import notificationService from '../../services/notification.service';
 import taskService from '../../services/task.service';
-import { toast } from 'react-toastify';
 import { isTaskNearDue, isTaskOverdue } from '../../utils/date.utils';
 
 export const useTaskOverdueNotification = (
@@ -62,17 +61,6 @@ export const useTaskOverdueNotification = (
       );
       console.log(`Notification sent to backend for task ${task._id}`);
 
-      // Show toast notification to user
-      toast.error(`Task "${task.title}" is now overdue!`, {
-        position: 'top-right',
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-      console.log(`Toast notification displayed for task ${task._id}`);
-
       // Mark task as checked
       setCheckedTaskIds(prev => ({
         ...prev,
@@ -129,20 +117,6 @@ export const useTaskOverdueNotification = (
       );
       console.log(`Near due notification sent to backend for task ${task._id}`);
 
-      // Show toast notification to user
-      toast.warning(
-        `Task "${task.title}" is 75% through its timeframe and still pending!`,
-        {
-          position: 'top-right',
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        }
-      );
-      console.log(`Toast notification displayed for near due task ${task._id}`);
-
       // Mark task as notified for near due
       setNearDueNotifiedTaskIds(prev => ({
         ...prev,
@@ -192,16 +166,6 @@ export const useTaskOverdueNotification = (
         event._id,
         event.title || 'Untitled Event'
       );
-      // Show toast notification to user
-      toast.error(`Event "${event.title}" is now overdue!`, {
-        position: 'top-right',
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-      console.log(`Toast notification displayed for event ${event._id}`);
 
       // Mark event as checked
       setCheckedEventIds(prev => ({

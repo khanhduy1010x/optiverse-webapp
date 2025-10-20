@@ -20,12 +20,13 @@ export const RefreshButton: React.FC<RefreshButtonProps> = ({ onClick }) => {
   return (
     <button
       onClick={handleClick}
-      className="p-2.5 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5 group"
+      className="p-2.5 bg-white/15 backdrop-blur-sm rounded-lg shadow-md hover:shadow-lg transition-all duration-200 border border-white/20 hover:bg-white/25 hover:scale-110 group"
       aria-label="Refresh"
       title="Refresh calendar"
+      type="button"
     >
       <svg 
-        className={`w-5 h-5 text-blue-600 group-hover:text-blue-700 transition-colors ${isRotating ? 'animate-spin' : ''}`} 
+        className={`w-5 h-5 text-white group-hover:text-white/90 transition-colors ${isRotating ? 'animate-spin' : ''}`} 
         fill="none" 
         stroke="currentColor" 
         viewBox="0 0 24 24"

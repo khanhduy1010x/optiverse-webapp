@@ -266,7 +266,6 @@ export const TaskExcelImportModal: React.FC<TaskExcelImportModalProps> = ({ isOp
     if (!file) return;
 
     if (!file.name.endsWith('.xlsx')) {
-      toast.error(t('invalid_file_type'));
       return;
     }
 
@@ -279,12 +278,8 @@ export const TaskExcelImportModal: React.FC<TaskExcelImportModalProps> = ({ isOp
       const ws = wb.Sheets[wb.SheetNames[0]];
       const json = XLSX.utils.sheet_to_json<Record<string, any>>(ws, { defval: '' });
       setRows(json);
-      if (!json.length) {
-        toast.warn(t('no_rows_found'));
-      }
     } catch (err) {
       console.error(err);
-      toast.error(t('import_failed'));
     } finally {
       setParsing(false);
     }
@@ -292,55 +287,170 @@ export const TaskExcelImportModal: React.FC<TaskExcelImportModalProps> = ({ isOp
 
   const processImport = async () => {
     if (!rows.length) {
-      toast.warn(t('no_rows_found'));
       return;
     }
     setProcessing(true);
     setErrors([]);
     let createdCount = 0;
     const rowErrors: TaskImportParseError[] = [];
-    const rowSuccesses: { rowIndex: number; title?: string }[] = [];
-
-    const getErrorMessage = (e: any): string => {
-      if (!e) return t('unknown_error');
-      if (typeof e.message === 'string' && e.message) return e.message;
-      const m = e?.response?.data?.message;
-      if (Array.isArray(m)) return m.join('; ');
-      if (typeof m === 'string' && m) return m;
-      const err = e?.response?.data?.error;
-      if (typeof err === 'string' && err) return err;
-      return t('unknown_error');
-    };
 
     // Fetch tags once to reduce calls
     let existingTags = await tagService.fetchAllUserTags();
     const tagMap = new Map(existingTags.map(tg => [tg.name.trim().toLowerCase(), tg]));
 
+    let dataRowCount = 0;
     for (let i = 0; i < rows.length; i++) {
       const rRaw = rows[i] as any;
-      const r = normalizeKeys(rRaw);
-      const rowIndex = i + 2; // considering header row at 1
-      try {
-        const title = (r['title'] ?? r['task_title'])?.toString().trim();
-        if (!title) {
-          throw new Error(t('missing_title'));
-        }
 
+      // Skip completely empty rows
+      const hasData = Object.values(rRaw).some(
+        (value) => value !== null && value !== undefined && value.toString().trim() !== ''
+      );
+      if (!hasData) {
+        console.log('Skipping empty row:', i + 2);
+        continue;
+      }
+
+      // Sequential task number for non-empty rows (Task 1, Task 2, ...)
+      dataRowCount += 1;
+      const taskIndex = dataRowCount;
+      const r = normalizeKeys(rRaw);
+      const rowIndex = i + 2; // Excel row number
+      const errors: string[] = [];
+
+      // 1. Validate title (required)
+      const title = (r['title'] ?? r['task_title'])?.toString().trim();
+      if (!title) {
+        errors.push('Title is required');
+        rowErrors.push({ rowIndex: taskIndex, message: `Task ${taskIndex}: Title is required` });
+        continue;
+      }
+
+      // 2. Validate start_time and end_time
+      const hasStartDate = r['start_date'] && String(r['start_date']).trim() !== '';
+      const hasStartTime = r['start_time'] && String(r['start_time']).trim() !== '';
+      const hasEndDate = r['end_date'] && String(r['end_date']).trim() !== '';
+      const hasEndTime = r['end_time'] && String(r['end_time']).trim() !== '';
+      
+      let startISO: string | undefined = undefined;
+      let endISO: string | undefined = undefined;
+
+      // Check if start time is provided
+      if (!hasStartDate || !hasStartTime) {
+        errors.push('Start time is required');
+        rowErrors.push({ rowIndex: taskIndex, message: `Task ${taskIndex}: Start time is required` });
+        continue;
+      }
+
+      // Validate start_time format (accept hh:mm string, number (Excel), or Date)
+      const startTimeVal = r['start_time'];
+      const isStartTimeValid = isTimeHM(startTimeVal) || typeof startTimeVal === 'number' || startTimeVal instanceof Date;
+      if (!isStartTimeValid) {
+        errors.push('Invalid start time format. Use hh:mm format (e.g., 09:30)');
+        rowErrors.push({ rowIndex: taskIndex, message: `Task ${taskIndex}: Invalid start time format. Use hh:mm format (e.g., 09:30)` });
+        continue;
+      }
+
+      // Build start ISO
+      startISO = combineDateTimeToISO(r['start_date'], r['start_time'], r['start_time'], false);
+      if (!startISO) {
+        errors.push('Could not parse start date/time. Use formats: dd/mm/yyyy hh:mm or yyyy-mm-dd hh:mm');
+        rowErrors.push({ rowIndex: taskIndex, message: `Task ${taskIndex}: Could not parse start date/time. Use formats: dd/mm/yyyy hh:mm or yyyy-mm-dd hh:mm` });
+        continue;
+      }
+
+      // Check if end time is provided
+      if (!hasEndDate || !hasEndTime) {
+        errors.push('End time is required');
+        rowErrors.push({ rowIndex: taskIndex, message: `Task ${taskIndex}: End time is required` });
+        continue;
+      }
+
+      // Validate end_time format (accept hh:mm string, number (Excel), or Date)
+      const endTimeVal = r['end_time'];
+      const isEndTimeValid = isTimeHM(endTimeVal) || typeof endTimeVal === 'number' || endTimeVal instanceof Date;
+      if (!isEndTimeValid) {
+        errors.push('Invalid end time format. Use hh:mm format (e.g., 17:30)');
+        rowErrors.push({ rowIndex: taskIndex, message: `Task ${taskIndex}: Invalid end time format. Use hh:mm format (e.g., 17:30)` });
+        continue;
+      }
+
+      // Build end ISO
+      endISO = combineDateTimeToISO(r['end_date'], r['end_time'], r['end_time'], false);
+      if (!endISO) {
+        errors.push('Could not parse end date/time. Use formats: dd/mm/yyyy hh:mm or yyyy-mm-dd hh:mm');
+        rowErrors.push({ rowIndex: taskIndex, message: `Task ${taskIndex}: Could not parse end date/time. Use formats: dd/mm/yyyy hh:mm or yyyy-mm-dd hh:mm` });
+        continue;
+      }
+
+      // 3. Validate end time must be after start time
+      const startDate = new Date(startISO);
+      const endDate = new Date(endISO);
+      if (endDate <= startDate) {
+        errors.push('End time must be after start time');
+        rowErrors.push({ rowIndex: taskIndex, message: `Task ${taskIndex}: End time must be after start time` });
+        continue;
+      }
+
+      // 4. Validate priority (optional, but if provided must be valid)
+      const priorityVal = r['priority'];
+      let priority: Task['priority'] = 'medium'; // default
+      if (priorityVal) {
+        const normalized = normalizePriority(priorityVal?.toString());
+        if (!normalized) {
+          errors.push(`Invalid priority "${priorityVal}". Use: high, medium, low, p1, p2, p3, or 1, 2, 3`);
+          rowErrors.push({ rowIndex: taskIndex, message: `Task ${taskIndex}: Invalid priority "${priorityVal}". Use: high, medium, low, p1, p2, p3, or 1, 2, 3` });
+          continue;
+        }
+        priority = normalized;
+      }
+
+      // 5. Validate status (optional, but if provided must be valid)
+      const statusVal = r['status'];
+      let status: Task['status'] = 'pending'; // default
+      if (statusVal) {
+        const normalized = normalizeStatus(statusVal?.toString());
+        if (!normalized) {
+          errors.push(`Invalid status "${statusVal}". Use: pending, completed, overdue, in_progress, todo, done, finished, complete, late`);
+          rowErrors.push({ rowIndex: taskIndex, message: `Task ${taskIndex}: Invalid status "${statusVal}". Use: pending, completed, overdue, in_progress, todo, done, finished, complete, late` });
+          continue;
+        }
+        status = normalized;
+      }
+
+      // 6. Validate description (optional, convert to string if present)
+      let description: string | undefined = undefined;
+      if (r['description']) {
+        const descVal = r['description'];
+        if (typeof descVal === 'number') {
+          description = descVal.toString();
+        } else if (typeof descVal === 'string') {
+          description = descVal.trim() || undefined;
+        } else {
+          description = String(descVal);
+        }
+      }
+
+      // All validations passed - create task
+      try {
         const taskPayload: Omit<Task, '_id'> = {
           title,
-          description: r['description']?.toString() || undefined,
-          priority: 'medium', // Default priority
-          status: 'pending', // Default status
-          start_time: combineDateTimeToISO(r['start_date'], r['start_time'], r['start_time'], false),
-          end_time: combineDateTimeToISO(r['end_date'], r['end_time'], r['end_time'], false),
+          description,
+          priority,
+          status,
+          start_time: startISO,
+          end_time: endISO,
         };
 
-        const createdTask = await taskService.createTask(taskPayload);
+        await taskService.createTask(taskPayload);
         createdCount += 1;
-        rowSuccesses.push({ rowIndex, title });
       } catch (e: any) {
-        console.error('Row error', e);
-        rowErrors.push({ rowIndex, message: getErrorMessage(e) });
+        console.error('Task creation error:', e);
+        const errorMsg = e?.message || e?.response?.data?.message || 'Unknown error';
+        rowErrors.push({
+          rowIndex: taskIndex,
+          message: `Task ${taskIndex}: Failed to create task - ${errorMsg}`
+        });
       }
     }
 
@@ -348,21 +458,35 @@ export const TaskExcelImportModal: React.FC<TaskExcelImportModalProps> = ({ isOp
     setErrors(rowErrors);
 
     if (createdCount > 0) {
-      // Summary
-      toast.success(t('import_success', { count: createdCount }));
-      // Per-row success notifications
-      rowSuccesses.forEach(s => toast.success(`Row ${s.rowIndex}: Imported successfully${s.title ? ` - ${s.title}` : ''}`));
-    }
-    if (rowErrors.length > 0) {
-      // Show all row errors with their reasons
-      rowErrors.forEach(er => toast.error(t('row_error', { index: er.rowIndex, message: er.message })));
+      const SuccessMessage = () => (
+        <div className="flex items-center gap-3">
+          <div className="flex-shrink-0">
+            <svg className="h-6 w-6 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <div className="flex-1">
+            <p className="font-semibold text-green-900">Import successful!</p>
+            <p className="text-sm text-green-800">{createdCount} task{createdCount > 1 ? 's' : ''} imported successfully</p>
+          </div>
+        </div>
+      );
+      toast.success(<SuccessMessage />, {
+        position: 'top-right',
+        autoClose: 4000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        className: 'bg-green-50 border border-green-200 shadow-lg',
+        progressClassName: 'bg-green-500'
+      });
     }
 
     onImported?.({ createdCount, errors: rowErrors });
-    // Keep modal open to show errors; close on success-only
-    if (rowErrors.length === 0) {
-      onClose();
-    }
+
+    // Keep modal open always - user must manually close it
+    // Modal stays open so user can review import results (success or errors)
   };
 
   if (!isOpen) return null;
@@ -398,6 +522,7 @@ export const TaskExcelImportModal: React.FC<TaskExcelImportModalProps> = ({ isOp
               accept=".xlsx"
               className="hidden"
               onChange={onFileChange}
+              title={t('choose_excel_file')}
             />
           </div>
 
@@ -440,7 +565,7 @@ export const TaskExcelImportModal: React.FC<TaskExcelImportModalProps> = ({ isOp
             <div className="mt-2 p-3 border rounded-md bg-red-50 border-red-200">
               <ul className="list-disc ml-4 text-sm text-red-700 space-y-1 max-h-40 overflow-y-auto">
                 {errors.map(er => (
-                  <li key={er.rowIndex}>{t('row_error', { index: er.rowIndex, message: er.message })}</li>
+                  <li key={er.rowIndex}>{er.message}</li>
                 ))}
               </ul>
             </div>

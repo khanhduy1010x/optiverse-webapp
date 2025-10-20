@@ -25,12 +25,9 @@ export const CalendarContainer: React.FC<CalendarContainerProps> = ({
   onRefresh
 }) => {
   return (
-    <div className="flex h-[calc(100vh-64px)] bg-gradient-to-br from-blue-50 to-indigo-100 overflow-auto">
+    <div className="flex h-[calc(100vh-64px)] bg-gradient-to-br from-slate-50 via-slate-50 to-indigo-50 overflow-auto">
       {/* Sidebar sẽ được render ở ngoài CalendarContainer nếu có */}
       <div className="flex-1 h-full bg-white flex flex-col relative transition-all duration-300 overflow-auto">
-        <div className="absolute top-4 right-4 md:top-6 md:right-8 z-50">
-          {/* Removed duplicate refresh button to avoid duplication with header */}
-        </div>
         <div className="flex-1 flex flex-col">
           <Calendar
             taskEvents={taskEvents}

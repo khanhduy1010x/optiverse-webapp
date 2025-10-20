@@ -267,6 +267,8 @@ export const EventExcelImportModal: React.FC<EventExcelImportModalProps> = ({ is
   const [rows, setRows] = useState<Record<string, any>[]>([]);
   const [errors, setErrors] = useState<{ rowIndex: number; message: string }[]>([]);
 
+  console.log('🔍 EventExcelImportModal render, isOpen:', isOpen);
+
   const eventTemplateHeaders = useMemo(
     () => [
       'title',
@@ -289,7 +291,6 @@ export const EventExcelImportModal: React.FC<EventExcelImportModalProps> = ({ is
     if (!file) return;
 
     if (!file.name.endsWith('.xlsx')) {
-      toast.error(t('invalid_file_type'));
       return;
     }
 
@@ -303,20 +304,24 @@ export const EventExcelImportModal: React.FC<EventExcelImportModalProps> = ({ is
       const json = XLSX.utils.sheet_to_json<Record<string, any>>(ws, { defval: '' });
       console.log('Parsed JSON from Excel:', json);
       setRows(json);
-      if (!json.length) toast.warn(t('no_rows_found'));
     } catch (err) {
       console.error(err);
-      toast.error(t('import_failed'));
     } finally {
       setParsing(false);
     }
   };
 
   const processImport = async () => {
+    console.log('📥 processImport started');
     if (!rows.length) {
-      toast.warn(t('no_rows_found'));
       return;
     }
+
+    // Check if user is authenticated
+    if (!userId) {
+      return;
+    }
+
     setProcessing(true);
     setErrors([]);
 
@@ -339,13 +344,16 @@ export const EventExcelImportModal: React.FC<EventExcelImportModalProps> = ({ is
       const eventIndex = dataRowCount;
       const r = normalizeKeys(rRaw);
       const rowIndex = i + 2; // header is row 1
-  const errors: string[] = [];
 
       // Validate title
       const titleValue = r['title'] ?? r['event_title'] ?? r['task_title'] ?? r['name'] ?? r['event_name'] ?? r['task_name'];
       const title = titleValue && titleValue.toString().trim() !== '' ? titleValue.toString().trim() : null;
       if (!title) {
-        errors.push('Missing title');
+        const errorMsg = `Event ${eventIndex}: Title is required`;
+        console.error('❌ Validation Error:', errorMsg);
+        console.log('Row data:', rRaw);
+        rowErrors.push({ rowIndex: eventIndex, message: errorMsg });
+        continue;
       }
 
       // Validate start_time (require both start_date and start_time, accept hh:mm string, number (Excel), or Date)
@@ -356,35 +364,75 @@ export const EventExcelImportModal: React.FC<EventExcelImportModalProps> = ({ is
       let endISO: string | undefined = undefined;
 
       if (!hasStartDate || !hasStartTime) {
-        errors.push('Start time is required');
-      } else {
-        const startTimeVal = r['start_time'];
-        const isStartTimeValid = isTimeHM(startTimeVal) || typeof startTimeVal === 'number' || startTimeVal instanceof Date;
-        if (!isStartTimeValid) {
-          errors.push('Invalid start time');
-        } else {
-          startISO = combineDateTimeToISO(r['start_date'], r['start_time'], r['start_time'], false);
-        }
+        const errorMsg = `Event ${eventIndex}: Start time is required`;
+        console.error('❌ Validation Error:', errorMsg);
+        console.log('hasStartDate:', hasStartDate, 'hasStartTime:', hasStartTime);
+        console.log('Row data:', rRaw);
+        rowErrors.push({ rowIndex: eventIndex, message: errorMsg });
+        continue;
+      }
+
+      // Validate start_time format (accept hh:mm string, number (Excel), or Date)
+      const startTimeVal = r['start_time'];
+      const isStartTimeValid = isTimeHM(startTimeVal) || typeof startTimeVal === 'number' || startTimeVal instanceof Date;
+      if (!isStartTimeValid) {
+        const errorMsg = `Event ${eventIndex}: Invalid start time format. Use hh:mm format (e.g., 09:30)`;
+        console.error('❌ Validation Error:', errorMsg);
+        console.log('startTimeVal:', startTimeVal, 'type:', typeof startTimeVal);
+        rowErrors.push({ rowIndex: eventIndex, message: errorMsg });
+        continue;
+      }
+
+      // Build start ISO
+      startISO = combineDateTimeToISO(r['start_date'], r['start_time'], r['start_time'], false);
+      if (!startISO) {
+        const errorMsg = `Event ${eventIndex}: Could not parse start date/time. Use formats: dd/mm/yyyy hh:mm or yyyy-mm-dd hh:mm`;
+        console.error('❌ Validation Error:', errorMsg);
+        console.log('start_date:', r['start_date'], 'start_time:', r['start_time']);
+        rowErrors.push({ rowIndex: eventIndex, message: errorMsg });
+        continue;
       }
 
       // Validate end_time (required; accept hh:mm string, number (Excel), or Date)
       const hasEndTime = r['end_time'] !== undefined && r['end_time'] !== null && String(r['end_time']).trim() !== '';
       if (!hasEndTime) {
-        errors.push('End time is required');
-      } else {
-        const endTimeVal = r['end_time'];
-        const isEndTimeValid = isTimeHM(endTimeVal) || typeof endTimeVal === 'number' || endTimeVal instanceof Date;
-        if (!isEndTimeValid) {
-          errors.push('Invalid end time');
-        } else {
-          endISO = combineDateTimeToISO(r['start_date'], r['end_time'], r['end_time'], false);
-          if (!endISO) {
-            errors.push('Invalid end time');
-          }
-        }
+        const errorMsg = `Event ${eventIndex}: End time is required`;
+        console.error('❌ Validation Error:', errorMsg);
+        console.log('end_time:', r['end_time']);
+        rowErrors.push({ rowIndex: eventIndex, message: errorMsg });
+        continue;
       }
-      if (startISO && endISO && new Date(endISO) <= new Date(startISO)) {
-        errors.push('End time must be after start time');
+
+      // Validate end_time format (accept hh:mm string, number (Excel), or Date)
+      const endTimeVal = r['end_time'];
+      const isEndTimeValid = isTimeHM(endTimeVal) || typeof endTimeVal === 'number' || endTimeVal instanceof Date;
+      if (!isEndTimeValid) {
+        const errorMsg = `Event ${eventIndex}: Invalid end time format. Use hh:mm format (e.g., 17:30)`;
+        console.error('❌ Validation Error:', errorMsg);
+        console.log('endTimeVal:', endTimeVal, 'type:', typeof endTimeVal);
+        rowErrors.push({ rowIndex: eventIndex, message: errorMsg });
+        continue;
+      }
+
+      // Build end ISO
+      endISO = combineDateTimeToISO(r['start_date'], r['end_time'], r['end_time'], false);
+      if (!endISO) {
+        const errorMsg = `Event ${eventIndex}: Could not parse end date/time. Use formats: dd/mm/yyyy hh:mm or yyyy-mm-dd hh:mm`;
+        console.error('❌ Validation Error:', errorMsg);
+        console.log('start_date:', r['start_date'], 'end_time:', r['end_time']);
+        rowErrors.push({ rowIndex: eventIndex, message: errorMsg });
+        continue;
+      }
+
+      // Validate end time must be after start time
+      const startDate = new Date(startISO);
+      const endDate = new Date(endISO);
+      if (endDate <= startDate) {
+        const errorMsg = `Event ${eventIndex}: End time must be after start time`;
+        console.error('❌ Validation Error:', errorMsg);
+        console.log('startDate:', startDate.toISOString(), 'endDate:', endDate.toISOString());
+        rowErrors.push({ rowIndex: eventIndex, message: errorMsg });
+        continue;
       }
 
       // Validate repeat fields
@@ -410,13 +458,25 @@ export const EventExcelImportModal: React.FC<EventExcelImportModalProps> = ({ is
       // Validate repeat logic
       if (repeatType !== 'none') {
         if (!repeatUnit) {
-          errors.push('Invalid repeat unit');
+          const errorMsg = `Event ${eventIndex}: Invalid repeat unit. Use: daily, weekly, monthly, yearly`;
+          console.error('❌ Validation Error:', errorMsg);
+          console.log('repeatUnit:', repeatUnit, 'repeatType:', repeatType);
+          rowErrors.push({ rowIndex: eventIndex, message: errorMsg });
+          continue;
         }
         if (repeatInterval !== undefined && (!Number.isFinite(repeatInterval) || repeatInterval < 1)) {
-          errors.push('Invalid repeat interval');
+          const errorMsg = `Event ${eventIndex}: Invalid repeat interval. Must be a positive number`;
+          console.error('❌ Validation Error:', errorMsg);
+          console.log('repeatInterval:', repeatInterval);
+          rowErrors.push({ rowIndex: eventIndex, message: errorMsg });
+          continue;
         }
         if (repeatEndType && !['never', 'on', 'after'].includes(repeatEndType)) {
-          errors.push('Invalid repeat end type');
+          const errorMsg = `Event ${eventIndex}: Invalid repeat end type. Use: never, on, after`;
+          console.error('❌ Validation Error:', errorMsg);
+          console.log('repeatEndType:', repeatEndType);
+          rowErrors.push({ rowIndex: eventIndex, message: errorMsg });
+          continue;
         }
       }
 
@@ -429,13 +489,21 @@ export const EventExcelImportModal: React.FC<EventExcelImportModalProps> = ({ is
         } else if (typeof guestsRaw === 'string') {
           guestsList = String(guestsRaw).split(',').map((s) => s.trim()).filter(Boolean);
         } else {
-          errors.push('Invalid guests');
+          const errorMsg = `Event ${eventIndex}: Guests must be a list or comma-separated string`;
+          console.error('❌ Validation Error:', errorMsg);
+          console.log('guestsRaw:', guestsRaw, 'type:', typeof guestsRaw);
+          rowErrors.push({ rowIndex: eventIndex, message: errorMsg });
+          continue;
         }
       }
 
       // Validate color (if present)
       if (r['color'] && typeof r['color'] !== 'string') {
-        errors.push('Invalid color');
+        const errorMsg = `Event ${eventIndex}: Color must be a valid text value`;
+        console.error('❌ Validation Error:', errorMsg);
+        console.log('color:', r['color'], 'type:', typeof r['color']);
+        rowErrors.push({ rowIndex: eventIndex, message: errorMsg });
+        continue;
       }
 
       // Validate description (optional, convert to string if present)
@@ -445,7 +513,11 @@ export const EventExcelImportModal: React.FC<EventExcelImportModalProps> = ({ is
 
       // Validate location (optional, but must be string if present)
       if (r['location'] && typeof r['location'] !== 'string') {
-        errors.push('Invalid location');
+        const errorMsg = `Event ${eventIndex}: Location must be a valid text value`;
+        console.error('❌ Validation Error:', errorMsg);
+        console.log('location:', r['location'], 'type:', typeof r['location']);
+        rowErrors.push({ rowIndex: eventIndex, message: errorMsg });
+        continue;
       }
 
       // Validate repeat_end_date (if present)
@@ -456,32 +528,23 @@ export const EventExcelImportModal: React.FC<EventExcelImportModalProps> = ({ is
         true
       );
       if (repeatEndType === 'on' && !repeatEndDateISO) {
-        errors.push('Invalid repeat end date');
-      }
-
-      // If any errors, collect and skip row
-      if (errors.length > 0) {
-        // Format error message with title in a more readable way
-        let titleInfo = title ? ` for event "${title}"` : '';
-        // Use sequential event numbering to match Task import UX
-        let errorMessage = `Event ${eventIndex}: ${errors.join('. ')}${titleInfo}`;
-        rowErrors.push({ rowIndex: eventIndex, message: errorMessage });
+        rowErrors.push({ rowIndex: eventIndex, message: `Event ${eventIndex}: Invalid repeat end date. Use formats: dd/mm/yyyy or yyyy-mm-dd` });
         continue;
       }
 
       // Build payload
       const payload: CreateTaskEventRequest = {
-        user_id: userId || '',
+        user_id: userId,
         title,
-        start_time: startISO || '',
-        end_time: endISO,
+        start_time: startISO,
+        end_time: endISO || undefined,
         all_day: allDay,
         repeat_type: repeatType,
         ...(repeatType !== 'none' && {
           repeat_interval: repeatInterval || 1,
           repeat_unit: repeatUnit,
           repeat_days: repeatDays,
-          repeat_end_type: repeatEndType || 'on',
+          repeat_end_type: repeatEndType || 'never',
           ...((repeatEndType === 'on' || !repeatEndType) && { repeat_end_date: repeatEndDateISO }),
           ...(exclusionDates ? { exclusion_dates: exclusionDates } : {}),
         }),
@@ -504,32 +567,71 @@ export const EventExcelImportModal: React.FC<EventExcelImportModalProps> = ({ is
     setProcessing(false);
     setErrors(rowErrors);
 
-    if (createdCount > 0) {
-      toast.success(t('import_success', { count: createdCount }));
-    }
+    // Log validation summary
     if (rowErrors.length > 0) {
-      rowErrors.slice(0, 3).forEach(er => {
-        toast.error(er.message);
+      console.error(`❌ Import completed with ${rowErrors.length} error(s):`);
+      rowErrors.forEach((err) => {
+        console.log(`  - Row ${err.rowIndex}: ${err.message}`);
+      });
+    } else {
+      console.log(`✅ All events validated successfully! Created: ${createdCount}`);
+    }
+
+    // Show success toast if any events were created
+    if (createdCount > 0) {
+      const SuccessMessage = () => (
+        <div className="flex items-center gap-3">
+          <div className="flex-shrink-0">
+            <svg className="h-6 w-6 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <div className="flex-1">
+            <p className="font-semibold text-green-900">Import successful!</p>
+            <p className="text-sm text-green-800">{createdCount} event{createdCount > 1 ? 's' : ''} imported successfully</p>
+          </div>
+        </div>
+      );
+      toast.success(<SuccessMessage />, {
+        position: 'top-right',
+        autoClose: 4000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        className: 'bg-green-50 border border-green-200 shadow-lg',
+        progressClassName: 'bg-green-500'
       });
     }
 
-  // Gọi callback để refresh events trên UI
-  onImported?.({ createdCount, errors: rowErrors });
-  
-  // Đóng modal nếu không có lỗi
-  if (rowErrors.length === 0) {
-    onClose();
-  }
+    console.log('📤 Calling onImported callback with:', { createdCount, errors: rowErrors });
+    // Gọi callback để refresh events trên UI
+    if (onImported) {
+      console.log('🔔 About to call onImported callback');
+      onImported({ createdCount, errors: rowErrors });
+      console.log('✅ onImported callback finished - Modal should STAY OPEN');
+    } else {
+      console.log('⚠️ onImported callback not provided');
+    }
+    
+  // Keep modal open so user can review any errors that occurred
+  // Modal stays open until user manually closes it via Close/Cancel button
+  // This allows user to see and understand what went wrong
 };
 
 if (!isOpen) return null;
 
 return (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-    <div className="w-full max-w-2xl bg-white rounded-lg shadow-lg p-6">
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+    <div className="w-full max-w-2xl bg-white rounded-lg shadow-lg p-6 max-h-[90vh] overflow-y-auto">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold">{t('import_excel')}</h2>
-        <button aria-label={t('close')} onClick={onClose} className="text-gray-500 hover:text-gray-700">
+        <button 
+          aria-label={t('close')} 
+          onClick={onClose}
+          className="text-gray-500 hover:text-gray-700 transition-colors"
+          title="Close"
+        >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"/></svg>
         </button>
       </div>
@@ -571,7 +673,11 @@ return (
         )}
 
         <div className="flex items-center justify-end space-x-2">
-          <button onClick={onClose} className="px-3 py-2 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm">
+          <button 
+            onClick={onClose}
+            className="px-3 py-2 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm transition-colors"
+            title="Close modal"
+          >
             {t('cancel')}
           </button>
           <button disabled={parsing || processing || !rows.length} onClick={processImport} className={`px-3 py-2 rounded-md text-white text-sm ${parsing || processing || !rows.length ? 'bg-green-300' : 'bg-green-500 hover:bg-green-600'}`}>

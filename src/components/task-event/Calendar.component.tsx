@@ -1390,6 +1390,7 @@ export const Calendar: React.FC<CalendarProps> = ({
           handlePrevious={handlePrevious}
           handleNext={handleNext}
           handleToday={handleToday}
+          refreshTaskEvents={refreshTaskEvents}
           onOpenEventImport={openEventImport}
           onDownloadEventTemplate={handleDownloadEventTemplate}
         />
@@ -1453,14 +1454,38 @@ export const Calendar: React.FC<CalendarProps> = ({
 
 
 
-      {/* TaskDetail Modal */}
-      {showTaskDetail && selectedTaskEvent && (
+      {/* TaskDetail Modal - Show different detail component based on source */}
+      {showTaskDetail && selectedTaskEvent && selectedSource === 'task' && (
         <TaskDetail
           task={convertTaskEventToTask(selectedTaskEvent)}
           tags={allTags}
           onClose={handleTaskDetailClose}
           onEdit={handleTaskDetailEdit}
           onDelete={handleTaskDetailDelete}
+        />
+      )}
+
+      {/* TaskEventDetail Modal - Show for calendar events */}
+      {selectedTaskEvent && selectedSource === 'event' && (
+        <TaskEventDetail
+          event={selectedTaskEvent}
+          isOpen={showTaskDetail}
+          onClose={handleTaskDetailClose}
+          tags={taskTags[selectedTaskEvent._id] || []}
+          onEdit={() => {
+            setShowTaskDetail(false);
+            setSelectedEvent(selectedTaskEvent);
+            setIsModalOpen(true);
+          }}
+          onDelete={() => {
+            setShowTaskDetail(false);
+            setEventToDelete(selectedTaskEvent);
+            if (isRecurringEvent(selectedTaskEvent) || isRecurringInstance(selectedTaskEvent)) {
+              setIsRecurringDeleteOpen(true);
+            } else {
+              setIsDeleteConfirmOpen(true);
+            }
+          }}
         />
       )}
 
