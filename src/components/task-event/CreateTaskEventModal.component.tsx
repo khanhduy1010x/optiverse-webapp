@@ -284,6 +284,8 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
           type="button"
           onClick={() => { resetForm(); onClose(); }}
           className="absolute top-3 right-3 p-2 hover:bg-gray-100 rounded-full transition-colors"
+          title={t('close')}
+          aria-label={t('close')}
         >
           <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -539,6 +541,9 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
                     value={formData.repeat_to || ''}
                     onChange={e => handleInputChange('repeat_to', e.target.value)}
                     className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    title={t('select_week')}
+                    aria-label={t('select_week')}
+                    placeholder={t('select_week')}
                   />
                 )}
                 {formData.repeat_type === 'monthly' && (
@@ -547,6 +552,9 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
                     value={formData.repeat_to || ''}
                     onChange={e => handleInputChange('repeat_to', e.target.value)}
                     className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    title={t('select_month')}
+                    aria-label={t('select_month')}
+                    placeholder={t('select_month')}
                   />
                 )}
                 {formData.repeat_type === 'yearly' && (

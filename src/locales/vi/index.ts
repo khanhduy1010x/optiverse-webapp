@@ -13,6 +13,7 @@ import error from './error.json';
 import taskEvent from './task-event.json';
 import chat from './chat.json';
 import workspace from './workspace.json';
+import workspaceTask from './workspace-task.json';
 
 export default {
   common,
@@ -30,4 +31,5 @@ export default {
   'task-event': taskEvent,
   chat,
   workspace,
+  'workspace-task': workspaceTask,
 };

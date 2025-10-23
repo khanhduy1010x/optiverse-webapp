@@ -1,0 +1,106 @@
+{
+  "workspace_task": {
+    "title": "Công Việc Workspace",
+    "kanban_board": "Bảng Kanban",
+    "list_view": "Xem Danh Sách",
+    "add_task": "Thêm Công Việc",
+    "create_task": "Tạo Công Việc Mới",
+    "edit_task": "Chỉnh Sửa Công Việc",
+    "delete_task": "Xóa Công Việc",
+    "task_title": "Tiêu Đề Công Việc",
+    "task_description": "Mô Tả",
+    "task_title_placeholder": "Nhập tiêu đề công việc...",
+    "task_description_placeholder": "Nhập mô tả công việc...",
+    "no_description": "Chưa có mô tả",
+    "subtasks": "Công Việc Con",
+    "add_subtask": "Thêm Công Việc Con",
+    "create_subtask": "Tạo Công Việc Con",
+    "subtask_title": "Tiêu Đề Công Việc Con",
+    "subtask_title_placeholder": "Nhập tiêu đề công việc con...",
+    "no_subtasks": "Chưa có công việc con",
+    "subtask_count": "{completed} trên {total} hoàn thành",
+    "columns": {
+      "to_do": "Chưa Làm",
+      "in_progress": "Đang Làm",
+      "done": "Hoàn Thành"
+    },
+    "status": {
+      "to_do": "Chưa Làm",
+      "in_progress": "Đang Làm",
+      "done": "Hoàn Thành",
+      "change_status": "Thay Đổi Trạng Thái",
+      "mark_done": "Đánh Dấu Hoàn Thành",
+      "move_next": "Chuyển Sang Bước Tiếp Theo"
+    },
+    "assign": {
+      "title": "Giao Công Việc",
+      "assign_to": "Giao Cho",
+      "assigned_to": "Giao cho {name}",
+      "unassigned": "Chưa Giao",
+      "select_member": "Chọn thành viên...",
+      "no_members": "Không có thành viên",
+      "reassign": "Giao Lại"
+    },
+    "member_activity": {
+      "title": "Hoạt Động Thành Viên",
+      "is_working": "{name} đang làm công việc này",
+      "viewed": "{name} xem công việc này",
+      "no_activity": "Không có hoạt động gần đây"
+    },
+    "created": "Tạo {date}",
+    "created_by": "Tạo bởi {name}",
+    "last_updated": "Cập nhật lần cuối {date}",
+    "buttons": {
+      "create": "Tạo",
+      "cancel": "Hủy",
+      "save": "Lưu",
+      "delete": "Xóa",
+      "confirm_delete": "Xác Nhận Xóa",
+      "confirm": "Xác Nhận",
+      "close": "Đóng",
+      "edit": "Chỉnh Sửa",
+      "assign": "Giao"
+    },
+    "messages": {
+      "task_created": "Công việc được tạo thành công",
+      "task_updated": "Công việc được cập nhật thành công",
+      "task_deleted": "Công việc được xóa thành công",
+      "task_assigned": "Công việc được giao thành công",
+      "subtask_created": "Công việc con được tạo thành công",
+      "subtask_updated": "Công việc con được cập nhật thành công",
+      "subtask_deleted": "Công việc con được xóa thành công",
+      "error_creating_task": "Lỗi khi tạo công việc",
+      "error_updating_task": "Lỗi khi cập nhật công việc",
+      "error_deleting_task": "Lỗi khi xóa công việc",
+      "error_assigning_task": "Lỗi khi giao công việc",
+      "permission_denied": "Bạn không có quyền thực hiện hành động này",
+      "loading": "Đang tải...",
+      "empty_tasks": "Chưa có công việc nào. Tạo một công việc để bắt đầu!"
+    },
+    "add_new_task_description": "Tạo công việc mới cho đội của bạn",
+    "edit_task_description": "Cập nhật chi tiết và thông tin công việc",
+    "add_new_subtask_description": "Chia nhỏ công việc thành các bước dễ xử lý",
+    "task_title_required": "Tiêu đề công việc là bắt buộc",
+    "subtask_title_required": "Tiêu đề công việc con là bắt buộc",
+    "creating": "Đang tạo...",
+    "updating": "Đang cập nhật...",
+    "assigning": "Đang giao...",
+    "unassigning": "Đang bỏ giao...",
+    "processing": "Đang xử lý...",
+    "unassign": "Bỏ Giao",
+    "select_team_member": "Chọn thành viên sẽ thực hiện công việc này",
+    "please_select_member": "Vui lòng chọn một thành viên",
+    "filter": {
+      "all": "Tất Cả",
+      "my_tasks": "Công Việc Của Tôi",
+      "assigned_to_me": "Giao Cho Tôi",
+      "created_by_me": "Tạo Bởi Tôi"
+    },
+    "sorting": {
+      "newest": "Mới Nhất",
+      "oldest": "Cũ Nhất",
+      "most_subtasks": "Nhiều Công Việc Con",
+      "least_subtasks": "Ít Công Việc Con"
+    }
+  }
+}

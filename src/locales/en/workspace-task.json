@@ -1,0 +1,106 @@
+{
+  "workspace_task": {
+    "title": "Workspace Tasks",
+    "kanban_board": "Kanban Board",
+    "list_view": "List View",
+    "add_task": "Add Task",
+    "create_task": "Create New Task",
+    "edit_task": "Edit Task",
+    "delete_task": "Delete Task",
+    "task_title": "Task Title",
+    "task_description": "Description",
+    "task_title_placeholder": "Enter task title...",
+    "task_description_placeholder": "Enter task description...",
+    "no_description": "No description provided",
+    "subtasks": "Subtasks",
+    "add_subtask": "Add Subtask",
+    "create_subtask": "Create Subtask",
+    "subtask_title": "Subtask Title",
+    "subtask_title_placeholder": "Enter subtask title...",
+    "no_subtasks": "No subtasks yet",
+    "subtask_count": "{completed} of {total} completed",
+    "columns": {
+      "to_do": "To Do",
+      "in_progress": "In Progress",
+      "done": "Done"
+    },
+    "status": {
+      "to_do": "To Do",
+      "in_progress": "In Progress",
+      "done": "Done",
+      "change_status": "Change Status",
+      "mark_done": "Mark as Done",
+      "move_next": "Move Next"
+    },
+    "assign": {
+      "title": "Assign Task",
+      "assign_to": "Assign To",
+      "assigned_to": "Assigned to {name}",
+      "unassigned": "Unassigned",
+      "select_member": "Select a member...",
+      "no_members": "No members available",
+      "reassign": "Reassign"
+    },
+    "member_activity": {
+      "title": "Member Activity",
+      "is_working": "{name} is working on this task",
+      "viewed": "{name} viewed this task",
+      "no_activity": "No recent activity"
+    },
+    "created": "Created {date}",
+    "created_by": "Created by {name}",
+    "last_updated": "Last updated {date}",
+    "buttons": {
+      "create": "Create",
+      "cancel": "Cancel",
+      "save": "Save",
+      "delete": "Delete",
+      "confirm_delete": "Confirm Delete",
+      "confirm": "Confirm",
+      "close": "Close",
+      "edit": "Edit",
+      "assign": "Assign"
+    },
+    "messages": {
+      "task_created": "Task created successfully",
+      "task_updated": "Task updated successfully",
+      "task_deleted": "Task deleted successfully",
+      "task_assigned": "Task assigned successfully",
+      "subtask_created": "Subtask created successfully",
+      "subtask_updated": "Subtask updated successfully",
+      "subtask_deleted": "Subtask deleted successfully",
+      "error_creating_task": "Error creating task",
+      "error_updating_task": "Error updating task",
+      "error_deleting_task": "Error deleting task",
+      "error_assigning_task": "Error assigning task",
+      "permission_denied": "You don't have permission to perform this action",
+      "loading": "Loading...",
+      "empty_tasks": "No tasks yet. Create one to get started!"
+    },
+    "add_new_task_description": "Create a new task for your team",
+    "edit_task_description": "Update task details and information",
+    "add_new_subtask_description": "Break down your task into smaller steps",
+    "task_title_required": "Task title is required",
+    "subtask_title_required": "Subtask title is required",
+    "creating": "Creating...",
+    "updating": "Updating...",
+    "assigning": "Assigning...",
+    "unassigning": "Unassigning...",
+    "processing": "Processing...",
+    "unassign": "Unassign",
+    "select_team_member": "Choose who will work on this task",
+    "please_select_member": "Please select a member",
+    "filter": {
+      "all": "All",
+      "my_tasks": "My Tasks",
+      "assigned_to_me": "Assigned to Me",
+      "created_by_me": "Created by Me"
+    },
+    "sorting": {
+      "newest": "Newest",
+      "oldest": "Oldest",
+      "most_subtasks": "Most Subtasks",
+      "least_subtasks": "Least Subtasks"
+    }
+  }
+}

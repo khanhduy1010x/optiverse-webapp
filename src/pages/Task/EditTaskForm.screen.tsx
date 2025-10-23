@@ -475,6 +475,7 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
               <label className="block text-xs font-medium text-gray-600 mb-2">{t('tags')}</label>
               <div className="flex flex-wrap gap-2 mb-2">
                 {selectedTags.map((tag) => (
+                  // eslint-disable-next-line react/style-prop-object
                   <span
                     key={tag._id}
                     className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium"
@@ -496,6 +497,7 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
                 {allTags
                   .filter(tag => !selectedTags.some(selected => selected._id === tag._id))
                   .map((tag) => (
+                    // eslint-disable-next-line react/style-prop-object
                     <button
                       key={tag._id}
                       type="button"
@@ -525,6 +527,8 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
                       className="w-full px-2 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                       maxLength={20}
                       autoComplete="off"
+                      title={t('Tag name')}
+                      aria-label={t('Tag name')}
                     />
                     <div className="flex items-center gap-2">
                       <input
@@ -532,6 +536,8 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
                         value={newTagColor}
                         onChange={(e) => setNewTagColor(e.target.value)}
                         className="w-6 h-6 border border-gray-200 rounded cursor-pointer"
+                        title={t('Color')}
+                        aria-label={t('Color')}
                       />
                       <span className="text-xs text-gray-500">{t('Color')}</span>
                     </div>

@@ -1,0 +1,1212 @@
+/* ====== Workspace Task - Minimal Modern Kanban Board ====== */
+:root {
+  --primary: #2563eb;
+  --primary-dark: #1e40af;
+  --primary-light: #dbeafe;
+  --gray-0: #ffffff;
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-900: #111827;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+}
+
+/* ====== WORKSPACE HEADER ====== */
+.workspace-task-header {
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: none;
+}
+
+.workspace-task-header-container {
+  padding: 24px;
+  max-width: 100%;
+}
+
+.workspace-task-header-info {
+  margin-bottom: 20px;
+}
+
+.workspace-task-header-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.workspace-task-header-description {
+  font-size: 14px;
+  color: #6b7280;
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+
+.workspace-task-header-id {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 6px;
+  margin-bottom: 0;
+}
+
+.workspace-task-header-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.workspace-task-header-tab {
+  padding: 10px 16px;
+  border-radius: 6px;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.workspace-task-header-tab:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.workspace-task-header-tab.active {
+  background: #2563eb;
+  color: white;
+}
+
+/* ====== BOARD LAYOUT ====== */
+.workspace-task-board-header {
+  display: flex;
+  justify-content: flex-end;
+  padding: 20px 24px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.workspace-task-board {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 20px;
+  padding: 24px;
+  background: #f9fafb;
+  min-height: calc(100vh - 200px);
+}
+
+/* ====== COLUMN STYLING ====== */
+.workspace-task-column {
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+  height: fit-content;
+  max-height: 80vh;
+  border: 1px solid #e5e7eb;
+}
+
+.workspace-task-column:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Column Header */
+.workspace-task-column-header {
+  padding: 16px;
+  background: #ffffff;
+  color: #111827;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 15px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.workspace-task-column-header.to-do {
+  border-bottom: 2px solid #ef4444;
+}
+
+.workspace-task-column-header.in-progress {
+  border-bottom: 2px solid #f59e0b;
+}
+
+.workspace-task-column-header.done {
+  border-bottom: 2px solid #10b981;
+}
+
+.workspace-task-column-count {
+  background: #e5e7eb;
+  color: #6b7280;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Column Body */
+.workspace-task-column-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 300px;
+}
+
+.workspace-task-column-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.workspace-task-column-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.workspace-task-column-body::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.workspace-task-column-body::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Task Card */
+.workspace-task-card {
+  background: #ffffff;
+  border-radius: 6px;
+  padding: 12px;
+  border-left: 3px solid #2563eb;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid #e5e7eb;
+  border-left: 3px solid #2563eb;
+}
+
+.workspace-task-card:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  background: #f9fafb;
+}
+
+.workspace-task-card-title {
+  font-weight: 600;
+  color: #111827;
+  font-size: 14px;
+  word-break: break-word;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.workspace-task-card-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.workspace-task-card-subtasks {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--gray-600);
+}
+
+.workspace-task-card-assignee {
+  display: flex;
+  align-items: center;
+}
+
+.workspace-task-card-assignee img {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.workspace-task-card-actions {
+  display: flex;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid var(--gray-100);
+  justify-content: flex-end;
+}
+
+.workspace-task-card-actions button {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.workspace-task-card-actions button:hover {
+  transform: scale(1.05);
+}
+
+.workspace-task-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.workspace-task-card-title {
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 8px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.workspace-task-card-description {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 8px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Subtask Progress Bar */
+.workspace-task-progress {
+  margin-bottom: 8px;
+}
+
+.workspace-task-progress-label {
+  font-size: 11px;
+  color: #6b7280;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.workspace-task-progress-bar {
+  width: 100%;
+  height: 6px;
+  background-color: #e5e7eb;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.workspace-task-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6 0%, #6366f1 100%);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+/* Task Footer */
+.workspace-task-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  font-size: 12px;
+}
+
+.workspace-task-assignee {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.workspace-task-assignee-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.workspace-task-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.workspace-task-action-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.workspace-task-action-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  transform: scale(1.1);
+}
+
+.workspace-task-action-btn.delete:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+/* Modal Styles */
+.workspace-task-modal {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.workspace-task-modal-content {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 20px 25px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s ease;
+}
+
+.workspace-task-modal-header {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.workspace-task-modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.workspace-task-modal-close:hover {
+  color: #6b7280;
+}
+
+.workspace-task-form-group {
+  margin-bottom: 16px;
+}
+
+.workspace-task-form-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+.workspace-task-form-input,
+.workspace-task-form-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  background: #ffffff;
+}
+
+.workspace-task-form-input:focus,
+.workspace-task-form-textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.workspace-task-form-textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+}
+
+/* Modal Backdrop */
+.workspace-task-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.2s ease;
+  padding: 16px;
+}
+
+/* Modal Container */
+.workspace-task-modal {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 24px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  animation: slideUp 0.3s ease;
+  border: 1px solid #f0f0f0;
+  position: relative;
+}
+
+/* Modal Header */
+.workspace-task-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.workspace-task-modal-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0;
+  word-break: break-word;
+  letter-spacing: -0.4px;
+}
+
+.workspace-task-modal-description {
+  font-size: 12px;
+  color: #999;
+  margin-top: 8px;
+  margin-bottom: 0;
+  font-weight: 400;
+}
+
+.workspace-task-modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 4px;
+  margin-left: 16px;
+  transition: color 0.2s ease;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.workspace-task-modal-close:hover {
+  color: #6b7280;
+}
+
+/* Modal Info Bar */
+.workspace-task-modal-info {
+  background: #f9fafb;
+  padding: 12px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+
+.workspace-task-modal-info-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.workspace-task-modal-info-row:last-child {
+  margin-bottom: 0;
+}
+
+.workspace-task-modal-assignee {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.workspace-task-modal-unassigned {
+  color: #9ca3af;
+  font-style: italic;
+  margin-top: 8px;
+}
+
+/* Modal Action Buttons */
+.workspace-task-modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+/* Modal Divider */
+.workspace-task-modal-divider {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 20px;
+  margin-bottom: 20px;
+}
+
+/* Subtasks Section */
+.workspace-task-modal-subtasks-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.workspace-task-modal-subtitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.workspace-task-modal-empty {
+  color: #9ca3af;
+  font-size: 14px;
+  font-style: italic;
+}
+
+.workspace-task-modal-subtasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Subtask Item */
+.workspace-task-modal-subtask-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  background: #f9fafb;
+  padding: 16px;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.workspace-task-modal-subtask-item:hover {
+  background: #f3f4f6;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.workspace-task-modal-subtask-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.workspace-task-modal-subtask-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.workspace-task-checkbox {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.workspace-task-modal-subtask-title {
+  font-weight: 500;
+  color: #111827;
+  display: inline;
+}
+
+.workspace-task-modal-subtask-title.completed {
+  text-decoration: line-through;
+  color: #9ca3af;
+}
+
+.workspace-task-modal-subtask-description {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 6px;
+  margin-left: 32px;
+}
+
+.workspace-task-modal-subtask-meta {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 10px;
+  margin-left: 32px;
+  flex-wrap: wrap;
+}
+
+.workspace-task-modal-subtask-assignee {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.workspace-task-modal-subtask-badge {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.workspace-task-modal-subtask-badge.done {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.workspace-task-modal-subtask-badge.in-progress {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.workspace-task-modal-subtask-badge.to-do {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.workspace-task-modal-subtask-delete {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #ef4444;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.workspace-task-modal-subtask-delete:hover {
+  color: #dc2626;
+}
+
+/* Modal Footer */
+.workspace-task-modal-footer {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.workspace-task-btn-full {
+  flex: 1;
+}
+
+/* Animation */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Scrollbar Styling */
+.workspace-task-column > div:last-child::-webkit-scrollbar {
+  width: 6px;
+}
+
+.workspace-task-column > div:last-child::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.workspace-task-column > div:last-child::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.workspace-task-column > div:last-child::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* ====== FORM STYLES ====== */
+
+.workspace-task-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.workspace-task-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.workspace-task-form-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a1a;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.workspace-task-form-required {
+  color: #ef4444;
+  font-weight: 700;
+}
+
+.workspace-task-form-optional {
+  color: #9ca3af;
+  font-weight: 400;
+  font-size: 12px;
+}
+
+.workspace-task-form-input,
+.workspace-task-form-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 13px;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  background: #ffffff;
+  color: #1a1a1a;
+}
+
+.workspace-task-form-input::placeholder,
+.workspace-task-form-textarea::placeholder {
+  color: #ccc;
+}
+
+.workspace-task-form-input:focus,
+.workspace-task-form-textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.06);
+}
+
+.workspace-task-form-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.workspace-task-form-input:disabled,
+.workspace-task-form-textarea:disabled {
+  background-color: #f9fafb;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.workspace-task-form-hint {
+  font-size: 12px;
+  color: #9ca3af;
+  text-align: right;
+}
+
+.workspace-task-form-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #fef2f2;
+  border: 1px solid #fee;
+  border-radius: 6px;
+  color: #c91111;
+  font-size: 12px;
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
+.workspace-task-form-error span:first-child {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.workspace-task-form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.workspace-task-spinner {
+  display: inline-block;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ====== BUTTON STYLES ====== */
+
+.workspace-task-btn-primary,
+.workspace-task-btn-secondary,
+.workspace-task-btn-danger,
+.workspace-task-btn-action {
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 9px 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+/* Primary Button */
+.workspace-task-btn-primary {
+  background: #2563eb;
+  color: white;
+  flex: 1;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+}
+
+.workspace-task-btn-primary:hover:not(:disabled) {
+  background: #1d4ed8;
+  box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
+}
+
+.workspace-task-btn-primary:active:not(:disabled) {
+  background: #1e40af;
+  transform: translateY(1px);
+}
+
+.workspace-task-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Secondary Button */
+.workspace-task-btn-secondary {
+  background: #f5f5f5;
+  color: #666;
+  flex: 1;
+  border: 1px solid #e8e8e8;
+}
+
+.workspace-task-btn-secondary:hover:not(:disabled) {
+  background: #efefef;
+  border-color: #d8d8d8;
+}
+
+.workspace-task-btn-secondary:active:not(:disabled) {
+  background: #e8e8e8;
+  transform: translateY(1px);
+}
+
+.workspace-task-btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Danger Button */
+.workspace-task-btn-danger {
+  background: #fecaca;
+  color: #991b1b;
+  flex: 1;
+}
+
+.workspace-task-btn-danger:hover:not(:disabled) {
+  background: #fca5a5;
+}
+
+.workspace-task-btn-danger:active:not(:disabled) {
+  background: #f87171;
+}
+
+.workspace-task-btn-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Action Button (inline) */
+.workspace-task-btn-action {
+  padding: 6px 8px;
+  background: transparent;
+  color: #6b7280;
+  font-size: 16px;
+  border-radius: 6px;
+  flex: none;
+}
+
+.workspace-task-btn-action:hover:not(:disabled) {
+  background: #f3f4f6;
+  color: #2563eb;
+}
+
+.workspace-task-btn-action.workspace-task-btn-danger:hover:not(:disabled) {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* Button Full Width */
+.workspace-task-btn-full {
+  width: 100%;
+}
+
+/* Progress Container */
+.workspace-task-progress-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 12px 0;
+}
+
+.workspace-task-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.workspace-task-progress-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.workspace-task-progress-count {
+  font-size: 12px;
+  font-weight: 700;
+  color: #3b82f6;
+}
+
+.workspace-task-progress-bar {
+  width: 100%;
+  height: 6px;
+  background-color: #e5e7eb;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.workspace-task-progress-fill {
+  height: 100%;
+  background: #2563eb;
+  transition: width 0.3s ease;
+  border-radius: 3px;
+}
+
+/* Avatar */
+.workspace-task-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Task Card Footer */
+.workspace-task-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.workspace-task-card-assignee {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.workspace-task-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Column Header Content */
+.workspace-task-column-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.workspace-task-column-header-content h3 {
+  color: #111827;
+  font-weight: 600;
+  font-size: 15px;
+  margin: 0;
+}
+
+.workspace-task-column-badge {
+  background: #e5e7eb;
+  color: #6b7280;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Empty State */
+.workspace-task-empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 120px;
+  color: #9ca3af;
+  font-size: 14px;
+  text-align: center;
+}
+
+.workspace-task-empty-state p {
+  margin: 0;
+}
+
+/* Modal Create Variant */
+.workspace-task-modal-create {
+  max-width: 480px;
+  max-height: 70vh;
+}
+
+/* Modal Confirm Variant */
+.workspace-task-modal-confirm {
+  max-width: 420px;
+}
+
+.workspace-task-confirm-message {
+  color: #6b7280;
+  font-size: 15px;
+  margin: 16px 0 20px;
+  line-height: 1.6;
+}
+
+/* Members List */
+.workspace-task-members-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.workspace-task-member-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: #f9fafb;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.workspace-task-member-item:hover {
+  background: #f3f4f6;
+  border-color: #e5e7eb;
+}
+
+.workspace-task-member-item.selected {
+  background: #dbeafe;
+  border-color: #3b82f6;
+}
+
+.workspace-task-member-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.workspace-task-member-name {
+  font-weight: 600;
+  color: #111827;
+  font-size: 14px;
+}
+
+.workspace-task-member-email {
+  font-size: 12px;
+  color: #6b7280;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workspace-task-member-check {
+  font-size: 18px;
+  color: #3b82f6;
+  font-weight: 700;
+}
+
+.workspace-task-empty-message {
+  color: #9ca3af;
+  font-size: 14px;
+  padding: 20px;
+  text-align: center;
+  margin: 0;
+}
+
+.workspace-task-member-item.disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* CSS Variables */
+:root {
+  --primary-color: #3b82f6;
+  --primary-light: #60a5fa;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --danger-color: #ef4444;
+}

@@ -122,7 +122,7 @@ export const DayView: React.FC<DayViewProps> = ({
           ))}
         </div>
         {/* Grid giờ */}
-        <div className="ml-20 relative h-[calc(24*6rem)]"> {/* 24h * 24px = 1440px, 1h=6rem=96px */}
+        <div className="ml-20 relative h-[calc(24*6rem)] flex-1 w-full"> {/* 24h * 24px = 1440px, 1h=6rem=96px */}
           {/* Các dòng giờ */}
           {hours.map((hour) => (
             <div key={hour} className="absolute left-0 right-0" style={{top: `${hour * 4.1667}%`, height: '96px', borderBottom: '1px solid #e5e7eb'}}></div>

@@ -5,8 +5,13 @@ import { LoadingState } from '../../components/task-event/LoadingState.component
 import { ErrorState } from '../../components/task-event/ErrorState.component';
 import { CalendarContainer } from '../../components/task-event/CalendarContainer.component';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
+import FloatingAddTaskButton from '../../components/task/FloatingAddTaskButton.component';
 
-const TaskEvent: React.FC = () => {
+interface TaskEventProps {
+  onAddEvent?: () => void;
+}
+
+const TaskEvent: React.FC<TaskEventProps> = ({ onAddEvent }) => {
   const { t } = useAppTranslate('task');
 
   // Custom hook to fetch task events (now uses userId internally)
@@ -46,16 +51,28 @@ const TaskEvent: React.FC = () => {
   }
 
   return (
-    <CalendarContainer
-      taskEvents={taskEvents}
-      loading={loading}
-      error={error}
-      addEvent={addEvent}
-      removeEvent={removeEvent}
-      updateEvent={updateEvent}
-      refreshTaskEvents={refreshTaskEvents}
-      onRefresh={triggerRefresh}
-    />
+    <div className="flex flex-col h-full w-full">
+      <CalendarContainer
+        taskEvents={taskEvents}
+        loading={loading}
+        error={error}
+        addEvent={addEvent}
+        removeEvent={removeEvent}
+        updateEvent={updateEvent}
+        refreshTaskEvents={refreshTaskEvents}
+        onRefresh={triggerRefresh}
+      />
+
+      {/* Floating Add Event Button */}
+      {onAddEvent && (
+        <FloatingAddTaskButton
+          onClick={onAddEvent}
+          title={t('add_event')}
+          position="bottom-right"
+          className="shadow-2xl"
+        />
+      )}
+    </div>
   );
 };
 
