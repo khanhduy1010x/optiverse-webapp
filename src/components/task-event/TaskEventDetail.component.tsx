@@ -75,8 +75,9 @@ export const TaskEventDetail: React.FC<TaskEventDetailProps> = ({
     >
       <button 
         type="button"
-        onClick={onClose} 
+        onClick={onClose}
         title="Close"
+        aria-label="Close"
         className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-200 transition"
       >
         <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
@@ -119,14 +120,18 @@ export const TaskEventDetail: React.FC<TaskEventDetailProps> = ({
       <div className="flex gap-4 mt-6">
         <button 
           type="button"
-          onClick={onEdit} 
+          onClick={onEdit}
+          title="Edit event"
+          aria-label="Edit event"
           className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-bold shadow hover:scale-105 hover:shadow-lg transition-all text-base"
         >
           Edit
         </button>
         <button 
           type="button"
-          onClick={onDelete} 
+          onClick={onDelete}
+          title="Delete event"
+          aria-label="Delete event"
           className="flex-1 px-4 py-2 bg-gradient-to-r from-pink-500 to-red-500 text-white rounded-xl font-bold shadow hover:scale-105 hover:shadow-lg transition-all text-base"
         >
           Delete

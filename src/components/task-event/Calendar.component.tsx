@@ -1374,12 +1374,12 @@ export const Calendar: React.FC<CalendarProps> = ({
   // Removed test event functions used for internal debugging
 
   return (
-    <div className="flex h-full bg-gray-50 relative">
+    <div className="flex flex-col h-full w-full bg-white overflow-hidden">
       {/* Task Overdue Notifier - removed since we no longer have task data */}
       {/* {task && <TaskOverdueNotifier tasks={[task]} taskEvents={taskEvents} />} */}
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col w-full">
         {/* Header */}
         <CalendarHeader
           currentDate={currentDate}
@@ -1396,7 +1396,7 @@ export const Calendar: React.FC<CalendarProps> = ({
         />
 
         {/* Calendar View */}
-        <div className="flex-1 overflow-auto bg-white shadow-sm">
+        <div className="flex-1 overflow-auto bg-white w-full">
           {loading ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">

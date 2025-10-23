@@ -14,9 +14,9 @@ import TaskSidebar from './TaskSidebar.component';
 import TaskEvent from './TaskEvent.screen';
 import { TaskOverdueNotifier, setForceCheckFunction, forceCheckForOverdueTasks } from '../../components/task-event/TaskOverdueNotifier.component';
 import View from '../../components/common/View.component';
-import { CircleButton } from '../../components/common/Button.component';
 import { GROUP_CLASSNAMES } from '../../styles/group-class-name.style';
 import TaskExcelImportModal from '../../components/task/TaskExcelImportModal.component';
+import FloatingAddTaskButton from '../../components/task/FloatingAddTaskButton.component';
 import { CreateTaskEventModalForm } from '../../components/task-event/CreateTaskEventModal.component';
 
 // Hooks
@@ -580,7 +580,7 @@ const TaskPage: React.FC = () => {
 
         {/* Main Content */}
         <View className={GROUP_CLASSNAMES.profileMainContent}>
-          <div className="p-8">
+          <div className={selectedMenu === 'task-event' ? '' : 'p-8'}>
 
 
             {selectedMenu === 'task' ? (
@@ -607,7 +607,6 @@ const TaskPage: React.FC = () => {
                   onOpenTaskImport={handleOpenTaskImport}
                   onDownloadTaskTemplate={handleDownloadTaskTemplate}
                 />
-
                 {/* Task List */}
                 <TaskList
                   filteredTasks={tabFilteredTasks}
@@ -630,7 +629,7 @@ const TaskPage: React.FC = () => {
                 />
               </>
             ) : selectedMenu === 'task-event' ? (
-              <TaskEvent />
+              <TaskEvent onAddEvent={handleCircleButtonClick} />
             ) : (
               <div className="p-6">
                 <h2 className="text-xl font-semibold mb-4">{t('settings_title')}</h2>
@@ -661,12 +660,15 @@ const TaskPage: React.FC = () => {
         </View>
       </View>
 
-      <CircleButton
-        name="add"
-        aria-label={selectedMenu === 'task-event' ? t('add_event') : t('add_task')}
-        title={selectedMenu === 'task-event' ? t('add_event') : t('add_task')}
-        onClick={handleCircleButtonClick}
-      />
+      {/* Floating Add Button - Conditional based on menu */}
+      {selectedMenu === 'task' && (
+        <FloatingAddTaskButton
+          onClick={handleCircleButtonClick}
+          title={t('add_task')}
+          position="bottom-right"
+          className="shadow-2xl"
+        />
+      )}
 
       {/* Task Detail Modal */}
       {showTaskDetail && selectedTask && (

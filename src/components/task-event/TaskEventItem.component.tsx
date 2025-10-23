@@ -18,8 +18,24 @@ export const TaskEventItem: React.FC<TaskEventItemProps> = ({ taskEvent, onEdit,
         </div>
       </div>
       <div className="flex space-x-2">
-        <button onClick={() => onEdit(taskEvent)} className="text-blue-500 hover:text-blue-700">Edit</button>
-        <button onClick={() => onDelete(taskEvent)} className="text-red-500 hover:text-red-700">Delete</button>
+        <button 
+          type="button"
+          onClick={() => onEdit(taskEvent)} 
+          title="Edit event"
+          aria-label="Edit event"
+          className="text-blue-500 hover:text-blue-700"
+        >
+          Edit
+        </button>
+        <button 
+          type="button"
+          onClick={() => onDelete(taskEvent)} 
+          title="Delete event"
+          aria-label="Delete event"
+          className="text-red-500 hover:text-red-700"
+        >
+          Delete
+        </button>
       </div>
     </div>
   );
