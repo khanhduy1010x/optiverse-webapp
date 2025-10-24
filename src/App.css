@@ -12,3 +12,14 @@
 html {
   overscroll-behavior: none;
 }
+
+/* Hide scrollbar while keeping scroll functionality */
+/* For Manager Tags and Filter by Tags */
+.overflow-y-auto {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.overflow-y-auto::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}

@@ -1,0 +1,133 @@
+/* Calendar Grid - Fix border and connector lines */
+
+/* Main calendar container */
+.calendar-grid {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Time row container */
+.calendar-time-row {
+  display: flex;
+  min-height: 64px;
+  position: relative;
+  overflow: visible;
+}
+
+/* Time row - create horizontal border that spans full width */
+.calendar-time-row::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background-color: #ccc;
+  pointer-events: none;
+}
+
+/* Time label */
+.calendar-time-label {
+  width: 80px;
+  flex-shrink: 0;
+  border-right: 1px solid #ccc;
+  background-color: #f9fafb;
+  font-size: 0.75rem;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Day cell - fix border-collapse issue */
+.calendar-cell {
+  flex: 1;
+  position: relative;
+  transition: background-color 200ms;
+  overflow: visible;
+  margin: 0;
+  padding: 0;
+}
+
+/* Day cell - create vertical borders that extend full height */
+.calendar-cell::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: #ccc;
+  pointer-events: none;
+}
+
+/* Remove vertical border from last cell to prevent double border */
+.calendar-cell:last-child::after {
+  display: none;
+}
+
+/* Working hours background */
+.calendar-cell.working-hour {
+  background-color: rgba(249, 250, 251, 0.7);
+}
+
+/* Current time cell background */
+.calendar-cell.current-time {
+  background-color: rgba(253, 230, 138, 0.6);
+}
+
+/* Event container - remove gaps */
+.calendar-events-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+/* Current time indicator line - ensure visibility */
+.calendar-time-indicator {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 2px solid #ec4899;
+  z-index: 10;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  overflow: visible;
+}
+
+.calendar-time-indicator::before {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: -10px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: #ec4899;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-time-indicator::after {
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: -6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: white;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}

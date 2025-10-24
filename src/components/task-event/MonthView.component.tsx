@@ -7,6 +7,7 @@ import { CalendarDeadlineEvent } from './CalendarDeadlineEvent.component';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
 import type { Task } from '../../types/task/response/task.response';
 import { DeadlineBadge } from './DeadlineBadge.component';
+import styles from './MonthView.module.css';
 
 interface MonthViewProps {
   currentDate: Date;
@@ -110,14 +111,14 @@ export const MonthView: React.FC<MonthViewProps> = ({
       t('day_sat'),
     ];
 
-    // Tạo header cho lịch
+    // Tạo header cho lịch với weekday labels
     rows.push(
-      <div key="header" className="grid grid-cols-7 border-b bg-gray-50 shadow-sm">
+      <div key="header" className={styles.weekdayHeader}>
         {weekDays.map((day, index) => (
-          <div 
-            key={index} 
-            className={`p-3 text-center font-medium text-sm border-r ${
-              index === 0 || index === 6 ? 'text-red-500' : 'text-gray-700'
+          <div
+            key={index}
+            className={`${styles.weekdayCell} ${
+              index === 0 || index === 6 ? styles.weekdaySunday : ''
             }`}
           >
             {day}
@@ -131,71 +132,66 @@ export const MonthView: React.FC<MonthViewProps> = ({
       const dayEvents = getEventsForDay(day);
       const isCurrentMonth = isSameMonth(day, currentDate);
       const isTodayDate = isToday(day);
-      const deadlinesForDay = (deadlineTasks || []).filter(t => t.end_time && isSameLocalDay(ensureDate(t.end_time), day));
+      
+      const deadlinesForDay = (deadlineTasks || []).filter(t => {
+        try {
+          const timeToUse = t.start_time ? ensureDate(t.start_time) : (t.end_time ? ensureDate(t.end_time) : null);
+          return timeToUse && isSameLocalDay(timeToUse, day);
+        } catch {
+          return false;
+        }
+      });
       
       cells.push(
         <div
           key={i}
-          className={`min-h-[140px] p-2 border-r border-b relative group transition-all hover:bg-gray-50 ${
-            !isCurrentMonth ? 'bg-gray-50/50' : ''
-          }`}
+          className={`${styles.dayCell} ${!isCurrentMonth ? styles.dayCellOtherMonth : ''}`}
         >
           {/* Hiển thị ngày */}
-          <div 
-            className={`text-right p-1 ${
-              !isCurrentMonth ? 'text-gray-400' : 'text-gray-700'
-            }`}
-          >
-            <span 
-              className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-center ${
-                isTodayDate ? 'bg-blue-600 text-white shadow-md' : ''
-              }`}
-            >
-              {format(day, 'd')}
-            </span>
+          <div className={`${styles.dayNumber} ${isTodayDate ? styles.dayNumberToday : ''} ${!isCurrentMonth ? styles.dayNumberOtherMonth : ''}`}>
+            {format(day, 'd')}
           </div>
-          
-          {/* Hiển thị các deadline và sự kiện trong ngày */}
-          <div className="mt-1 max-h-[100px] overflow-y-auto flex flex-col items-start gap-1 pr-1">
-            {/* Deadline trước, giới hạn tối đa 2 */}
+
+          {/* Hiển thị các deadline và sự kiện */}
+          <div className={styles.eventListContainer}>
+            {/* Deadlines first, max 2 */}
             {deadlinesForDay.slice(0, 2).map((task, idx) => (
               <CalendarDeadlineEvent
                 key={task._id || `deadline-${i}-${idx}`}
                 task={task}
                 onClick={() => onDeadlineClick && onDeadlineClick(task)}
-                className="w-full block"
               />
             ))}
             {deadlinesForDay.length > 2 && (
-              <div className="text-[10px] text-red-700 bg-red-50 rounded-full py-0.5 px-2 inline-block">
-                +{deadlinesForDay.length - 2} more
+              <div className={styles.moreButton}>
+                +{deadlinesForDay.length - 2} {t('more')}
               </div>
             )}
-            {/* Event sau */}
+
+            {/* Events, max 3 */}
             {dayEvents.slice(0, 3).map((event, index) => (
               <CalendarEvent
                 key={event._id || index}
                 event={event}
                 onClick={() => handleEditEvent(event)}
-                className="w-full block"
               />
             ))}
             {dayEvents.length > 3 && (
-              <div 
-                className="text-xs text-center bg-gray-100 rounded-full py-1 px-2 cursor-pointer hover:bg-gray-200 transition-colors w-full font-medium text-gray-700 shadow-sm"
+              <div
+                className={styles.moreButton}
                 onClick={() => dayEvents.slice(3).forEach(event => handleEditEvent(event))}
               >
-                {t('more_count', { count: dayEvents.length - 3 })}
+                +{dayEvents.length - 3} {t('more')}
               </div>
             )}
           </div>
         </div>
       );
 
-      // Tạo hàng mới sau mỗi 7 ô (1 tuần)
+      // Tạo hàng mới sau mỗi 7 ô
       if ((i + 1) % 7 === 0) {
         rows.push(
-          <div key={i} className="grid grid-cols-7">
+          <div key={`row-${i}`} className={styles.calendarGrid}>
             {cells}
           </div>
         );
@@ -206,7 +202,7 @@ export const MonthView: React.FC<MonthViewProps> = ({
     // Thêm hàng cuối cùng nếu còn cells
     if (cells.length > 0) {
       rows.push(
-        <div key="last-row" className="grid grid-cols-7">
+        <div key="last-row" className={styles.calendarGrid}>
           {cells}
         </div>
       );
@@ -216,15 +212,15 @@ export const MonthView: React.FC<MonthViewProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full overflow-auto">
-      {/* Header hiển thị tháng và năm */}
-      <div className="border-b p-4 bg-white sticky top-0 z-10 shadow-sm">
-        <h2 className="text-2xl md:text-3xl font-bold text-center text-gray-800">
+    <div className={styles.monthViewContainer}>
+      {/* Header với tháng và năm */}
+      <div className={styles.header}>
+        <h2 className={styles.headerTitle}>
           {format(currentDate, 'MMMM yyyy')}
         </h2>
       </div>
       {/* Lưới lịch */}
-      <div className="flex-grow overflow-x-auto">
+      <div className="flex-grow overflow-auto">
         {renderCalendarRows()}
       </div>
     </div>

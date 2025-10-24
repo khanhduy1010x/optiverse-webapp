@@ -1,10 +1,11 @@
 import React, { useMemo } from 'react';
 import { TaskEvent } from '../../types/task-events/task-events.types';
-import { format, addDays, startOfWeek } from 'date-fns';
+import { format, addDays, startOfWeek, isToday as isDateToday } from 'date-fns';
 import { isSameLocalDay, ensureDate } from '../../utils/date.util';
 import { CalendarEvent } from './CalendarEvent.component';
 import type { Task } from '../../types/task/response/task.response';
 import { CalendarDeadlineEvent } from './CalendarDeadlineEvent.component';
+import styles from './WeekView.module.css';
 
 interface WeekViewProps {
   currentDate: Date;
@@ -108,45 +109,34 @@ export const WeekView: React.FC<WeekViewProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full overflow-auto">
+    <div className={styles.weekViewContainer}>
       {/* Header với các ngày trong tuần */}
-      <div className="flex border-b sticky top-0 bg-white z-10 shadow-sm">
-        <div className="w-20 flex-shrink-0 border-r bg-gray-50"></div>
+      <div className={styles.header}>
+        <div className={styles.headerTimeSidebar}></div>
         {weekDays.map((day, index) => {
-          const isToday = 
-            day.getDate() === new Date().getDate() &&
-            day.getMonth() === new Date().getMonth() &&
-            day.getFullYear() === new Date().getFullYear();
+          const isToday = isDateToday(day);
           return (
-            <div
-              key={index}
-              className={`flex-1 p-3 text-center border-r ${
-                isToday ? 'bg-blue-100/60' : ''
-              }`}
-            >
-              <div className="font-medium text-gray-600 text-base md:text-lg">{format(day, 'EEE')}</div>
-              <div
-                className={`text-xl md:text-2xl rounded-full w-10 h-10 flex items-center justify-center mx-auto ${
-                  isToday ? 'bg-blue-600 text-white shadow-md' : 'text-gray-800'
-                }`}
-              >
+            <div key={index} className={styles.headerDay}>
+              <div className={styles.dayLabel}>{format(day, 'EEE')}</div>
+              <div className={`${styles.dayNumber} ${isToday ? styles.dayNumberToday : ''}`}>
                 {format(day, 'd')}
               </div>
             </div>
           );
         })}
       </div>
+
       {/* Lưới thời gian */}
-      <div className="flex-1 flex flex-col">
+      <div className={styles.gridContainer}>
         {hours.map((hour) => (
-          <div key={hour} className="flex flex-1 min-h-[64px] border-b relative">
-            <div className="w-20 flex-shrink-0 border-r bg-gray-50 text-xs text-gray-500 flex items-center justify-center select-none">
-              {hour}:00
+          <div key={hour} className={styles.timeRowContainer}>
+            <div className={styles.timeCell}>
+              {`${hour.toString().padStart(2, '0')}:00`}
             </div>
             {weekDays.map((day, dayIndex) => {
               const isCurrentTimeCell = isCurrentHour(day, hour);
-              const isWorkingHour = hour >= 9 && hour <= 17; // 9 AM - 5 PM
-              // Đếm số event trong cell này
+              const isWorkingHour = hour >= 9 && hour <= 17;
+              
               const eventsInCell = taskEvents.filter(event => {
                 try {
                   const eventDate = new Date(event.start_time);
@@ -156,62 +146,60 @@ export const WeekView: React.FC<WeekViewProps> = ({
                   return false;
                 }
               });
-              const deadlinesInCell = (deadlineTasks || []).filter(task => {
-                if (!task.end_time) return false;
+              
+              const tasksInCell = (deadlineTasks || []).filter(task => {
                 try {
-                  const d = ensureDate(task.end_time);
-                  return isSameLocalDay(d, day) && d.getHours() === hour;
+                  if (task.start_time) {
+                    const taskDate = new Date(task.start_time);
+                    const taskHour = taskDate.getHours();
+                    return isSameLocalDay(taskDate, day) && taskHour === hour;
+                  }
+                  if (task.end_time) {
+                    const d = ensureDate(task.end_time);
+                    return isSameLocalDay(d, day) && d.getHours() === hour;
+                  }
+                  return false;
                 } catch {
                   return false;
                 }
               });
-              // Tính chiều cao động: mỗi event 56px, min 64px
-              const cellHeight = Math.max(64, (eventsInCell.length * 56) + (deadlinesInCell.length * 40));
+              
               return (
                 <div
                   key={dayIndex}
-                  className={`flex-1 border-r relative transition-colors ${
-                    isCurrentTimeCell ? 'bg-pink-100/60' : 
-                    isWorkingHour ? 'bg-gray-50/70' : ''
-                  }`}
-                  style={{ minHeight: cellHeight, height: cellHeight }}
+                  className={`${styles.dayCell} ${
+                    isCurrentTimeCell ? styles.currentTimeCell : ''
+                  } ${isWorkingHour && !isCurrentTimeCell ? styles.workingHours : ''}`}
                 >
-                  {/* Đường chỉ thời gian hiện tại */}
+                  {/* Current time indicator */}
                   {isCurrentTimeCell && (
                     <div
-                      className="absolute left-0 right-0 border-t-2 border-pink-500 z-10 animate-pulse"
+                      className={styles.currentTimeIndicator}
                       style={{
                         top: `${(currentTime.getMinutes() / 60) * 100}%`,
-                      }}
-                    >
-                      <div className="absolute -left-1 -top-2.5 w-5 h-5 rounded-full bg-pink-500 shadow-md flex items-center justify-center">
-                        <div className="w-2 h-2 rounded-full bg-white"></div>
-                      </div>
-                    </div>
+                      } as React.CSSProperties}
+                    ></div>
                   )}
-                  {/* Container cho các sự kiện trong ngày và giờ này */}
-                  {eventsInCell.map((event, eventIndex) => {
-                    try {
-                      return (
-                        <CalendarEvent
-                          key={event._id || eventIndex}
-                          event={event}
-                          onClick={() => handleEditEvent(event)}
-                          className="w-full block mb-1 rounded-xl shadow-md hover:scale-[1.03] transition-all duration-200"
-                        />
-                      );
-                    } catch (error) {
-                      return null;
-                    }
-                  })}
-                  {deadlinesInCell.map((task, idx) => (
-                    <CalendarDeadlineEvent
-                      key={task._id || `deadline-${dayIndex}-${hour}-${idx}`}
-                      task={task}
-                      onClick={() => onDeadlineClick && onDeadlineClick(task)}
-                      className="w-full block mb-1 rounded-xl shadow-md hover:scale-[1.03] transition-all duration-200"
-                    />
-                  ))}
+
+                  {/* Events container */}
+                  <div className={styles.eventContainer}>
+                    {eventsInCell.map((event, eventIndex) => (
+                      <CalendarEvent
+                        key={event._id || eventIndex}
+                        event={event}
+                        onClick={() => handleEditEvent(event)}
+                        className="w-full"
+                      />
+                    ))}
+                    {tasksInCell.map((task, idx) => (
+                      <CalendarDeadlineEvent
+                        key={task._id || `deadline-${dayIndex}-${hour}-${idx}`}
+                        task={task}
+                        onClick={() => onDeadlineClick && onDeadlineClick(task)}
+                        className="w-full"
+                      />
+                    ))}
+                  </div>
                 </div>
               );
             })}

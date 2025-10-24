@@ -540,11 +540,70 @@ export const useTaskEventList = () => {
     }
   }, [userId]); // Thay đổi dependency từ taskId sang userId
 
-  // Hàm để trigger refresh từ bên ngoài
-  const refreshTaskEvents = useCallback(() => {
-    console.log('Manual refresh triggered');
-    // setRefreshKey(prevKey => prevKey + 1);
-  }, []);
+  // Hàm để trigger refresh từ bên ngoài - thực hiện fetch ngay lập tức
+  const refreshTaskEvents = useCallback(async () => {
+    console.log('Manual refresh triggered - fetching events directly');
+    // Fetch dữ liệu trực tiếp thay vì sử dụng refreshKey
+    if (!userId) {
+      console.log('❌ No userId found, skipping fetch');
+      return;
+    }
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await taskEventService.getTaskEventsByUserId();
+      
+      if (response && response.data) {
+        const rawData: any = response.data?.data;
+        let events: TaskEvent[] = [];
+        
+        if (Array.isArray(rawData)) {
+          events = rawData as TaskEvent[];
+          console.log('✅ Parsed as direct array, events count:', events.length);
+        } else if (rawData && Array.isArray(rawData.taskEvents)) {
+          events = rawData.taskEvents as TaskEvent[];
+          console.log('✅ Parsed from taskEvents property, events count:', events.length);
+        } else if (rawData && typeof rawData === 'object') {
+          const possibleArrayKeys = Object.keys(rawData).filter(key => Array.isArray(rawData[key]));
+          if (possibleArrayKeys.length > 0) {
+            events = rawData[possibleArrayKeys[0]] as TaskEvent[];
+            console.log('✅ Found events in key:', possibleArrayKeys[0], 'count:', events.length);
+          }
+        }
+        
+        console.log('📋 Refreshed events count:', events.length);
+        
+        const validEvents = events.filter(event => {
+          if (!event._id || !event.title) {
+            return false;
+          }
+          return true;
+        });
+        
+        const formattedEvents = validEvents.map(event => ({
+          ...event,
+          start_time: event.start_time ? new Date(event.start_time) : new Date(),
+          end_time: event.end_time ? new Date(event.end_time) : undefined
+        }));
+        
+        const allEventsWithRecurring = generateRecurringEvents(formattedEvents);
+        console.log('🔄 Refreshed events with recurring instances:', allEventsWithRecurring.length, 'total events');
+        
+        setTaskEvents(allEventsWithRecurring);
+      } else {
+        console.log('❌ No data in refresh response');
+        setTaskEvents([]);
+      }
+    } catch (err: any) {
+      console.error('❌ Error in refreshTaskEvents:', err);
+      setError('Failed to refresh task events');
+      setTaskEvents([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []); // Empty dependency - userId được access từ closure
 
   // Hàm thêm sự kiện mới - chỉ lưu 1 event gốc vào database, virtual instances sẽ được tạo tự động
   const addEvent = async (newEvent: TaskEvent) => {

@@ -230,24 +230,24 @@ export const GROUP_CLASSNAMES = {
   taskEmptyDescription: 'mt-1 text-sm text-gray-500',
   taskEmptyAction: 'mt-6',
 
-  // Tag management styles
-  tagContainer: 'flex flex-wrap gap-1',
-  tagItem: 'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium',
-  tagManagementContainer: 'px-4 py-4',
-  tagManagementSection: 'mb-4',
-  tagManagementTitle: 'text-sm font-medium text-gray-700 mb-2',
+  // Tag management styles - Apple Design
+  tagContainer: 'flex flex-wrap gap-2',
+  tagItem: 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium',
+  tagManagementContainer: 'px-6 py-6 space-y-6',
+  tagManagementSection: 'space-y-3',
+  tagManagementTitle: 'text-sm font-semibold text-gray-900 tracking-tight',
   tagManagementInput:
-    'flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500',
-  tagManagementColorInput: 'w-10 h-10 border-0 p-0 cursor-pointer rounded',
-  tagManagementButton: 'px-3 py-2 rounded text-sm',
-  tagManagementButtonActive: 'bg-red-500 text-white hover:bg-red-600',
-  tagManagementButtonDisabled: 'bg-gray-300 text-gray-500 cursor-not-allowed',
+    'flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white focus:border-transparent transition-all',
+  tagManagementColorInput: 'w-11 h-11 border-0 p-0 cursor-pointer rounded-xl shadow-sm hover:shadow-md transition-shadow',
+  tagManagementButton: 'px-4 py-2 rounded-lg text-sm font-medium transition-all',
+  tagManagementButtonActive: 'bg-blue-500 text-white hover:bg-blue-600 active:scale-95',
+  tagManagementButtonDisabled: 'bg-gray-100 text-gray-400 cursor-not-allowed',
   tagManagementList:
-    'mt-2 max-h-64 overflow-y-auto rounded-md divide-y divide-gray-100',
+    'mt-4 max-h-80 overflow-y-auto space-y-2 pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent',
   tagManagementListItem:
-    'py-2 px-3 flex items-center justify-between hover:bg-gray-50 transition-colors',
+    'py-3 px-4 flex items-center justify-between hover:bg-gray-50 rounded-xl transition-all duration-200 group',
   tagManagementDeleteButton:
-    'text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-gray-100',
+    'text-gray-400 hover:text-blue-500 p-1.5 rounded-lg hover:bg-gray-100 transition-all opacity-0 group-hover:opacity-100',
 
   // Delete confirmation modal
   deleteConfirmModal: 'bg-white rounded-lg shadow-xl p-5 max-w-[90vw]',
