@@ -11,7 +11,7 @@ import type { RootState } from '../../store';
 interface EventExcelImportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onImported?: (result: { createdCount: number; errors: { rowIndex: number; message: string }[] }) => void;
+  onImported?: (result: { createdCount: number; errors: { rowIndex: number; message: string }[] }) => void | Promise<void>;
 }
 
 // Helpers
@@ -438,7 +438,22 @@ export const EventExcelImportModal: React.FC<EventExcelImportModalProps> = ({ is
       // Validate repeat fields
   const rawRepeat = r['repeat'] ?? r['repeat_type'] ?? r['recurring'] ?? r['recurrence'];
       const repeatType = normalizeRepeatSelection(rawRepeat?.toString?.());
-      const repeatUnit = normalizeRepeatUnit(r['repeat_unit']?.toString?.());
+      
+      // Convert repeatType to repeatUnit automatically
+      // If repeatType is provided, derive the unit from it; otherwise check repeat_unit column
+      let repeatUnit: RepeatUnit | undefined;
+      if (repeatType !== 'none') {
+        // Map repeatType to RepeatUnit
+        if (['daily', 'day'].includes(repeatType)) repeatUnit = 'day';
+        else if (['weekly', 'week'].includes(repeatType)) repeatUnit = 'week';
+        else if (['monthly', 'month'].includes(repeatType)) repeatUnit = 'month';
+        else if (['yearly', 'year'].includes(repeatType)) repeatUnit = 'year';
+        else if (repeatType === 'weekday') repeatUnit = 'day'; // weekday maps to day unit
+        else if (repeatType === 'custom') repeatUnit = normalizeRepeatUnit(r['repeat_unit']?.toString?.());
+      } else {
+        // If no repeat type, still try to get unit from repeat_unit column
+        repeatUnit = normalizeRepeatUnit(r['repeat_unit']?.toString?.());
+      }
       const repeatInterval = parseNumber(r['repeat_interval']);
       const repeatDays = parseRepeatDays(r['repeat_days']);
       const repeatOccurrences = parseNumber(r['repeat_occurrences']);
@@ -608,8 +623,16 @@ export const EventExcelImportModal: React.FC<EventExcelImportModalProps> = ({ is
     // Gọi callback để refresh events trên UI
     if (onImported) {
       console.log('🔔 About to call onImported callback');
-      onImported({ createdCount, errors: rowErrors });
-      console.log('✅ onImported callback finished - Modal should STAY OPEN');
+      try {
+        const result = onImported({ createdCount, errors: rowErrors });
+        // If result is a Promise, await it
+        if (result instanceof Promise) {
+          await result;
+        }
+        console.log('✅ onImported callback finished - Events refreshed');
+      } catch (err) {
+        console.error('❌ Error in onImported callback:', err);
+      }
     } else {
       console.log('⚠️ onImported callback not provided');
     }

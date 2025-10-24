@@ -2,7 +2,7 @@ import React from 'react';
 import { Tag } from '../../types/task/response/tag.response';
 import { GROUP_CLASSNAMES } from '../../styles/group-class-name.style';
 import { TaskStatusTab } from './Task.page';
-import NotificationBell from '../../components/task-event/NotificationBell.component';
+import NotificationBell from '../../components/task/NotificationBell.component';
 import { Task } from '../../types/task/response/task.response';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
 import { ImportDropdown } from '../../components/common/ImportDropdown.component';
@@ -313,19 +313,6 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
         <div className="flex mb-4 border-b border-gray-200">
           <button
             className={`px-4 py-2 font-medium text-sm mr-2 ${
-              activeTab === 'all'
-                ? 'text-blue-600 border-b-2 border-blue-500'
-                : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-            onClick={() => handleTabChange('all')}
-          >
-            {t('all')}
-            <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-700">
-              {taskCounts.all}
-            </span>
-          </button>
-          <button
-            className={`px-4 py-2 font-medium text-sm mr-2 ${
               activeTab === 'pending'
                 ? 'text-blue-600 border-b-2 border-blue-500'
                 : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -351,7 +338,7 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
             </span>
           </button>
           <button
-            className={`px-4 py-2 font-medium text-sm ${
+            className={`px-4 py-2 font-medium text-sm mr-2 ${
               activeTab === 'overdue'
                 ? 'text-blue-600 border-b-2 border-blue-500'
                 : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -361,6 +348,19 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
             {t('overdue')}
             <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-700">
               {taskCounts.overdue}
+            </span>
+          </button>
+          <button
+            className={`px-4 py-2 font-medium text-sm ${
+              activeTab === 'all'
+                ? 'text-blue-600 border-b-2 border-blue-500'
+                : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+            onClick={() => handleTabChange('all')}
+          >
+            {t('all')}
+            <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-700">
+              {taskCounts.all}
             </span>
           </button>
         </div>

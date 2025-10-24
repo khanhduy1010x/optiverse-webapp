@@ -1,6 +1,7 @@
 import React from 'react';
 import { Task } from '../../types/task/response/task.response';
 import { Tag } from '../../types/task/response/tag.response';
+import TagItem from './TagItem.component';
 
 interface TaskListItemProps {
   task: Task;
@@ -23,9 +24,12 @@ export const TaskListItem: React.FC<TaskListItemProps> = ({ task, tags, onEdit, 
           <span className="ml-2 text-xs text-gray-500">{task.priority}</span>
         </div>
         <div className="text-xs text-gray-500 mt-1">{task.description}</div>
-        <div className="flex flex-wrap gap-1 mt-1">
+        <div className="flex flex-wrap gap-2 mt-2">
           {tags.map(tag => (
-            <span key={tag._id} className="bg-gray-200 text-gray-700 rounded px-2 py-0.5 text-xs">{tag.name}</span>
+            <TagItem
+              key={tag._id || `temp-${tag.name}-${Math.random().toString(36).substr(2, 9)}`}
+              tag={tag}
+            />
           ))}
         </div>
       </div>

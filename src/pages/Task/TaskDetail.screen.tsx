@@ -6,6 +6,7 @@ import { TaskDetailProps } from '../../types/task/props/component.props';
 import Modal from 'react-modal';
 import { formatConsistentDateTime } from '../../utils/date.utils';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
+import TagItem from '../../components/task/TagItem.component';
 
 const TaskDetail: React.FC<TaskDetailProps> = ({
     task,
@@ -104,16 +105,11 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
                                 </div>
                                 <div className={GROUP_CLASSNAMES.tagContainer}>
                                     {tags.map((tag) => (
-                                        <span
+                                        <TagItem
                                             key={tag._id || `temp-${tag.name}-${Math.random().toString(36).substr(2, 9)}`}
+                                            tag={tag}
                                             className={GROUP_CLASSNAMES.tagItem}
-                                            style={{
-                                                backgroundColor: tag.color ? `${tag.color}15` : '#e5e7eb15',
-                                                color: tag.color || '#6b7280'
-                                            }}
-                                        >
-                                            {tag.name || t('unnamed_tag')}
-                                        </span>
+                                        />
                                     ))}
                                 </div>
                             </div>

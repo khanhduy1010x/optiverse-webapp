@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { TaskEvent, RepeatType } from '../../types/task-events/task-events.types';
 import { CalendarHeader } from './CalendarHeader.component';
 import { CalendarSidebar } from './CalendarSidebar.component';
@@ -92,6 +92,7 @@ export const Calendar: React.FC<CalendarProps> = ({
   const [showDeleteTaskConfirm, setShowDeleteTaskConfirm] = useState(false);
   const [selectedTaskEvent, setSelectedTaskEvent] = useState<TaskEvent | null>(null);
   const [selectedSource, setSelectedSource] = useState<'event' | 'task' | null>(null);
+  const [selectedOriginalTask, setSelectedOriginalTask] = useState<Task | null>(null);
 
   // EditTaskForm states
   const [editTitle, setEditTitle] = useState('');
@@ -156,11 +157,18 @@ export const Calendar: React.FC<CalendarProps> = ({
   const [isAllDay, setIsAllDay] = useState(false);
   const [eventEndDate, setEventEndDate] = useState<Date | null>(null);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
-
   // Event import modal state
   const [isEventImportOpen, setIsEventImportOpen] = useState(false);
   const openEventImport = () => setIsEventImportOpen(true);
   const closeEventImport = () => setIsEventImportOpen(false);
+
+  // Handle event imported - fetch events to refresh UI
+  const handleEventImported = useCallback(async (result: any) => {
+    console.log('✅ Import completed:', result);
+    // Refresh events immediately after import - wait for it to complete
+    await refreshTaskEvents();
+    console.log('✅ Events refreshed successfully - modal stays open');
+  }, [refreshTaskEvents]);
 
   // Download Event Template
   const handleDownloadEventTemplate = () => {
@@ -625,6 +633,7 @@ export const Calendar: React.FC<CalendarProps> = ({
         repeat_type: 'none'
       } as TaskEvent;
       setSelectedTaskEvent(pseudoEvent);
+      setSelectedOriginalTask(task);
       setSelectedSource('task');
       setShowTaskDetail(true);
     } catch (error) {
@@ -655,6 +664,7 @@ export const Calendar: React.FC<CalendarProps> = ({
     setShowTaskDetail(false);
     setSelectedTaskEvent(null);
     setSelectedSource(null);
+    setSelectedOriginalTask(null);
   };
 
   // Handler cho EditTaskForm modal
@@ -1455,10 +1465,10 @@ export const Calendar: React.FC<CalendarProps> = ({
 
 
       {/* TaskDetail Modal - Show different detail component based on source */}
-      {showTaskDetail && selectedTaskEvent && selectedSource === 'task' && (
+      {showTaskDetail && selectedTaskEvent && selectedSource === 'task' && selectedOriginalTask && (
         <TaskDetail
-          task={convertTaskEventToTask(selectedTaskEvent)}
-          tags={allTags}
+          task={selectedOriginalTask}
+          tags={taskTags[selectedOriginalTask._id] || []}
           onClose={handleTaskDetailClose}
           onEdit={handleTaskDetailEdit}
           onDelete={handleTaskDetailDelete}
@@ -1627,7 +1637,7 @@ export const Calendar: React.FC<CalendarProps> = ({
       <EventExcelImportModal
         isOpen={isEventImportOpen}
         onClose={closeEventImport}
-        onImported={() => refreshTaskEvents()}
+        onImported={handleEventImported}
       />
     </div>
   );

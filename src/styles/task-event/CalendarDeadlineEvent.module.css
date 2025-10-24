@@ -1,0 +1,183 @@
+/* Apple-style Deadline/Task Card Styles - Different from Events */
+
+.deadlineCard {
+  cursor: pointer;
+  border-radius: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 200ms ease-in-out;
+  border-top: 3px solid;
+  border-left: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.deadlineCard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0));
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+.deadlineCard:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.deadlineCard:hover::before {
+  opacity: 1;
+}
+
+.deadlineContent {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+.deadlineDot {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  margin-top: 0.125rem;
+  border: 2px solid currentColor;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.625rem;
+  font-weight: 700;
+  background: currentColor;
+}
+
+.deadlineBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.deadlineTitle {
+  font-weight: 600;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deadlineInfo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.deadlineTime {
+  font-size: 0.75rem;
+  opacity: 0.75;
+  font-weight: 500;
+}
+
+.statusBadge {
+  font-size: 0.625rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  opacity: 0.9;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* Status Color Variants - Top Border Color */
+
+.pending {
+  background-color: rgb(239, 246, 255);
+  border-top-color: rgb(96, 165, 250);
+  color: rgb(30, 58, 138);
+}
+
+.pending .statusBadge {
+  background-color: rgba(96, 165, 250, 0.2);
+  color: rgb(29, 78, 216);
+}
+
+.completed {
+  background-color: rgb(240, 253, 250);
+  border-top-color: rgb(74, 222, 128);
+  color: rgb(22, 101, 52);
+}
+
+.completed .statusBadge {
+  background-color: rgba(74, 222, 128, 0.2);
+  color: rgb(22, 163, 74);
+}
+
+.overdue {
+  background-color: rgb(254, 242, 242);
+  border-top-color: rgb(248, 113, 113);
+  color: rgb(127, 29, 29);
+}
+
+.overdue .statusBadge {
+  background-color: rgba(248, 113, 113, 0.2);
+  color: rgb(220, 38, 38);
+}
+
+/* Dot/Checkbox Variants */
+
+.pendingDot {
+  color: rgb(59, 130, 246);
+  background-color: rgb(219, 234, 254);
+  border-color: rgb(96, 165, 250);
+}
+
+.completedDot {
+  color: rgb(34, 197, 94);
+  background-color: rgb(220, 252, 231);
+  border-color: rgb(74, 222, 128);
+  font-size: 0.75rem;
+}
+
+.completedDot::after {
+  content: '✓';
+  position: absolute;
+  color: inherit;
+}
+
+.overdueDot {
+  color: rgb(239, 68, 68);
+  background-color: rgb(254, 226, 226);
+  border-color: rgb(248, 113, 113);
+}
+
+@media (max-width: 640px) {
+  .deadlineCard {
+    padding: 0.5rem 0.625rem;
+  }
+
+  .deadlineContent {
+    gap: 0.5rem;
+  }
+
+  .deadlineTitle {
+    font-size: 0.8125rem;
+  }
+
+  .deadlineTime {
+    font-size: 0.6875rem;
+  }
+
+  .statusBadge {
+    font-size: 0.5625rem;
+    padding: 0.2rem 0.375rem;
+  }
+}
+
