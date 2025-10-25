@@ -4,6 +4,7 @@ import { TaskEvent } from '../../types/task-events/task-events.types';
 import { Tag } from '../../types/task/response/tag.response';
 import { format } from 'date-fns';
 import { GROUP_CLASSNAMES } from '../../styles';
+import TagItem from '../task/TagItem.component';
 
 interface TaskEventDetailProps {
   event: TaskEvent;
@@ -102,16 +103,11 @@ export const TaskEventDetail: React.FC<TaskEventDetailProps> = ({
         <div className="w-full mt-6 px-2">
           <div className="flex flex-wrap gap-2 justify-center">
             {tags.map((tag) => (
-              <span
+              <TagItem
                 key={tag._id || `temp-${tag.name}-${Math.random().toString(36).substr(2, 9)}`}
+                tag={tag}
                 className={GROUP_CLASSNAMES.tagItem}
-                style={{
-                  backgroundColor: tag.color ? `${tag.color}15` : '#e5e7eb15',
-                  color: tag.color || '#6b7280'
-                }}
-              >
-                {tag.name}
-              </span>
+              />
             ))}
           </div>
         </div>

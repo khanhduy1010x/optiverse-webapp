@@ -61,37 +61,19 @@ export const formatConsistentDateTime = (isoString: string | Date): string => {
     return '';
   }
   
-  // Lấy thời gian từ chuỗi ISO trực tiếp để tránh chuyển đổi múi giờ
-  if (typeof isoString === 'string') {
-    // Lấy thông tin thời gian từ chuỗi ISO
-    const matches = isoString.match(/T(\d{2}):(\d{2})/);
-    if (matches) {
-      const hour = matches[1];
-      const minute = matches[2];
-      
-      // Format ngày tháng
-      const formatter = new Intl.DateTimeFormat('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-      });
-      
-      // Kết hợp ngày tháng và giờ phút
-      return `${formatter.format(date)} ${hour}:${minute}`;
-    }
-  }
+  // Lấy giờ phút từ Date object local (đã convert sang timezone người dùng)
+  const hour = String(date.getHours()).padStart(2, '0');
+  const minute = String(date.getMinutes()).padStart(2, '0');
   
-  // Fallback nếu không phải chuỗi ISO
+  // Format ngày tháng
   const formatter = new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
   });
   
-  return formatter.format(date);
+  // Kết hợp ngày tháng và giờ phút từ local time
+  return `${formatter.format(date)} ${hour}:${minute}`;
 };
 
 // Convert local datetime-local input value to ISO string with proper timezone handling

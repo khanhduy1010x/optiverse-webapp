@@ -1,0 +1,198 @@
+/* MonthView Grid Styling - Apple Style */
+
+.monthViewContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: auto;
+  background-color: #fff;
+}
+
+.header {
+  padding: 1.5rem 1rem;
+  background-color: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.headerTitle {
+  font-size: 1.875rem;
+  font-weight: 700;
+  text-align: center;
+  color: #111827;
+}
+
+@media (min-width: 768px) {
+  .headerTitle {
+    font-size: 2.25rem;
+  }
+}
+
+.weekdayHeader {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border-bottom: 1px solid #e5e7eb;
+  background-color: rgba(249, 250, 251, 0.5);
+}
+
+.weekdayCell {
+  padding: 1rem 0.75rem;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-right: 1px solid #e5e7eb;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.weekdayCell:last-child {
+  border-right: none;
+}
+
+.weekdaySunday,
+.weekdaySaturday {
+  color: #ef4444;
+}
+
+.calendarGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-auto-rows: 1fr;
+  flex: 1;
+  gap: 0;
+  border: 1px solid #e5e7eb;
+  background-color: #fff;
+}
+
+.dayCell {
+  min-height: 140px;
+  padding: 0.75rem;
+  border-right: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+  background-color: #fff;
+  position: relative;
+  transition: all 200ms ease;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dayCell:nth-child(7n) {
+  border-right: none;
+}
+
+.dayCell:hover {
+  background-color: rgba(59, 130, 246, 0.03);
+  box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.1);
+}
+
+.dayCellOtherMonth {
+  background-color: rgba(249, 250, 251, 0.5);
+}
+
+.dayCellOtherMonth:hover {
+  background-color: rgba(249, 250, 251, 0.8);
+}
+
+.dayNumber {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #111827;
+  margin-left: auto;
+  margin-bottom: 0.5rem;
+}
+
+.dayNumberToday {
+  background-color: #3b82f6;
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+}
+
+.dayNumberOtherMonth {
+  color: #9ca3af;
+}
+
+.eventListContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  overflow-y: auto;
+  flex: 1;
+  padding-right: 0.25rem;
+}
+
+.eventListContainer::-webkit-scrollbar {
+  width: 4px;
+}
+
+.eventListContainer::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.eventListContainer::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 2px;
+}
+
+.eventListContainer::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+.moreButton {
+  font-size: 0.75rem;
+  text-align: center;
+  padding: 0.5rem 0.75rem;
+  background-color: #f3f4f6;
+  border-radius: 6px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 200ms ease;
+  border: 1px solid #e5e7eb;
+}
+
+.moreButton:hover {
+  background-color: #e5e7eb;
+  color: #4b5563;
+}
+
+/* Last row doesn't need bottom border styling */
+.lastRowCell {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+@media (max-width: 768px) {
+  .header {
+    padding: 1rem 0.75rem;
+  }
+
+  .headerTitle {
+    font-size: 1.5rem;
+  }
+
+  .weekdayCell {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .dayCell {
+    min-height: 120px;
+    padding: 0.5rem;
+  }
+
+  .dayNumber {
+    width: 28px;
+    height: 28px;
+    font-size: 0.75rem;
+  }
+}

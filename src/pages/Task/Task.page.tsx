@@ -32,7 +32,7 @@ import taskService from '../../services/task.service';
 import { useTaskStreak } from '../../hooks/streak/useTaskStreak.hook';
 
 // Định nghĩa kiểu dữ liệu cho các tab
-export type TaskStatusTab = 'all' | 'pending' | 'completed' | 'overdue';
+export type TaskStatusTab = 'pending' | 'completed' | 'overdue' | 'all';
 
 const TaskPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -121,7 +121,7 @@ const TaskPage: React.FC = () => {
   }, [searchParams]);
 
   // State mới để theo dõi tab đang được chọn
-  const [activeTab, setActiveTab] = useState<TaskStatusTab>('all');
+  const [activeTab, setActiveTab] = useState<TaskStatusTab>('pending');
 
   // State để lưu trữ các task đã được lọc theo tab
   const [tabFilteredTasks, setTabFilteredTasks] = useState<Task[]>([]);

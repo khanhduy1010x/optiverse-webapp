@@ -1,0 +1,164 @@
+/* Extended Tag Styling Utilities - Apple Design System */
+
+/* Base Tag Item - Default style (already in TagItem.component.css) */
+.tag-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.7rem;
+  background-color: var(--tag-bg-color, #f3f4f6);
+  color: var(--tag-text-color, #6b7280);
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+  border: none;
+  letter-spacing: 0.3px;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: default;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.tag-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  filter: brightness(0.97);
+}
+
+/* Variant: Small - For compact spaces */
+.tag-item.tag-small {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+/* Variant: Large - For more prominent display */
+.tag-item.tag-large {
+  padding: 0.45rem 0.85rem;
+  font-size: 0.875rem;
+}
+
+/* Variant: Outline - For secondary tags */
+.tag-item.tag-outline {
+  background-color: transparent;
+  border: 1px solid currentColor;
+  opacity: 0.7;
+}
+
+.tag-item.tag-outline:hover {
+  opacity: 1;
+  background-color: var(--tag-bg-color, #f3f4f6);
+}
+
+/* Variant: Dark - For dark themes */
+.tag-item.tag-dark {
+  background-color: var(--tag-text-color, #6b7280);
+  color: #ffffff;
+}
+
+.tag-item.tag-dark:hover {
+  filter: brightness(0.9);
+}
+
+/* Animation: Fade in */
+@keyframes fadeInTag {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.tag-item.tag-animate-in {
+  animation: fadeInTag 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Container: Tag list with proper spacing */
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* Container: Inline tag display (for paragraphs/text) */
+.tag-inline {
+  display: inline;
+  margin: 0 0.25rem;
+}
+
+/* State: Disabled */
+.tag-item:disabled,
+.tag-item[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tag-item:disabled:hover,
+.tag-item[aria-disabled="true"]:hover {
+  transform: none;
+  box-shadow: none;
+  filter: none;
+}
+
+/* State: Loading/Skeleton */
+.tag-item.tag-skeleton {
+  background: linear-gradient(
+    90deg,
+    #f3f4f6 25%,
+    #e5e7eb 50%,
+    #f3f4f6 75%
+  );
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Responsive: Mobile optimization */
+@media (max-width: 640px) {
+  .tag-item {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.75rem;
+  }
+  
+  .tag-list {
+    gap: 0.4rem;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .tag-item {
+    --tag-bg-color: #374151;
+    --tag-text-color: #e5e7eb;
+  }
+  
+  .tag-item.tag-outline {
+    border-color: currentColor;
+  }
+}
+
+/* Accessibility: Focus visible */
+.tag-item:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+/* Print optimization */
+@media print {
+  .tag-item {
+    border: 1px solid currentColor;
+    background-color: transparent;
+  }
+}
