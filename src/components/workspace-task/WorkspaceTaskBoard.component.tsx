@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useDispatch } from 'react-redux';
-import { AppDispatch } from '../../store';
 import { WorkspaceTask } from '../../types/workspace-task/workspace-task.types';
-import { TaskColumn, CreateTaskModal } from './index';
-import '../../styles/workspace-task.style.css';
+import WorkspaceTaskListView from './WorkspaceTaskListView.component';
+import WorkspaceTaskBoardView from './WorkspaceTaskBoardView.component';
+import WorkspaceTaskCalendarPicker from './WorkspaceTaskCalendarPicker.component';
 
 interface WorkspaceTaskBoardProps {
   workspaceId: string;
@@ -14,61 +13,74 @@ interface WorkspaceTaskBoardProps {
     'in-progress': WorkspaceTask[];
     done: WorkspaceTask[];
   };
+  filterStatus?: 'to-do' | 'in-progress' | 'done' | 'all';
+  workspaceMembers?: Array<{ _id: string; name: string; email: string; avatar?: string }>;
+  onTaskEdit?: (task: WorkspaceTask) => void;
+  onTaskClick?: (task: WorkspaceTask) => void;
 }
 
 const WorkspaceTaskBoard: React.FC<WorkspaceTaskBoardProps> = ({
   workspaceId,
   tasks,
   tasksByStatus,
+  filterStatus = 'all',
+  workspaceMembers = [],
+  onTaskEdit,
+  onTaskClick,
 }) => {
   const { t } = useTranslation('workspace-task');
-  const dispatch = useDispatch<AppDispatch>();
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [viewType, setViewType] = useState<'list' | 'board' | 'calendar'>('list');
 
-  const columns = [
-    { id: 'to-do', title: t('workspace_task.columns.to_do'), color: 'from-red-500 to-orange-500' },
-    {
-      id: 'in-progress',
-      title: t('workspace_task.columns.in_progress'),
-      color: 'from-yellow-500 to-amber-500',
-    },
-    { id: 'done', title: t('workspace_task.columns.done'), color: 'from-green-500 to-emerald-500' },
-  ];
+  React.useEffect(() => {
+    console.log('[TaskBoard] Rendered with tasks:', tasks);
+    console.log('[TaskBoard] tasksByStatus:', tasksByStatus);
+    console.log('[TaskBoard] viewType:', viewType);
+  }, [tasks, tasksByStatus, viewType]);
 
   return (
-    <>
-      {/* Header with Add Button */}
-      <div className="workspace-task-board-header">
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="workspace-task-btn-primary"
-        >
-          + {t('workspace_task.add_task')}
-        </button>
-      </div>
-
-      {/* Kanban Board */}
-      <div className="workspace-task-board">
-        {columns.map((column) => (
-          <TaskColumn
-            key={column.id}
-            columnId={column.id}
-            columnTitle={column.title}
-            columnColor={column.color}
-            tasks={tasksByStatus[column.id as keyof typeof tasksByStatus]}
-            workspaceId={workspaceId}
-          />
+    <div className="w-full h-full flex flex-col">
+      {/* View Selector - Apple Style */}
+      <div className="flex gap-1 mb-6">
+        {['list', 'board', 'calendar'].map((view) => (
+          <button
+            key={view}
+            onClick={() => setViewType(view as any)}
+            className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 ${
+              viewType === view
+                ? 'bg-gray-900 text-white shadow-sm'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+            }`}
+          >
+            {view === 'list' ? '📋 List' : view === 'board' ? '📊 Board' : '📅 Calendar'}
+          </button>
         ))}
       </div>
 
-      {/* Create Task Modal */}
-      {showCreateModal && (
-        <CreateTaskModal
-          workspaceId={workspaceId}
-          onClose={() => setShowCreateModal(false)}
-        />
-      )}
-    </>
+      {/* View Content */}
+      <div className="flex-1 overflow-auto">
+        {viewType === 'list' && (
+          <WorkspaceTaskListView
+            workspaceId={workspaceId}
+            tasks={tasks}
+            onTaskEdit={onTaskEdit}
+            onTaskClick={onTaskClick}
+          />
+        )}
+        {viewType === 'board' && (
+          <WorkspaceTaskBoardView
+            workspaceId={workspaceId}
+            tasks={tasks}
+            tasksByStatus={tasksByStatus}
+          />
+        )}
+        {viewType === 'calendar' && (
+          <WorkspaceTaskCalendarPicker
+            workspaceId={workspaceId}
+            tasks={tasks}
+          />
+        )}
+      </div>
+    </div>
   );
 };
 

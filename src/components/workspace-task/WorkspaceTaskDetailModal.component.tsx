@@ -4,22 +4,23 @@ import { useTranslation } from 'react-i18next';
 import { AppDispatch, RootState } from '../../store';
 import { WorkspaceTask } from '../../types/workspace-task/workspace-task.types';
 import {
-  deleteSubtask,
-  updateSubtaskStatus,
   deleteTask,
   updateTaskStatus,
   getTasksByWorkspace,
 } from '../../store/slices/workspace_task.slice';
-import { EditTaskModal, AssignMemberModal, CreateSubtaskModal, ConfirmModal } from './index';
+import WorkspaceEditTaskModal from './WorkspaceEditTaskModal.component';
+import WorkspaceAssignMemberModal from './WorkspaceAssignMemberModal.component';
+import WorkspaceConfirmModal from './WorkspaceConfirmModal.component';
+import './workspace-task.component.css';
 
-interface TaskDetailModalProps {
+interface WorkspaceTaskDetailModalProps {
   task: WorkspaceTask;
   workspaceId: string;
   workspaceMembers?: Array<{ _id: string; name: string; email: string; avatar?: string }>;
   onClose: () => void;
 }
 
-const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
+const WorkspaceTaskDetailModal: React.FC<WorkspaceTaskDetailModalProps> = ({
   task: initialTask,
   workspaceId,
   workspaceMembers = [],
@@ -27,15 +28,13 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 }) => {
   const { t } = useTranslation('workspace-task');
   const dispatch = useDispatch<AppDispatch>();
-  
+
   // Get fresh task data from Redux after updates
   const allTasks = useSelector((state: RootState) => state.workspaceTask.tasks);
-  const task = allTasks.find(t => t._id === initialTask._id) || initialTask;
-  
+  const task = allTasks.find((t) => t._id === initialTask._id) || initialTask;
+
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
-  const [isCreateSubtaskModalOpen, setIsCreateSubtaskModalOpen] = useState(false);
-  const [confirmDeleteSubtaskId, setConfirmDeleteSubtaskId] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -45,34 +44,9 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
     const labels: Record<string, string> = {
       'to-do': 'To Do',
       'in-progress': 'In Progress',
-      'done': 'Done',
+      done: 'Done',
     };
     return labels[status] || status;
-  };
-
-  const handleDeleteSubtask = (subtaskId: string) => {
-    setConfirmDeleteSubtaskId(subtaskId);
-    setShowDeleteConfirm(true);
-  };
-
-  const confirmDeleteSubtask = async () => {
-    if (confirmDeleteSubtaskId) {
-      setLoading(true);
-      setError(null);
-      try {
-        await dispatch(deleteSubtask({ workspaceId, taskId: task._id, subtaskId: confirmDeleteSubtaskId })).unwrap();
-        // Refetch tasks after delete
-        await dispatch(getTasksByWorkspace(workspaceId)).unwrap();
-        setConfirmDeleteSubtaskId(null);
-        setShowDeleteConfirm(false);
-      } catch (err: any) {
-        const errorMsg = err?.message || 'Failed to delete subtask';
-        setError(errorMsg);
-        console.error('Error deleting subtask:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
   };
 
   const handleDeleteTask = () => {
@@ -97,7 +71,11 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
   const handleMoveStatus = async () => {
     const nextStatus =
-      task.status === 'to-do' ? 'in-progress' : task.status === 'in-progress' ? 'done' : 'to-do';
+      task.status === 'to-do'
+        ? 'in-progress'
+        : task.status === 'in-progress'
+          ? 'done'
+          : 'to-do';
     setLoading(true);
     setError(null);
     try {
@@ -106,7 +84,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
           workspaceId,
           taskId: task._id,
           status: nextStatus,
-        }),
+        })
       ).unwrap();
       // Refetch tasks after status update
       await dispatch(getTasksByWorkspace(workspaceId)).unwrap();
@@ -114,30 +92,6 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
       const errorMsg = err?.message || 'Failed to update task status';
       setError(errorMsg);
       console.error('Error updating task status:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleToggleSubtaskStatus = async (subtaskId: string, currentStatus: string) => {
-    const nextStatus = currentStatus === 'to-do' ? 'in-progress' : 'done';
-    setLoading(true);
-    setError(null);
-    try {
-      await dispatch(
-        updateSubtaskStatus({
-          workspaceId,
-          taskId: task._id,
-          subtaskId,
-          status: nextStatus,
-        }),
-      ).unwrap();
-      // Refetch tasks after subtask status update
-      await dispatch(getTasksByWorkspace(workspaceId)).unwrap();
-    } catch (err: any) {
-      const errorMsg = err?.message || 'Failed to update subtask status';
-      setError(errorMsg);
-      console.error('Error updating subtask status:', err);
     } finally {
       setLoading(false);
     }
@@ -171,9 +125,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
             </svg>
           </button>
           <h2 className="text-2xl font-bold text-gray-900 pr-8 mb-2">{task.title}</h2>
-          {task.description && (
-            <p className="text-sm text-gray-600">{task.description}</p>
-          )}
+          {task.description && <p className="text-sm text-gray-600">{task.description}</p>}
         </div>
 
         {/* Content */}
@@ -183,20 +135,20 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
             <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex gap-2">
               <span className="text-red-600 font-medium text-sm">⚠️</span>
               <span className="text-red-600 text-sm">{error}</span>
-              <button
-                onClick={() => setError(null)}
-                className="ml-auto text-red-400 hover:text-red-600"
-              >
+              <button onClick={() => setError(null)} className="ml-auto text-red-400 hover:text-red-600">
                 ✕
               </button>
             </div>
           )}
+
           {/* Info Cards */}
           <div className="grid grid-cols-3 gap-4">
             {/* Status Card */}
             <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
               <div className="text-xs font-medium text-gray-500 mb-2">Status</div>
-              <div className={`inline-block px-3 py-1 rounded-full border text-sm font-medium ${getStatusColor(task.status)}`}>
+              <div
+                className={`inline-block px-3 py-1 rounded-full border text-sm font-medium ${getStatusColor(task.status)}`}
+              >
                 {getStatusLabel(task.status)}
               </div>
             </div>
@@ -257,7 +209,11 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
               className="px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 text-sm"
             >
               <span>{loading ? '⏳' : '➡️'}</span>
-              {loading ? 'Moving...' : `Move to ${getStatusLabel(task.status === 'to-do' ? 'in-progress' : task.status === 'in-progress' ? 'done' : 'to-do')}`}
+              {loading
+                ? 'Moving...'
+                : `Move to ${getStatusLabel(
+                    task.status === 'to-do' ? 'in-progress' : task.status === 'in-progress' ? 'done' : 'to-do'
+                  )}`}
             </button>
             <button
               onClick={handleDeleteTask}
@@ -267,102 +223,6 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
               <span>🗑️</span>
               Delete
             </button>
-          </div>
-
-          {/* Subtasks Section */}
-          <div className="border-t border-gray-100 pt-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">Subtasks</h3>
-                <p className="text-sm text-gray-500 mt-1">
-                  {task.subtask_completed_count} of {task.subtasks.length} completed
-                </p>
-              </div>
-              <button
-                onClick={() => setIsCreateSubtaskModalOpen(true)}
-                className="px-4 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2 text-sm whitespace-nowrap"
-              >
-                <span>➕</span>
-                Add Subtask
-              </button>
-            </div>
-
-            {/* Progress Bar */}
-            {task.subtasks.length > 0 && (
-              <div className="mb-4 bg-gray-200 rounded-full h-2 overflow-hidden">
-                <div
-                  className="bg-green-500 h-full transition-all"
-                  style={{
-                    width: `${(task.subtask_completed_count / task.subtasks.length) * 100}%`,
-                  }}
-                />
-              </div>
-            )}
-
-            {/* Subtasks List */}
-            {task.subtasks.length === 0 ? (
-              <div className="p-8 text-center bg-gray-50 rounded-lg border border-gray-200">
-                <p className="text-gray-500 text-sm">No subtasks yet. Add one to get started!</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {task.subtasks.map((subtask) => (
-                  <div
-                    key={subtask._id}
-                    className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors flex items-start gap-3"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={subtask.status === 'done'}
-                      onChange={() =>
-                        handleToggleSubtaskStatus(subtask._id, subtask.status)
-                      }
-                      className="mt-1 w-5 h-5 accent-blue-500 rounded cursor-pointer"
-                      title={`Toggle subtask: ${subtask.title}`}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div
-                        className={`font-medium text-sm ${
-                          subtask.status === 'done'
-                            ? 'line-through text-gray-400'
-                            : 'text-gray-900'
-                        }`}
-                      >
-                        {subtask.title}
-                      </div>
-                      {subtask.description && (
-                        <p className="text-xs text-gray-600 mt-1">{subtask.description}</p>
-                      )}
-                      <div className="flex items-center gap-3 mt-2 text-xs">
-                        <span className="text-gray-600">
-                          👤 {subtask.assigned_to?.name || 'Unassigned'}
-                        </span>
-                        <span
-                          className={`px-2 py-1 rounded-full font-medium border ${getStatusColor(
-                            subtask.status
-                          )}`}
-                        >
-                          {getStatusLabel(subtask.status)}
-                        </span>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handleDeleteSubtask(subtask._id)}
-                      className="p-2 hover:bg-red-50 rounded-lg transition-colors text-gray-400 hover:text-red-600 flex-shrink-0"
-                      title="Delete subtask"
-                    >
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path
-                          fillRule="evenodd"
-                          d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         </div>
 
@@ -379,40 +239,33 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
       {/* Modals */}
       {isEditModalOpen && (
-        <EditTaskModal
+        <WorkspaceEditTaskModal
           task={task}
           workspaceId={workspaceId}
           onClose={() => setIsEditModalOpen(false)}
         />
       )}
       {isAssignModalOpen && (
-        <AssignMemberModal
+        <WorkspaceAssignMemberModal
           task={task}
           workspaceId={workspaceId}
           members={workspaceMembers}
           onClose={() => setIsAssignModalOpen(false)}
         />
       )}
-      {isCreateSubtaskModalOpen && (
-        <CreateSubtaskModal
-          task={task}
-          workspaceId={workspaceId}
-          onClose={() => setIsCreateSubtaskModalOpen(false)}
-        />
-      )}
 
       {/* Delete Confirm Modal */}
       {showDeleteConfirm && (
-        <ConfirmModal
-          title={confirmDeleteSubtaskId ? 'Xóa Công Việc Con' : 'Xóa Công Việc'}
-          message={confirmDeleteSubtaskId ? 'Bạn chắc chắn muốn xóa công việc con này?' : 'Bạn chắc chắn muốn xóa công việc này?'}
-          confirmText="Xóa"
-          cancelText="Hủy"
+        <WorkspaceConfirmModal
+          isOpen={showDeleteConfirm}
+          title="Delete Task"
+          message="Are you sure you want to delete this task? This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
           isDangerous={true}
-          onConfirm={confirmDeleteSubtaskId ? confirmDeleteSubtask : confirmDeleteTask}
+          onConfirm={confirmDeleteTask}
           onCancel={() => {
             setShowDeleteConfirm(false);
-            setConfirmDeleteSubtaskId(null);
           }}
         />
       )}
@@ -420,4 +273,4 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   );
 };
 
-export default TaskDetailModal;
+export default WorkspaceTaskDetailModal;
