@@ -4,8 +4,6 @@ import {
   WorkspaceTask,
   CreateTaskRequest,
   UpdateTaskRequest,
-  CreateSubtaskRequest,
-  UpdateSubtaskRequest,
 } from '../types/workspace-task/workspace-task.types';
 
 const BASE_URL = 'productivity/workspace';
@@ -17,25 +15,37 @@ class WorkspaceTaskServiceClass {
     createTaskDto: CreateTaskRequest,
   ): Promise<WorkspaceTask> {
     try {
+      console.log('[Service] Creating task:', { workspaceId, dto: createTaskDto });
       const response = await api.post<ApiResponse<WorkspaceTask>>(
         `${BASE_URL}/${workspaceId}/task`,
         createTaskDto,
       );
+      console.log('[Service] Task created successfully:', response.data.data);
       return response.data.data;
     } catch (error: any) {
-      console.error('Failed to create task:', error);
+      console.error('[Service] Failed to create task:', {
+        message: error?.message,
+        status: error?.response?.status,
+        data: error?.response?.data,
+      });
       throw error;
     }
   }
 
   async getTasksByWorkspace(workspaceId: string): Promise<WorkspaceTask[]> {
     try {
+      console.log('[Service] getTasksByWorkspace called with workspaceId:', workspaceId);
       const response = await api.get<ApiResponse<WorkspaceTask[]>>(
         `${BASE_URL}/${workspaceId}/task`,
       );
+      console.log('[Service] getTasksByWorkspace response:', response.data.data);
       return response.data.data;
     } catch (error: any) {
-      console.error('Failed to get tasks:', error);
+      console.error('[Service] getTasksByWorkspace error:', {
+        message: error?.message,
+        status: error?.response?.status,
+        data: error?.response?.data,
+      });
       throw error;
     }
   }
@@ -96,7 +106,7 @@ class WorkspaceTaskServiceClass {
   async assignTask(
     workspaceId: string,
     taskId: string,
-    userId: string,
+    userId?: string,
   ): Promise<WorkspaceTask> {
     try {
       const response = await api.post<ApiResponse<WorkspaceTask>>(
@@ -123,75 +133,6 @@ class WorkspaceTaskServiceClass {
       return response.data.data;
     } catch (error: any) {
       console.error('Failed to update task status:', error);
-      throw error;
-    }
-  }
-
-  // ========== Subtask Operations ==========
-  async createSubtask(
-    workspaceId: string,
-    taskId: string,
-    createSubtaskDto: CreateSubtaskRequest,
-  ): Promise<WorkspaceTask> {
-    try {
-      const response = await api.post<ApiResponse<WorkspaceTask>>(
-        `${BASE_URL}/${workspaceId}/task/${taskId}/subtask`,
-        createSubtaskDto,
-      );
-      return response.data.data;
-    } catch (error: any) {
-      console.error('Failed to create subtask:', error);
-      throw error;
-    }
-  }
-
-  async updateSubtask(
-    workspaceId: string,
-    taskId: string,
-    subtaskId: string,
-    updateSubtaskDto: UpdateSubtaskRequest,
-  ): Promise<WorkspaceTask> {
-    try {
-      const response = await api.put<ApiResponse<WorkspaceTask>>(
-        `${BASE_URL}/${workspaceId}/task/${taskId}/subtask/${subtaskId}`,
-        updateSubtaskDto,
-      );
-      return response.data.data;
-    } catch (error: any) {
-      console.error('Failed to update subtask:', error);
-      throw error;
-    }
-  }
-
-  async deleteSubtask(
-    workspaceId: string,
-    taskId: string,
-    subtaskId: string,
-  ): Promise<void> {
-    try {
-      await api.delete(
-        `${BASE_URL}/${workspaceId}/task/${taskId}/subtask/${subtaskId}`,
-      );
-    } catch (error: any) {
-      console.error('Failed to delete subtask:', error);
-      throw error;
-    }
-  }
-
-  async updateSubtaskStatus(
-    workspaceId: string,
-    taskId: string,
-    subtaskId: string,
-    status: string,
-  ): Promise<WorkspaceTask> {
-    try {
-      const response = await api.put<ApiResponse<WorkspaceTask>>(
-        `${BASE_URL}/${workspaceId}/task/${taskId}/subtask/${subtaskId}/status`,
-        { status },
-      );
-      return response.data.data;
-    } catch (error: any) {
-      console.error('Failed to update subtask status:', error);
       throw error;
     }
   }

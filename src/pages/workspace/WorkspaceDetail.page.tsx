@@ -9,9 +9,13 @@ import {
   selectTasksByStatus,
   selectWorkspaceTaskLoading,
 } from '../../store/selector/workspace-task.selector';
-
-// Import components with barrel exports
-import { WorkspaceTaskBoard, WorkspaceHeader } from '../../components/workspace-task/index';
+import WorkspaceTaskBoard from '../../components/workspace-task/WorkspaceTaskBoard.component';
+import WorkspaceHeader from '../../components/workspace-task/WorkspaceHeader.component';
+import WorkspaceCreateTaskModal from '../../components/workspace-task/WorkspaceCreateTaskModal.component';
+import WorkspaceEditTaskModal from '../../components/workspace-task/WorkspaceEditTaskModal.component';
+import WorkspaceTaskDetailModal from '../../components/workspace-task/WorkspaceTaskDetailModal.component';
+import FloatingAddTaskButton from '../../components/task/FloatingAddTaskButton.component';
+import { WorkspaceTask } from '../../types/workspace-task/workspace-task.types';
 
 const WorkspaceDetail: React.FC = () => {
   const { workspaceId } = useParams<{ workspaceId: string }>();
@@ -23,13 +27,54 @@ const WorkspaceDetail: React.FC = () => {
   const tasksByStatus = useSelector(selectTasksByStatus);
   const loading = useSelector(selectWorkspaceTaskLoading);
 
-  const [activeTab, setActiveTab] = useState<'board' | 'list'>('board');
+  const [activeTab, setActiveTab] = useState<'to-do' | 'in-progress' | 'done' | 'all'>('all');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<WorkspaceTask | null>(null);
 
   useEffect(() => {
     if (workspaceId) {
+      console.log('[Page] Fetching tasks for workspaceId:', workspaceId);
       dispatch(getTasksByWorkspace(workspaceId));
     }
   }, [workspaceId, dispatch]);
+
+  useEffect(() => {
+    console.log('[Page] Tasks updated:', tasks);
+    console.log('[Page] TasksByStatus updated:', tasksByStatus);
+  }, [tasks, tasksByStatus]);
+
+  // Handle task edit
+  const handleTaskEdit = (task: WorkspaceTask) => {
+    setSelectedTask(task);
+    setShowEditModal(true);
+  };
+
+  // Handle task detail view
+  const handleTaskDetail = (task: WorkspaceTask) => {
+    setSelectedTask(task);
+    setShowDetailModal(true);
+  };
+
+  // Close modals
+  const handleCloseEditModal = () => {
+    setShowEditModal(false);
+    setSelectedTask(null);
+  };
+
+  const handleCloseDetailModal = () => {
+    setShowDetailModal(false);
+    setSelectedTask(null);
+  };
+
+  // Calculate task counts
+  const taskCounts = {
+    all: tasks.length,
+    'to-do': tasks.filter(t => t.status === 'to-do').length,
+    'in-progress': tasks.filter(t => t.status === 'in-progress').length,
+    'done': tasks.filter(t => t.status === 'done').length,
+  };
 
   if (!workspaceId) {
     return (
@@ -40,35 +85,72 @@ const WorkspaceDetail: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-full bg-gray-50">
-      {/* Header */}
-      <WorkspaceHeader 
-        workspace={{
-          _id: workspaceId,
-          name: 'Workspace Tasks',
-        } as any}
-        activeTab={activeTab} 
-        setActiveTab={setActiveTab} 
-      />
+    <div className="flex flex-col h-full bg-white">
+      {/* Header - Apple Style */}
+      <div className="px-8 py-6 border-b border-gray-100">
+        <WorkspaceHeader 
+          workspace={{
+            _id: workspaceId,
+            name: 'Workspace Tasks',
+          } as any}
+          onAddTask={() => setShowCreateModal(true)}
+        />
+      </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-auto px-8 py-6">
         {loading ? (
           <div className="flex items-center justify-center h-full">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+            <div className="space-y-3 text-center">
+              <div className="flex justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+              </div>
+              <p className="text-gray-500 text-sm font-medium">Loading tasks...</p>
+            </div>
           </div>
         ) : (
-          <>
-            {activeTab === 'board' && (
-              <WorkspaceTaskBoard
-                workspaceId={workspaceId!}
-                tasks={tasks}
-                tasksByStatus={tasksByStatus}
-              />
-            )}
-          </>
+          <WorkspaceTaskBoard
+            workspaceId={workspaceId!}
+            tasks={tasks}
+            tasksByStatus={tasksByStatus}
+            filterStatus={activeTab}
+            onTaskEdit={handleTaskEdit}
+            onTaskClick={handleTaskDetail}
+          />
         )}
       </div>
+
+      {/* Create Task Modal */}
+      {showCreateModal && (
+        <WorkspaceCreateTaskModal
+          workspaceId={workspaceId!}
+          onClose={() => setShowCreateModal(false)}
+        />
+      )}
+
+      {/* Edit Task Modal */}
+      {showEditModal && selectedTask && (
+        <WorkspaceEditTaskModal
+          task={selectedTask}
+          workspaceId={workspaceId!}
+          onClose={handleCloseEditModal}
+        />
+      )}
+
+      {/* Task Detail Modal */}
+      {showDetailModal && selectedTask && (
+        <WorkspaceTaskDetailModal
+          task={selectedTask}
+          workspaceId={workspaceId!}
+          onClose={handleCloseDetailModal}
+        />
+      )}
+
+      {/* Floating Add Task Button - Apple Style */}
+      <FloatingAddTaskButton
+        onClick={() => setShowCreateModal(true)}
+        title="Add Task"
+      />
     </div>
   );
 };

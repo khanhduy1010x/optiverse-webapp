@@ -5,13 +5,13 @@ import { AppDispatch } from '../../store';
 import { WorkspaceTask } from '../../types/workspace-task/workspace-task.types';
 import { updateTask, getTasksByWorkspace } from '../../store/slices/workspace_task.slice';
 
-interface EditTaskModalProps {
+interface WorkspaceEditTaskModalProps {
   task: WorkspaceTask;
   workspaceId: string;
   onClose: () => void;
 }
 
-const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, workspaceId, onClose }) => {
+const WorkspaceEditTaskModal: React.FC<WorkspaceEditTaskModalProps> = ({ task, workspaceId, onClose }) => {
   const { t } = useTranslation('workspace-task');
   const dispatch = useDispatch<AppDispatch>();
   const [title, setTitle] = useState(task.title);
@@ -159,4 +159,4 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, workspaceId, onClos
   );
 };
 
-export default EditTaskModal;
+export default WorkspaceEditTaskModal;
