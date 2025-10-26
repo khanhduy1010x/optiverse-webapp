@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { AppDispatch } from '../../store';
 import { WorkspaceTask } from '../../types/workspace-task/workspace-task.types';
 import { updateTask, getTasksByWorkspace } from '../../store/slices/workspace_task.slice';
+import { UserDetailDto } from '../../types/workspace/response/workspace.response';
+import workspaceService from '../../services/workspace.service';
 
 interface WorkspaceEditTaskModalProps {
   task: WorkspaceTask;
@@ -16,10 +18,29 @@ const WorkspaceEditTaskModal: React.FC<WorkspaceEditTaskModalProps> = ({ task, w
   const dispatch = useDispatch<AppDispatch>();
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description || '');
+  const [assignedTo, setAssignedTo] = useState<string>(task.assigned_to || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [members, setMembers] = useState<UserDetailDto[]>([]);
 
-  const handleSave = async (e: React.FormEvent) => {
+  useEffect(() => {
+    const fetchMembers = async () => {
+      try {
+        const workspaceDetail = await workspaceService.getWorkspaceById(workspaceId);
+        const activeMembersArray = workspaceDetail?.members?.active || [];
+        setMembers(activeMembersArray);
+      } catch (err) {
+        console.error('Failed to fetch workspace members:', err);
+        setMembers([]);
+      }
+    };
+
+    if (workspaceId) {
+      fetchMembers();
+    }
+  }, [workspaceId]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -31,21 +52,32 @@ const WorkspaceEditTaskModal: React.FC<WorkspaceEditTaskModalProps> = ({ task, w
 
     setLoading(true);
     try {
+      const trimmedTitle = title.trim();
+      const trimmedDescription = description.trim();
+      const trimmedAssignedTo = assignedTo?.trim();
+
       await dispatch(
         updateTask({
           workspaceId,
           taskId: task._id,
           data: {
-            title: title.trim(),
-            description: description.trim(),
+            title: trimmedTitle,
+            description: trimmedDescription || undefined,
+            assigned_to: trimmedAssignedTo || undefined,
           },
         }),
       ).unwrap();
+
       // Refetch tasks after update
-      await dispatch(getTasksByWorkspace(workspaceId)).unwrap();
+      try {
+        await dispatch(getTasksByWorkspace(workspaceId)).unwrap();
+      } catch (refetchErr) {
+        console.warn('Failed to refetch tasks, but task was updated successfully:', refetchErr);
+      }
+      
       onClose();
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to update task';
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to update task';
       setError(errorMessage);
       console.error('Error updating task:', error);
     } finally {
@@ -56,7 +88,7 @@ const WorkspaceEditTaskModal: React.FC<WorkspaceEditTaskModalProps> = ({ task, w
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-[500px] my-auto">
-        {/* Header */}
+        {/* Header - Simple Input */}
         <div className="relative p-6 border-b border-gray-100">
           <button
             type="button"
@@ -70,12 +102,50 @@ const WorkspaceEditTaskModal: React.FC<WorkspaceEditTaskModalProps> = ({ task, w
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
-          <h2 className="text-xl font-bold text-gray-900 pr-8">Edit Task</h2>
-          <p className="text-sm text-gray-500 mt-1">Update task details and information</p>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value.substring(0, 100))}
+            placeholder="Add title"
+            maxLength={100}
+            className="w-full text-lg font-medium border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none focus:ring-0 py-2 px-0 text-gray-900 placeholder-gray-400"
+            disabled={loading}
+            autoFocus
+            required
+          />
+          
+          {/* Assignee Section */}
+          <div className="mt-4 pt-4">
+            <label htmlFor="assignee-select" className="block text-sm font-medium text-gray-700 mb-2">Assign to</label>
+            <select
+              id="assignee-select"
+              value={assignedTo}
+              onChange={(e) => {
+                console.log('Selected assignee:', e.target.value);
+                setAssignedTo(e.target.value);
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+              disabled={loading}
+            >
+              <option value="">No one assigned</option>
+              {members && members.length > 0 ? (
+                members.map((member) => (
+                  <option key={member.user_id} value={member.user_id}>
+                    {member.full_name || member.email || 'Unknown'}
+                  </option>
+                ))
+              ) : (
+                <option disabled>No members available</option>
+              )}
+            </select>
+            {members.length === 0 && (
+              <p className="text-xs text-gray-500 mt-1">Loading members...</p>
+            )}
+          </div>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSave} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {/* Error Message */}
           {error && (
             <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex gap-2">
@@ -84,38 +154,19 @@ const WorkspaceEditTaskModal: React.FC<WorkspaceEditTaskModalProps> = ({ task, w
             </div>
           )}
 
-          {/* Title */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Task Title <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value.substring(0, 100))}
-              placeholder="Enter task title..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-400"
-              disabled={loading}
-              maxLength={100}
-              autoFocus
-            />
-            <div className="text-xs text-gray-500 mt-1 text-right">
-              {title.length}/100
-            </div>
-          </div>
-
           {/* Description */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description <span className="text-gray-400">(optional)</span>
+              Description <span className="text-gray-400"></span>
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value.substring(0, 500))}
               placeholder="Enter task description..."
+              maxLength={500}
+              rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-400 resize-none"
               disabled={loading}
-              maxLength={500}
             />
             <div className="text-xs text-gray-500 mt-1 text-right">
               {description.length}/500

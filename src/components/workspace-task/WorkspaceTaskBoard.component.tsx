@@ -14,7 +14,7 @@ interface WorkspaceTaskBoardProps {
     done: WorkspaceTask[];
   };
   filterStatus?: 'to-do' | 'in-progress' | 'done' | 'all';
-  workspaceMembers?: Array<{ _id: string; name: string; email: string; avatar?: string }>;
+  workspaceMembers?: Array<{ _id: string; full_name: string; email: string; avatar_url?: string }>;
   onTaskEdit?: (task: WorkspaceTask) => void;
   onTaskClick?: (task: WorkspaceTask) => void;
 }
@@ -62,6 +62,7 @@ const WorkspaceTaskBoard: React.FC<WorkspaceTaskBoardProps> = ({
           <WorkspaceTaskListView
             workspaceId={workspaceId}
             tasks={tasks}
+            workspaceMembers={workspaceMembers}
             onTaskEdit={onTaskEdit}
             onTaskClick={onTaskClick}
           />
@@ -71,6 +72,7 @@ const WorkspaceTaskBoard: React.FC<WorkspaceTaskBoardProps> = ({
             workspaceId={workspaceId}
             tasks={tasks}
             tasksByStatus={tasksByStatus}
+            workspaceMembers={workspaceMembers}
           />
         )}
         {viewType === 'calendar' && (

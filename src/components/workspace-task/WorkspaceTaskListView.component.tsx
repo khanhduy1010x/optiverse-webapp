@@ -13,6 +13,7 @@ import { GROUP_CLASSNAMES } from '../../styles/group-class-name.style';
 interface WorkspaceTaskListViewProps {
   workspaceId: string;
   tasks: WorkspaceTask[];
+  workspaceMembers?: Array<{ _id: string; full_name: string; email: string; avatar_url?: string }>;
   loading?: boolean;
   onTaskEdit?: (task: WorkspaceTask) => void;
   onTaskClick?: (task: WorkspaceTask) => void;
@@ -21,6 +22,7 @@ interface WorkspaceTaskListViewProps {
 const WorkspaceTaskListView: React.FC<WorkspaceTaskListViewProps> = ({
   workspaceId,
   tasks,
+  workspaceMembers = [],
   loading = false,
   onTaskEdit,
   onTaskClick,
@@ -29,6 +31,11 @@ const WorkspaceTaskListView: React.FC<WorkspaceTaskListViewProps> = ({
   const dispatch = useDispatch<AppDispatch>();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
+  const [displayedTaskCount, setDisplayedTaskCount] = useState<Record<string, number>>({
+    'done': 5,
+    'in-progress': 5,
+    'to-do': 5,
+  });
 
   // Group tasks by status
   const tasksByStatus = useMemo(() => {
@@ -44,7 +51,6 @@ const WorkspaceTaskListView: React.FC<WorkspaceTaskListViewProps> = ({
     {
       id: 'done',
       label: 'Done',
-      icon: '✓',
       color: 'bg-green-50',
       badgeColor: 'bg-green-600',
       textColor: 'text-green-700',
@@ -53,7 +59,6 @@ const WorkspaceTaskListView: React.FC<WorkspaceTaskListViewProps> = ({
     {
       id: 'in-progress',
       label: 'In Progress',
-      icon: '●',
       color: 'bg-blue-50',
       badgeColor: 'bg-blue-600',
       textColor: 'text-blue-700',
@@ -62,7 +67,6 @@ const WorkspaceTaskListView: React.FC<WorkspaceTaskListViewProps> = ({
     {
       id: 'to-do',
       label: 'To Do',
-      icon: '○',
       color: 'bg-gray-50',
       badgeColor: 'bg-gray-600',
       textColor: 'text-gray-700',
@@ -97,6 +101,22 @@ const WorkspaceTaskListView: React.FC<WorkspaceTaskListViewProps> = ({
       setShowDeleteConfirm(false);
       setTaskToDelete(null);
     }
+  };
+
+  // Handle view more
+  const handleViewMore = (statusId: string) => {
+    setDisplayedTaskCount(prev => ({
+      ...prev,
+      [statusId]: prev[statusId as keyof typeof prev] + 5
+    }));
+  };
+
+  // Handle view less
+  const handleViewLess = (statusId: string) => {
+    setDisplayedTaskCount(prev => ({
+      ...prev,
+      [statusId]: 5
+    }));
   };
 
   // Handle task click
@@ -140,10 +160,10 @@ const WorkspaceTaskListView: React.FC<WorkspaceTaskListViewProps> = ({
           />
         </svg>
         <h3 className={GROUP_CLASSNAMES.taskEmptyTitle}>
-          {t('no_tasks')}
+          {t('No Tasks')}
         </h3>
         <p className={GROUP_CLASSNAMES.taskEmptyDescription}>
-          {t('no_tasks')}
+          {t('No tasks available')}
         </p>
       </div>
     );
@@ -159,9 +179,6 @@ const WorkspaceTaskListView: React.FC<WorkspaceTaskListViewProps> = ({
           <div key={status.id} className="space-y-2">
             {/* Status Header - Apple Style */}
             <div className="flex items-center gap-2 px-2 py-1">
-              <span className={`text-lg font-semibold ${status.textColor}`}>
-                {status.icon}
-              </span>
               <h2 className={`text-sm font-semibold ${status.textColor} tracking-tight`}>
                 {status.label}
               </h2>
@@ -177,18 +194,42 @@ const WorkspaceTaskListView: React.FC<WorkspaceTaskListViewProps> = ({
                   No tasks
                 </div>
               ) : (
-                <ul className="divide-y divide-gray-100">
-                  {statusTasks.map((task) => (
-                    <WorkspaceTaskListItem
-                      key={task._id}
-                      task={task}
-                      workspaceId={workspaceId}
-                      onEdit={handleTaskEdit}
-                      onDelete={handleDelete}
-                      onClick={handleTaskRowClick}
-                    />
-                  ))}
-                </ul>
+                <>
+                  <ul className="divide-y divide-gray-100">
+                    {statusTasks.slice(0, displayedTaskCount[status.id as keyof typeof displayedTaskCount]).map((task) => (
+                      <WorkspaceTaskListItem
+                        key={task._id}
+                        task={task}
+                        workspaceId={workspaceId}
+                        workspaceMembers={workspaceMembers}
+                        onEdit={handleTaskEdit}
+                        onDelete={handleDelete}
+                        onClick={handleTaskRowClick}
+                      />
+                    ))}
+                  </ul>
+                  
+                  {/* View More / Show Less Buttons */}
+                  <div className="flex justify-center items-center gap-3 p-4 border-t border-gray-100 bg-gray-50/50">
+                    {statusTasks.length > (displayedTaskCount[status.id as keyof typeof displayedTaskCount]) && (
+                      <button
+                        onClick={() => handleViewMore(status.id)}
+                        className="px-6 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+                      >
+                        View More ({statusTasks.length - (displayedTaskCount[status.id as keyof typeof displayedTaskCount])} remaining)
+                      </button>
+                    )}
+                    
+                    {(displayedTaskCount[status.id as keyof typeof displayedTaskCount]) > 5 && (
+                      <button
+                        onClick={() => handleViewLess(status.id)}
+                        className="px-6 py-2 text-sm font-medium text-gray-600 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                      >
+                        Show Less
+                      </button>
+                    )}
+                  </div>
+                </>
               )}
             </div>
           </div>
