@@ -1,9 +1,9 @@
 // User type definition
 export interface User {
   _id: string;
-  name: string;
+  full_name: string;
   email: string;
-  avatar?: string;
+  avatar_url?: string;
 }
 
 export interface WorkspaceTask {
@@ -11,8 +11,8 @@ export interface WorkspaceTask {
   workspace_id: string;
   title: string;
   description?: string;
-  created_by: User;
-  assigned_to?: User;
+  created_by: string;  // ObjectId from backend
+  assigned_to?: string;  // ObjectId from backend (optional)
   status: 'to-do' | 'in-progress' | 'done';
   completed_at?: Date;
   createdAt: Date;

@@ -16,7 +16,7 @@ import './workspace-task.component.css';
 interface WorkspaceTaskDetailModalProps {
   task: WorkspaceTask;
   workspaceId: string;
-  workspaceMembers?: Array<{ _id: string; name: string; email: string; avatar?: string }>;
+  workspaceMembers?: Array<{ _id: string; full_name: string; email: string; avatar_url?: string }>;
   onClose: () => void;
 }
 
@@ -170,14 +170,7 @@ const WorkspaceTaskDetailModal: React.FC<WorkspaceTaskDetailModalProps> = ({
               <div className="text-xs font-medium text-gray-500 mb-2">Assigned To</div>
               {task.assigned_to ? (
                 <div className="flex items-center gap-2">
-                  {task.assigned_to.avatar && (
-                    <img
-                      src={task.assigned_to.avatar}
-                      alt={task.assigned_to.name}
-                      className="w-6 h-6 rounded-full object-cover"
-                    />
-                  )}
-                  <span className="text-sm font-medium text-gray-900">{task.assigned_to.name}</span>
+                  <span className="text-sm font-medium text-gray-900">User ID: {task.assigned_to}</span>
                 </div>
               ) : (
                 <span className="text-sm text-gray-500 italic">Unassigned</span>

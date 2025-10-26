@@ -7,9 +7,9 @@ import { assignTask, getTasksByWorkspace } from '../../store/slices/workspace_ta
 
 interface Member {
   _id: string;
-  name: string;
+  full_name: string;
   email: string;
-  avatar?: string;
+  avatar_url?: string;
 }
 
 interface WorkspaceAssignMemberModalProps {
@@ -29,7 +29,7 @@ const WorkspaceAssignMemberModal: React.FC<WorkspaceAssignMemberModalProps> = ({
   const dispatch = useDispatch<AppDispatch>();
   const isLoading = useSelector((state: RootState) => state.workspaceTask.loading);
   
-  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(task.assigned_to?._id || null);
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(task.assigned_to || null);
   const [error, setError] = useState<string | null>(null);
 
   const handleAssign = async () => {
@@ -40,7 +40,7 @@ const WorkspaceAssignMemberModal: React.FC<WorkspaceAssignMemberModalProps> = ({
     }
 
     // Check if already assigned to this member
-    if (task.assigned_to?._id === selectedMemberId) {
+    if (task.assigned_to === selectedMemberId) {
       setError('This member is already assigned');
       return;
     }
@@ -63,7 +63,7 @@ const WorkspaceAssignMemberModal: React.FC<WorkspaceAssignMemberModalProps> = ({
   };
 
   const handleUnassign = async () => {
-    if (!task.assigned_to?._id) {
+    if (!task.assigned_to) {
       setError('Task is not currently assigned');
       return;
     }
@@ -105,7 +105,7 @@ const WorkspaceAssignMemberModal: React.FC<WorkspaceAssignMemberModalProps> = ({
           </button>
           <h2 className="text-xl font-bold text-gray-900 pr-8">Assign Member</h2>
           <p className="text-sm text-gray-500 mt-1">
-            Currently assigned to: {task.assigned_to?.name || 'undefined'}
+            Currently assigned to: {task.assigned_to || 'undefined'}
           </p>
         </div>
 
@@ -146,19 +146,19 @@ const WorkspaceAssignMemberModal: React.FC<WorkspaceAssignMemberModalProps> = ({
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3 flex-1">
-                        {member.avatar ? (
+                        {member.avatar_url ? (
                           <img
-                            src={member.avatar}
-                            alt={member.name}
+                            src={member.avatar_url}
+                            alt={member.full_name}
                             className="w-8 h-8 rounded-full object-cover flex-shrink-0"
                           />
                         ) : (
                           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
-                            {member.name.charAt(0).toUpperCase()}
+                            {member.full_name.charAt(0).toUpperCase()}
                           </div>
                         )}
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-gray-900 text-sm">{member.name}</p>
+                          <p className="font-medium text-gray-900 text-sm">{member.full_name}</p>
                           <p className="text-xs text-gray-500 truncate">{member.email}</p>
                         </div>
                       </div>
@@ -184,7 +184,7 @@ const WorkspaceAssignMemberModal: React.FC<WorkspaceAssignMemberModalProps> = ({
           <button
             type="button"
             onClick={handleUnassign}
-            disabled={isLoading || !task.assigned_to?._id}
+            disabled={isLoading || !task.assigned_to}
             className="px-4 py-2 border border-orange-300 text-orange-600 font-medium rounded-lg hover:bg-orange-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
           >
             🔓 unassign
@@ -200,7 +200,7 @@ const WorkspaceAssignMemberModal: React.FC<WorkspaceAssignMemberModalProps> = ({
           <button
             type="button"
             onClick={handleAssign}
-            disabled={isLoading || !selectedMemberId || task.assigned_to?._id === selectedMemberId}
+            disabled={isLoading || !selectedMemberId || task.assigned_to === selectedMemberId}
             className="flex-1 px-4 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isLoading ? (
