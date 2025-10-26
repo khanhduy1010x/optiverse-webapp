@@ -2,13 +2,13 @@ import React from 'react';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '../../store';
 import { WorkspaceTask } from '../../types/workspace-task/workspace-task.types';
-import { formatDistanceToNow } from 'date-fns';
-import { vi } from 'date-fns/locale';
+import { format } from 'date-fns';
 import { updateTaskStatus } from '../../store/slices/workspace_task.slice';
 
 interface WorkspaceTaskListItemProps {
   task: WorkspaceTask;
   workspaceId: string;
+  workspaceMembers?: Array<{ _id: string; full_name: string; email: string; avatar_url?: string }>;
   onEdit: (task: WorkspaceTask) => void;
   onDelete: (taskId: string) => void;
   onClick: (task: WorkspaceTask) => void;
@@ -21,12 +21,18 @@ interface WorkspaceTaskListItemProps {
 export const WorkspaceTaskListItem: React.FC<WorkspaceTaskListItemProps> = ({
   task,
   workspaceId,
+  workspaceMembers = [],
   onEdit,
   onDelete,
   onClick,
 }) => {
   const dispatch = useDispatch<AppDispatch>();
   const isClosed = task.status === 'done';
+
+  // Tìm user từ assigned_to ObjectId
+  const assignedUser = task.assigned_to 
+    ? workspaceMembers.find(m => m._id === task.assigned_to)
+    : null;
 
   // Handle checkbox click to toggle between 'to-do' and 'done'
   const handleCheckboxClick = (e: React.MouseEvent) => {
@@ -37,18 +43,6 @@ export const WorkspaceTaskListItem: React.FC<WorkspaceTaskListItemProps> = ({
       taskId: task._id,
       status: newStatus,
     }));
-  };
-
-  // Get status icon
-  const getStatusIcon = () => {
-    switch (task.status) {
-      case 'done':
-        return <span className="text-green-500 text-lg">✓</span>;
-      case 'in-progress':
-        return <span className="text-blue-500 text-lg">●</span>;
-      default:
-        return <span className="text-gray-300 text-lg">○</span>;
-    }
   };
 
   return (
@@ -83,11 +77,6 @@ export const WorkspaceTaskListItem: React.FC<WorkspaceTaskListItemProps> = ({
         )}
       </div>
 
-      {/* Status Icon */}
-      <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
-        {getStatusIcon()}
-      </div>
-
       {/* Task Title - Main Content */}
       <div className="flex-1 min-w-0">
         <h3 className={`text-sm font-medium transition-colors duration-200 ${
@@ -100,12 +89,20 @@ export const WorkspaceTaskListItem: React.FC<WorkspaceTaskListItemProps> = ({
       </div>
 
       {/* Assignee Avatar */}
-      {task.assigned_to ? (
+      {assignedUser ? (
         <div 
-          className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 text-white flex items-center justify-center text-xs font-semibold shadow-sm hover:shadow-md transition-all duration-200"
-          title={`Assigned to ${(task.assigned_to as any)?.name || 'Unknown'}`}
+          className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 text-white flex items-center justify-center text-xs font-semibold shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden"
+          title={`Assigned to ${assignedUser.full_name}`}
         >
-          {(task.assigned_to as any)?.name?.[0]?.toUpperCase() || '?'}
+          {assignedUser.avatar_url ? (
+            <img 
+              src={assignedUser.avatar_url} 
+              alt={assignedUser.full_name}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <span>{assignedUser.full_name?.[0]?.toUpperCase() || '?'}</span>
+          )}
         </div>
       ) : (
         <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center text-xs font-semibold">
@@ -116,8 +113,8 @@ export const WorkspaceTaskListItem: React.FC<WorkspaceTaskListItemProps> = ({
       {/* Date */}
       <div className="flex-shrink-0 text-sm text-gray-500 min-w-max">
         {task.updatedAt ? (
-          <span title={new Date(task.updatedAt).toLocaleDateString('vi-VN')}>
-            {formatDistanceToNow(new Date(task.updatedAt), { locale: vi })}
+          <span title={new Date(task.updatedAt).toLocaleString('en-US')}>
+            {format(new Date(task.updatedAt), 'MMM dd')}
           </span>
         ) : (
           <span className="text-gray-300">-</span>
@@ -125,17 +122,17 @@ export const WorkspaceTaskListItem: React.FC<WorkspaceTaskListItemProps> = ({
       </div>
 
       {/* Action Buttons - Apple Style */}
-      <div className="ml-2 flex-shrink-0 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+      <div className="ml-2 flex-shrink-0 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
         <button
           onClick={(e) => {
             e.stopPropagation();
             onEdit(task);
           }}
-          className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+          className="p-1 text-gray-400 hover:text-blue-600 transition-colors duration-200"
           title="Edit task"
         >
-          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M3 17.25V21h3.75L17.81 9.94m-4.88-4.88L17.81 9.94m-4.88-4.88l4.88 4.88M7.07 5.19L4 8.25M19.08 2.92l2.83 2.83a1.414 1.414 0 010 2l-2.83-2.83"/>
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
           </svg>
         </button>
         <button
@@ -143,11 +140,11 @@ export const WorkspaceTaskListItem: React.FC<WorkspaceTaskListItemProps> = ({
             e.stopPropagation();
             onDelete(task._id);
           }}
-          className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
+          className="p-1 text-gray-400 hover:text-red-600 transition-colors duration-200"
           title="Delete task"
         >
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
+            <path d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v1a1 1 0 001 1v8a3 3 0 003 3h4a3 3 0 003-3V7a1 1 0 001-1V6a1 1 0 000-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v8a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v8a1 1 0 102 0V8a1 1 0 00-1-1z" />
           </svg>
         </button>
       </div>

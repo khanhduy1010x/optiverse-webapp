@@ -4,8 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { AppDispatch } from '../../store';
 import { WorkspaceTask } from '../../types/workspace-task/workspace-task.types';
 import { updateTaskStatus } from '../../store/slices/workspace_task.slice';
-import { formatDistanceToNow } from 'date-fns';
-import { vi } from 'date-fns/locale';
+import { format } from 'date-fns';
 
 interface WorkspaceTaskBoardViewProps {
   workspaceId: string;
@@ -15,12 +14,14 @@ interface WorkspaceTaskBoardViewProps {
     'in-progress': WorkspaceTask[];
     done: WorkspaceTask[];
   };
+  workspaceMembers?: Array<{ _id: string; full_name: string; email: string; avatar_url?: string }>;
 }
 
 const WorkspaceTaskBoardView: React.FC<WorkspaceTaskBoardViewProps> = ({
   workspaceId,
   tasks,
   tasksByStatus,
+  workspaceMembers = [],
 }) => {
   const { t } = useTranslation('workspace-task');
   const dispatch = useDispatch<AppDispatch>();
@@ -30,8 +31,7 @@ const WorkspaceTaskBoardView: React.FC<WorkspaceTaskBoardViewProps> = ({
   const columns = [
     { 
       id: 'to-do', 
-      title: 'To Do', 
-      icon: '○',
+      title: 'To Do',
       color: 'bg-gray-50',
       headerColor: 'text-gray-700',
       badge: 'bg-gray-600',
@@ -40,8 +40,7 @@ const WorkspaceTaskBoardView: React.FC<WorkspaceTaskBoardViewProps> = ({
     },
     { 
       id: 'in-progress', 
-      title: 'In Progress', 
-      icon: '●',
+      title: 'In Progress',
       color: 'bg-blue-50',
       headerColor: 'text-blue-700',
       badge: 'bg-blue-600',
@@ -50,8 +49,7 @@ const WorkspaceTaskBoardView: React.FC<WorkspaceTaskBoardViewProps> = ({
     },
     { 
       id: 'done', 
-      title: 'Done', 
-      icon: '✓',
+      title: 'Done',
       color: 'bg-green-50',
       headerColor: 'text-green-700',
       badge: 'bg-green-600',
@@ -104,9 +102,6 @@ const WorkspaceTaskBoardView: React.FC<WorkspaceTaskBoardViewProps> = ({
               {/* Column Header - Apple Style */}
               <div className="flex-shrink-0 pb-4">
                 <div className="flex items-center gap-2.5">
-                  <span className={`text-lg font-semibold ${column.headerColor}`}>
-                    {column.icon}
-                  </span>
                   <h3 className={`text-base font-semibold ${column.headerColor} tracking-tight`}>
                     {column.title}
                   </h3>
@@ -129,7 +124,13 @@ const WorkspaceTaskBoardView: React.FC<WorkspaceTaskBoardViewProps> = ({
                     </div>
                   </div>
                 ) : (
-                  columnTasks.map((task) => (
+                  columnTasks.map((task) => {
+                    // Tìm user từ assigned_to ObjectId
+                    const assignedUser = task.assigned_to 
+                      ? workspaceMembers.find(m => m._id === task.assigned_to)
+                      : null;
+
+                    return (
                     <div
                       key={task._id}
                       draggable
@@ -160,13 +161,21 @@ const WorkspaceTaskBoardView: React.FC<WorkspaceTaskBoardViewProps> = ({
                       {/* Task Meta - Compact */}
                       <div className="flex items-center justify-between gap-2 pt-3 border-t border-gray-100">
                         {/* Assignee */}
-                        {task.assigned_to ? (
+                        {assignedUser ? (
                           <div className="flex items-center gap-1.5">
-                            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
-                              {(task.assigned_to as any)?.name?.[0]?.toUpperCase() || '?'}
+                            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 text-white flex items-center justify-center text-xs font-semibold flex-shrink-0 overflow-hidden">
+                              {assignedUser.avatar_url ? (
+                                <img 
+                                  src={assignedUser.avatar_url} 
+                                  alt={assignedUser.full_name}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <span>{assignedUser.full_name?.[0]?.toUpperCase() || '?'}</span>
+                              )}
                             </div>
                             <span className="text-xs text-gray-600 truncate">
-                              {(task.assigned_to as any)?.name?.split(' ')[0]}
+                              {assignedUser.full_name?.split(' ')[0]}
                             </span>
                           </div>
                         ) : (
@@ -175,11 +184,16 @@ const WorkspaceTaskBoardView: React.FC<WorkspaceTaskBoardViewProps> = ({
 
                         {/* Time */}
                         <span className="text-xs text-gray-400 flex-shrink-0">
-                          {formatDistanceToNow(new Date(task.updatedAt), { locale: vi })}
+                          {task.updatedAt ? (
+                            format(new Date(task.updatedAt), 'MMM dd')
+                          ) : (
+                            '-'
+                          )}
                         </span>
                       </div>
                     </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </div>

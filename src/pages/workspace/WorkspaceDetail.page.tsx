@@ -16,6 +16,7 @@ import WorkspaceEditTaskModal from '../../components/workspace-task/WorkspaceEdi
 import WorkspaceTaskDetailModal from '../../components/workspace-task/WorkspaceTaskDetailModal.component';
 import FloatingAddTaskButton from '../../components/task/FloatingAddTaskButton.component';
 import { WorkspaceTask } from '../../types/workspace-task/workspace-task.types';
+import workspaceService from '../../services/workspace.service';
 
 const WorkspaceDetail: React.FC = () => {
   const { workspaceId } = useParams<{ workspaceId: string }>();
@@ -32,13 +33,37 @@ const WorkspaceDetail: React.FC = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState<WorkspaceTask | null>(null);
+  const [workspaceMembers, setWorkspaceMembers] = useState<Array<{ _id: string; full_name: string; email: string; avatar_url?: string }>>([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     if (workspaceId) {
       console.log('[Page] Fetching tasks for workspaceId:', workspaceId);
       dispatch(getTasksByWorkspace(workspaceId));
+      
+      // Fetch workspace members
+      fetchWorkspaceMembers(workspaceId);
     }
   }, [workspaceId, dispatch]);
+
+  const fetchWorkspaceMembers = async (id: string) => {
+    try {
+      const workspaceDetail = await workspaceService.getWorkspaceById(id);
+      const activeMembersArray = workspaceDetail?.members?.active || [];
+      // Map UserDetailDto to the format expected by assign modal
+      const mappedMembers = activeMembersArray.map((user: any) => ({
+        _id: user.user_id,
+        full_name: user.full_name || 'Unknown',
+        email: user.email,
+        avatar_url: user.avatar_url,
+      }));
+      console.log('[Page] Workspace members:', mappedMembers);
+      setWorkspaceMembers(mappedMembers);
+    } catch (err) {
+      console.error('[Page] Failed to fetch workspace members:', err);
+      setWorkspaceMembers([]);
+    }
+  };
 
   useEffect(() => {
     console.log('[Page] Tasks updated:', tasks);
@@ -76,6 +101,21 @@ const WorkspaceDetail: React.FC = () => {
     'done': tasks.filter(t => t.status === 'done').length,
   };
 
+  // Filter tasks by search query
+  const filteredTasks = searchQuery.trim() 
+    ? tasks.filter(task =>
+        task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (task.description && task.description.toLowerCase().includes(searchQuery.toLowerCase()))
+      )
+    : tasks;
+
+  // Filter tasks by status for board view
+  const filteredTasksByStatus = {
+    'to-do': filteredTasks.filter(t => t.status === 'to-do'),
+    'in-progress': filteredTasks.filter(t => t.status === 'in-progress'),
+    'done': filteredTasks.filter(t => t.status === 'done'),
+  };
+
   if (!workspaceId) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -94,6 +134,8 @@ const WorkspaceDetail: React.FC = () => {
             name: 'Workspace Tasks',
           } as any}
           onAddTask={() => setShowCreateModal(true)}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
         />
       </div>
 
@@ -111,9 +153,10 @@ const WorkspaceDetail: React.FC = () => {
         ) : (
           <WorkspaceTaskBoard
             workspaceId={workspaceId!}
-            tasks={tasks}
-            tasksByStatus={tasksByStatus}
+            tasks={filteredTasks}
+            tasksByStatus={filteredTasksByStatus}
             filterStatus={activeTab}
+            workspaceMembers={workspaceMembers}
             onTaskEdit={handleTaskEdit}
             onTaskClick={handleTaskDetail}
           />
@@ -142,6 +185,7 @@ const WorkspaceDetail: React.FC = () => {
         <WorkspaceTaskDetailModal
           task={selectedTask}
           workspaceId={workspaceId!}
+          workspaceMembers={workspaceMembers}
           onClose={handleCloseDetailModal}
         />
       )}

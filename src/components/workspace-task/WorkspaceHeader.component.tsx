@@ -5,14 +5,17 @@ import { Workspace } from '../../types/workspace/response/workspace.response';
 interface WorkspaceHeaderProps {
   workspace: Workspace;
   onAddTask?: () => void;
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
 }
 
 const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
   workspace,
   onAddTask,
+  searchQuery = '',
+  onSearchChange,
 }) => {
   const { t } = useTranslation('workspace-task');
-  const [searchQuery, setSearchQuery] = useState('');
 
   return (
     <>
@@ -46,7 +49,7 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
             type="text"
             placeholder="Search tasks..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => onSearchChange?.(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 bg-gray-100 border border-transparent rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-200 text-sm font-medium text-gray-900 placeholder-gray-500"
           />
         </div>
