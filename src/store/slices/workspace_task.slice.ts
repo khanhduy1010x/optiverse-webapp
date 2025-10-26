@@ -31,9 +31,12 @@ export const getTasksByWorkspace = createAsyncThunk(
   'workspaceTask/getByWorkspace',
   async (workspaceId: string, { rejectWithValue }) => {
     try {
+      console.log('[Redux] getTasksByWorkspace called with workspaceId:', workspaceId);
       const response = await workspaceTaskService.getTasksByWorkspace(workspaceId);
+      console.log('[Redux] getTasksByWorkspace response:', response);
       return response;
     } catch (error: any) {
+      console.error('[Redux] getTasksByWorkspace error:', error);
       return rejectWithValue(error.message || 'Failed to fetch tasks');
     }
   },
@@ -61,7 +64,9 @@ export const createTask = createAsyncThunk(
       const response = await workspaceTaskService.createTask(workspaceId, data);
       return response;
     } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to create task');
+      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to create task';
+      console.error('[createTask] Error:', errorMessage, error);
+      return rejectWithValue(errorMessage);
     }
   },
 );
@@ -96,7 +101,7 @@ export const deleteTask = createAsyncThunk(
 export const assignTask = createAsyncThunk(
   'workspaceTask/assign',
   async (
-    { workspaceId, taskId, userId }: { workspaceId: string; taskId: string; userId: string },
+    { workspaceId, taskId, userId }: { workspaceId: string; taskId: string; userId?: string },
     { rejectWithValue },
   ) => {
     try {
@@ -123,86 +128,6 @@ export const updateTaskStatus = createAsyncThunk(
   },
 );
 
-export const createSubtask = createAsyncThunk(
-  'workspaceTask/createSubtask',
-  async (
-    { workspaceId, taskId, data }: { workspaceId: string; taskId: string; data: any },
-    { rejectWithValue },
-  ) => {
-    try {
-      const response = await workspaceTaskService.createSubtask(workspaceId, taskId, data);
-      return response;
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to create subtask');
-    }
-  },
-);
-
-export const updateSubtask = createAsyncThunk(
-  'workspaceTask/updateSubtask',
-  async (
-    {
-      workspaceId,
-      taskId,
-      subtaskId,
-      data,
-    }: { workspaceId: string; taskId: string; subtaskId: string; data: any },
-    { rejectWithValue },
-  ) => {
-    try {
-      const response = await workspaceTaskService.updateSubtask(
-        workspaceId,
-        taskId,
-        subtaskId,
-        data,
-      );
-      return response;
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to update subtask');
-    }
-  },
-);
-
-export const deleteSubtask = createAsyncThunk(
-  'workspaceTask/deleteSubtask',
-  async (
-    { workspaceId, taskId, subtaskId }: { workspaceId: string; taskId: string; subtaskId: string },
-    { rejectWithValue },
-  ) => {
-    try {
-      await workspaceTaskService.deleteSubtask(workspaceId, taskId, subtaskId);
-      return { taskId, subtaskId };
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to delete subtask');
-    }
-  },
-);
-
-export const updateSubtaskStatus = createAsyncThunk(
-  'workspaceTask/updateSubtaskStatus',
-  async (
-    {
-      workspaceId,
-      taskId,
-      subtaskId,
-      status,
-    }: { workspaceId: string; taskId: string; subtaskId: string; status: string },
-    { rejectWithValue },
-  ) => {
-    try {
-      const response = await workspaceTaskService.updateSubtaskStatus(
-        workspaceId,
-        taskId,
-        subtaskId,
-        status,
-      );
-      return response;
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to update subtask status');
-    }
-  },
-);
-
 // ========== Slice ==========
 const workspaceTaskSlice = createSlice({
   name: 'workspaceTask',
@@ -219,10 +144,12 @@ const workspaceTaskSlice = createSlice({
     // getTasksByWorkspace
     builder
       .addCase(getTasksByWorkspace.pending, (state) => {
+        console.log('[Redux] getTasksByWorkspace pending');
         state.loading = true;
         state.error = null;
       })
       .addCase(getTasksByWorkspace.fulfilled, (state, action) => {
+        console.log('[Redux] getTasksByWorkspace fulfilled, tasks:', action.payload);
         state.loading = false;
         state.tasks = action.payload;
         // Organize by status
@@ -231,8 +158,10 @@ const workspaceTaskSlice = createSlice({
           'in-progress': action.payload.filter((t) => t.status === 'in-progress'),
           done: action.payload.filter((t) => t.status === 'done'),
         };
+        console.log('[Redux] tasksByStatus updated:', state.tasksByStatus);
       })
       .addCase(getTasksByWorkspace.rejected, (state, action) => {
+        console.error('[Redux] getTasksByWorkspace rejected:', action.payload);
         state.loading = false;
         state.error = action.payload as string;
       });
@@ -320,7 +249,7 @@ const workspaceTaskSlice = createSlice({
         state.error = action.payload as string;
       });
 
-    // assignTask, updateTaskStatus, createSubtask, updateSubtask, deleteSubtask, updateSubtaskStatus
+    // assignTask, updateTaskStatus
     builder
       .addCase(assignTask.fulfilled, (state, action) => {
         const index = state.tasks.findIndex((t) => t._id === action.payload._id);
@@ -344,44 +273,6 @@ const workspaceTaskSlice = createSlice({
           'in-progress': state.tasks.filter((t) => t.status === 'in-progress'),
           done: state.tasks.filter((t) => t.status === 'done'),
         };
-      })
-      .addCase(createSubtask.fulfilled, (state, action) => {
-        const index = state.tasks.findIndex((t) => t._id === action.payload._id);
-        if (index !== -1) {
-          state.tasks[index] = action.payload;
-        }
-        if (state.currentTask?._id === action.payload._id) {
-          state.currentTask = action.payload;
-        }
-      })
-      .addCase(updateSubtask.fulfilled, (state, action) => {
-        const index = state.tasks.findIndex((t) => t._id === action.payload._id);
-        if (index !== -1) {
-          state.tasks[index] = action.payload;
-        }
-        if (state.currentTask?._id === action.payload._id) {
-          state.currentTask = action.payload;
-        }
-      })
-      .addCase(deleteSubtask.fulfilled, (state, action) => {
-        const taskIndex = state.tasks.findIndex((t) => t._id === action.payload.taskId);
-        if (taskIndex !== -1) {
-          state.tasks[taskIndex].subtasks = state.tasks[taskIndex].subtasks.filter(
-            (st) => st._id !== action.payload.subtaskId,
-          );
-          if (state.currentTask?._id === state.tasks[taskIndex]._id) {
-            state.currentTask = state.tasks[taskIndex];
-          }
-        }
-      })
-      .addCase(updateSubtaskStatus.fulfilled, (state, action) => {
-        const index = state.tasks.findIndex((t) => t._id === action.payload._id);
-        if (index !== -1) {
-          state.tasks[index] = action.payload;
-        }
-        if (state.currentTask?._id === action.payload._id) {
-          state.currentTask = action.payload;
-        }
       });
   },
 });

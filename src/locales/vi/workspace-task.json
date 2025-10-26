@@ -90,6 +90,13 @@
     "unassign": "Bỏ Giao",
     "select_team_member": "Chọn thành viên sẽ thực hiện công việc này",
     "please_select_member": "Vui lòng chọn một thành viên",
+    "assign_member_title": "Giao Công Việc Cho Thành Viên",
+    "current_assignee": "Hiện được giao cho",
+    "no_assignee": "Chưa được giao cho ai",
+    "team_member": "Thành Viên Đội",
+    "unassigned": "Chưa Giao",
+    "no_members_available": "Không có thành viên nào",
+    "cancel": "Hủy",
     "filter": {
       "all": "Tất Cả",
       "my_tasks": "Công Việc Của Tôi",

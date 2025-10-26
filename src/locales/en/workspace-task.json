@@ -90,6 +90,13 @@
     "unassign": "Unassign",
     "select_team_member": "Choose who will work on this task",
     "please_select_member": "Please select a member",
+    "assign_member_title": "Assign Task to Team Member",
+    "current_assignee": "Currently assigned to",
+    "no_assignee": "Not assigned",
+    "team_member": "Team Member",
+    "unassigned": "Unassigned",
+    "no_members_available": "No members available",
+    "cancel": "Cancel",
     "filter": {
       "all": "All",
       "my_tasks": "My Tasks",

@@ -6,18 +6,6 @@ export interface User {
   avatar?: string;
 }
 
-export interface Subtask {
-  _id: string;
-  title: string;
-  description?: string;
-  assigned_to: User;
-  status: 'to-do' | 'in-progress' | 'done';
-  completed_by?: string;
-  completed_at?: Date;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
 export interface WorkspaceTask {
   _id: string;
   workspace_id: string;
@@ -26,8 +14,6 @@ export interface WorkspaceTask {
   created_by: User;
   assigned_to?: User;
   status: 'to-do' | 'in-progress' | 'done';
-  subtasks: Subtask[];
-  subtask_completed_count: number;
   completed_at?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -37,6 +23,7 @@ export interface WorkspaceTask {
 export interface CreateTaskRequest {
   title: string;
   description?: string;
+  assigned_to?: string;
 }
 
 export interface UpdateTaskRequest {
@@ -44,19 +31,6 @@ export interface UpdateTaskRequest {
   description?: string;
   status?: 'to-do' | 'in-progress' | 'done';
   assigned_to?: string;
-}
-
-export interface CreateSubtaskRequest {
-  title: string;
-  description?: string;
-  assigned_to: string;
-}
-
-export interface UpdateSubtaskRequest {
-  title?: string;
-  description?: string;
-  assigned_to?: string;
-  status?: 'to-do' | 'in-progress' | 'done';
 }
 
 // Response DTOs
