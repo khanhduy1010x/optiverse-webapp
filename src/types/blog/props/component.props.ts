@@ -55,6 +55,7 @@ export interface BlogEditorProps {
   post?: BlogPost;
   onSave?: (post: Partial<BlogPost>) => void;
   onCancel?: () => void;
+  onImageUpload?: (file: File) => Promise<string>;
   loading?: boolean;
   className?: string;
 }

@@ -72,8 +72,8 @@ interface GroupChatHeaderProps {
   showThemeSelector: boolean;
   setShowThemeSelector: (show: boolean) => void;
 
-  showGroupSettings: boolean;
-  setShowGroupSettings: (show: boolean) => void;
+  showGroupSettings?: boolean; // Optional - không bắt buộc cho workspace chat
+  setShowGroupSettings?: (show: boolean) => void; // Optional
   t: (key: string) => string;
 }
 

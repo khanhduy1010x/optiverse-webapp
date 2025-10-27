@@ -37,6 +37,7 @@ export function useGroupConversations() {
       }
       
       // Lọc các group conversations mà user hiện tại tham gia và không bị ẩn
+      // EXCLUDE workspace chats (chỉ lấy regular group chats)
       const userGroupConversations = Object.entries(data)
         .filter(([_, conv]: [string, any]) => {
           const isGroupConversation = conv.type === 'group';
@@ -46,7 +47,10 @@ export function useGroupConversations() {
             conv.groupMembers[currentUserId] && 
             conv.groupMembers[currentUserId].status === 'active';
           
-          return isGroupConversation && isParticipant && !isHidden && isActiveMember;
+          // EXCLUDE workspace chats - Simplified (chỉ cần check workspaceId)
+          const isWorkspaceChat = !!conv.workspaceId;
+          
+          return isGroupConversation && isParticipant && !isHidden && isActiveMember && !isWorkspaceChat;
         })
         .map(([id, conv]: [string, any]) => ({
           id,

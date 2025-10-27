@@ -59,6 +59,9 @@ export interface GroupConversationType extends ConversationType {
   createdBy: string; // Người tạo nhóm
   updatedAt: number; // Thời gian cập nhật cuối
   
+  // Workspace Integration - Simplified (bỏ isWorkspaceChat flag dư thừa)
+  workspaceId?: string; // Nếu có workspaceId => đây là workspace chat
+  
   // Thống kê nhóm
   stats?: {
     totalMessages: number;
@@ -98,6 +101,10 @@ export interface CreateGroupRequest {
   avatar?: string;
   memberIds: string[]; // Danh sách ID thành viên ban đầu
   settings?: Partial<GroupSettings>;
+  
+  // Workspace Integration - NEW
+  workspaceId?: string; // ID workspace nếu tạo workspace chat
+  isWorkspaceChat?: boolean; // Đánh dấu đây là workspace chat
 }
 
 export interface UpdateGroupRequest {

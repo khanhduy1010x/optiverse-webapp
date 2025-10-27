@@ -129,6 +129,11 @@ class GroupService {
         groupData.avatar = request.avatar;
       }
 
+      // Workspace Integration - Simplified (chỉ cần workspaceId)
+      if (request.workspaceId) {
+        groupData.workspaceId = request.workspaceId;
+      }
+
       // Lưu vào Firebase
       await set(ref(db, `groupConversations/${groupId}`), groupData);
 
@@ -629,6 +634,177 @@ class GroupService {
       console.error('Error updating group description:', error);
       return false;
     }
+  }
+
+  /**
+   * ========== WORKSPACE CHAT INTEGRATION - NEW ==========
+   */
+
+  /**
+   * Tạo workspace chat group (tự động khi tạo workspace)
+   * @param workspaceId - ID của workspace
+   * @param workspaceName - Tên workspace
+   * @param memberIds - Danh sách member IDs
+   * @param creatorId - ID người tạo (owner)
+   */
+  async createWorkspaceChat(
+    workspaceId: string,
+    workspaceName: string,
+    memberIds: string[],
+    creatorId?: string
+  ): Promise<string | null> {
+    try {
+      const userId = creatorId || localStorage.getItem('user_id');
+      if (!userId) {
+        console.error('User not logged in');
+        return null;
+      }
+
+      console.log('Creating workspace chat:', {
+        workspaceId,
+        workspaceName,
+        memberIds,
+        userId
+      });
+
+      // Tạo group chat với workspace flag (chỉ cần workspaceId)
+      const groupId = await this.createGroup({
+        name: `${workspaceName} Chat`,
+        description: `Chat room for ${workspaceName} workspace`,
+        memberIds: [...memberIds, userId], // Ensure creator is included
+        workspaceId: workspaceId,
+        settings: {
+          allowMemberInvite: false, // Chỉ admin workspace mới mời được
+          allowMemberLeave: false, // Không cho phép tự rời (phải remove từ workspace)
+          requireApprovalToJoin: false,
+          maxMembers: 1000,
+          isPublic: false
+        }
+      });
+
+      console.log('Workspace chat created:', groupId);
+      return groupId;
+    } catch (error) {
+      console.error('Error creating workspace chat:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Lấy workspace chat theo workspaceId
+   */
+  async getWorkspaceChat(workspaceId: string): Promise<GroupConversationType | null> {
+    try {
+      const conversationsRef = ref(db, 'groupConversations');
+      const snapshot = await get(conversationsRef);
+      
+      if (!snapshot.exists()) {
+        return null;
+      }
+
+      const conversations = snapshot.val();
+      
+      // Tìm group chat của workspace (chỉ cần check workspaceId)
+      const workspaceChat = Object.entries(conversations)
+        .find(([_, conv]: [string, any]) => 
+          conv.workspaceId === workspaceId
+        );
+
+      if (!workspaceChat) {
+        return null;
+      }
+
+      const [groupId, groupData] = workspaceChat;
+      return {
+        ...groupData as GroupConversationType,
+        id: groupId
+      };
+    } catch (error) {
+      console.error('Error getting workspace chat:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Sync members từ workspace vào group chat
+   * Gọi khi có thay đổi members trong workspace
+   */
+  async syncWorkspaceMembers(
+    workspaceId: string,
+    memberIds: string[]
+  ): Promise<boolean> {
+    try {
+      console.log('Syncing workspace members:', { workspaceId, memberIds });
+
+      // Lấy workspace chat
+      const workspaceChat = await this.getWorkspaceChat(workspaceId);
+      
+      if (!workspaceChat) {
+        console.error('Workspace chat not found');
+        return false;
+      }
+
+      const groupId = workspaceChat.id;
+      const currentMembers = Object.keys(workspaceChat.groupMembers || {});
+      
+      // Tìm members cần thêm
+      const membersToAdd = memberIds.filter(id => !currentMembers.includes(id));
+      
+      // Tìm members cần xóa
+      const membersToRemove = currentMembers.filter(id => !memberIds.includes(id));
+
+      console.log('Members to add:', membersToAdd);
+      console.log('Members to remove:', membersToRemove);
+
+      // Thêm members mới
+      for (const memberId of membersToAdd) {
+        await this.addMemberToGroup(groupId, memberId);
+      }
+
+      // Xóa members không còn trong workspace
+      for (const memberId of membersToRemove) {
+        await this.removeMemberFromGroup(groupId, memberId);
+      }
+
+      console.log('Workspace members synced successfully');
+      return true;
+    } catch (error) {
+      console.error('Error syncing workspace members:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Thêm member vào workspace chat (internal method)
+   */
+  private async addMemberToGroup(groupId: string, userId: string): Promise<void> {
+    const newMember: GroupMember = {
+      userId,
+      role: GroupMemberRole.MEMBER,
+      status: GroupMemberStatus.ACTIVE,
+      joinedAt: Date.now(),
+      invitedBy: 'system' // Auto-added by system
+    };
+
+    await update(ref(db, `groupConversations/${groupId}/groupMembers/${userId}`), newMember);
+    await update(ref(db, `groupConversations/${groupId}/members/${userId}`), { active: true });
+    await update(ref(db, `groupConversations/${groupId}`), {
+      updatedAt: Date.now()
+    });
+  }
+
+  /**
+   * Xóa member khỏi workspace chat (internal method)
+   */
+  private async removeMemberFromGroup(groupId: string, userId: string): Promise<void> {
+    await update(ref(db, `groupConversations/${groupId}/groupMembers/${userId}`), {
+      status: GroupMemberStatus.LEFT,
+      leftAt: Date.now()
+    });
+    await remove(ref(db, `groupConversations/${groupId}/members/${userId}`));
+    await update(ref(db, `groupConversations/${groupId}`), {
+      updatedAt: Date.now()
+    });
   }
 }
 
