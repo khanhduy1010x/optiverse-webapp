@@ -178,9 +178,7 @@ export const WORKSPACE_ONLY_SECTIONS: NavSection[] = [
 // Dedicated minimal navigation for Marketplace context
 export const MARKETPLACE_SECTIONS: NavSection[] = [
   { label: 'Home', path: '/marketplace', icon: 'home' },
-
-  { label: 'Create', path: '/marketplace/create', icon: 'add_market' },
-  { label: 'Favorites', path: '/marketplace/favorites', icon: 'star' },
+  { label: 'My marketplace', path: '/marketplace/my-items', icon: 'add_market' },
 ];
 
 // Map các path con tới path cha để dễ dàng tìm kiếm
@@ -206,6 +204,8 @@ const PATH_MAPPING: Record<string, string> = {
   '/admin/users': '/admin/dashboard',
   '/admin/settings': '/admin/dashboard',
   '/admin/achievements': '/admin/dashboard',
+  '/marketplace': '/marketplace',
+  '/marketplace/my-items': '/marketplace',
 };
 
 export const getSectionKeyFromPath = (path: string): string => {

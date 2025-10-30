@@ -3,6 +3,8 @@ import { UserAchievement } from '../../types/user-achievement/user-achievement.t
 import View from '../common/View.component';
 import Button from '../common/Button.component';
 import Icon from '../common/Icon/Icon.component';
+import RichTextDisplay from '../common/RichTextDisplay.component';
+import '../common/RichTextDisplay.style.css';
 
 interface AchievementListProps {
     unlockedAchievements: UserAchievement[];
@@ -104,10 +106,14 @@ const AchievementList: React.FC<AchievementListProps> = ({
                             </div>
                         )}
 
-                        <p className={`text-xs mb-3 text-center line-clamp-2 ${isUnlocked ? 'text-gray-600' : 'text-gray-400'
+                        <div className={`text-xs mb-3 text-center line-clamp-2 ${isUnlocked ? 'text-gray-600' : 'text-gray-400'
                             }`}>
-                            {achievement.achievement.description}
-                        </p>
+                            <RichTextDisplay 
+                                content={achievement.achievement.description || ''} 
+                                className="compact"
+                                maxLength={60}
+                            />
+                        </div>
 
                         {/* Reward section */}
                         {achievement.achievement.reward && (

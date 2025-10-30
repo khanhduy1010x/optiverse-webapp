@@ -1,6 +1,8 @@
 import React from 'react'
 import { Achievement } from '../../types/achievement/achievement.types'
 import { motion } from 'framer-motion'
+import RichTextDisplay from '../common/RichTextDisplay.component'
+import '../common/RichTextDisplay.style.css'
 
 interface AchievementCardProps {
   achievement: Achievement
@@ -37,9 +39,13 @@ const AchievementCard: React.FC<AchievementCardProps> = ({ achievement, onEdit, 
                 {achievement.reward} points
               </span>
             </div>
-            <p className="mt-2 text-sm text-gray-600 overflow-hidden max-h-12">
-              {achievement.description || 'No description'}
-            </p>
+            <div className="mt-2 text-sm text-gray-600 overflow-hidden max-h-12">
+              <RichTextDisplay 
+                content={achievement.description || 'No description'} 
+                className="compact"
+                maxLength={80}
+              />
+            </div>
           </div>
         </div>
 

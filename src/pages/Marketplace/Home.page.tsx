@@ -1,7 +1,24 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import MarketplaceGrid from '../../components/Marketplace/MarketplaceGrid.component';
 import MarketplaceFilterBar from '../../components/Marketplace/MarketplaceFilterBar.component';
-import { MarketplaceProduct } from '../../components/Marketplace/MarketplaceCard.component';
+import MarketplaceItemDetailModal from '../../components/Marketplace/MarketplaceItemDetailModal.component';
+import SuccessNotificationModal from '../../components/Marketplace/SuccessNotificationModal.component';
+import { useMarketplaceItems } from '../../hooks/marketplace/useMarketplaceItems';
+import { useMarketplaceFilter } from '../../hooks/marketplace/useMarketplaceFilter';
+import { usePurchaseMarketplace } from '../../hooks/marketplace/usePurchaseMarketplace';
+import { transformItemsToProducts } from '../../utils/marketplace.transform';
+import { MarketplaceItem } from '../../types/marketplace/marketplace.types';
+
+// Hide scrollbar style
+const scrollbarHideStyle = `
+    .marketplace-page::-webkit-scrollbar {
+        display: none;
+    }
+    .marketplace-page {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+`;
 
 const MarketplaceHomePage: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
@@ -9,136 +26,43 @@ const MarketplaceHomePage: React.FC = () => {
     const [priceRange, setPriceRange] = useState({ min: 0, max: 1000 });
     const [popularity, setPopularity] = useState('all');
     const [category, setCategory] = useState('all');
-
-    const sampleProducts: MarketplaceProduct[] = [
-        {
-            id: '1',
-            name: 'Beautiful Landing Page Template',
-            image: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400&h=300&fit=crop',
-            price: 15,
-            discount: 20,
-            seller: 'John Designer',
-            purchaseCount: 1240,
-            rating: 4.8,
-            ratingCount: 342,
-        },
-        {
-            id: '2',
-            name: 'E-commerce Dashboard Plugin',
-            image: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400&h=300&fit=crop',
-            price: 0,
-            seller: 'Sarah Dev',
-            purchaseCount: 856,
-            rating: 4.6,
-            ratingCount: 213,
-        },
-        {
-            id: '3',
-            name: 'Premium Icon Pack (5000+)',
-            image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop',
-            price: 25,
-            discount: 15,
-            seller: 'Design Studio Pro',
-            purchaseCount: 2103,
-            rating: 4.9,
-            ratingCount: 567,
-        },
-        {
-            id: '4',
-            name: 'React Component Library',
-            image: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400&h=300&fit=crop',
-            price: 30,
-            seller: 'Tech Masters',
-            purchaseCount: 512,
-            rating: 4.7,
-            ratingCount: 128,
-        },
-        {
-            id: '5',
-            name: 'Figma Design System',
-            image: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400&h=300&fit=crop',
-            price: 20,
-            discount: 10,
-            seller: 'Design Pro Co',
-            purchaseCount: 789,
-            rating: 4.5,
-            ratingCount: 195,
-        },
-        {
-            id: '6',
-            name: 'AI Writing Assistant Plugin',
-            image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop',
-            price: 0,
-            seller: 'AI Creators',
-            purchaseCount: 1523,
-            rating: 4.8,
-            ratingCount: 421,
-        },
-    ];
-
+    const [selectedItem, setSelectedItem] = useState<MarketplaceItem | null>(null);
+    const [showSuccessNotification, setShowSuccessNotification] = useState(false);
+    
+    // Get current user ID from localStorage
+    const currentUserId = localStorage.getItem('user_id');
+    // Fetch items from hook
+    const { items, loading, error, page, setPage, refetch } = useMarketplaceItems(currentUserId);
+    // Transform items to products
+    const products = transformItemsToProducts(items);
     // Apply filters and sorting
-    const filteredProducts = useMemo(() => {
-        let products = sampleProducts;
+    const filteredProducts = useMarketplaceFilter(products, {
+        searchQuery,
+        sortBy,
+        priceRange,
+        popularity,
+    });
 
-        // Search filter
-        if (searchQuery) {
-            products = products.filter(product =>
-                product.name.toLowerCase().includes(searchQuery.toLowerCase())
-            );
+    // Use purchase hook
+    const { isPurchasing, handlePurchase } = usePurchaseMarketplace(
+        () => {
+            // On success
+            setSelectedItem(null);
+            setShowSuccessNotification(true);
+            // Refetch marketplace items and user balance
+            refetch();
         }
-
-        // Price filter
-        products = products.filter(product =>
-            product.price >= priceRange.min && product.price <= priceRange.max
-        );
-
-        // Popularity filter
-        if (popularity !== 'all') {
-            products = products.filter(product => {
-                switch (popularity) {
-                    case 'top-100':
-                        return product.purchaseCount >= 500;
-                    case 'top-1000':
-                        return product.purchaseCount >= 1000;
-                    case 'top-500':
-                        return product.purchaseCount >= 500;
-                    default:
-                        return true;
-                }
-            });
-        }
-
-        // Sort
-        const sorted = [...products];
-        switch (sortBy) {
-            case 'newest':
-                break;
-            case 'oldest':
-                sorted.reverse();
-                break;
-            case 'price-high':
-                sorted.sort((a, b) => b.price - a.price);
-                break;
-            case 'price-low':
-                sorted.sort((a, b) => a.price - b.price);
-                break;
-            case 'popular':
-                sorted.sort((a, b) => b.purchaseCount - a.purchaseCount);
-                break;
-            default:
-                break;
-        }
-
-        return sorted;
-    }, [searchQuery, priceRange, popularity, sortBy]);
+    );
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <>
+            <style>{scrollbarHideStyle}</style>
+            <div className="marketplace-page min-h-screen bg-gray-50">
             {/* Header Section */}
             <div className="bg-white border-b border-gray-200 p-6">
                 <h1 className="text-3xl font-bold text-gray-900">Marketplace</h1>
                 <p className="text-gray-600 mt-1">
-                    Khám phá template, plugin, và gói mở rộng từ cộng đồng
+                    Discover flashcards from the community
                 </p>
             </div>
 
@@ -158,14 +82,67 @@ const MarketplaceHomePage: React.FC = () => {
 
             {/* Products Grid Section */}
             <div className="p-6">
-                <MarketplaceGrid
-                    products={filteredProducts}
-                    onProductClick={(product) => {
-                        console.log('Clicked product:', product);
-                    }}
-                />
+                {loading ? (
+                    <div className="flex justify-center items-center h-96">
+                        <p className="text-gray-500">Loading data...</p>
+                    </div>
+                ) : error ? (
+                    <div className="flex justify-center items-center h-96">
+                        <p className="text-red-500">{error}</p>
+                    </div>
+                ) : (
+                    <>
+                        <MarketplaceGrid
+                            products={filteredProducts}
+                            onProductClick={(product) => {
+                                const item = items.find(i => i._id === product.id);
+                                if (item) {
+                                    setSelectedItem(item);
+                                }
+                            }}
+                        />
+                        {/* Pagination */}
+                        <div className="mt-8 flex justify-center gap-2">
+                            <button
+                                onClick={() => setPage(Math.max(1, page - 1))}
+                                disabled={page === 1}
+                                className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300"
+                            >
+                                Previous
+                            </button>
+                            <span className="px-4 py-2">{page}</span>
+                            <button
+                                onClick={() => setPage(page + 1)}
+                                disabled={items.length < 10}
+                                className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300"
+                            >
+                                Next
+                            </button>
+                        </div>
+                    </>
+                )}
             </div>
+
+            {/* Detail Modal */}
+            <MarketplaceItemDetailModal
+                item={selectedItem}
+                isOpen={selectedItem !== null}
+                onClose={() => setSelectedItem(null)}
+                onPurchaseSuccess={() => {
+                    setShowSuccessNotification(true);
+                    refetch();
+                }}
+            />
+
+            {/* Success Notification Modal */}
+            <SuccessNotificationModal
+                isOpen={showSuccessNotification}
+                onClose={() => setShowSuccessNotification(false)}
+                title="Purchase Successful"
+                message="Your flashcard deck has been added to your collection!"
+            />
         </div>
+        </>
     );
 };
 
