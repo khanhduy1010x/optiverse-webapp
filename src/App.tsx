@@ -74,8 +74,7 @@ import ForgotPasswordContainer from './pages/Auth/ForgotPasswordContainer.page';
 import WorkspaceMembersPage from './pages/workspace/WorkspaceMembers.page';
 import { Navigate } from 'react-router-dom';
 import MarketplaceHomePage from './pages/Marketplace/Home.page';
-import MarketplaceCreateNewPage from './pages/Marketplace/CreateNew.page';
-import MarketplaceFavoritesPage from './pages/Marketplace/Favorites.page';
+import MyItemsPage from './pages/Marketplace/MyItems.page';
 
 declare global {
   interface Window {
@@ -138,22 +137,13 @@ const AppContent: React.FC = () => {
               }
             />
             <Route
-              path="/marketplace/create"
+              path="/marketplace/my-items"
               element={
                 <ProtectedRoute>
-                  <MarketplaceCreateNewPage />
+                  <MyItemsPage />
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/marketplace/favorites"
-              element={
-                <ProtectedRoute>
-                  <MarketplaceFavoritesPage />
-                </ProtectedRoute>
-              }
-            />
-
             <Route
               path="/forgot"
               element={

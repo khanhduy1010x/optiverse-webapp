@@ -4,6 +4,7 @@ import { useAchievementForm } from '../../hooks/achievement/useAchievementForm';
 import Button from '../common/Button.component';
 import RuleFormModal from './RuleFormModal.component';
 import { AchievementFormData } from '../../types/achievement/request/achievement.request';
+import AchievementEditor from './AchievementEditor.component';
 
 interface AchievementFormModalProps {
   isOpen: boolean;
@@ -105,16 +106,12 @@ const AchievementFormModal: React.FC<AchievementFormModalProps> = ({
                 <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
                   Description *
                 </label>
-                <textarea
-                  id="description"
-                  name="description"
+                <AchievementEditor
                   value={formData.description}
-                  onChange={handleInputChange}
+                  onChange={(value) => handleInputChange({ target: { name: 'description', value } } as any)}
                   onBlur={() => handleBlur('description')}
-                  rows={4}
-                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 resize-none ${hasError('description') ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                    }`}
-                  placeholder="Enter achievement description"
+                  hasError={hasError('description')}
+                  placeholder="Enter achievement description..."
                 />
                 {hasError('description') && (
                   <p className="mt-1 text-sm text-red-600">{getError('description')}</p>

@@ -1,0 +1,120 @@
+.rich-text-display {
+  /* Typography */
+  font-family: inherit;
+  line-height: 1.5;
+  color: inherit;
+}
+
+.rich-text-display p {
+  margin: 0;
+  padding: 0;
+}
+
+.rich-text-display strong,
+.rich-text-display b {
+  font-weight: 600;
+}
+
+.rich-text-display em,
+.rich-text-display i {
+  font-style: italic;
+}
+
+.rich-text-display u {
+  text-decoration: underline;
+}
+
+.rich-text-display s,
+.rich-text-display strike {
+  text-decoration: line-through;
+}
+
+.rich-text-display ul,
+.rich-text-display ol {
+  margin: 0;
+  padding-left: 1rem;
+}
+
+.rich-text-display li {
+  margin: 0;
+}
+
+.rich-text-display h1,
+.rich-text-display h2,
+.rich-text-display h3,
+.rich-text-display h4,
+.rich-text-display h5,
+.rich-text-display h6 {
+  margin: 0;
+  font-weight: 600;
+}
+
+.rich-text-display h1 { font-size: 1.25em; }
+.rich-text-display h2 { font-size: 1.125em; }
+.rich-text-display h3 { font-size: 1em; }
+.rich-text-display h4 { font-size: 0.875em; }
+.rich-text-display h5 { font-size: 0.75em; }
+.rich-text-display h6 { font-size: 0.625em; }
+
+.rich-text-display blockquote {
+  margin: 0;
+  padding-left: 0.75rem;
+  border-left: 2px solid #e5e7eb;
+  font-style: italic;
+}
+
+.rich-text-display code {
+  background-color: #f3f4f6;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-family: 'Courier New', monospace;
+  font-size: 0.875em;
+}
+
+.rich-text-display pre {
+  background-color: #f3f4f6;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  overflow-x: auto;
+  margin: 0;
+}
+
+.rich-text-display pre code {
+  background-color: transparent;
+  padding: 0;
+}
+
+.rich-text-display a {
+  color: #3b82f6;
+  text-decoration: underline;
+}
+
+.rich-text-display a:hover {
+  color: #1d4ed8;
+}
+
+/* Compact version for cards */
+.rich-text-display.compact {
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.rich-text-display.compact h1,
+.rich-text-display.compact h2,
+.rich-text-display.compact h3,
+.rich-text-display.compact h4,
+.rich-text-display.compact h5,
+.rich-text-display.compact h6 {
+  font-size: inherit;
+  font-weight: 600;
+}
+
+.rich-text-display.compact ul,
+.rich-text-display.compact ol {
+  padding-left: 0.75rem;
+}
+
+.rich-text-display.compact blockquote {
+  padding-left: 0.5rem;
+  border-left-width: 1px;
+}

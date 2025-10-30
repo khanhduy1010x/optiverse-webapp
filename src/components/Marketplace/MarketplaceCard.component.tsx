@@ -1,5 +1,6 @@
 import React from 'react';
 import Icon from '../common/Icon/Icon.component';
+import { CreatorInfo } from '../../types/marketplace/marketplace.types';
 
 export interface MarketplaceProduct {
     id: string;
@@ -7,7 +8,8 @@ export interface MarketplaceProduct {
     image: string;
     price: number;
     discount?: number;
-    seller: string;
+    sellerName: string;
+    sellerInfo?: CreatorInfo;
     purchaseCount: number;
     rating: number;
     ratingCount?: number;
@@ -45,26 +47,33 @@ const MarketplaceCard: React.FC<MarketplaceCardProps> = ({ product, onClick }) =
 
             {/* Content Container */}
             <div className="p-4 flex flex-col gap-3">
-                {/* Product Name */}
-                <h3 className="font-semibold text-base line-clamp-2 text-gray-800">
-                    {product.name}
-                </h3>
-
-                {/* Price Section */}
-                <div className="flex items-center gap-2">
-                    <span className="text-lg font-bold text-gray-900">
-                        {discountedPrice.toLocaleString()} OP
-                    </span>
-                    {product.discount && (
-                        <span className="text-sm text-gray-500 line-through">
-                            {product.price.toLocaleString()} OP
+                {/* Product Name & Price */}
+                <div className="flex justify-between items-start gap-2">
+                    <h3 className="font-semibold text-base line-clamp-2 text-gray-800 flex-1">
+                        {product.name}
+                    </h3>
+                    <div className="text-right flex-shrink-0">
+                        <span className="text-lg font-bold text-gray-900">
+                            {discountedPrice.toLocaleString()} OP
                         </span>
-                    )}
+                        {product.discount && (
+                            <div className="text-xs text-gray-500 line-through">
+                                {product.price.toLocaleString()} OP
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Seller Info */}
-                <div className="text-xs text-gray-600">
-                    <p>Người đăng: <span className="font-medium">{product.seller}</span></p>
+                <div className="flex items-center gap-2">
+                    <img
+                        src={product.sellerInfo?.avatar_url || `https://ui-avatars.com/api/?name=${product.sellerInfo?.full_name || 'Unknown'}&background=random&size=32`}
+                        alt={product.sellerInfo?.full_name || 'Seller'}
+                        className="w-8 h-8 rounded-full object-cover"
+                    />
+                    <p className="text-xs text-gray-600">
+                        <span className="font-medium">{product.sellerInfo?.full_name || product.sellerName}</span>
+                    </p>
                 </div>
 
                 {/* Bottom Stats Row */}
@@ -72,7 +81,7 @@ const MarketplaceCard: React.FC<MarketplaceCardProps> = ({ product, onClick }) =
                     {/* Purchase Count */}
                     <div className="flex items-center gap-1">
                         <Icon name="check" size={14} className="text-gray-500" />
-                        <span>{product.purchaseCount} mua</span>
+                        <span>{product.purchaseCount} purchased</span>
                     </div>
 
                     {/* Rating Stars */}

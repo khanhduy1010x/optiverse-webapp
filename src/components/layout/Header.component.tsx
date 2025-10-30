@@ -8,6 +8,7 @@ import { useAuthStatus } from '../../hooks/auth/useAuthStatus.hook';
 import NotificationPopover from './NotificationPopover';
 import UserMenuPopover from './UserMenuPopover';
 import WorkspaceSelector from '../workspace/WorkspaceSelector';
+import OPScore from '../common/OPScore.component';
 
 const Header: React.FC = () => {
     const navigate = useNavigate();
@@ -48,7 +49,7 @@ const Header: React.FC = () => {
                     <span className="hidden sm:inline">Marketplace</span>
                 </Button>
 
-                {/* Right: Notification, User Name & Avatar */}
+                {/* Right: Notification, OP Score, User Name & Avatar */}
                 <div className="ml-auto flex items-center gap-3">
                     {/* Notification Button with hover popover */}
                     <div
@@ -77,6 +78,9 @@ const Header: React.FC = () => {
                             />
                         )}
                     </div>
+
+                    {/* OP Score */}
+                    <OPScore className="hidden sm:flex" />
 
                     {/* User Name (hidden on small screens) */}
                     {user?.full_name && (

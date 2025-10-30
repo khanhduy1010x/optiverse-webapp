@@ -1,0 +1,262 @@
+import api from './api.service';
+import { ApiResponse } from '../types/api/api.interface';
+import {
+  MarketplaceItem,
+  CreateMarketplaceItemPayload,
+  UpdateMarketplaceItemPayload,
+  PurchasePayload,
+  PurchaseResponse,
+} from '../types/marketplace/marketplace.types';
+
+// Export types for convenience
+export type {
+  MarketplaceItem,
+  CreateMarketplaceItemPayload,
+  UpdateMarketplaceItemPayload,
+  PurchasePayload,
+  PurchaseResponse,
+};
+
+const URLBASE = 'productivity/marketplace';
+
+class MarketplaceServiceClass {
+  /**
+   * Lấy danh sách tất cả marketplace items
+   */
+  async getAll(page: number = 1, limit: number = 10, type?: string) {
+    try {
+      const params: any = { page, limit };
+      if (type) params.type = type;
+
+      const response = await api.get<
+        ApiResponse<{
+          items: MarketplaceItem[];
+          total: number;
+        }>
+      >(`${URLBASE}`, { params });
+
+      return {
+        items: response.data.data.items || [],
+        total: response.data.data.total || 0,
+      };
+    } catch (error: any) {
+      console.error('Error fetching marketplace items:', {
+        error: error.message,
+        response: error.response?.data,
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Lấy chi tiết một marketplace item
+   */
+  async getById(id: string): Promise<MarketplaceItem> {
+    try {
+      const response = await api.get<ApiResponse<{ data: MarketplaceItem }>>(
+        `${URLBASE}/${id}`
+      );
+
+      return response.data.data.data;
+    } catch (error: any) {
+      console.error(`Error fetching marketplace item ${id}:`, {
+        error: error.message,
+        response: error.response?.data,
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Tạo marketplace item mới với upload ảnh
+   */
+  async create(payload: CreateMarketplaceItemPayload | FormData): Promise<MarketplaceItem> {
+    try {
+      let data: any;
+
+      // Nếu là FormData (từ frontend pages), dùng trực tiếp
+      if (payload instanceof FormData) {
+        data = payload;
+      } else {
+        // Nếu là object, convert thành FormData
+        data = new FormData();
+        data.append('title', payload.title);
+        if (payload.description) {
+          data.append('description', payload.description);
+        }
+        data.append('price', payload.price.toString());
+        data.append('type', payload.type);
+        if (payload.type_id) {
+          data.append('type_id', payload.type_id);
+        }
+
+        if (payload.images) {
+          payload.images.forEach((file) => {
+            data.append('images', file);
+          });
+        }
+      }
+
+      const response = await api.post<ApiResponse<{ data: MarketplaceItem }>>(
+        `${URLBASE}`,
+        data,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
+      return response.data.data.data;
+    } catch (error: any) {
+      console.error('Error creating marketplace item:', {
+        error: error.message,
+        response: error.response?.data,
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Cập nhật marketplace item
+   */
+  async update(
+    id: string,
+    payload: UpdateMarketplaceItemPayload | FormData
+  ): Promise<MarketplaceItem> {
+    try {
+      let data: any;
+
+      // Nếu là FormData, dùng trực tiếp
+      if (payload instanceof FormData) {
+        data = payload;
+      } else {
+        // Nếu là object, convert thành FormData
+        data = new FormData();
+        if (payload.title) data.append('title', payload.title);
+        if (payload.description) data.append('description', payload.description);
+        if (payload.price !== undefined) data.append('price', payload.price.toString());
+        if (payload.type_id) data.append('type_id', payload.type_id);
+
+        if (payload.images) {
+          payload.images.forEach((file) => {
+            data.append('images', file);
+          });
+        }
+      }
+
+      const response = await api.put<ApiResponse<{ data: MarketplaceItem }>>(
+        `${URLBASE}/${id}`,
+        data,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
+      return response.data.data.data;
+    } catch (error: any) {
+      console.error(`Error updating marketplace item ${id}:`, {
+        error: error.message,
+        response: error.response?.data,
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Xóa marketplace item
+   */
+  async delete(id: string): Promise<{ message: string }> {
+    try {
+      const response = await api.delete<ApiResponse<{ message: string }>>(
+        `${URLBASE}/${id}`
+      );
+
+      return response.data.data;
+    } catch (error: any) {
+      console.error(`Error deleting marketplace item ${id}:`, {
+        error: error.message,
+        response: error.response?.data,
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Lấy danh sách marketplace items của user hiện tại
+   */
+  async getMyItems(page: number = 1, limit: number = 10) {
+    try {
+      const params = { page, limit };
+
+      const response = await api.get<
+        ApiResponse<{
+          items: MarketplaceItem[];
+          total: number;
+        }>
+      >(`${URLBASE}/user/my-items`, { params });
+
+      return {
+        items: response.data.data.items || [],
+        total: response.data.data.total || 0,
+      };
+    } catch (error: any) {
+      console.error('Error fetching my marketplace items:', {
+        error: error.message,
+        response: error.response?.data,
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Lấy danh sách marketplace items của một user khác
+   */
+  async getByCreatorId(creatorId: string, page: number = 1, limit: number = 10) {
+    try {
+      const params = { page, limit };
+
+      const response = await api.get<
+        ApiResponse<{
+          items: MarketplaceItem[];
+          total: number;
+        }>
+      >(`${URLBASE}/user/${creatorId}`, { params });
+
+      return {
+        items: response.data.data.items || [],
+        total: response.data.data.total || 0,
+      };
+    } catch (error: any) {
+      console.error(`Error fetching marketplace items for creator ${creatorId}:`, {
+        error: error.message,
+        response: error.response?.data,
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Mua marketplace item
+   */
+  async purchase(payload: PurchasePayload): Promise<PurchaseResponse> {
+    try {
+      const response = await api.post<ApiResponse<{ data: PurchaseResponse }>>(
+        `${URLBASE}/purchase`,
+        payload
+      );
+
+      return response.data.data.data;
+    } catch (error: any) {
+      console.error('Error purchasing marketplace item:', {
+        error: error.message,
+        response: error.response?.data,
+      });
+      throw error;
+    }
+  }
+}
+
+export default new MarketplaceServiceClass();

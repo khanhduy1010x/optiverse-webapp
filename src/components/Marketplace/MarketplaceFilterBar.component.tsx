@@ -33,22 +33,22 @@ const MarketplaceFilterBar: React.FC<MarketplaceFilterBarProps> = ({
     };
 
     const priceRanges = [
-        { label: 'Tất cả', min: 0, max: 1000 },
-        { label: 'Miễn phí', min: 0, max: 0 },
+        { label: 'All', min: 0, max: 1000 },
+        { label: 'Free', min: 0, max: 0 },
         { label: '0 - 10 OP', min: 0, max: 10 },
         { label: '10 - 25 OP', min: 10, max: 25 },
         { label: '25+ OP', min: 25, max: 1000 },
     ];
 
     const popularityOptions = [
-        { label: 'Tất cả', value: 'all' },
+        { label: 'All', value: 'all' },
         { label: 'Top 100', value: 'top-100' },
-        { label: '1000+ lượt mua', value: 'top-1000' },
-        { label: '500+ lượt mua', value: 'top-500' },
+        { label: '1000+ purchases', value: 'top-1000' },
+        { label: '500+ purchases', value: 'top-500' },
     ];
 
     const categoryOptions = [
-        { label: 'Tất cả danh mục', value: 'all' },
+        { label: 'All Categories', value: 'all' },
         { label: 'Template', value: 'template' },
         { label: 'Plugin', value: 'plugin' },
         { label: 'Icon Pack', value: 'icons' },
@@ -56,11 +56,11 @@ const MarketplaceFilterBar: React.FC<MarketplaceFilterBarProps> = ({
     ];
 
     const sortOptions = [
-        { label: 'Mới nhất', value: 'newest' },
-        { label: 'Cũ nhất', value: 'oldest' },
-        { label: 'Giá cao đến thấp', value: 'price-high' },
-        { label: 'Giá thấp đến cao', value: 'price-low' },
-        { label: 'Bán chạy nhất', value: 'popular' },
+        { label: 'Newest', value: 'newest' },
+        { label: 'Oldest', value: 'oldest' },
+        { label: 'Price: High to Low', value: 'price-high' },
+        { label: 'Price: Low to High', value: 'price-low' },
+        { label: 'Most Popular', value: 'popular' },
     ];
 
     const getDisplayLabel = (value: string, options: Array<{ label: string; value: string }>) => {
@@ -68,8 +68,8 @@ const MarketplaceFilterBar: React.FC<MarketplaceFilterBarProps> = ({
     };
 
     const getDisplayPrice = (range: { min: number; max: number }) => {
-        if (range.min === 0 && range.max === 0) return 'Miễn phí';
-        if (range.max === 1000) return 'Tất cả';
+        if (range.min === 0 && range.max === 0) return 'Free';
+        if (range.max === 1000) return 'All';
         return `${range.min} - ${range.max} OP`;
     };
 
@@ -80,7 +80,7 @@ const MarketplaceFilterBar: React.FC<MarketplaceFilterBarProps> = ({
                 <div className="flex-1 relative">
                     <input
                         type="text"
-                        placeholder="Tìm kiếm template, plugin, icon..."
+                        placeholder="Search items..."
                         value={searchQuery}
                         onChange={(e) => onSearchChange(e.target.value)}
                         className="w-full pl-4 pr-12 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition shadow-sm"
@@ -101,7 +101,7 @@ const MarketplaceFilterBar: React.FC<MarketplaceFilterBarProps> = ({
                         onClick={() => toggleDropdown('price')}
                         className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition bg-white"
                     >
-                        <span className="text-sm font-medium text-gray-700">Theo giá: {getDisplayPrice(priceRange)}</span>
+                        <span className="text-sm font-medium text-gray-700">Price: {getDisplayPrice(priceRange)}</span>
                         <Icon
                             name="chevron"
                             size={16}
@@ -136,7 +136,7 @@ const MarketplaceFilterBar: React.FC<MarketplaceFilterBarProps> = ({
                         onClick={() => toggleDropdown('popularity')}
                         className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition bg-white"
                     >
-                        <span className="text-sm font-medium text-gray-700">Độ phổ biến: {getDisplayLabel(popularity, popularityOptions)}</span>
+                        <span className="text-sm font-medium text-gray-700">Popularity: {getDisplayLabel(popularity, popularityOptions)}</span>
                         <Icon
                             name="chevron"
                             size={16}
@@ -171,7 +171,7 @@ const MarketplaceFilterBar: React.FC<MarketplaceFilterBarProps> = ({
                         onClick={() => toggleDropdown('category')}
                         className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition bg-white"
                     >
-                        <span className="text-sm font-medium text-gray-700">Danh mục: {getDisplayLabel(category, categoryOptions)}</span>
+                        <span className="text-sm font-medium text-gray-700">Category: {getDisplayLabel(category, categoryOptions)}</span>
                         <Icon
                             name="chevron"
                             size={16}
@@ -206,7 +206,7 @@ const MarketplaceFilterBar: React.FC<MarketplaceFilterBarProps> = ({
                         onClick={() => toggleDropdown('sort')}
                         className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition bg-white"
                     >
-                        <span className="text-sm font-medium text-gray-700">Sắp xếp: {getDisplayLabel(sortBy, sortOptions)}</span>
+                        <span className="text-sm font-medium text-gray-700">Sort by: {getDisplayLabel(sortBy, sortOptions)}</span>
                         <Icon
                             name="chevron"
                             size={16}

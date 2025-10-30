@@ -9,7 +9,6 @@ import { GROUP_CLASSNAMES } from '../../styles/group-class-name.style';
 import ProfileSidebar from './ProfileSidebar.component';
 import StreakDisplay from '../../components/streak/StreakDisplay';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
-
 export default function UserProfile() {
   const { theme, toggleTheme } = useTheme();
   const {
@@ -49,7 +48,7 @@ export default function UserProfile() {
       {/* Avatar View Modal */}
       {showAvatarModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
           onClick={() => setShowAvatarModal(false)}
         >
           <div className="relative" onClick={e => e.stopPropagation()}>
@@ -73,13 +72,9 @@ export default function UserProfile() {
               </svg>
             </button>
             <img
-              src={
-                avatar ||
-                'https://cdn.vectorstock.com/i/500p/44/01/default-avatar-photo-placeholder-icon-grey-vector-38594401.jpg'
-              }
-              alt="User Avatar"
-              className="max-w-[90vw] max-h-[80vh] object-contain rounded-lg"
-              onClick={e => e.stopPropagation()}
+              src={avatar}
+              alt="Avatar"
+              className="max-w-[90vw] max-h-[80vh] rounded-lg"
             />
           </div>
         </div>
@@ -140,75 +135,76 @@ export default function UserProfile() {
               <View className="max-w-2xl">
                 <View className="flex items-start gap-8 mb-10">
                   <div
-                    className="relative w-24 h-24 rounded-full overflow-hidden border border-gray-100 shadow group"
+                    className="group"
                     onMouseEnter={() => setShowAvatarMenu(true)}
                     onMouseLeave={() => setShowAvatarMenu(false)}
                   >
-                    <img
-                      src={avatar}
-                      alt={t('user_avatar')}
-                      className="w-full h-full object-cover"
-                    />
-
-                    {/* Hover Menu */}
-                    {showAvatarMenu && (
-                      <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center gap-2">
-                        <button
-                          onClick={handleViewAvatar}
-                          className="text-white text-sm hover:text-blue-300 transition-colors flex items-center gap-1"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-4 w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
+                    <div className="relative">
+                      <img
+                        src={avatar}
+                        alt="User Avatar"
+                        className="w-32 h-32 rounded-full border border-gray-100 shadow object-cover"
+                      />
+                      {/* Hover Menu */}
+                      {showAvatarMenu && (
+                        <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center gap-2 rounded-full">
+                          <button
+                            onClick={handleViewAvatar}
+                            className="text-white text-sm hover:text-blue-300 transition-colors flex items-center gap-1"
                           >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                            />
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                            />
-                          </svg>
-                          {t('view')}
-                        </button>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-4 w-4"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                              />
+                            </svg>
+                            {t('view')}
+                          </button>
 
-                        <label
-                          htmlFor="avatarUpload"
-                          className="text-white text-sm hover:text-blue-300 transition-colors cursor-pointer flex items-center gap-1"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-4 w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
+                          <label
+                            htmlFor="avatarUpload"
+                            className="text-white text-sm hover:text-blue-300 transition-colors cursor-pointer flex items-center gap-1"
                           >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12"
-                            />
-                          </svg>
-                          {t('change')}
-                        </label>
-                      </div>
-                    )}
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-4 w-4"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12"
+                              />
+                            </svg>
+                            {t('change')}
+                          </label>
+                        </div>
+                      )}
 
-                    {/* Loading Overlay */}
-                    {isUploadingAvatar && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
-                        <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      </div>
-                    )}
+                      {/* Loading Overlay */}
+                      {isUploadingAvatar && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 rounded-full">
+                          <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                      )}
+                    </div>
 
                     {/* Hidden File Input */}
                     <input
@@ -329,7 +325,9 @@ export default function UserProfile() {
               </View>
             )}
 
-            <Text textStyle="regular20" className="mb-4 font-semibold">
+
+
+            <Text textStyle="regular20" className="mb-4 font-semibold mt-8">
               {t('others_settings')}
             </Text>
             <hr className="mb-6 border-gray-300 dark:border-gray-600" />
