@@ -677,7 +677,6 @@ export const Calendar: React.FC<CalendarProps> = ({
     status: string;
     priority: string;
     tags: Tag[];
-    start_time?: string | Date;
     end_time?: string | Date;
   }) => {
     if (selectedTaskEvent) {
@@ -689,12 +688,33 @@ export const Calendar: React.FC<CalendarProps> = ({
             const d = typeof date === 'string' ? new Date(date) : new Date(date.getTime());
             return d.toISOString();
           };
+
+          // Tính toán status tự động dựa trên deadline mới
+          let finalStatus = updatedData.status as 'pending' | 'completed' | 'overdue';
+          
+          // Nếu status là 'overdue' hoặc 'pending', kiểm tra lại dựa trên deadline mới
+          if (updatedData.end_time && (finalStatus === 'overdue' || finalStatus === 'pending')) {
+            const endTimeDate = typeof updatedData.end_time === 'string' 
+              ? new Date(updatedData.end_time) 
+              : new Date(updatedData.end_time);
+            
+            const now = new Date();
+            
+            // Nếu deadline mới chưa đến, chuyển về pending
+            if (endTimeDate > now) {
+              finalStatus = 'pending';
+            }
+            // Nếu deadline đã qua nhưng status hiện tại là 'pending', chuyển về overdue
+            else if (endTimeDate < now && finalStatus === 'pending') {
+              finalStatus = 'overdue';
+            }
+          }
+
           const dataToUpdate = {
             title: updatedData.title,
             description: updatedData.description,
-            status: updatedData.status as 'pending' | 'completed' | 'overdue',
+            status: finalStatus,
             priority: updatedData.priority as 'low' | 'medium' | 'high',
-            start_time: formatDateToISOString(updatedData.start_time),
             end_time: formatDateToISOString(updatedData.end_time)
           };
 
@@ -711,11 +731,34 @@ export const Calendar: React.FC<CalendarProps> = ({
           toast.success(t('task_updated_successfully'));
         } else {
           // Create updated Task object with proper type casting and update calendar event
+          let finalStatus = updatedData.status as 'pending' | 'completed' | 'overdue';
+          
+          // Tính toán status tự động dựa trên deadline mới
+          if (updatedData.end_time && (finalStatus === 'overdue' || finalStatus === 'pending')) {
+            const endTimeDate = typeof updatedData.end_time === 'string' 
+              ? new Date(updatedData.end_time) 
+              : new Date(updatedData.end_time);
+            
+            const now = new Date();
+            
+            // Nếu deadline mới chưa đến, chuyển về pending
+            if (endTimeDate > now) {
+              finalStatus = 'pending';
+            }
+            // Nếu deadline đã qua nhưng status hiện tại là 'pending', chuyển về overdue
+            else if (endTimeDate < now && finalStatus === 'pending') {
+              finalStatus = 'overdue';
+            }
+          }
+
           const updatedTask: Task = {
             ...convertTaskEventToTask(selectedTaskEvent),
-            ...updatedData,
-            status: updatedData.status as 'pending' | 'completed' | 'overdue',
-            priority: updatedData.priority as 'low' | 'medium' | 'high'
+            title: updatedData.title,
+            description: updatedData.description,
+            status: finalStatus,
+            priority: updatedData.priority as 'low' | 'medium' | 'high',
+            tags: updatedData.tags,
+            end_time: updatedData.end_time
           };
           const updatedTaskEvent = convertTaskToTaskEvent(updatedTask, selectedTaskEvent);
           updateEvent(selectedTaskEvent._id, updatedTaskEvent);
@@ -1516,8 +1559,6 @@ export const Calendar: React.FC<CalendarProps> = ({
           setStatus={setEditStatus}
           priority={editPriority}
           setPriority={setEditPriority}
-          start_time={editStartTime}
-          setStartTime={setEditStartTime}
           end_time={editEndTime}
           setEndTime={setEditEndTime}
           selectedTags={editSelectedTags}

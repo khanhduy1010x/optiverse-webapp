@@ -1,5 +1,5 @@
 import React from 'react';
-import WorkspaceDetail from '../../workspace/WorkspaceDetail.page';
+import WorkspaceDetail from '../workspace/WorkspaceDetail.page';
 
 const TaskWorkspacePage: React.FC = () => {
     return <WorkspaceDetail />;

@@ -1,0 +1,21 @@
+.tag-button-selected {
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: 1px solid;
+  transition: opacity 0.2s ease;
+  cursor: pointer;
+}
+
+.tag-button-selected:hover {
+  opacity: 0.8;
+}
+
+.tag-color-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background-color: var(--tag-color, #d1d5db);
+}
+
