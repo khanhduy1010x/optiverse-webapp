@@ -40,6 +40,16 @@ export const UpdateTaskEventModalForm: React.FC<UpdateTaskEventModalFormProps> =
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [pendingPayload, setPendingPayload] = useState<any | null>(null);
 
+  // Đồng bộ selectedColor khi taskEvent thay đổi
+  React.useEffect(() => {
+    setSelectedColor(taskEvent.color || '#3B82F6');
+  }, [taskEvent.color]);
+
+  // Cập nhật formData color khi selectedColor thay đổi
+  React.useEffect(() => {
+    handleInputChange('color', selectedColor);
+  }, [selectedColor]);
+
   // Chuẩn bị payload dùng chung cho cả submit và confirm
   const buildPayload = () => {
     const payload = getUpdatePayload();
@@ -57,7 +67,7 @@ export const UpdateTaskEventModalForm: React.FC<UpdateTaskEventModalFormProps> =
     ].filter(Boolean).join('\n');
     payload.guests = Array.isArray(formData.guests) ? formData.guests.filter(g => !!g && g.trim()) : [];
     payload.location = formData.location || '';
-    payload.color = selectedColor || '#3B82F6';
+    // Color được lấy từ formData thông qua hook, không cần override
     if ((payload.repeat_type === 'weekly' || payload.repeat_type === 'custom') && 
         (!payload.repeat_days || payload.repeat_days.length === 0)) {
       payload.repeat_days = [new Date(formData.start_time).getDay()];

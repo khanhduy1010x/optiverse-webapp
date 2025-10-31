@@ -9,9 +9,9 @@ import TaskDetail from './TaskDetail.screen';
 import CreateTaskForm from './CreateTaskForm.screen';
 import EditTaskForm from './EditTaskForm.screen';
 import DeleteConfirmation from './DeleteConfirmation.screen';
-import TagManagement from './TagManagement.screen';
+import TagManagement from '../Tags/TagManagement.screen';
 import TaskSidebar from './TaskSidebar.component';
-import TaskEvent from './TaskEvent.screen';
+import TaskEvent from '../TaskEvents/TaskEvent.screen';
 import { TaskOverdueNotifier, setForceCheckFunction, forceCheckForOverdueTasks } from '../../components/task-event/TaskOverdueNotifier.component';
 import View from '../../components/common/View.component';
 import { GROUP_CLASSNAMES } from '../../styles/group-class-name.style';
@@ -419,11 +419,32 @@ const TaskPage: React.FC = () => {
     try {
       setLoading(true);
 
+      // Tính toán status tự động dựa trên deadline mới
+      let finalStatus = updatedTask.status as 'pending' | 'completed' | 'overdue';
+      
+      // Nếu status là 'overdue' hoặc 'pending', kiểm tra lại dựa trên deadline mới
+      if (updatedTask.end_time && (finalStatus === 'overdue' || finalStatus === 'pending')) {
+        const endTimeDate = typeof updatedTask.end_time === 'string' 
+          ? new Date(updatedTask.end_time) 
+          : new Date(updatedTask.end_time);
+        
+        const now = new Date();
+        
+        // Nếu deadline mới chưa đến, chuyển về pending
+        if (endTimeDate > now) {
+          finalStatus = 'pending';
+        }
+        // Nếu deadline đã qua nhưng status hiện tại là 'pending', chuyển về overdue
+        else if (endTimeDate < now && finalStatus === 'pending') {
+          finalStatus = 'overdue';
+        }
+      }
+
       // Format data for API update
       const dataToUpdate = {
         title: updatedTask.title,
         description: updatedTask.description,
-        status: updatedTask.status as 'pending' | 'completed' | 'overdue',
+        status: finalStatus,
         priority: updatedTask.priority as 'low' | 'medium' | 'high',
         start_time: formatDateToISOString(updatedTask.start_time),
         end_time: formatDateToISOString(updatedTask.end_time)
@@ -814,7 +835,15 @@ const TaskPage: React.FC = () => {
         <EditTaskForm
           onClose={() => setShowEditTaskForm(false)}
           onSave={async (updatedTask) => {
-            const result = await handleUpdateTask({ ...updatedTask, start_time: formatDateToISOString(updatedTask.start_time), end_time: formatDateToISOString(updatedTask.end_time) });
+            const result = await handleUpdateTask({ 
+              title: updatedTask.title,
+              description: updatedTask.description,
+              status: updatedTask.status,
+              priority: updatedTask.priority,
+              tags: updatedTask.tags,
+              start_time: undefined,
+              end_time: formatDateToISOString(updatedTask.end_time) 
+            });
             if (result) {
               setShowEditTaskForm(false); // Đóng form khi lưu thành công
               return true;
@@ -830,8 +859,6 @@ const TaskPage: React.FC = () => {
           setStatus={setStatus}
           priority={priority}
           setPriority={setPriority}
-          start_time={start_time}
-          setStartTime={setStartTime}
           end_time={end_time}
           setEndTime={setEndTime}
           allTags={allTags}

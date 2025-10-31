@@ -70,67 +70,114 @@ export const TaskEventDetail: React.FC<TaskEventDetailProps> = ({
     <Modal
       isOpen={isOpen}
       onRequestClose={onClose}
-      className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md relative outline-none border border-gray-100"
-      overlayClassName="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000] flex items-center justify-center min-h-screen"
+      className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[450px] max-w-[90vw] bg-white rounded-2xl shadow-2xl z-[2000] outline-none"
+      overlayClassName="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000]"
       ariaHideApp={false}
     >
-      <button 
-        type="button"
-        onClick={onClose}
-        title="Close"
-        aria-label="Close"
-        className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-200 transition"
-      >
-        <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-      </button>
-      <div className="flex flex-col items-center text-center mb-6">
-        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-r from-purple-400 to-blue-400 mb-3 shadow">
-          <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+      <div className={GROUP_CLASSNAMES.taskModalContent}>
+        {/* Event title */}
+        <div className={GROUP_CLASSNAMES.taskDetailHeader}>
+          <h2 className="text-xl font-medium text-gray-900">
+            {event.title || '(No title)'}
+          </h2>
         </div>
-        <div className="font-extrabold text-2xl text-gray-900 mb-1 truncate max-w-full">{event.title || '(No title)'}</div>
-        <div className="text-base text-gray-600 mb-1 flex items-center justify-center gap-2">
-          <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-          {formatEventDate()}
-        </div>
-        {isPartOfSeries && (
-          <div className="text-xs text-purple-500 font-semibold mb-1">{getRepeatTypeDisplay()}</div>
-        )}
-        {event.description && <div className="text-gray-700 text-sm mt-2 mb-1 px-2 break-words">{event.description}</div>}
-      </div>
 
-      {/* Tags Section */}
-      {tags && tags.length > 0 && (
-        <div className="w-full mt-6 px-2">
-          <div className="flex flex-wrap gap-2 justify-center">
-            {tags.map((tag) => (
-              <TagItem
-                key={tag._id || `temp-${tag.name}-${Math.random().toString(36).substr(2, 9)}`}
-                tag={tag}
-                className={GROUP_CLASSNAMES.tagItem}
-              />
-            ))}
+        {/* Description */}
+        {event.description && (
+          <div className={GROUP_CLASSNAMES.taskDetailDescription}>
+            <p className="text-sm text-gray-600 whitespace-pre-wrap">
+              {event.description}
+            </p>
+          </div>
+        )}
+
+        <div className={GROUP_CLASSNAMES.taskDetailSection}>
+          <div className="space-y-2">
+            {/* Date and Time */}
+            <div className="flex items-center py-2">
+              <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <div className="text-sm text-gray-700">Date & Time:</div>
+              <span className="ml-auto text-sm text-gray-600">
+                {formatEventDate()}
+              </span>
+            </div>
+
+            {/* Repeat Type */}
+            {isPartOfSeries && (
+              <div className="flex items-center py-2">
+                <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <div className="text-sm text-gray-700">Repeat:</div>
+                <span className="ml-auto text-sm text-gray-600">
+                  {getRepeatTypeDisplay()}
+                </span>
+              </div>
+            )}
+
+            {/* Tags Section */}
+            {tags && tags.length > 0 && (
+              <div className="py-2">
+                <div className="flex items-start mb-2">
+                  <svg className="w-5 h-5 text-gray-400 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                  </svg>
+                  <div className="text-sm text-gray-700">Tags:</div>
+                </div>
+                <div className={GROUP_CLASSNAMES.tagContainer}>
+                  {tags.map((tag) => (
+                    <TagItem
+                      key={tag._id || `temp-${tag.name}-${Math.random().toString(36).substr(2, 9)}`}
+                      tag={tag}
+                      className={GROUP_CLASSNAMES.tagItem}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
-      )}
 
-      <div className="flex gap-4 mt-6">
-        <button 
+        {/* Bottom buttons */}
+        <div className={GROUP_CLASSNAMES.taskDetailFooter}>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-sm text-gray-500 hover:text-gray-700"
+          >
+            Close
+          </button>
+          <div className="flex space-x-2">
+            <button
+              type="button"
+              onClick={onDelete}
+              className="px-4 py-2 text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full"
+            >
+              Delete
+            </button>
+            <button
+              type="button"
+              onClick={onEdit}
+              className="px-4 py-2 text-sm bg-red-500 hover:bg-red-600 text-white rounded-full"
+            >
+              Edit
+            </button>
+          </div>
+        </div>
+
+        {/* Close button */}
+        <button
           type="button"
-          onClick={onEdit}
-          title="Edit event"
-          aria-label="Edit event"
-          className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-bold shadow hover:scale-105 hover:shadow-lg transition-all text-base"
+          onClick={onClose}
+          className={GROUP_CLASSNAMES.taskModalCloseButton}
+          aria-label="Close"
+          title="Close"
         >
-          Edit
-        </button>
-        <button 
-          type="button"
-          onClick={onDelete}
-          title="Delete event"
-          aria-label="Delete event"
-          className="flex-1 px-4 py-2 bg-gradient-to-r from-pink-500 to-red-500 text-white rounded-xl font-bold shadow hover:scale-105 hover:shadow-lg transition-all text-base"
-        >
-          Delete
+          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
         </button>
       </div>
     </Modal>

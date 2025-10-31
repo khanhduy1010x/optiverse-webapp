@@ -12,7 +12,8 @@ interface EditTaskFormProps {
   onClose: () => void;
   onSave: (updated: { 
     title: string; 
-    description: string; 
+    description: string;
+    status: string;
     priority: string; 
     tags: Tag[];
     end_time?: string | Date;
@@ -21,6 +22,8 @@ interface EditTaskFormProps {
   setTitle: React.Dispatch<React.SetStateAction<string>>;
   description: string;
   setDescription: React.Dispatch<React.SetStateAction<string>>;
+  status: 'pending' | 'completed' | 'overdue';
+  setStatus: React.Dispatch<React.SetStateAction<'pending' | 'completed' | 'overdue'>>;
   priority: 'low' | 'medium' | 'high';
   setPriority: React.Dispatch<React.SetStateAction<'low' | 'medium' | 'high'>>;
   end_time: Date | string | undefined;
@@ -50,6 +53,8 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
   setTitle,
   description,
   setDescription,
+  status,
+  setStatus,
   priority,
   setPriority,
   end_time,
@@ -173,6 +178,7 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
       const result = await onSave({
         title,
         description,
+        status,
         priority,
         tags: selectedTags,
         end_time

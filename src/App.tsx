@@ -38,7 +38,7 @@ import FocusSessionList from './pages/FocusTimer/FocusTimerList.page';
 import { AuthViewType } from './types/auth/auth.types';
 import LoginSessions from './pages/Profile/LoginSession.page';
 import TaskPage from './pages/Task/Task.page';
-import TaskWorkspacePage from './pages/Task/workspace/Task.workspace.page';
+import TaskWorkspacePage from './pages/WorkspaceTask/Task.workspace.page';
 import TemplateComponent from './pages/Template/TemplateComponent.page';
 import FocusTimerLayout from './pages/FocusTimer/FocusTimerLayout.page';
 import FocusTimerWorkspacePage from './pages/FocusTimer/workspace/FocusTimer.workspace.page';
