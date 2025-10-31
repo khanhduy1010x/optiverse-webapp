@@ -1,11 +1,12 @@
 import { ApiResponse } from '../types/api/api.interface';
 import api from './api.service';
 
-export interface CreateFocusRoomRequest {
-  title: string;
-  type: 'public' | 'private';
-  accessMode: 'free' | 'approval' | 'password';
+export interface CreateLiveRoomRequest {
+  name: string;
+  workspace_id?: string | null;
+  access_type: 'public' | 'private';
   password?: string;
+  description?: string;
 }
 
 export interface JoinRoomRequest {
@@ -25,45 +26,56 @@ export interface User {
   email?: string;
   avatar_url?: string;
 }
+
 export interface FocusRoomResponse {
   _id: string;
   name: string;
-  roomId: string;
-  type: 'public' | 'private';
-  accessMode: 'free' | 'approval' | 'password';
-  description?: string;
+  workspace_id?: string;
+  host_id: string;
   hostUser: User | null;
-  participants: string[];
-  visible: boolean;
-  maxParticipants?: number;
-  startAt?: string | null;
-  endAt?: string | null;
-  category?: string;
-  isLocked: boolean;
-  approvalQueue: any[];
-  createdAt: string;
-  updatedAt: string;
-  __v: number;
+  room_sid: string;
+  access_type: 'public' | 'private';
+  have_password: boolean;
+  userAccessStatus?: 'allowed' | 'pending' | 'password_required' | 'denied';
+  description?: string;
+  is_recording: boolean;
+  record_count: number;
+  created_at: string;
+  updated_at: string;
+  isOwner?: boolean;
+  memberCount?: number;
 }
 
 class FocusRoomService {
   private basePath = '/productivity/focus-room';
 
-  /** 🔹 Lấy danh sách tất cả phòng công khai */
   public async getPublicRooms(): Promise<FocusRoomResponse[]> {
     try {
       const response = await api.get<ApiResponse<FocusRoomResponse[]>>(
         `${this.basePath}/public`
       );
-      return response.data || [];
+      return response.data.data || [];
     } catch (error) {
-      console.error('⚠️ Lỗi khi lấy danh sách phòng:', error);
+      console.error('Error fetching public rooms:', error);
       return [];
     }
   }
 
-  /** 🔹 Tạo phòng mới */
-  public async createRoom(payload: CreateFocusRoomRequest): Promise<any> {
+  public async getRoomsByWorkspace(
+    workspaceId: string
+  ): Promise<FocusRoomResponse[]> {
+    try {
+      const response = await api.get<ApiResponse<FocusRoomResponse[]>>(
+        `${this.basePath}/workspace/${workspaceId}`
+      );
+      return response.data.data || [];
+    } catch (error) {
+      console.error('Error fetching workspace rooms:', error);
+      return [];
+    }
+  }
+
+  public async createRoom(payload: CreateLiveRoomRequest): Promise<any> {
     try {
       const response = await api.post<ApiResponse<any>>(
         `${this.basePath}/create`,
@@ -71,27 +83,25 @@ class FocusRoomService {
       );
       return response.data.data;
     } catch (error) {
-      console.error('⚠️ Lỗi khi tạo phòng:', error);
+      console.error('Error creating room:', error);
       throw error;
     }
   }
 
-  /** 🔹 Gửi yêu cầu tham gia phòng */
   public async joinRoom(payload: JoinRoomRequest): Promise<any> {
     try {
       const response = await api.post<ApiResponse<any>>(
         `${this.basePath}/${payload.roomId}/request-join`,
         payload
       );
-      
+
       return response.data.data;
     } catch (error) {
-      console.error('⚠️ Lỗi khi tham gia phòng:', error);
+      console.error('Error joining room:', error);
       throw error;
     }
   }
 
-  /** 🔹 Duyệt yêu cầu tham gia */
   public async approveJoin(payload: ApproveJoinRequest): Promise<any> {
     try {
       const response = await api.post<ApiResponse<any>>(
@@ -100,12 +110,11 @@ class FocusRoomService {
       );
       return response.data.data;
     } catch (error) {
-      console.error('⚠️ Lỗi khi duyệt yêu cầu:', error);
+      console.error('Error approving join request:', error);
       throw error;
     }
   }
 
-  /** 🔹 Lấy danh sách participant của phòng */
   public async getParticipants(roomId: string): Promise<any[]> {
     try {
       const response = await api.get<ApiResponse<any[]>>(
@@ -113,12 +122,11 @@ class FocusRoomService {
       );
       return response.data.data || [];
     } catch (error) {
-      console.error('⚠️ Lỗi khi lấy danh sách participants:', error);
+      console.error('Error fetching participants:', error);
       return [];
     }
   }
 
-  /** 🔹 Xoá phòng */
   public async deleteRoom(roomId: string): Promise<any> {
     try {
       const response = await api.delete<ApiResponse<any>>(
@@ -126,7 +134,43 @@ class FocusRoomService {
       );
       return response.data.data;
     } catch (error) {
-      console.error('⚠️ Lỗi khi xoá phòng:', error);
+      console.error('Error deleting room:', error);
+      throw error;
+    }
+  }
+
+  public async kickMember(roomId: string, userId: string): Promise<any> {
+    try {
+      const response = await api.post<ApiResponse<any>>(
+        `${this.basePath}/${roomId}/kick`,
+        { user_id: userId }
+      );
+      return response.data.data;
+    } catch (error) {
+      console.error('Error kicking member:', error);
+      throw error;
+    }
+  }
+
+  public async updateRoom(
+    roomId: string,
+    updateData: {
+      name?: string;
+      access_type?: 'public' | 'private';
+      description?: string;
+      new_password?: string;
+      old_password?: string;
+      remove_password?: boolean;
+    }
+  ): Promise<FocusRoomResponse> {
+    try {
+      const response = await api.put<ApiResponse<FocusRoomResponse>>(
+        `${this.basePath}/${roomId}`,
+        updateData
+      );
+      return response.data.data;
+    } catch (error) {
+      console.error('Error updating room:', error);
       throw error;
     }
   }

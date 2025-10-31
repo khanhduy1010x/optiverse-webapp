@@ -75,7 +75,20 @@ import { ReactComponent as kick } from './kick.svg';
 import { ReactComponent as ban } from './ban.svg';
 import { ReactComponent as lock } from './lock.svg';
 import { ReactComponent as copy } from './copy.svg';
+import { ReactComponent as request } from './request.svg';
+import { ReactComponent as record } from './record.svg';
+import { ReactComponent as mic } from './mic.svg';
+import { ReactComponent as unMic } from './un-mic.svg';
+import { ReactComponent as stt } from './stt.svg';
+import { ReactComponent as drag } from './drag_size.svg';
+import { ReactComponent as stt2 } from './stt2.svg';
+import { ReactComponent as paper_clip } from './paper_clip.svg';
+import { ReactComponent as download } from './download.svg';
+import { ReactComponent as cam } from './cam.svg';
+import { ReactComponent as unCam } from './un-cam.svg';
+
 export const ICONS = {
+
   add: add,
   adjust: adjust,
   admin: admin,
@@ -153,6 +166,17 @@ export const ICONS = {
   ban: ban,
   lock: lock,
   copy: copy,
+  request: request,
+  record: record,
+  mic: mic,
+  unMic: unMic,
+  stt: stt,
+  stt2: stt2,
+  drag: drag,
+  paper_clip: paper_clip,
+  download: download,
+  cam: cam,
+  unCam: unCam,
 };
 
 export type IconName = keyof typeof ICONS;

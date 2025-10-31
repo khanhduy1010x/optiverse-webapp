@@ -14,6 +14,7 @@ import taskEvent from './task-event.json';
 import chat from './chat.json';
 import workspace from './workspace.json';
 import workspaceTask from './workspace-task.json';
+import focusRoom from './focus-room.json';
 
 export default {
   common,
@@ -32,4 +33,5 @@ export default {
   chat,
   workspace,
   'workspace-task': workspaceTask,
+  'focus-room': focusRoom,
 };

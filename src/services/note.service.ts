@@ -163,6 +163,122 @@ ${content}
     const res = await api.get(`/productivity/note/${noteId}`);
     return res.data.data;
   }
+
+  /**
+   * Create a note in a room (auto-creates folder if not exists)
+   */
+  async createNoteInRoom(title: string, liveRoomId: string): Promise<NoteItem> {
+    try {
+      const response = await api.post<ApiResponse<{ note: NoteItem }>>(
+        `${URLBASE}/create-note-room`,
+        {
+          title,
+          live_room_id: liveRoomId,
+        }
+      );
+
+      SocketService.emitFolderStructureChanged();
+      return { ...response.data.data.note, type: 'file' as const };
+    } catch (error: any) {
+      console.error('❌ Failed to create note in room:', {
+        error: error.message,
+        response: error.response?.data,
+      });
+      throw new Error(`Could not create note ${title}`);
+    }
+  }
+
+  /**
+   * Get all notes for a room
+   */
+  async getNotesByRoomId(roomId: string): Promise<NoteItem[]> {
+    try {
+      const response = await api.get<ApiResponse<NoteItem[]>>(
+        `${URLBASE}/room/${roomId}`
+      );
+      return response.data.data || [];
+    } catch (error: any) {
+      console.error('❌ Failed to fetch notes by room:', {
+        error: error.message,
+        response: error.response?.data,
+      });
+      return [];
+    }
+  }
+
+  /**
+   * Delete a note in a room
+   */
+  async deleteNoteInRoom(noteId: string): Promise<void> {
+    try {
+      await api.delete(`${URLBASE}/delete-note-room/${noteId}`);
+      console.log('✅ Note deleted from room:', noteId);
+      SocketService.emitNoteDeleted(noteId);
+    } catch (error: any) {
+      console.error('❌ Failed to delete note from room:', {
+        error: error.message,
+        response: error.response?.data,
+      });
+      throw new Error(`Could not delete note ${noteId}`);
+    }
+  }
+
+  /**
+   * Update a note in a room (via WebSocket or REST)
+   */
+  async updateNoteInRoom(
+    noteId: string,
+    title: string | undefined,
+    content: string | undefined,
+    liveRoomId: string
+  ): Promise<void> {
+    try {
+      // Optionally use WebSocket if available, otherwise REST API
+      console.log(`📤 Updating note ${noteId} in room ${liveRoomId}`);
+
+      // Send via REST API
+      await api.patch(`${URLBASE}/${noteId}`, {
+        title,
+        content,
+      });
+
+      console.log('✅ Note updated in room');
+    } catch (error: any) {
+      console.error('❌ Failed to update note in room:', {
+        error: error.message,
+        response: error.response?.data,
+      });
+      throw new Error('Could not update note');
+    }
+  }
+
+  /**
+   * Rename a note in a room
+   */
+  async renameNoteInRoom(
+    noteId: string,
+    newTitle: string,
+    liveRoomId: string
+  ): Promise<void> {
+    try {
+      console.log(
+        `📝 Renaming note ${noteId} to "${newTitle}" in room ${liveRoomId}`
+      );
+
+      // Send via REST API
+      await api.patch(`${URLBASE}/${noteId}`, {
+        title: newTitle,
+      });
+
+      console.log('✅ Note renamed in room');
+    } catch (error: any) {
+      console.error('❌ Failed to rename note in room:', {
+        error: error.message,
+        response: error.response?.data,
+      });
+      throw new Error('Could not rename note');
+    }
+  }
 }
 
 // Tạo instance của class

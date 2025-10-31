@@ -1,0 +1,125 @@
+/* Summary Display Modal Styles */
+.summary-content {
+  font-family: inherit;
+  color: inherit;
+  line-height: 1.6;
+}
+
+.summary-content h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: inherit;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 0.5rem;
+}
+
+.summary-content h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  color: inherit;
+}
+
+.summary-content h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+  color: inherit;
+}
+
+.summary-content p {
+  margin-bottom: 1rem;
+  line-height: 1.6;
+  color: inherit;
+}
+
+.summary-content ul,
+.summary-content ol {
+  margin-bottom: 1rem;
+  padding-left: 1.5rem;
+  list-style-position: outside;
+}
+
+.summary-content ul {
+  list-style-type: disc;
+}
+
+.summary-content ol {
+  list-style-type: decimal;
+}
+
+.summary-content li {
+  margin-bottom: 0.5rem;
+  line-height: 1.5;
+  color: inherit;
+}
+
+.summary-content strong {
+  font-weight: 600;
+  color: inherit;
+}
+
+.summary-content em {
+  font-style: italic;
+}
+
+.summary-content br {
+  display: block;
+  margin: 0.25rem 0;
+  content: '';
+}
+
+.summary-content code {
+  background-color: rgba(156, 163, 175, 0.1);
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.875em;
+}
+
+.summary-content blockquote {
+  border-left: 4px solid #e5e7eb;
+  padding-left: 1rem;
+  margin: 1rem 0;
+  font-style: italic;
+  color: inherit;
+}
+
+/* Dark mode support */
+.dark .summary-content h1 {
+  border-bottom-color: #374151;
+}
+
+.dark .summary-content code {
+  background-color: rgba(75, 85, 99, 0.3);
+}
+
+.dark .summary-content blockquote {
+  border-left-color: #374151;
+}
+
+/* Print styles */
+@media print {
+  .summary-content {
+    font-size: 12pt;
+    line-height: 1.4;
+    color: black !important;
+  }
+
+  .summary-content h1 {
+    border-bottom-color: #000 !important;
+    page-break-after: avoid;
+  }
+
+  .summary-content h2,
+  .summary-content h3 {
+    page-break-after: avoid;
+  }
+
+  .summary-content li {
+    page-break-inside: avoid;
+  }
+}
