@@ -221,7 +221,9 @@
   "edit_task_title": "Edit Task",
   "edit_task_subtitle": "Update task details and settings",
   "required_fields_note": "* Required fields",
-  "create_task": "Create Task",
   "update_task": "Update Task",
-  "updating": "Updating..."
+  "updating": "Updating...",
+  "show_more": "Show more",
+  "show_less": "Show less",
+  "loading_events": "Loading events..."
 }

@@ -1,0 +1,53 @@
+.colorPickerContainer {
+  margin: 2rem auto;
+  width: 260px;
+}
+
+.colorSwatchesContainer {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.colorButton {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.colorButton[data-color="#FFFFFF"] {
+  background-color: #FFFFFF;
+}
+
+.colorButton[data-color="#282A29"] {
+  background-color: #282A29;
+}
+
+.colorButton[data-color="#4CAF50"] {
+  background-color: #4CAF50;
+}
+
+.colorButton[data-color="#E23C42"] {
+  background-color: #E23C42;
+}
+
+.colorButton[data-color="#FFA726"] {
+  background-color: #FFA726;
+}
+
+.colorButton[data-color="#E5D4F4"] {
+  background-color: #E5D4F4;
+}
+
+.colorButton:hover {
+  transform: scale(1.1);
+}
+
+.colorButton.active {
+  border: 2px solid #000;
+}

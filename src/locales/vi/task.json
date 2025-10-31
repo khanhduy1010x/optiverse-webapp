@@ -209,5 +209,8 @@
   "create_task": "Tạo Công Việc",
   "create_event": "Tạo Sự Kiện",
   "update_task": "Cập Nhật Công Việc",
-  "updating": "Đang cập nhật..."
+  "updating": "Đang cập nhật...",
+  "show_more": "Xem thêm",
+  "show_less": "Ẩn bớt",
+  "loading_events": "Đang tải sự kiện..."
 }

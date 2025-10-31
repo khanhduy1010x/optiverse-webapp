@@ -1,16 +1,23 @@
 import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '../../store';
 import { WorkspaceTask } from '../../types/workspace-task/workspace-task.types';
 import { format, startOfWeek, addDays, isSameDay } from 'date-fns';
+import { useWorkspaceTaskCountdown } from '../../hooks/workspace-task/useWorkspaceTaskCountdown';
+import { updateTaskStatus } from '../../store/slices/workspace_task.slice';
 
 interface WorkspaceTaskWeekViewProps {
   workspaceId: string;
   tasks: WorkspaceTask[];
+  onTaskClick?: (task: WorkspaceTask) => void;
 }
 
 const WorkspaceTaskWeekView: React.FC<WorkspaceTaskWeekViewProps> = ({
   workspaceId,
   tasks,
+  onTaskClick,
 }) => {
+  const dispatch = useDispatch<AppDispatch>();
   const [currentWeekStart, setCurrentWeekStart] = useState(startOfWeek(new Date()));
 
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(currentWeekStart, i));
@@ -33,6 +40,32 @@ const WorkspaceTaskWeekView: React.FC<WorkspaceTaskWeekViewProps> = ({
       default:
         return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  // Handle status cycle: to-do → in-progress → done → to-do
+  const handleStatusCycle = (task: WorkspaceTask, e: React.MouseEvent) => {
+    e.stopPropagation();
+    let newStatus: 'to-do' | 'in-progress' | 'done';
+    
+    switch (task.status) {
+      case 'to-do':
+        newStatus = 'in-progress';
+        break;
+      case 'in-progress':
+        newStatus = 'done';
+        break;
+      case 'done':
+        newStatus = 'to-do';
+        break;
+      default:
+        newStatus = 'to-do';
+    }
+    
+    dispatch(updateTaskStatus({
+      workspaceId,
+      taskId: task._id,
+      status: newStatus,
+    }));
   };
 
   const isToday = (date: Date) => {
@@ -89,22 +122,40 @@ const WorkspaceTaskWeekView: React.FC<WorkspaceTaskWeekViewProps> = ({
                 {dayTasks.length === 0 ? (
                   <div className="text-xs text-gray-400 text-center py-4">No tasks</div>
                 ) : (
-                  dayTasks.map(task => (
+                  dayTasks.map(task => {
+                    // Get overdue status for this task
+                    const { isOverdue } = useWorkspaceTaskCountdown(task, workspaceId);
+                    
+                    return (
                     <div
                       key={task._id}
-                      className={`p-2 rounded text-xs font-medium cursor-pointer hover:shadow-md transition-all ${getStatusBadgeColor(
-                        task.status
-                      )}`}
-                      title={task.title}
+                      onClick={() => onTaskClick?.(task)}
+                      className={`p-2 rounded text-xs font-medium cursor-pointer hover:shadow-md transition-all flex items-start gap-1.5 ${
+                        task.status === 'done' && isOverdue
+                          ? 'bg-red-100 text-red-800'
+                          : getStatusBadgeColor(task.status)
+                      }`}
+                      title={`${task.title}${task.status === 'done' && isOverdue ? ' (Overdue)' : ''}`}
                     >
-                      <div className="truncate">{task.title}</div>
-                      {task.assigned_to && (
-                        <div className="text-xs mt-1 opacity-75">
-                          {(task.assigned_to as any)?.name || 'Assigned'}
-                        </div>
-                      )}
+                      {/* Status Indicator Circle */}
+                      <div
+                        onClick={(e) => handleStatusCycle(task, e)}
+                        className={`flex-shrink-0 w-2.5 h-2.5 rounded-full border mt-1 flex items-center justify-center cursor-pointer transition-all ${
+                          task.status === 'to-do'
+                            ? 'border-current opacity-40'
+                            : task.status === 'in-progress'
+                            ? 'border-current'
+                            : 'border-current'
+                        }`}
+                      />
+                      
+                      <div className="flex-1 truncate">
+                        {task.status === 'done' && isOverdue && '⚠️ '}
+                        {task.title}
+                      </div>
                     </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </div>

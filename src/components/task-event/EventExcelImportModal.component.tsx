@@ -233,6 +233,57 @@ const parseNumber = (v?: string | number): number | undefined => {
   return Number.isFinite(n) ? n : undefined;
 };
 
+// Color name to hex mapping
+const COLOR_NAME_MAP: Record<string, string> = {
+  'blue': '#3B82F6',
+  'red': '#EF4444',
+  'yellow': '#FBBF24',
+  'green': '#10B981',
+  'purple': '#A78BFA',
+  'pink': '#EC4899',
+  'orange': '#F97316',
+  'cyan': '#06B6D4',
+  'indigo': '#6366F1',
+  'gray': '#6B7280',
+  'slate': '#64748B',
+  'stone': '#78716C',
+  'neutral': '#737373',
+  'zinc': '#71717A',
+  'rose': '#F43F5E',
+  'amber': '#F59E0B',
+  'lime': '#84CC16',
+  'emerald': '#10B981',
+  'teal': '#14B8A6',
+  'sky': '#0EA5E9',
+  'violet': '#8B5CF6',
+  'fuchsia': '#D946EF',
+};
+
+// Convert color name to hex if needed
+const normalizeColor = (colorInput: string): string | null => {
+  if (!colorInput) return null;
+  
+  const trimmed = colorInput.trim();
+  
+  // Check if it's already a hex code
+  if (/^#[0-9A-Fa-f]{6}$/.test(trimmed)) {
+    return trimmed;
+  }
+  
+  // Check if it's hex without #
+  if (/^[0-9A-Fa-f]{6}$/.test(trimmed)) {
+    return '#' + trimmed;
+  }
+  
+  // Try to find color name in map (case-insensitive)
+  const colorName = trimmed.toLowerCase();
+  if (colorName in COLOR_NAME_MAP) {
+    return COLOR_NAME_MAP[colorName];
+  }
+  
+  return null;
+};
+
 // Normalize row keys: e.g. "Start Date" -> "start_date"
 const normalizeKeys = (row: Record<string, any>): Record<string, any> => {
   const out: Record<string, any> = {};
@@ -252,6 +303,13 @@ const normalizeKeys = (row: Record<string, any>): Record<string, any> => {
     if (['repeat', 'repeat_type', 'recurring', 'recurrence'].includes(key)) {
       out['repeat'] = v;
       out['repeat_type'] = v;
+    }
+    
+    // Thêm các alias cho color và normalize color name to hex
+    if (['color', 'event_color', 'color_code', 'hex_color', 'event_color_code'].includes(key)) {
+      const normalizedColor = normalizeColor(String(v || ''));
+      out['color'] = normalizedColor;
+      out['event_color'] = normalizedColor;
     }
   });
   return out;
@@ -278,6 +336,7 @@ export const EventExcelImportModal: React.FC<EventExcelImportModalProps> = ({ is
       'repeat',
       'to_date',
       'description',
+      'color',
     ],
     []
   );
@@ -302,10 +361,15 @@ export const EventExcelImportModal: React.FC<EventExcelImportModalProps> = ({ is
       const wb = XLSX.read(data, { type: 'array' });
       const ws = wb.Sheets[wb.SheetNames[0]];
       const json = XLSX.utils.sheet_to_json<Record<string, any>>(ws, { defval: '' });
-      console.log('Parsed JSON from Excel:', json);
+      console.log('📄 Parsed JSON from Excel:', json);
+      console.log('📋 Total rows parsed:', json.length);
+      if (json.length > 0) {
+        console.log('🔍 First row keys:', Object.keys(json[0]));
+        console.log('🔍 First row data:', json[0]);
+      }
       setRows(json);
     } catch (err) {
-      console.error(err);
+      console.error('❌ Error parsing Excel:', err);
     } finally {
       setParsing(false);
     }
@@ -313,12 +377,15 @@ export const EventExcelImportModal: React.FC<EventExcelImportModalProps> = ({ is
 
   const processImport = async () => {
     console.log('📥 processImport started');
+    console.log('📊 Total rows to process:', rows.length);
     if (!rows.length) {
+      console.warn('⚠️ No rows to process');
       return;
     }
 
     // Check if user is authenticated
     if (!userId) {
+      console.error('❌ No userId found');
       return;
     }
 
@@ -344,6 +411,11 @@ export const EventExcelImportModal: React.FC<EventExcelImportModalProps> = ({ is
       const eventIndex = dataRowCount;
       const r = normalizeKeys(rRaw);
       const rowIndex = i + 2; // header is row 1
+      
+      console.log(`\n📝 Processing Event ${eventIndex} (row ${rowIndex}):`);
+      console.log('   Original keys:', Object.keys(rRaw));
+      console.log('   Normalized keys:', Object.keys(r));
+      console.log('   Raw data:', rRaw);
 
       // Validate title
       const titleValue = r['title'] ?? r['event_title'] ?? r['task_title'] ?? r['name'] ?? r['event_name'] ?? r['task_name'];
@@ -351,10 +423,11 @@ export const EventExcelImportModal: React.FC<EventExcelImportModalProps> = ({ is
       if (!title) {
         const errorMsg = `Event ${eventIndex}: Title is required`;
         console.error('❌ Validation Error:', errorMsg);
-        console.log('Row data:', rRaw);
+        console.log('   Row data:', rRaw);
         rowErrors.push({ rowIndex: eventIndex, message: errorMsg });
         continue;
       }
+      console.log('   ✅ Title:', title);
 
       // Validate start_time (require both start_date and start_time, accept hh:mm string, number (Excel), or Date)
       const allDay = toBoolean(r['all_day']);
@@ -513,12 +586,24 @@ export const EventExcelImportModal: React.FC<EventExcelImportModalProps> = ({ is
       }
 
       // Validate color (if present)
-      if (r['color'] && typeof r['color'] !== 'string') {
-        const errorMsg = `Event ${eventIndex}: Color must be a valid text value`;
-        console.error('❌ Validation Error:', errorMsg);
-        console.log('color:', r['color'], 'type:', typeof r['color']);
-        rowErrors.push({ rowIndex: eventIndex, message: errorMsg });
-        continue;
+      let colorValue: string | undefined = undefined;
+      if (r['color']) {
+        // Color should already be normalized to hex by normalizeKeys
+        const colorValue_temp = String(r['color']).trim();
+        if (colorValue_temp) {
+          console.log('🎨 Color validation - normalized value:', colorValue_temp);
+          
+          // Validate hex format (should be valid after normalization)
+          if (!/^#[0-9A-Fa-f]{6}$/.test(colorValue_temp)) {
+            const errorMsg = `Event ${eventIndex}: Color must be valid hex format or color name (e.g., #3B82F6, 3B82F6, or "Blue"). Got: ${colorValue_temp}`;
+            console.error('❌ Validation Error:', errorMsg);
+            rowErrors.push({ rowIndex: eventIndex, message: errorMsg });
+            continue;
+          }
+          
+          colorValue = colorValue_temp;
+          console.log('✅ Color validation passed:', colorValue);
+        }
       }
 
       // Validate description (optional, convert to string if present)
@@ -566,7 +651,7 @@ export const EventExcelImportModal: React.FC<EventExcelImportModalProps> = ({ is
         location: r['location']?.toString() || undefined,
         description: r['description']?.toString() || undefined,
         guests: guestsList,
-        color: r['color']?.toString() || undefined,
+        color: colorValue || undefined,
       };
       console.log('Final payload for row', rowIndex, ':', payload);
 
@@ -681,10 +766,10 @@ return (
         <p className="text-xs text-gray-500">{t('template_columns')}</p>
 
         <div className="rounded-md border border-gray-200 bg-gray-50 p-3">
-          <div className="text-xs font-medium text-gray-700 mb-2">{t('template_sheet_name')}</div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+          <div className="text-xs font-medium text-gray-700 mb-3">{t('template_sheet_name')}</div>
+          <div className="flex flex-wrap gap-2">
             {eventTemplateHeaders.map((key) => (
-              <span key={key} className="inline-flex items-center rounded-md bg-white px-2 py-1 text-xs font-medium text-gray-700 shadow ring-1 ring-gray-200">
+              <span key={key} className="inline-flex items-center rounded-md bg-white px-3 py-2 text-xs font-medium text-gray-700 shadow ring-1 ring-gray-200 flex-shrink-0 whitespace-nowrap">
                 {t(`column_${key}` as any)}
               </span>
             ))}

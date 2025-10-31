@@ -29,63 +29,81 @@ const WorkspaceAssignMemberModal: React.FC<WorkspaceAssignMemberModalProps> = ({
   const dispatch = useDispatch<AppDispatch>();
   const isLoading = useSelector((state: RootState) => state.workspaceTask.loading);
   
-  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(task.assigned_to || null);
+  // Initialize with multiple members from assigned_to_list or fallback to assigned_to
+  const [selectedMemberIds, setSelectedMemberIds] = useState<Set<string>>(
+    new Set(task.assigned_to_list && task.assigned_to_list.length > 0 
+      ? task.assigned_to_list 
+      : (task.assigned_to ? [task.assigned_to] : [])
+    )
+  );
   const [error, setError] = useState<string | null>(null);
 
-  const handleAssign = async () => {
-    // Validation
-    if (!selectedMemberId) {
-      setError('Please select a member');
-      return;
+  // Get currently assigned member names for display
+  const getCurrentlyAssignedNames = (): string => {
+    const assigned = task.assigned_to_list?.map(memberId =>
+      members.find(m => m._id === memberId)?.full_name
+    ).filter(Boolean) || [];
+    
+    if (assigned.length === 0 && task.assigned_to) {
+      const member = members.find(m => m._id === task.assigned_to);
+      return member?.full_name || task.assigned_to;
     }
+    
+    return assigned.length > 0 ? assigned.join(', ') : 'unassigned';
+  };
 
-    // Check if already assigned to this member
-    if (task.assigned_to === selectedMemberId) {
-      setError('This member is already assigned');
-      return;
+  // Toggle member selection
+  const handleToggleMember = (memberId: string) => {
+    if (isLoading) return;
+    
+    const newSelected = new Set(selectedMemberIds);
+    if (newSelected.has(memberId)) {
+      newSelected.delete(memberId);
+    } else {
+      newSelected.add(memberId);
     }
-
+    setSelectedMemberIds(newSelected);
     setError(null);
+  };
+
+  const handleAssign = async () => {
+    setError(null);
+    
     try {
       await dispatch(
         assignTask({
           workspaceId,
           taskId: task._id,
-          userId: selectedMemberId,
+          userIds: Array.from(selectedMemberIds),
         })
       ).unwrap();
       await dispatch(getTasksByWorkspace(workspaceId)).unwrap();
       onClose();
     } catch (err: any) {
-      setError(err?.message || 'Failed to assign member');
-      console.error('Error assigning member:', err);
+      setError(err?.message || 'Failed to assign members');
+      console.error('Error assigning members:', err);
     }
   };
 
   const handleUnassign = async () => {
-    if (!task.assigned_to) {
-      setError('Task is not currently assigned');
-      return;
-    }
-
     setError(null);
+    
     try {
       await dispatch(
         assignTask({
           workspaceId,
           taskId: task._id,
-          userId: undefined,
+          userIds: [],
         })
       ).unwrap();
       await dispatch(getTasksByWorkspace(workspaceId)).unwrap();
-      setSelectedMemberId(null);
+      setSelectedMemberIds(new Set());
       onClose();
     } catch (err: any) {
-      setError(err?.message || 'Failed to unassign member');
-      console.error('Error unassigning member:', err);
+      setError(err?.message || 'Failed to unassign members');
+      console.error('Error unassigning members:', err);
     }
   };
-
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
@@ -105,7 +123,7 @@ const WorkspaceAssignMemberModal: React.FC<WorkspaceAssignMemberModalProps> = ({
           </button>
           <h2 className="text-xl font-bold text-gray-900 pr-8">Assign Member</h2>
           <p className="text-sm text-gray-500 mt-1">
-            Currently assigned to: {task.assigned_to || 'undefined'}
+            Currently assigned to: {getCurrentlyAssignedNames()}
           </p>
         </div>
 
@@ -125,27 +143,40 @@ const WorkspaceAssignMemberModal: React.FC<WorkspaceAssignMemberModalProps> = ({
               Team Member
             </label>
 
-            {/* Member Selection */}
+            {/* Member Selection with Checkboxes */}
             <div className="space-y-2 max-h-[320px] overflow-y-auto">
               {members.length === 0 ? (
                 <div className="p-4 text-center bg-gray-50 rounded-lg">
                   <p className="text-gray-500 text-sm">No members available</p>
                 </div>
               ) : (
-                members.map((member) => (
-                  <div
-                    key={member._id}
-                    onClick={() => {
-                      if (!isLoading) setSelectedMemberId(member._id);
-                    }}
-                    className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                      selectedMemberId === member._id
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                    } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3 flex-1">
+                members.map((member) => {
+                  const isSelected = selectedMemberIds.has(member._id);
+                  return (
+                    <div
+                      key={member._id}
+                      onClick={() => handleToggleMember(member._id)}
+                      className={`p-4 rounded-lg border-2 cursor-pointer transition-all flex items-center gap-3 ${
+                        isSelected
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                      } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      {/* Checkbox */}
+                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                        isSelected
+                          ? 'bg-blue-500 border-blue-500'
+                          : 'border-gray-300'
+                      }`}>
+                        {isSelected && (
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </div>
+
+                      {/* Member Info */}
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
                         {member.avatar_url ? (
                           <img
                             src={member.avatar_url}
@@ -162,18 +193,9 @@ const WorkspaceAssignMemberModal: React.FC<WorkspaceAssignMemberModalProps> = ({
                           <p className="text-xs text-gray-500 truncate">{member.email}</p>
                         </div>
                       </div>
-                      {selectedMemberId === member._id && (
-                        <svg className="w-5 h-5 text-blue-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                          <path
-                            fillRule="evenodd"
-                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      )}
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>
@@ -184,7 +206,7 @@ const WorkspaceAssignMemberModal: React.FC<WorkspaceAssignMemberModalProps> = ({
           <button
             type="button"
             onClick={handleUnassign}
-            disabled={isLoading || !task.assigned_to}
+            disabled={isLoading || selectedMemberIds.size === 0}
             className="px-4 py-2 border border-orange-300 text-orange-600 font-medium rounded-lg hover:bg-orange-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
           >
             🔓 unassign
@@ -200,7 +222,7 @@ const WorkspaceAssignMemberModal: React.FC<WorkspaceAssignMemberModalProps> = ({
           <button
             type="button"
             onClick={handleAssign}
-            disabled={isLoading || !selectedMemberId || task.assigned_to === selectedMemberId}
+            disabled={isLoading}
             className="flex-1 px-4 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isLoading ? (

@@ -108,6 +108,44 @@
       "oldest": "Oldest",
       "most_subtasks": "Most Subtasks",
       "least_subtasks": "Least Subtasks"
+    },
+    "permissions": {
+      "manage_permissions": "Manage Permissions",
+      "task_permissions": "Task Permissions",
+      "current_members": "Current Members",
+      "add_member": "Add Member",
+      "select_member": "Select Member",
+      "assign_role": "Assign Role",
+      "owner": "Owner",
+      "admin": "Admin",
+      "editor": "Editor",
+      "viewer": "Viewer",
+      "restricted": "Restricted",
+      "transfer_ownership": "Transfer Ownership",
+      "remove_member": "Remove Member",
+      "permission_granted": "Permission granted successfully",
+      "permission_removed": "Permission removed successfully",
+      "ownership_transferred": "Ownership transferred successfully",
+      "role_descriptions": {
+        "owner": "Full control over task, can manage permissions and transfer ownership",
+        "admin": "Can create, edit, delete and assign tasks",
+        "editor": "Can create and edit tasks assigned to them",
+        "viewer": "Can only view tasks assigned to them",
+        "restricted": "Limited access to assigned tasks"
+      },
+      "permission_levels": {
+        "view_all": "Can view all tasks",
+        "view_assigned": "Can only view assigned tasks",
+        "edit_all": "Can edit any task",
+        "edit_assigned": "Can only edit assigned tasks",
+        "edit_own": "Can only edit own tasks",
+        "delete_all": "Can delete any task",
+        "delete_assigned": "Can delete assigned tasks",
+        "delete_own": "Can only delete own tasks",
+        "create_task": "Can create tasks",
+        "assign_task": "Can assign tasks",
+        "transfer_ownership": "Can transfer ownership"
+      }
     }
   }
 }
