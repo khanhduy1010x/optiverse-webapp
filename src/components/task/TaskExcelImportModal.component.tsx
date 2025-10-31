@@ -250,11 +250,10 @@ export const TaskExcelImportModal: React.FC<TaskExcelImportModalProps> = ({ isOp
   const taskTemplateHeaders = useMemo(
     () => [
       'title',
-      'description',
-      'start_date',
-      'start_time',
+      'priority',
       'end_date',
       'end_time',
+      'description',
     ],
     []
   );
@@ -326,75 +325,51 @@ export const TaskExcelImportModal: React.FC<TaskExcelImportModalProps> = ({ isOp
         continue;
       }
 
-      // 2. Validate start_time and end_time
-      const hasStartDate = r['start_date'] && String(r['start_date']).trim() !== '';
-      const hasStartTime = r['start_time'] && String(r['start_time']).trim() !== '';
+      // 2. Validate end_time only (optional - user can skip deadline)
       const hasEndDate = r['end_date'] && String(r['end_date']).trim() !== '';
       const hasEndTime = r['end_time'] && String(r['end_time']).trim() !== '';
       
-      let startISO: string | undefined = undefined;
       let endISO: string | undefined = undefined;
 
-      // Check if start time is provided
-      if (!hasStartDate || !hasStartTime) {
-        errors.push('Start time is required');
-        rowErrors.push({ rowIndex: taskIndex, message: `Task ${taskIndex}: Start time is required` });
-        continue;
+      // Only validate end_time if at least one of them is provided
+      if (hasEndDate || hasEndTime) {
+        // If one is provided, the other must also be provided
+        if (!hasEndDate || !hasEndTime) {
+          errors.push('Both end date and end time must be provided together');
+          rowErrors.push({ rowIndex: taskIndex, message: `Task ${taskIndex}: Both end date and end time must be provided together` });
+          continue;
+        }
+
+        // Validate end_time format (accept hh:mm string, number (Excel), or Date)
+        const endTimeVal = r['end_time'];
+        const isEndTimeValid = isTimeHM(endTimeVal) || typeof endTimeVal === 'number' || endTimeVal instanceof Date;
+        if (!isEndTimeValid) {
+          errors.push('Invalid end time format. Use hh:mm format (e.g., 17:30)');
+          rowErrors.push({ rowIndex: taskIndex, message: `Task ${taskIndex}: Invalid end time format. Use hh:mm format (e.g., 17:30)` });
+          continue;
+        }
+
+        // Build end ISO
+        endISO = combineDateTimeToISO(r['end_date'], r['end_time'], r['end_time'], false);
+        if (!endISO) {
+          errors.push('Could not parse end date/time. Use formats: dd/mm/yyyy hh:mm or yyyy-mm-dd hh:mm');
+          rowErrors.push({ rowIndex: taskIndex, message: `Task ${taskIndex}: Could not parse end date/time. Use formats: dd/mm/yyyy hh:mm or yyyy-mm-dd hh:mm` });
+          continue;
+        }
+
+        // Validate end date/time is not in the past
+        const endDate = new Date(endISO);
+        const now = new Date();
+        if (endDate < now) {
+          errors.push('End date/time cannot be in the past');
+          rowErrors.push({ rowIndex: taskIndex, message: `Task ${taskIndex}: End date/time cannot be in the past` });
+          continue;
+        }
       }
 
-      // Validate start_time format (accept hh:mm string, number (Excel), or Date)
-      const startTimeVal = r['start_time'];
-      const isStartTimeValid = isTimeHM(startTimeVal) || typeof startTimeVal === 'number' || startTimeVal instanceof Date;
-      if (!isStartTimeValid) {
-        errors.push('Invalid start time format. Use hh:mm format (e.g., 09:30)');
-        rowErrors.push({ rowIndex: taskIndex, message: `Task ${taskIndex}: Invalid start time format. Use hh:mm format (e.g., 09:30)` });
-        continue;
-      }
-
-      // Build start ISO
-      startISO = combineDateTimeToISO(r['start_date'], r['start_time'], r['start_time'], false);
-      if (!startISO) {
-        errors.push('Could not parse start date/time. Use formats: dd/mm/yyyy hh:mm or yyyy-mm-dd hh:mm');
-        rowErrors.push({ rowIndex: taskIndex, message: `Task ${taskIndex}: Could not parse start date/time. Use formats: dd/mm/yyyy hh:mm or yyyy-mm-dd hh:mm` });
-        continue;
-      }
-
-      // Check if end time is provided
-      if (!hasEndDate || !hasEndTime) {
-        errors.push('End time is required');
-        rowErrors.push({ rowIndex: taskIndex, message: `Task ${taskIndex}: End time is required` });
-        continue;
-      }
-
-      // Validate end_time format (accept hh:mm string, number (Excel), or Date)
-      const endTimeVal = r['end_time'];
-      const isEndTimeValid = isTimeHM(endTimeVal) || typeof endTimeVal === 'number' || endTimeVal instanceof Date;
-      if (!isEndTimeValid) {
-        errors.push('Invalid end time format. Use hh:mm format (e.g., 17:30)');
-        rowErrors.push({ rowIndex: taskIndex, message: `Task ${taskIndex}: Invalid end time format. Use hh:mm format (e.g., 17:30)` });
-        continue;
-      }
-
-      // Build end ISO
-      endISO = combineDateTimeToISO(r['end_date'], r['end_time'], r['end_time'], false);
-      if (!endISO) {
-        errors.push('Could not parse end date/time. Use formats: dd/mm/yyyy hh:mm or yyyy-mm-dd hh:mm');
-        rowErrors.push({ rowIndex: taskIndex, message: `Task ${taskIndex}: Could not parse end date/time. Use formats: dd/mm/yyyy hh:mm or yyyy-mm-dd hh:mm` });
-        continue;
-      }
-
-      // 3. Validate end time must be after start time
-      const startDate = new Date(startISO);
-      const endDate = new Date(endISO);
-      if (endDate <= startDate) {
-        errors.push('End time must be after start time');
-        rowErrors.push({ rowIndex: taskIndex, message: `Task ${taskIndex}: End time must be after start time` });
-        continue;
-      }
-
-      // 4. Validate priority (optional, but if provided must be valid)
+      // 4. Validate priority (optional, default to 'low' if not provided)
       const priorityVal = r['priority'];
-      let priority: Task['priority'] = 'medium'; // default
+      let priority: Task['priority'] = 'low'; // default to 'low'
       if (priorityVal) {
         const normalized = normalizePriority(priorityVal?.toString());
         if (!normalized) {
@@ -438,7 +413,6 @@ export const TaskExcelImportModal: React.FC<TaskExcelImportModalProps> = ({ isOp
           description,
           priority,
           status,
-          start_time: startISO,
           end_time: endISO,
         };
 

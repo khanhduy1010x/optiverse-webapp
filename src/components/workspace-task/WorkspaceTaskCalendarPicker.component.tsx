@@ -6,11 +6,13 @@ import WorkspaceTaskCalendarView from './WorkspaceTaskCalendarView.component';
 interface WorkspaceTaskCalendarPickerProps {
   workspaceId: string;
   tasks: WorkspaceTask[];
+  onTaskClick?: (task: WorkspaceTask) => void;
 }
 
 const WorkspaceTaskCalendarPicker: React.FC<WorkspaceTaskCalendarPickerProps> = ({
   workspaceId,
   tasks,
+  onTaskClick,
 }) => {
   const [calendarMode, setCalendarMode] = useState<'week' | 'month'>('week');
 
@@ -46,12 +48,14 @@ const WorkspaceTaskCalendarPicker: React.FC<WorkspaceTaskCalendarPickerProps> = 
           <WorkspaceTaskWeekView
             workspaceId={workspaceId}
             tasks={tasks}
+            onTaskClick={onTaskClick}
           />
         )}
         {calendarMode === 'month' && (
           <WorkspaceTaskCalendarView
             workspaceId={workspaceId}
             tasks={tasks}
+            onTaskClick={onTaskClick}
           />
         )}
       </div>

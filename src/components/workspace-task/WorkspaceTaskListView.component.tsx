@@ -13,7 +13,9 @@ import { GROUP_CLASSNAMES } from '../../styles/group-class-name.style';
 interface WorkspaceTaskListViewProps {
   workspaceId: string;
   tasks: WorkspaceTask[];
-  workspaceMembers?: Array<{ _id: string; full_name: string; email: string; avatar_url?: string }>;
+  workspaceMembers?: Array<{ _id: string; full_name: string; email: string; avatar_url?: string; role?: string }>;
+  currentUserId?: string;
+  currentUserRole?: 'admin' | 'user';
   loading?: boolean;
   onTaskEdit?: (task: WorkspaceTask) => void;
   onTaskClick?: (task: WorkspaceTask) => void;
@@ -23,6 +25,8 @@ const WorkspaceTaskListView: React.FC<WorkspaceTaskListViewProps> = ({
   workspaceId,
   tasks,
   workspaceMembers = [],
+  currentUserId,
+  currentUserRole = 'user',
   loading = false,
   onTaskEdit,
   onTaskClick,
@@ -202,6 +206,8 @@ const WorkspaceTaskListView: React.FC<WorkspaceTaskListViewProps> = ({
                         task={task}
                         workspaceId={workspaceId}
                         workspaceMembers={workspaceMembers}
+                        currentUserId={currentUserId}
+                        currentUserRole={currentUserRole}
                         onEdit={handleTaskEdit}
                         onDelete={handleDelete}
                         onClick={handleTaskRowClick}

@@ -11,6 +11,7 @@ interface CalendarContainerProps {
   removeEvent: (eventId: string, deleteOption?: 'all' | 'this') => void;
   updateEvent: (eventId: string, updatedEvent: TaskEvent, updateOption?: 'all' | 'this') => void;
   refreshTaskEvents: () => void;
+  refreshImportedEvents: () => void;
   onRefresh: () => void;
 }
 
@@ -22,6 +23,7 @@ export const CalendarContainer: React.FC<CalendarContainerProps> = ({
   removeEvent,
   updateEvent,
   refreshTaskEvents,
+  refreshImportedEvents,
   onRefresh
 }) => {
   return (
@@ -35,6 +37,7 @@ export const CalendarContainer: React.FC<CalendarContainerProps> = ({
           removeEvent={removeEvent}
           updateEvent={updateEvent}
           refreshTaskEvents={refreshTaskEvents}
+          refreshImportedEvents={refreshImportedEvents}
         />
       </div>
     </div>

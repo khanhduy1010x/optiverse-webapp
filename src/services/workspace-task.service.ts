@@ -4,6 +4,8 @@ import {
   WorkspaceTask,
   CreateTaskRequest,
   UpdateTaskRequest,
+  TaskRolePreset,
+  TaskMemberPermission,
 } from '../types/workspace-task/workspace-task.types';
 
 const BASE_URL = 'productivity/workspace';
@@ -106,12 +108,17 @@ class WorkspaceTaskServiceClass {
   async assignTask(
     workspaceId: string,
     taskId: string,
-    userId?: string,
+    userIds?: string | string[],
   ): Promise<WorkspaceTask> {
     try {
+      // Support both single string (legacy) and array (new)
+      const ids = Array.isArray(userIds) 
+        ? userIds 
+        : (userIds ? [userIds] : []);
+      
       const response = await api.post<ApiResponse<WorkspaceTask>>(
         `${BASE_URL}/${workspaceId}/task/${taskId}/assign`,
-        { userId },
+        { userIds: ids },
       );
       return response.data.data;
     } catch (error: any) {
@@ -133,6 +140,71 @@ class WorkspaceTaskServiceClass {
       return response.data.data;
     } catch (error: any) {
       console.error('Failed to update task status:', error);
+      throw error;
+    }
+  }
+
+  // ========== Task Permission Management ==========
+  async grantTaskPermission(
+    workspaceId: string,
+    taskId: string,
+    memberId: string,
+    role: TaskRolePreset,
+  ): Promise<void> {
+    try {
+      await api.post(
+        `${BASE_URL}/${workspaceId}/task/${taskId}/grant-permission`,
+        { memberId, role },
+      );
+    } catch (error: any) {
+      console.error('Failed to grant task permission:', error);
+      throw error;
+    }
+  }
+
+  async transferTaskOwnership(
+    workspaceId: string,
+    taskId: string,
+    newOwnerId: string,
+  ): Promise<void> {
+    try {
+      await api.post(
+        `${BASE_URL}/${workspaceId}/task/${taskId}/transfer-ownership`,
+        { newOwnerId },
+      );
+    } catch (error: any) {
+      console.error('Failed to transfer task ownership:', error);
+      throw error;
+    }
+  }
+
+  async getTaskMembers(
+    workspaceId: string,
+    taskId: string,
+  ): Promise<TaskMemberPermission[]> {
+    try {
+      const response = await api.get<ApiResponse<TaskMemberPermission[]>>(
+        `${BASE_URL}/${workspaceId}/task/${taskId}/permissions`,
+      );
+      return response.data.data;
+    } catch (error: any) {
+      console.error('Failed to get task members:', error);
+      throw error;
+    }
+  }
+
+  async removeTaskPermission(
+    workspaceId: string,
+    taskId: string,
+    memberId: string,
+  ): Promise<void> {
+    try {
+      await api.delete(
+        `${BASE_URL}/${workspaceId}/task/${taskId}/remove-permission`,
+        { data: { memberId } },
+      );
+    } catch (error: any) {
+      console.error('Failed to remove task permission:', error);
       throw error;
     }
   }

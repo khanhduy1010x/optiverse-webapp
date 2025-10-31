@@ -3,17 +3,20 @@ import { useDispatch } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { AppDispatch } from '../../store';
 import { WorkspaceTask } from '../../types/workspace-task/workspace-task.types';
-import { updateTask } from '../../store/slices/workspace_task.slice';
+import { updateTask, updateTaskStatus } from '../../store/slices/workspace_task.slice';
 import { format, getDaysInMonth, startOfMonth, getDay, addMonths, subMonths } from 'date-fns';
+import { useWorkspaceTaskCountdown } from '../../hooks/workspace-task/useWorkspaceTaskCountdown';
 
 interface WorkspaceTaskCalendarViewProps {
   workspaceId: string;
   tasks: WorkspaceTask[];
+  onTaskClick?: (task: WorkspaceTask) => void;
 }
 
 const WorkspaceTaskCalendarView: React.FC<WorkspaceTaskCalendarViewProps> = ({
   workspaceId,
   tasks,
+  onTaskClick,
 }) => {
   const { t } = useTranslation('workspace-task');
   const dispatch = useDispatch<AppDispatch>();
@@ -76,6 +79,32 @@ const WorkspaceTaskCalendarView: React.FC<WorkspaceTaskCalendarViewProps> = ({
       default:
         return 'bg-gray-50';
     }
+  };
+
+  // Handle status cycle: to-do → in-progress → done → to-do
+  const handleStatusCycle = (task: WorkspaceTask, e: React.MouseEvent) => {
+    e.stopPropagation();
+    let newStatus: 'to-do' | 'in-progress' | 'done';
+    
+    switch (task.status) {
+      case 'to-do':
+        newStatus = 'in-progress';
+        break;
+      case 'in-progress':
+        newStatus = 'done';
+        break;
+      case 'done':
+        newStatus = 'to-do';
+        break;
+      default:
+        newStatus = 'to-do';
+    }
+    
+    dispatch(updateTaskStatus({
+      workspaceId,
+      taskId: task._id,
+      status: newStatus,
+    }));
   };
 
   // Handle drag start
@@ -203,19 +232,42 @@ const WorkspaceTaskCalendarView: React.FC<WorkspaceTaskCalendarViewProps> = ({
 
                   {/* Tasks for this day */}
                   <div className="space-y-1 overflow-y-auto max-h-[85px]">
-                    {getTasksForDate(day).map(task => (
+                    {getTasksForDate(day).map(task => {
+                      // Get overdue status for this task
+                      const { isOverdue } = useWorkspaceTaskCountdown(task, workspaceId);
+                      
+                      return (
                       <div
                         key={task._id}
                         draggable
                         onDragStart={(e) => handleDragStart(task, e)}
-                        className={`p-1.5 rounded text-xs font-medium cursor-move hover:shadow-md transition-all truncate ${getStatusColor(
-                          task.status
-                        )}`}
-                        title={task.title}
+                        onClick={() => onTaskClick?.(task)}
+                        className={`p-1.5 rounded text-xs font-medium cursor-move hover:shadow-md transition-all truncate flex items-start gap-1 ${
+                          task.status === 'done' && isOverdue
+                            ? 'bg-red-200 text-red-800'
+                            : getStatusColor(task.status)
+                        }`}
+                        title={`${task.title}${task.status === 'done' && isOverdue ? ' (Overdue)' : ''}`}
                       >
-                        {task.title}
+                        {/* Status Indicator Circle */}
+                        <div
+                          onClick={(e) => handleStatusCycle(task, e)}
+                          className={`flex-shrink-0 w-2 h-2 rounded-full border mt-0.5 flex items-center justify-center cursor-pointer transition-all ${
+                            task.status === 'to-do'
+                              ? 'border-current opacity-40'
+                              : task.status === 'in-progress'
+                              ? 'border-current'
+                              : 'border-current'
+                          }`}
+                        />
+
+                        <span className="truncate flex-1">
+                          {task.status === 'done' && isOverdue && '⚠️ '}
+                          {task.title}
+                        </span>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </>
               )}

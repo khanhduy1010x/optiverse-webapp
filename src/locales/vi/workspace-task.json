@@ -108,6 +108,44 @@
       "oldest": "Cũ Nhất",
       "most_subtasks": "Nhiều Công Việc Con",
       "least_subtasks": "Ít Công Việc Con"
+    },
+    "permissions": {
+      "manage_permissions": "Quản Lý Quyền Hạn",
+      "task_permissions": "Quyền Hạn Công Việc",
+      "current_members": "Thành Viên Hiện Tại",
+      "add_member": "Thêm Thành Viên",
+      "select_member": "Chọn Thành Viên",
+      "assign_role": "Gán Vai Trò",
+      "owner": "Chủ Sở Hữu",
+      "admin": "Quản Trị Viên",
+      "editor": "Trình Chỉnh Sửa",
+      "viewer": "Người Xem",
+      "restricted": "Hạn Chế",
+      "transfer_ownership": "Chuyển Quyền Sở Hữu",
+      "remove_member": "Loại Bỏ Thành Viên",
+      "permission_granted": "Quyền hạn được cấp thành công",
+      "permission_removed": "Quyền hạn được loại bỏ thành công",
+      "ownership_transferred": "Quyền sở hữu được chuyển thành công",
+      "role_descriptions": {
+        "owner": "Kiểm soát toàn bộ công việc, có thể quản lý quyền hạn và chuyển quyền sở hữu",
+        "admin": "Có thể tạo, chỉnh sửa, xóa và gán công việc",
+        "editor": "Có thể tạo và chỉnh sửa công việc được giao cho họ",
+        "viewer": "Chỉ có thể xem công việc được giao cho họ",
+        "restricted": "Quyền truy cập hạn chế cho công việc được giao"
+      },
+      "permission_levels": {
+        "view_all": "Có thể xem tất cả công việc",
+        "view_assigned": "Chỉ có thể xem công việc được giao",
+        "edit_all": "Có thể chỉnh sửa bất kỳ công việc nào",
+        "edit_assigned": "Chỉ có thể chỉnh sửa công việc được giao",
+        "edit_own": "Chỉ có thể chỉnh sửa công việc của chính mình",
+        "delete_all": "Có thể xóa bất kỳ công việc nào",
+        "delete_assigned": "Có thể xóa công việc được giao",
+        "delete_own": "Chỉ có thể xóa công việc của chính mình",
+        "create_task": "Có thể tạo công việc",
+        "assign_task": "Có thể gán công việc",
+        "transfer_ownership": "Có thể chuyển quyền sở hữu"
+      }
     }
   }
 }

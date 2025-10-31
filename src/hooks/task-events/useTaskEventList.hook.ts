@@ -541,8 +541,9 @@ export const useTaskEventList = () => {
   }, [userId]); // Thay đổi dependency từ taskId sang userId
 
   // Hàm để trigger refresh từ bên ngoài - thực hiện fetch ngay lập tức
+  // Sử dụng cho header refresh button - hiển thị loading state
   const refreshTaskEvents = useCallback(async () => {
-    console.log('Manual refresh triggered - fetching events directly');
+    console.log('[Header Refresh] Manual refresh triggered - fetching events directly');
     // Fetch dữ liệu trực tiếp thay vì sử dụng refreshKey
     if (!userId) {
       console.log('❌ No userId found, skipping fetch');
@@ -603,6 +604,68 @@ export const useTaskEventList = () => {
     } finally {
       setLoading(false);
     }
+  }, []); // Empty dependency - userId được access từ closure
+
+  // Hàm refresh riêng cho import modal - KHÔNG hiển thị loading state toàn trang
+  // Giữ modal mở và chỉ cập nhật data ở background
+  const refreshImportedEvents = useCallback(async () => {
+    console.log('[Import Modal Refresh] Refreshing imported events without closing modal');
+    if (!userId) {
+      console.log('❌ No userId found, skipping fetch');
+      return;
+    }
+    
+    // KHÔNG set loading = true để tránh hiển thị loading state
+    setError(null);
+    
+    try {
+      const response = await taskEventService.getTaskEventsByUserId();
+      
+      if (response && response.data) {
+        const rawData: any = response.data?.data;
+        let events: TaskEvent[] = [];
+        
+        if (Array.isArray(rawData)) {
+          events = rawData as TaskEvent[];
+          console.log('✅ [Import] Parsed as direct array, events count:', events.length);
+        } else if (rawData && Array.isArray(rawData.taskEvents)) {
+          events = rawData.taskEvents as TaskEvent[];
+          console.log('✅ [Import] Parsed from taskEvents property, events count:', events.length);
+        } else if (rawData && typeof rawData === 'object') {
+          const possibleArrayKeys = Object.keys(rawData).filter(key => Array.isArray(rawData[key]));
+          if (possibleArrayKeys.length > 0) {
+            events = rawData[possibleArrayKeys[0]] as TaskEvent[];
+            console.log('✅ [Import] Found events in key:', possibleArrayKeys[0], 'count:', events.length);
+          }
+        }
+        
+        console.log('📋 [Import] Refreshed events count:', events.length);
+        
+        const validEvents = events.filter(event => {
+          if (!event._id || !event.title) {
+            return false;
+          }
+          return true;
+        });
+        
+        const formattedEvents = validEvents.map(event => ({
+          ...event,
+          start_time: event.start_time ? new Date(event.start_time) : new Date(),
+          end_time: event.end_time ? new Date(event.end_time) : undefined
+        }));
+        
+        const allEventsWithRecurring = generateRecurringEvents(formattedEvents);
+        console.log('🔄 [Import] Refreshed events with recurring instances:', allEventsWithRecurring.length, 'total events');
+        
+        setTaskEvents(allEventsWithRecurring);
+      } else {
+        console.log('❌ No data in import refresh response');
+      }
+    } catch (err: any) {
+      console.error('❌ Error in refreshImportedEvents:', err);
+      // KHÔNG set error để tránh thay đổi UI state
+    }
+    // KHÔNG set loading = false vì không bao giờ set = true
   }, []); // Empty dependency - userId được access từ closure
 
   // Hàm thêm sự kiện mới - chỉ lưu 1 event gốc vào database, virtual instances sẽ được tạo tự động
@@ -1020,6 +1083,7 @@ export const useTaskEventList = () => {
     loading,
     error,
     refreshTaskEvents,
+    refreshImportedEvents,
     addEvent,
     removeEvent,
     updateEvent

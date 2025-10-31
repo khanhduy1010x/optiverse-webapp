@@ -4,6 +4,7 @@ import { TaskEvent } from '../../types/task-events/task-events.types';
 import { useTaskEventForm } from '../../hooks/task-events/useTaskEventForm.hook';
 import { useTaskEventOperations } from '../../hooks/task-events/useTaskEventOperations.hook';
 import { useTaskEventList } from '../../hooks/task-events/useTaskEventList.hook';
+import { ColorPicker } from './ColorPicker.component';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
 import { useAppSelector } from '../../store/hooks';
 import { GROUP_CLASSNAMES } from '../../styles';
@@ -167,21 +168,43 @@ export const UpdateTaskEventModalForm: React.FC<UpdateTaskEventModalFormProps> =
         shouldCloseOnOverlayClick={true}
         ariaHideApp={false}
       >
-        <form onSubmit={handleSubmit} className="p-4 md:p-6 flex flex-col gap-3">
-          {/* Tiêu đề */}
-          <input
-            type="text"
-            placeholder={t('event_title_placeholder')}
-            value={formData.title}
-            onChange={(e) => handleInputChange('title', e.target.value)}
-            className="w-full border-0 border-b border-gray-200 py-2 mb-2 focus:outline-none focus:ring-0 focus:border-blue-400 placeholder-gray-400 text-base bg-blue-50/30 rounded-t-xl transition-all"
-            autoFocus
-          />
-          {titleError && (
-            <div className="text-red-500 text-xs mb-1">{titleError}</div>
-          )}
-          {/* Hiển thị ngày của event */}
-          <div className="text-base text-gray-600 font-semibold mb-1 text-center">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+          {/* Header: Title + Color Picker + Close Button */}
+          <div className="flex items-start justify-between gap-3 px-4 md:px-6 pt-4 md:pt-6 pb-2 border-b border-gray-100">
+            <input
+              type="text"
+              placeholder={t('event_title_placeholder')}
+              value={formData.title}
+              onChange={(e) => handleInputChange('title', e.target.value)}
+              className="flex-1 border-0 border-b border-gray-200 py-2 focus:outline-none focus:ring-0 focus:border-blue-400 placeholder-gray-400 text-base bg-blue-50/30 rounded-t-xl transition-all"
+              autoFocus
+            />
+            <div className="flex-shrink-0">
+              <ColorPicker
+                selectedColor={selectedColor}
+                onColorSelect={setSelectedColor}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => { resetForm(); onClose(); }}
+              className="flex-shrink-0 p-2 hover:bg-gray-100 rounded-full transition-colors"
+              title={t('close')}
+              aria-label={t('close')}
+            >
+              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Content */}
+          <div className="px-4 md:px-6 pb-4 md:pb-6 space-y-3">
+            {titleError && (
+              <div className="text-red-500 text-xs">{titleError}</div>
+            )}
+            {/* Hiển thị ngày của event */}
+            <div className="text-base text-gray-600 font-semibold mb-1 text-center">
             {formData.start_time ? new Date(formData.start_time).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : ''}
           </div>
           {/* Thời gian bắt đầu/kết thúc */}
@@ -247,6 +270,7 @@ export const UpdateTaskEventModalForm: React.FC<UpdateTaskEventModalFormProps> =
             >
               {t('save')}
             </button>
+          </div>
           </div>
         </form>
 
