@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import iro from '@jaames/iro';
 import { useTheme } from '../../contexts/theme.context';
 import COLORS from '../../constants/colors.constant';
+import styles from './ColorPicker.module.css';
 
 const ColorPicker: React.FC = () => {
   const { setPrimaryColor, primaryColor } = useTheme();
@@ -30,7 +31,7 @@ const ColorPicker: React.FC = () => {
   }, [primaryColor, setPrimaryColor]);
 
   return (
-    <div ref={pickerRef} style={{ margin: '2rem auto', width: '260px' }} />
+    <div ref={pickerRef} className={styles.colorPickerContainer} />
   );
 };
 
@@ -47,27 +48,15 @@ export const ColorSwatches: React.FC = () => {
   const { setPrimaryColor, primaryColor } = useTheme();
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        gap: '8px',
-        justifyContent: 'center',
-        flexWrap: 'wrap',
-      }}
-    >
+    <div className={styles.colorSwatchesContainer}>
       {presetColors.map(color => (
         <button
           key={color}
           onClick={() => setPrimaryColor(color)}
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: '50%',
-            border:
-              primaryColor === color ? '2px solid #000' : '1px solid #ccc',
-            backgroundColor: color,
-            cursor: 'pointer',
-          }}
+          title={`Select color ${color}`}
+          className={`${styles.colorButton} ${primaryColor === color ? styles.active : ''}`}
+          aria-label={`Select color ${color}`}
+          data-color={color}
         />
       ))}
     </div>

@@ -23,10 +23,25 @@ export const CalendarEvent: React.FC<CalendarEventProps> = ({
   onClick,
   className
 }) => {
-  // Select color based on event title hash for consistency
-  const colorIndex = (event.title?.length || 0) % COLOR_CONFIG.length;
-  const colorConfig = COLOR_CONFIG[colorIndex];
-  const colorClass = styles[colorConfig.key as keyof typeof styles];
+  // Use event color if available, otherwise select based on title hash
+  const getEventColorStyle = () => {
+    if (event.color) {
+      return {
+        backgroundColor: `${event.color}20`, // 20% opacity
+        borderLeftColor: event.color,
+        color: event.color
+      };
+    }
+    
+    // Fallback to hash-based color selection
+    const colorIndex = (event.title?.length || 0) % COLOR_CONFIG.length;
+    const colorConfig = COLOR_CONFIG[colorIndex];
+    return { colorClass: styles[colorConfig.key as keyof typeof styles] };
+  };
+
+  const colorStyle = getEventColorStyle();
+  const isCustomColor = event.color !== undefined;
+  const colorClass = !isCustomColor ? (colorStyle as any).colorClass : '';
   
   // Format time range
   const formatTimeRange = () => {
@@ -41,14 +56,28 @@ export const CalendarEvent: React.FC<CalendarEventProps> = ({
     
     return startTime;
   };
+  
+  // Get dot color
+  const getDotColor = () => {
+    if (event.color) {
+      return event.color;
+    }
+    const colorIndex = (event.title?.length || 0) % COLOR_CONFIG.length;
+    const colorConfig = COLOR_CONFIG[colorIndex];
+    return colorConfig.key;
+  };
 
   return (
     <div
       onClick={onClick}
       className={`${styles.eventCard} ${colorClass} ${className || ''}`}
+      style={isCustomColor ? (colorStyle as any) : undefined}
     >
       <div className={styles.eventContent}>
-        <div className={`${styles.eventDot} ${colorConfig.dotClass}`}></div>
+        <div 
+          className={styles.eventDot}
+          style={isCustomColor ? { backgroundColor: event.color } : undefined}
+        ></div>
         <div className={styles.eventBody}>
           <p className={styles.eventTitle}>{event.title || 'Untitled Event'}</p>
           <p className={styles.eventTime}>{formatTimeRange()}</p>

@@ -45,6 +45,7 @@ interface CalendarProps {
   removeEvent: (eventId: string, deleteOption?: 'all' | 'this', instanceStartTime?: Date | string) => void;
   updateEvent: (eventId: string, event: TaskEvent, updateOption?: 'all' | 'this') => void;
   refreshTaskEvents: () => void;
+  refreshImportedEvents: () => void;
 }
 
 export const Calendar: React.FC<CalendarProps> = ({
@@ -54,7 +55,8 @@ export const Calendar: React.FC<CalendarProps> = ({
   addEvent,
   removeEvent,
   updateEvent,
-  refreshTaskEvents
+  refreshTaskEvents,
+  refreshImportedEvents
 }) => {
   const { t } = useAppTranslate('task');
 
@@ -162,13 +164,14 @@ export const Calendar: React.FC<CalendarProps> = ({
   const openEventImport = () => setIsEventImportOpen(true);
   const closeEventImport = () => setIsEventImportOpen(false);
 
-  // Handle event imported - fetch events to refresh UI
+  // Handle event imported - fetch events to refresh UI (background refresh, không đóng modal)
   const handleEventImported = useCallback(async (result: any) => {
     console.log('✅ Import completed:', result);
-    // Refresh events immediately after import - wait for it to complete
-    await refreshTaskEvents();
-    console.log('✅ Events refreshed successfully - modal stays open');
-  }, [refreshTaskEvents]);
+    // Refresh events in background - KHÔNG hiển thị loading state toàn trang
+    // Sử dụng refreshImportedEvents thay vì refreshTaskEvents
+    await refreshImportedEvents();
+    console.log('✅ Events refreshed successfully in background - modal stays open');
+  }, [refreshImportedEvents]);
 
   // Download Event Template
   const handleDownloadEventTemplate = () => {

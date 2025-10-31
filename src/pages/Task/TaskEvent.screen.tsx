@@ -19,7 +19,8 @@ const TaskEvent: React.FC<TaskEventProps> = ({ onAddEvent }) => {
     taskEvents, 
     loading, 
     error, 
-    refreshTaskEvents, 
+    refreshTaskEvents,
+    refreshImportedEvents,
     addEvent, 
     removeEvent, 
     updateEvent 
@@ -28,7 +29,7 @@ const TaskEvent: React.FC<TaskEventProps> = ({ onAddEvent }) => {
   // Custom hook for auto-refresh functionality
   const { triggerRefresh } = useAutoRefresh(refreshTaskEvents, {
     interval: 30000,
-    enabled: false // Disable auto refresh
+    enabled: false // Enable auto refresh
   });
 
   // Handle reload - refresh task events
@@ -60,6 +61,7 @@ const TaskEvent: React.FC<TaskEventProps> = ({ onAddEvent }) => {
         removeEvent={removeEvent}
         updateEvent={updateEvent}
         refreshTaskEvents={refreshTaskEvents}
+        refreshImportedEvents={refreshImportedEvents}
         onRefresh={triggerRefresh}
       />
 

@@ -5,6 +5,7 @@ import { useTaskEventOperations } from '../../hooks/task-events/useTaskEventOper
 import { TaskEvent } from '../../types/task-events/task-events.types';
 import { CalendarDatePicker } from './CalendarDatePicker.component';
 import { TimePickerDropdown } from './TimePickerDropdown.component';
+import { ColorPicker } from './ColorPicker.component';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
 import { useAppSelector } from '../../store/hooks';
 
@@ -244,6 +245,14 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
     });
   };
 
+  // Format time to HH:mm (24-hour format)
+  const formatTimeToHHmm = (dateInput: Date | string) => {
+    const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+  };
+
   // Helpers for To Date (repeat_to) using CalendarDatePicker, similar UI to Start Date
   const formatDateYMD = (ymd?: string) => {
     if (!ymd) return t('select_date');
@@ -280,35 +289,47 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
     >
       <div className="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 max-h-[90vh] flex flex-col relative">
         
-        <button
-          type="button"
-          onClick={() => { resetForm(); onClose(); }}
-          className="absolute top-3 right-3 p-2 hover:bg-gray-100 rounded-full transition-colors"
-          title={t('close')}
-          aria-label={t('close')}
-        >
-          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
+        {/* Header with Title Input and Color Picker */}
+        <div className="flex items-center justify-between gap-3 px-6 pt-6 pb-4 border-b border-gray-100">
+          <div className="flex-1">
+            <input
+              type="text"
+              placeholder={t('add_title')}
+              value={formData.title || ''}
+              onChange={(e) => handleInputChange('title', e.target.value)}
+              className="w-full text-xl font-medium border-0 border-b-2 border-transparent focus:border-blue-500 focus:outline-none pb-2 placeholder-gray-400"
+              autoFocus
+            />
+            {formData.title && formData.title.length > 50 && (
+              <div className="text-red-500 text-xs mt-1">{t('title_max_length')}</div>
+            )}
+          </div>
+
+          {/* Color Picker */}
+          <div className="flex-shrink-0">
+            <ColorPicker
+              selectedColor={selectedColor}
+              onColorSelect={setSelectedColor}
+            />
+          </div>
+
+          {/* Close Button */}
+          <button
+            type="button"
+            onClick={() => { resetForm(); onClose(); }}
+            className="flex-shrink-0 p-2 hover:bg-gray-100 rounded-full transition-colors"
+            title={t('close')}
+            aria-label={t('close')}
+          >
+            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
       
       {/* Form Content */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
           <div className="p-6 space-y-4">
-            {/* Title Input */}
-            <div>
-              <input
-                type="text"
-                placeholder={t('add_title')}
-                value={formData.title || ''}
-                onChange={(e) => handleInputChange('title', e.target.value)}
-                className="w-full text-xl font-medium border-0 border-b-2 border-transparent focus:border-blue-500 focus:outline-none pb-2 placeholder-gray-400"
-                autoFocus
-              />
-              {formData.title && formData.title.length > 50 && (
-                <div className="text-red-500 text-xs mt-1">{t('title_max_length')}</div>
-              )}
-            </div>
 
             {/* Date and Time Section */}
             <div className="space-y-3">
@@ -364,21 +385,17 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
                     {showStartTimePicker && (
                       <div className="absolute top-full left-0 mt-1 z-50">
                         <TimePickerDropdown
-                          selectedTime={formData.start_time ? formatTime(formData.start_time.toISOString()) : ''}
+                          selectedTime={formData.start_time ? formatTimeToHHmm(formData.start_time) : ''}
                           onTimeSelect={(time: string) => {
                             const currentDate = formData.start_time ? new Date(formData.start_time) : new Date();
-                            const [timeStr, period] = time.split(' ');
-                            const [hours, minutes] = timeStr.split(':').map(Number);
-                            let adjustedHours = hours;
-                            if (period === 'PM' && hours !== 12) adjustedHours += 12;
-                            if (period === 'AM' && hours === 12) adjustedHours = 0;
-                            
-                            currentDate.setHours(adjustedHours, minutes);
+                            const [hours, minutes] = time.split(':').map(Number);
+                            currentDate.setHours(hours, minutes);
                             handleInputChange('start_time', currentDate.toISOString());
                             setShowStartTimePicker(false);
                           }}
                           isOpen={showStartTimePicker}
                           onClose={() => setShowStartTimePicker(false)}
+                          format24h={true}
                         />
                       </div>
                     )}
@@ -404,21 +421,17 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
                     {showEndTimePicker && (
                       <div className="absolute top-full left-0 mt-1 z-50">
                         <TimePickerDropdown
-                          selectedTime={formData.end_time ? formatTime(formData.end_time.toISOString()) : ''}
+                          selectedTime={formData.end_time ? formatTimeToHHmm(formData.end_time) : ''}
                           onTimeSelect={(time: string) => {
                             const currentDate = formData.end_time ? new Date(formData.end_time) : new Date(formData.start_time || new Date());
-                            const [timeStr, period] = time.split(' ');
-                            const [hours, minutes] = timeStr.split(':').map(Number);
-                            let adjustedHours = hours;
-                            if (period === 'PM' && hours !== 12) adjustedHours += 12;
-                            if (period === 'AM' && hours === 12) adjustedHours = 0;
-                            
-                            currentDate.setHours(adjustedHours, minutes);
+                            const [hours, minutes] = time.split(':').map(Number);
+                            currentDate.setHours(hours, minutes);
                             handleInputChange('end_time', currentDate.toISOString());
                             setShowEndTimePicker(false);
                           }}
                           isOpen={showEndTimePicker}
                           onClose={() => setShowEndTimePicker(false)}
+                          format24h={true}
                         />
                       </div>
                     )}

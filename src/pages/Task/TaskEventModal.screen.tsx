@@ -4,6 +4,7 @@ import { useTaskEventForm } from '../../hooks/task-events/useTaskEventForm.hook'
 import { useTaskEventOperations } from '../../hooks/task-events/useTaskEventOperations.hook';
 import Modal from 'react-modal';
 import { GROUP_CLASSNAMES } from '../../styles';
+import { ColorPicker } from '../../components/task-event/ColorPicker.component';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
 import DateTimePicker from '../../components/datetime-picker/DateTimePicker.component';
 import { validateTaskEvent } from '../../utils/validate.util';
@@ -221,15 +222,23 @@ export const TaskEventModal: React.FC<TaskEventModalProps> = ({
       ariaHideApp={false}
     >
       <form onSubmit={handleSubmit} className="p-4 md:p-6 flex flex-col gap-3">
-        {/* Tiêu đề */}
-        <input
-          type="text"
-          placeholder={t('event_title_placeholder')}
-          value={formData.title}
-          onChange={(e) => handleInputChange('title', e.target.value)}
-          className="w-full border-0 border-b border-gray-200 py-2 mb-2 focus:outline-none focus:ring-0 focus:border-blue-400 placeholder-gray-400 text-base bg-blue-50/30 rounded-t-xl transition-all"
-          autoFocus
-        />
+        {/* Tiêu đề với Color Picker */}
+        <div className="flex items-start gap-3">
+          <input
+            type="text"
+            placeholder={t('event_title_placeholder')}
+            value={formData.title}
+            onChange={(e) => handleInputChange('title', e.target.value)}
+            className="flex-1 border-0 border-b border-gray-200 py-2 focus:outline-none focus:ring-0 focus:border-blue-400 placeholder-gray-400 text-base bg-blue-50/30 rounded-t-xl transition-all"
+            autoFocus
+          />
+          <div className="pt-2">
+            <ColorPicker
+              selectedColor={selectedColor}
+              onColorSelect={setSelectedColor}
+            />
+          </div>
+        </div>
         {/* Start Time */}
         <div className="mb-2">
           <label className="block text-sm font-medium text-gray-700 mb-2">

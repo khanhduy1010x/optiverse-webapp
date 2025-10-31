@@ -24,6 +24,10 @@ const WorkspaceDetail: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
 
+  // Get current user from auth store
+  const currentUser = useSelector((state: RootState) => state.auth.user);
+  const currentUserId = currentUser?._id;
+  
   const tasks = useSelector(selectAllTasks);
   const tasksByStatus = useSelector(selectTasksByStatus);
   const loading = useSelector(selectWorkspaceTaskLoading);
@@ -33,8 +37,13 @@ const WorkspaceDetail: React.FC = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState<WorkspaceTask | null>(null);
-  const [workspaceMembers, setWorkspaceMembers] = useState<Array<{ _id: string; full_name: string; email: string; avatar_url?: string }>>([]);
+  const [workspaceMembers, setWorkspaceMembers] = useState<Array<{ _id: string; full_name: string; email: string; avatar_url?: string; role?: string }>>([]);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Compute current user role
+  const currentUserRole = workspaceMembers.length > 0 
+    ? (workspaceMembers.find(m => m._id === currentUserId)?.role as 'admin' | 'user') || 'user'
+    : 'user';
 
   useEffect(() => {
     if (workspaceId) {
@@ -56,6 +65,7 @@ const WorkspaceDetail: React.FC = () => {
         full_name: user.full_name || 'Unknown',
         email: user.email,
         avatar_url: user.avatar_url,
+        role: user.role || 'user', // Include role field
       }));
       console.log('[Page] Workspace members:', mappedMembers);
       setWorkspaceMembers(mappedMembers);
@@ -157,6 +167,12 @@ const WorkspaceDetail: React.FC = () => {
             tasksByStatus={filteredTasksByStatus}
             filterStatus={activeTab}
             workspaceMembers={workspaceMembers}
+            currentUserId={currentUserId}
+            currentUserRole={(() => {
+              // Find current user's role in workspace
+              const member = workspaceMembers.find(m => m._id === currentUserId);
+              return (member?.role as 'admin' | 'user') || 'user';
+            })()}
             onTaskEdit={handleTaskEdit}
             onTaskClick={handleTaskDetail}
           />
@@ -186,15 +202,23 @@ const WorkspaceDetail: React.FC = () => {
           task={selectedTask}
           workspaceId={workspaceId!}
           workspaceMembers={workspaceMembers}
+          currentUserId={currentUserId}
+          currentUserRole={(() => {
+            // Find current user's role in workspace
+            const member = workspaceMembers.find(m => m._id === currentUserId);
+            return (member?.role as 'admin' | 'user') || 'user';
+          })()}
           onClose={handleCloseDetailModal}
         />
       )}
 
       {/* Floating Add Task Button - Apple Style */}
-      <FloatingAddTaskButton
-        onClick={() => setShowCreateModal(true)}
-        title="Add Task"
-      />
+      {currentUserRole === 'admin' && (
+        <FloatingAddTaskButton
+          onClick={() => setShowCreateModal(true)}
+          title="Add Task"
+        />
+      )}
     </div>
   );
 };

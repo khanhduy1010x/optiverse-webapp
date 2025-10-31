@@ -101,11 +101,13 @@ export const deleteTask = createAsyncThunk(
 export const assignTask = createAsyncThunk(
   'workspaceTask/assign',
   async (
-    { workspaceId, taskId, userId }: { workspaceId: string; taskId: string; userId?: string },
+    { workspaceId, taskId, userId, userIds }: { workspaceId: string; taskId: string; userId?: string; userIds?: string[] },
     { rejectWithValue },
   ) => {
     try {
-      const response = await workspaceTaskService.assignTask(workspaceId, taskId, userId);
+      // Support both single userId (legacy) and userIds array (new)
+      const ids = userIds || (userId ? [userId] : []);
+      const response = await workspaceTaskService.assignTask(workspaceId, taskId, ids);
       return response;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Failed to assign task');
