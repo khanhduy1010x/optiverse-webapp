@@ -1481,7 +1481,7 @@ export const Calendar: React.FC<CalendarProps> = ({
       {/* Global FAB removed: using page-level CircleButton in Task.page.tsx */}
 
       {/* Create Event Modal */}
-      {isAddScheduleOpen && (
+      {isAddScheduleOpen && !isModalOpen && (
         <CreateTaskEventModalForm
           isOpen={isAddScheduleOpen}
           onClose={() => setIsAddScheduleOpen(false)}
@@ -1493,7 +1493,7 @@ export const Calendar: React.FC<CalendarProps> = ({
       )}
 
       {/* Add Event Modal */}
-      {isModalOpen && selectedEvent && (
+      {isModalOpen && selectedEvent && !isAddScheduleOpen && (
         <UpdateTaskEventModalForm
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}

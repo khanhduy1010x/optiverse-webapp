@@ -933,7 +933,8 @@ export const useTaskEventList = () => {
             exclusion_dates: updatedEvent.exclusion_dates,
             location: updatedEvent.location,
             description: updatedEvent.description,
-            guests: updatedEvent.guests
+            guests: updatedEvent.guests,
+            color: updatedEvent.color
           };
           
           const response = await taskEventService.updateTaskEvent(parentEventId, eventToUpdate);
@@ -993,7 +994,8 @@ export const useTaskEventList = () => {
               repeat_type: 'none',
               location: updatedEvent.location,
               description: updatedEvent.description,
-              guests: updatedEvent.guests
+              guests: updatedEvent.guests,
+              color: updatedEvent.color
             };
           
             const response = await taskEventService.createTaskEvent(newSingleEvent);
@@ -1041,7 +1043,8 @@ export const useTaskEventList = () => {
           exclusion_dates: updatedEvent.exclusion_dates,
           location: updatedEvent.location,
           description: updatedEvent.description,
-          guests: updatedEvent.guests
+          guests: updatedEvent.guests,
+          color: updatedEvent.color
         };
         
         const response = await taskEventService.updateTaskEvent(eventId, eventToUpdate);

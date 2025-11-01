@@ -4,7 +4,9 @@ import { TaskEvent } from '../../types/task-events/task-events.types';
 import { useTaskEventForm } from '../../hooks/task-events/useTaskEventForm.hook';
 import { useTaskEventOperations } from '../../hooks/task-events/useTaskEventOperations.hook';
 import { useTaskEventList } from '../../hooks/task-events/useTaskEventList.hook';
-import { ColorPicker } from './ColorPicker.component';
+import { ColorPickerUpdate } from './ColorPickerUpdate.component';
+import { TimePickerInput } from './TimePickerInput.component';
+import { CalendarDatePicker } from './CalendarDatePicker.component';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
 import { useAppSelector } from '../../store/hooks';
 import { GROUP_CLASSNAMES } from '../../styles';
@@ -29,6 +31,8 @@ export const UpdateTaskEventModalForm: React.FC<UpdateTaskEventModalFormProps> =
   const { formData, handleInputChange, resetForm, getUpdatePayload } = useTaskEventForm(taskEvent);
   const { updateTaskEvent, loading } = useTaskEventOperations();
   const [showRepeatOptions, setShowRepeatOptions] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const dateButtonRef = React.useRef<HTMLButtonElement>(null);
   const [selectedColor, setSelectedColor] = useState(taskEvent.color || '#3B82F6');
   const [titleError, setTitleError] = useState('');
   const [descError, setDescError] = useState('');
@@ -39,16 +43,6 @@ export const UpdateTaskEventModalForm: React.FC<UpdateTaskEventModalFormProps> =
   // Xác nhận cập nhật cho sự kiện lặp lại (UI đẹp mắt, đồng bộ design)
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [pendingPayload, setPendingPayload] = useState<any | null>(null);
-
-  // Đồng bộ selectedColor khi taskEvent thay đổi
-  React.useEffect(() => {
-    setSelectedColor(taskEvent.color || '#3B82F6');
-  }, [taskEvent.color]);
-
-  // Cập nhật formData color khi selectedColor thay đổi
-  React.useEffect(() => {
-    handleInputChange('color', selectedColor);
-  }, [selectedColor]);
 
   // Chuẩn bị payload dùng chung cho cả submit và confirm
   const buildPayload = () => {
@@ -67,7 +61,7 @@ export const UpdateTaskEventModalForm: React.FC<UpdateTaskEventModalFormProps> =
     ].filter(Boolean).join('\n');
     payload.guests = Array.isArray(formData.guests) ? formData.guests.filter(g => !!g && g.trim()) : [];
     payload.location = formData.location || '';
-    // Color được lấy từ formData thông qua hook, không cần override
+    payload.color = selectedColor || '#3B82F6';
     if ((payload.repeat_type === 'weekly' || payload.repeat_type === 'custom') && 
         (!payload.repeat_days || payload.repeat_days.length === 0)) {
       payload.repeat_days = [new Date(formData.start_time).getDay()];
@@ -88,6 +82,24 @@ export const UpdateTaskEventModalForm: React.FC<UpdateTaskEventModalFormProps> =
     setTitleError(formData.title && formData.title.length > 50 ? t('create_title_max') : '');
     setDescError(formData.description && formData.description.length > 100 ? t('edit_desc_max') : '');
   }, [formData.title, formData.description, t]);
+
+  // Helper function to format time as HH:mm
+  const formatTimeToHHmm = (dateInput: Date | string): string => {
+    const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+  };
+
+  // Helper function to format date display
+  const formatDate = (dateInput: Date | string): string => {
+    const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+    return date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -172,27 +184,33 @@ export const UpdateTaskEventModalForm: React.FC<UpdateTaskEventModalFormProps> =
   return (
     <>
       <Modal isOpen={isOpen}
-        className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[400px] md:w-[450px] max-w-[95vw] bg-white rounded-xl shadow-2xl z-[2000] outline-none"
+        className="fixed inset-0 flex items-center justify-center z-[2000] outline-none"
         overlayClassName="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000]"
         onRequestClose={() => { resetForm(); onClose(); }}
         shouldCloseOnOverlayClick={true}
         ariaHideApp={false}
       >
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+        <div className="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 max-h-[90vh] flex flex-col relative">
           {/* Header: Title + Color Picker + Close Button */}
-          <div className="flex items-start justify-between gap-3 px-4 md:px-6 pt-4 md:pt-6 pb-2 border-b border-gray-100">
-            <input
-              type="text"
-              placeholder={t('event_title_placeholder')}
-              value={formData.title}
-              onChange={(e) => handleInputChange('title', e.target.value)}
-              className="flex-1 border-0 border-b border-gray-200 py-2 focus:outline-none focus:ring-0 focus:border-blue-400 placeholder-gray-400 text-base bg-blue-50/30 rounded-t-xl transition-all"
-              autoFocus
-            />
+          <div className="flex items-center justify-between gap-3 px-6 pt-6 pb-4 border-b border-gray-100">
+            <div className="flex-1">
+              <input
+                type="text"
+                placeholder={t('event_title_placeholder')}
+                value={formData.title}
+                onChange={(e) => handleInputChange('title', e.target.value)}
+                className="w-full text-xl font-medium border-0 border-b-2 border-transparent focus:border-blue-500 focus:outline-none pb-2 placeholder-gray-400"
+                autoFocus
+              />
+              {titleError && (
+                <div className="text-red-500 text-xs mt-1">{titleError}</div>
+              )}
+            </div>
             <div className="flex-shrink-0">
-              <ColorPicker
+              <ColorPickerUpdate
                 selectedColor={selectedColor}
                 onColorSelect={setSelectedColor}
+                isModalOpen={isOpen}
               />
             </div>
             <button
@@ -208,81 +226,114 @@ export const UpdateTaskEventModalForm: React.FC<UpdateTaskEventModalFormProps> =
             </button>
           </div>
 
-          {/* Content */}
-          <div className="px-4 md:px-6 pb-4 md:pb-6 space-y-3">
+          {/* Form Content */}
+          <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
+            <div className="p-6">
             {titleError && (
               <div className="text-red-500 text-xs">{titleError}</div>
             )}
-            {/* Hiển thị ngày của event */}
-            <div className="text-base text-gray-600 font-semibold mb-1 text-center">
-            {formData.start_time ? new Date(formData.start_time).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : ''}
-          </div>
-          {/* Thời gian bắt đầu/kết thúc */}
-          <div className="flex items-center gap-2 mb-2">
-            <div className="flex flex-col flex-1">
-              <label className="text-xs text-gray-500 mb-1" htmlFor="start-time">{t('start_time_label')}</label>
-              <input
-                id="start-time"
-                type="time"
-                value={(() => { try { return formData.start_time ? new Date(formData.start_time).toTimeString().slice(0, 5) : ''; } catch { return ''; } })()}
-                onChange={e => {
-                  const newDate = new Date(formData.start_time);
-                  const [hours, minutes] = e.target.value.split(':').map(Number);
-                  newDate.setHours(hours, minutes);
-                  handleInputChange('start_time', newDate);
-                }}
-                className="border border-gray-200 rounded-md p-1.5 text-sm"
-                placeholder={t('start_time_placeholder')}
-              />
+            {/* Date Picker */}
+            <div className="relative mb-4">
+              <button
+                ref={dateButtonRef}
+                type="button"
+                onClick={() => setShowDatePicker(!showDatePicker)}
+                className="flex items-center gap-2 w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span className="text-gray-700 font-medium">
+                  {formData.start_time ? new Date(formData.start_time).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) : t('select_date')}
+                </span>
+              </button>
+
+              {showDatePicker && (
+                <CalendarDatePicker
+                  triggerRef={dateButtonRef}
+                  selectedDate={formData.start_time ? new Date(formData.start_time) : new Date()}
+                  onDateSelect={(date) => {
+                    const currentTime = formData.start_time ? new Date(formData.start_time) : new Date();
+                    date.setHours(currentTime.getHours(), currentTime.getMinutes());
+                    handleInputChange('start_time', date);
+                    setShowDatePicker(false);
+                  }}
+                  isOpen={showDatePicker}
+                  onClose={() => setShowDatePicker(false)}
+                />
+              )}
             </div>
-            <span className="text-gray-400 mt-6">{t('time_range_sep')}</span>
-            <div className="flex flex-col flex-1">
-              <label className="text-xs text-gray-500 mb-1" htmlFor="end-time">{t('end_time_label')}</label>
-              <input
-                id="end-time"
-                type="time"
-                value={(() => { try { return formData.end_time ? new Date(formData.end_time).toTimeString().slice(0, 5) : ''; } catch { return ''; } })()}
-                onChange={e => {
-                  if (!formData.end_time) return;
-                  const newDate = new Date(formData.end_time);
-                  const [hours, minutes] = e.target.value.split(':').map(Number);
-                  newDate.setHours(hours, minutes);
-                  handleInputChange('end_time', newDate);
-                }}
-                className="border border-gray-200 rounded-md p-1.5 text-sm"
-                placeholder={t('end_time_placeholder')}
-              />
+
+            {/* Thời gian bắt đầu/kết thúc */}
+            <div className="flex gap-3 mb-4">
+              {/* Start Time */}
+              <div className="flex-1">
+                <TimePickerInput
+                  selectedTime={formData.start_time ? formatTimeToHHmm(formData.start_time) : ''}
+                  onTimeSelect={(time: string) => {
+                    const currentDate = formData.start_time ? new Date(formData.start_time) : new Date();
+                    const [hours, minutes] = time.split(':').map(Number);
+                    currentDate.setHours(hours, minutes);
+                    handleInputChange('start_time', currentDate);
+                  }}
+                  placeholder="HH:mm"
+                  format24h={true}
+                  className="w-full"
+                />
+              </div>
+
+              <span className="text-gray-400 self-center">-</span>
+
+              {/* End Time */}
+              <div className="flex-1">
+                <TimePickerInput
+                  selectedTime={formData.end_time ? formatTimeToHHmm(formData.end_time) : ''}
+                  onTimeSelect={(time: string) => {
+                    const currentDate = formData.end_time ? new Date(formData.end_time) : new Date();
+                    const [hours, minutes] = time.split(':').map(Number);
+                    currentDate.setHours(hours, minutes);
+                    handleInputChange('end_time', currentDate);
+                  }}
+                  placeholder="HH:mm"
+                  format24h={true}
+                  startTime={formData.start_time ? formatTimeToHHmm(formData.start_time) : ''}
+                  isEndTime={true}
+                  className="w-full"
+                />
+              </div>
             </div>
-          </div>
           {/* Description */}
           <textarea
             placeholder={t('add_description_placeholder')}
             value={formData.description || ''}
             onChange={e => handleInputChange('description', e.target.value)}
-            className="w-full border-0 border-b border-gray-200 py-2 focus:outline-none focus:ring-0 text-sm mb-2 resize-none min-h-[32px]"
+            className="w-full border-0 border-b border-gray-200 py-2 focus:outline-none focus:ring-0 text-sm resize-none min-h-[32px]"
           />
           {descError && (
-            <div className="text-red-500 text-xs mb-1">{descError}</div>
+            <div className="text-red-500 text-xs mt-1">{descError}</div>
           )}
-          {/* Nút lưu/hủy */}
-          <div className="flex justify-end gap-2 mt-2">
+            </div>
+          </form>
+
+          {/* Footer */}
+          <div className="flex items-center justify-end gap-3 p-4 border-t border-gray-200">
             <button 
               type="button"
               onClick={() => { resetForm(); onClose(); }}
-              className="px-5 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl text-base font-semibold transition-all"
+              className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
             >
               {t('cancel')}
             </button>
             <button
               type="submit"
+              onClick={handleSubmit}
               disabled={loading || !formData.title.trim() || (formData.title && formData.title.length > 50) || (!!formData.description && formData.description.length > 100)}
-              className="px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-bold shadow-md hover:scale-105 hover:shadow-xl transition-all text-base disabled:bg-blue-300 disabled:opacity-60"
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
             >
               {t('save')}
             </button>
           </div>
-          </div>
-        </form>
+        </div>
 
       </Modal>
 

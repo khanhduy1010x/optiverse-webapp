@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
 import { useOutsideClick } from '../../hooks/common/useOutsideClick.hook';
 
@@ -8,6 +8,7 @@ interface CalendarDatePickerProps {
   className?: string;
   isOpen?: boolean;
   onClose?: () => void;
+  triggerRef?: React.RefObject<HTMLButtonElement | HTMLElement | null>;
 }
 
 export const CalendarDatePicker: React.FC<CalendarDatePickerProps> = ({
@@ -15,22 +16,49 @@ export const CalendarDatePicker: React.FC<CalendarDatePickerProps> = ({
   onDateSelect,
   className = '',
   isOpen = true,
-  onClose
+  onClose,
+  triggerRef: externalTriggerRef
 }) => {
   const { t } = useAppTranslate('common');
   const [currentMonth, setCurrentMonth] = useState(selectedDate || new Date());
-
-  // Auto-close when clicking outside
-  const calendarRef = useOutsideClick<HTMLDivElement>(() => {
-    if (onClose) {
-      onClose();
-    }
-  }, isOpen);
+  const calendarRef = useRef<HTMLDivElement>(null);
+  const internalTriggerRef = useRef<HTMLElement | null>(null);
+  const triggerRef = externalTriggerRef || internalTriggerRef;
+  const [calendarPos, setCalendarPos] = useState({ top: 0, left: 0 });
 
   // If not open, don't render
   if (!isOpen) {
     return null;
   }
+
+  // Close when clicking outside
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (calendarRef.current?.contains(target) || triggerRef.current?.contains(target)) {
+        return;
+      }
+      if (onClose) {
+        onClose();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen, onClose]);
+
+  // Calculate calendar position
+  useEffect(() => {
+    if (isOpen && triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setCalendarPos({
+        top: rect.bottom + 8,
+        left: rect.left
+      });
+    }
+  }, [isOpen]);
 
   const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -92,11 +120,20 @@ export const CalendarDatePicker: React.FC<CalendarDatePickerProps> = ({
   const days = getDaysInMonth(currentMonth);
 
   return (
-    <div ref={calendarRef} className={`bg-white border border-gray-200 rounded-lg shadow-lg p-4 w-72 ${className}`}>
+    <div
+      ref={calendarRef}
+      className={`fixed bg-white border border-gray-200 rounded-lg shadow-lg p-4 w-72 z-[9999] ${className}`}
+      style={{
+        top: `${calendarPos.top}px`,
+        left: `${calendarPos.left}px`,
+      }}
+    >
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <button
           type="button"
+          title="Previous month"
+          aria-label="Previous month"
           onClick={() => navigateMonth('prev')}
           className="p-2 hover:bg-gray-100 rounded-full transition-colors"
         >
@@ -111,6 +148,8 @@ export const CalendarDatePicker: React.FC<CalendarDatePickerProps> = ({
         
         <button
           type="button"
+          title="Next month"
+          aria-label="Next month"
           onClick={() => navigateMonth('next')}
           className="p-2 hover:bg-gray-100 rounded-full transition-colors"
         >

@@ -263,15 +263,19 @@ const TaskPage: React.FC = () => {
     resetForm();
     setTitle('');
     setDescription('');
+    setStatus('pending'); // Explicitly set status
     setPriority('low');
     setStartTime('');
     setEndTime('');
     setSelectedTags([]);
+    setNewTagName(''); // Reset new tag name
+    setNewTagColor('#3B82F6'); // Reset to default blue color
+    setShowNewTagForm(false); // Close new tag form
+    setTaskToEdit(null);
 
     // Hiển thị form
     setShowCreateTaskForm(true);
     setShowEditTaskForm(false);
-    setTaskToEdit(null);
   };
 
   // Sửa hàm mở form sửa task
@@ -580,10 +584,14 @@ const TaskPage: React.FC = () => {
     resetForm();
     setTitle('');
     setDescription('');
+    setStatus('pending');
     setPriority('low');
     setStartTime('');
     setEndTime('');
-    setSelectedTags([]);
+    setSelectedTags([]); // Explicitly reset tags
+    setNewTagName(''); // Reset new tag name
+    setNewTagColor('#3B82F6'); // Reset to default blue color
+    setShowNewTagForm(false); // Close new tag form
     setTaskToEdit(null);
 
     // Close modals
@@ -833,7 +841,22 @@ const TaskPage: React.FC = () => {
       {/* Edit Task Form */}
       {showEditTaskForm && taskToEdit && (
         <EditTaskForm
-          onClose={() => setShowEditTaskForm(false)}
+          onClose={() => {
+            // Reset all form state when closing edit form
+            resetForm();
+            setTitle('');
+            setDescription('');
+            setStatus('pending');
+            setPriority('low');
+            setStartTime('');
+            setEndTime('');
+            setSelectedTags([]);
+            setNewTagName('');
+            setNewTagColor('#3B82F6');
+            setShowNewTagForm(false);
+            setTaskToEdit(null);
+            setShowEditTaskForm(false);
+          }}
           onSave={async (updatedTask) => {
             const result = await handleUpdateTask({ 
               title: updatedTask.title,
@@ -845,7 +868,20 @@ const TaskPage: React.FC = () => {
               end_time: formatDateToISOString(updatedTask.end_time) 
             });
             if (result) {
-              setShowEditTaskForm(false); // Đóng form khi lưu thành công
+              // Reset form state after successful save
+              resetForm();
+              setTitle('');
+              setDescription('');
+              setStatus('pending');
+              setPriority('low');
+              setStartTime('');
+              setEndTime('');
+              setSelectedTags([]);
+              setNewTagName('');
+              setNewTagColor('#3B82F6');
+              setShowNewTagForm(false);
+              setTaskToEdit(null);
+              setShowEditTaskForm(false);
               return true;
             }
             return false;

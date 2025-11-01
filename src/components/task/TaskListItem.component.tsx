@@ -1,7 +1,7 @@
 import React from 'react';
 import { Task } from '../../types/task/response/task.response';
 import { Tag } from '../../types/task/response/tag.response';
-import TagItem from './TagItem.component';
+import TagItem from '../tags/TagItem.component';
 
 interface TaskListItemProps {
   task: Task;
