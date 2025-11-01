@@ -8,7 +8,7 @@ import notificationService from '../../services/notification.service';
 // Removed taskService dependency since TaskEvent no longer links to Task via task_id
 import { useAppSelector } from '../../store/hooks';
 
-export const useTaskEventOperations = () => {
+export const useTaskEventOperations = (onEventCreated?: () => void, onEventUpdated?: () => void) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const userId = useAppSelector(state => state.auth.user?._id) || '';
@@ -91,6 +91,12 @@ export const useTaskEventOperations = () => {
           console.log('Skipping local state update - empty or missing addEventToList function');
         }
         
+        // Trigger refresh callback to fetch updated list
+        if (onEventCreated) {
+          console.log('Triggering refresh after event creation');
+          onEventCreated();
+        }
+        
         return createdEvent;
       } else {
         console.error('Failed to create event, invalid response:', response);
@@ -134,6 +140,12 @@ export const useTaskEventOperations = () => {
           updateEventInList(taskEventId, updatedEvent);
         } else {
           console.log('No updateEventInList function provided or it is not a function');
+        }
+        
+        // Trigger refresh callback to fetch updated list
+        if (onEventUpdated) {
+          console.log('Triggering refresh after event update');
+          onEventUpdated();
         }
         
         return updatedEvent;

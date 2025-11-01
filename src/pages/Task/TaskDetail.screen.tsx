@@ -6,7 +6,7 @@ import { TaskDetailProps } from '../../types/task/props/component.props';
 import Modal from 'react-modal';
 import { formatConsistentDateTime } from '../../utils/date.utils';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
-import TagItem from '../../components/task/TagItem.component';
+import TagItem from '../../components/tags/TagItem.component';
 
 const TaskDetail: React.FC<TaskDetailProps> = ({
     task,

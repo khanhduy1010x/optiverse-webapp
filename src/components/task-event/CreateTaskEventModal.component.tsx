@@ -4,7 +4,7 @@ import { useTaskEventForm } from '../../hooks/task-events/useTaskEventForm.hook'
 import { useTaskEventOperations } from '../../hooks/task-events/useTaskEventOperations.hook';
 import { TaskEvent } from '../../types/task-events/task-events.types';
 import { CalendarDatePicker } from './CalendarDatePicker.component';
-import { TimePickerDropdown } from './TimePickerDropdown.component';
+import { TimePickerInput } from './TimePickerInput.component';
 import { ColorPicker } from './ColorPicker.component';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
 import { useAppSelector } from '../../store/hooks';
@@ -28,11 +28,14 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
   const userId = useAppSelector(state => state.auth.user?._id);
   const [showRepeatOptions, setShowRepeatOptions] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showStartTimePicker, setShowStartTimePicker] = useState(false);
-  const [showEndTimePicker, setShowEndTimePicker] = useState(false);
   const [showToDatePicker, setShowToDatePicker] = useState(false);
   const [selectedColor, setSelectedColor] = useState('#3B82F6');
   const [dateError, setDateError] = useState('');
+  const dateButtonRef = React.useRef<HTMLButtonElement>(null);
+  const toDateButtonRef = React.useRef<HTMLButtonElement>(null);
+  const repeatButtonRef = React.useRef<HTMLButtonElement>(null);
+  const [repeatDropdownPos, setRepeatDropdownPos] = useState({ top: 0, left: 0, width: 0 });
+  const repeatDropdownRef = React.useRef<HTMLDivElement>(null);
 
   // Validate To Date > Start Date
   React.useEffect(() => {
@@ -84,6 +87,34 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
     }
     setDateError(error);
   }, [formData.start_time, formData.repeat_to, formData.repeat_type]);
+
+  // Calculate repeat dropdown position
+  React.useEffect(() => {
+    if (showRepeatOptions && repeatButtonRef.current) {
+      const rect = repeatButtonRef.current.getBoundingClientRect();
+      setRepeatDropdownPos({
+        top: rect.bottom + 8,
+        left: rect.left,
+        width: rect.width
+      });
+    }
+  }, [showRepeatOptions]);
+
+  // Close repeat dropdown when clicking outside
+  React.useEffect(() => {
+    if (!showRepeatOptions) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (repeatDropdownRef.current?.contains(target) || repeatButtonRef.current?.contains(target)) {
+        return;
+      }
+      setShowRepeatOptions(false);
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showRepeatOptions]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -310,6 +341,7 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
             <ColorPicker
               selectedColor={selectedColor}
               onColorSelect={setSelectedColor}
+              isModalOpen={isOpen}
             />
           </div>
 
@@ -336,6 +368,7 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
               {/* Date Picker */}
               <div className="relative">
                 <button
+                  ref={dateButtonRef}
                   type="button"
                   onClick={() => setShowDatePicker(!showDatePicker)}
                   className="flex items-center gap-3 w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
@@ -349,99 +382,65 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
                 </button>
                 
                 {showDatePicker && (
-                  <div className="absolute top-full left-0 mt-1 z-50">
-                    <CalendarDatePicker
-                      selectedDate={formData.start_time ? new Date(formData.start_time) : new Date()}
-                      onDateSelect={(date) => {
-                        const currentTime = formData.start_time ? new Date(formData.start_time) : new Date();
-                        date.setHours(currentTime.getHours(), currentTime.getMinutes());
-                        handleInputChange('start_time', date.toISOString());
-                        setShowDatePicker(false);
-                      }}
-                      isOpen={showDatePicker}
-                      onClose={() => setShowDatePicker(false)}
-                    />
-                  </div>
+                  <CalendarDatePicker
+                    triggerRef={dateButtonRef}
+                    selectedDate={formData.start_time ? new Date(formData.start_time) : new Date()}
+                    onDateSelect={(date) => {
+                      const currentTime = formData.start_time ? new Date(formData.start_time) : new Date();
+                      date.setHours(currentTime.getHours(), currentTime.getMinutes());
+                      handleInputChange('start_time', date.toISOString());
+                      setShowDatePicker(false);
+                    }}
+                    isOpen={showDatePicker}
+                    onClose={() => setShowDatePicker(false)}
+                  />
                 )}
               </div>
 
               {/* Time Pickers: always visible (removed All Day toggle) */}
-              <div className="flex items-center gap-3">
+              <div className="flex gap-3">
                 {/* Start Time */}
-                <div className="flex-1 relative">
-                  <button
-                      type="button"
-                      onClick={() => setShowStartTimePicker(!showStartTimePicker)}
-                      className="flex items-center gap-2 w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span className="text-sm text-gray-700">
-                        {formData.start_time ? formatTime(formData.start_time.toISOString()) : t('start_time')}
-                      </span>
-                    </button>
-                    
-                    {showStartTimePicker && (
-                      <div className="absolute top-full left-0 mt-1 z-50">
-                        <TimePickerDropdown
-                          selectedTime={formData.start_time ? formatTimeToHHmm(formData.start_time) : ''}
-                          onTimeSelect={(time: string) => {
-                            const currentDate = formData.start_time ? new Date(formData.start_time) : new Date();
-                            const [hours, minutes] = time.split(':').map(Number);
-                            currentDate.setHours(hours, minutes);
-                            handleInputChange('start_time', currentDate.toISOString());
-                            setShowStartTimePicker(false);
-                          }}
-                          isOpen={showStartTimePicker}
-                          onClose={() => setShowStartTimePicker(false)}
-                          format24h={true}
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  <span className="text-gray-400">-</span>
-
-                  {/* End Time */}
-                  <div className="flex-1 relative">
-                    <button
-                      type="button"
-                      onClick={() => setShowEndTimePicker(!showEndTimePicker)}
-                      className="flex items-center gap-2 w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span className="text-sm text-gray-700">
-                        {formData.end_time ? formatTime(formData.end_time.toISOString()) : t('end_time')}
-                      </span>
-                    </button>
-                    
-                    {showEndTimePicker && (
-                      <div className="absolute top-full left-0 mt-1 z-50">
-                        <TimePickerDropdown
-                          selectedTime={formData.end_time ? formatTimeToHHmm(formData.end_time) : ''}
-                          onTimeSelect={(time: string) => {
-                            const currentDate = formData.end_time ? new Date(formData.end_time) : new Date(formData.start_time || new Date());
-                            const [hours, minutes] = time.split(':').map(Number);
-                            currentDate.setHours(hours, minutes);
-                            handleInputChange('end_time', currentDate.toISOString());
-                            setShowEndTimePicker(false);
-                          }}
-                          isOpen={showEndTimePicker}
-                          onClose={() => setShowEndTimePicker(false)}
-                          format24h={true}
-                        />
-                      </div>
-                    )}
-                  </div>
+                <div className="flex-1">
+                  <TimePickerInput
+                    selectedTime={formData.start_time ? formatTimeToHHmm(formData.start_time) : ''}
+                    onTimeSelect={(time: string) => {
+                      const currentDate = formData.start_time ? new Date(formData.start_time) : new Date();
+                      const [hours, minutes] = time.split(':').map(Number);
+                      currentDate.setHours(hours, minutes);
+                      handleInputChange('start_time', currentDate.toISOString());
+                    }}
+                    placeholder="HH:mm"
+                    format24h={true}
+                    className="w-full"
+                  />
                 </div>
+
+                <span className="text-gray-400 self-center">-</span>
+
+                {/* End Time */}
+                <div className="flex-1">
+                  <TimePickerInput
+                    selectedTime={formData.end_time ? formatTimeToHHmm(formData.end_time) : ''}
+                    onTimeSelect={(time: string) => {
+                      const currentDate = formData.end_time ? new Date(formData.end_time) : new Date(formData.start_time || new Date());
+                      const [hours, minutes] = time.split(':').map(Number);
+                      currentDate.setHours(hours, minutes);
+                      handleInputChange('end_time', currentDate.toISOString());
+                    }}
+                    placeholder="HH:mm"
+                    format24h={true}
+                    startTime={formData.start_time ? formatTimeToHHmm(formData.start_time) : ''}
+                    isEndTime={true}
+                    className="w-full"
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Repeat Options */}
             <div className="relative">
               <button
+                ref={repeatButtonRef}
                 type="button"
                 onClick={() => setShowRepeatOptions(!showRepeatOptions)}
                 className="flex items-center gap-3 w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
@@ -459,7 +458,15 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
               </button>
               
               {showRepeatOptions && (
-                <div className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-[200px]">
+                <div 
+                  ref={repeatDropdownRef}
+                  className="fixed bg-white border border-gray-200 rounded-lg shadow-lg z-[9999] min-w-[200px]"
+                  style={{
+                    top: `${repeatDropdownPos.top}px`,
+                    left: `${repeatDropdownPos.left}px`,
+                    width: `${repeatDropdownPos.width}px`
+                  }}
+                >
                   <div 
                     className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
                     onClick={() => {
@@ -521,6 +528,7 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
                 {formData.repeat_type === 'daily' && (
                   <div className="relative">
                     <button
+                      ref={toDateButtonRef}
                       type="button"
                       onClick={() => setShowToDatePicker(!showToDatePicker)}
                       className="flex items-center gap-3 w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
@@ -534,17 +542,16 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
                     </button>
 
                     {showToDatePicker && (
-                      <div className="absolute top-full left-0 mt-1 z-50">
-                        <CalendarDatePicker
-                          selectedDate={parseYMDToDate(String(formData.repeat_to || ''))}
-                          onDateSelect={(date) => {
-                            handleInputChange('repeat_to', formatDateYYYYMMDD(date));
-                            setShowToDatePicker(false);
-                          }}
-                          isOpen={showToDatePicker}
-                          onClose={() => setShowToDatePicker(false)}
-                        />
-                      </div>
+                      <CalendarDatePicker
+                        triggerRef={toDateButtonRef}
+                        selectedDate={parseYMDToDate(String(formData.repeat_to || ''))}
+                        onDateSelect={(date) => {
+                          handleInputChange('repeat_to', formatDateYYYYMMDD(date));
+                          setShowToDatePicker(false);
+                        }}
+                        isOpen={showToDatePicker}
+                        onClose={() => setShowToDatePicker(false)}
+                      />
                     )}
                   </div>
                 )}

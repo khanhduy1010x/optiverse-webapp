@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { TaskEvent } from '../../types/task-events/task-events.types';
 import { useTaskEventList } from '../../hooks/task-events/useTaskEventList.hook';
-import { TaskEventModal } from './TaskEventModal.screen';
+import { CreateTaskEventModalForm } from '../../components/task-event/CreateTaskEventModal.component';
+import { UpdateTaskEventModalForm } from '../../components/task-event/UpdateTaskEventModalForm.component';
 
 // Removed unused operations hook
 // import { useTaskEventOperations } from '../../hooks/task-events/useTaskEventOperations.hook';
@@ -9,7 +10,7 @@ import { useAppTranslate } from '../../hooks/useAppTranslate';
 // Remove unused import since formatTime is not exported
 // import { handleRecurringEventDelete } from '../../utils/recurring-event.utils';
 import { isRecurringEvent, isRecurringInstance } from '../../utils/recurring-event.utils';
-import DeleteConfirmation from './DeleteConfirmation.screen';
+import DeleteConfirmation from '../Task/DeleteConfirmation.screen';
 import Modal from 'react-modal';
 import { GROUP_CLASSNAMES } from '../../styles';
 import { formatDateOnly, formatTimeOnly } from '../../utils/date.utils';
@@ -21,9 +22,10 @@ interface TaskEventListProps {
 export const TaskEventList: React.FC<TaskEventListProps> = ({ taskId }) => {
   const { t } = useAppTranslate('task');
   // useTaskEventList hiện không nhận tham số taskId nữa (lấy theo user_id)
-  const { taskEvents, loading, error, refreshTaskEvents, removeEvent } = useTaskEventList();
+  const { taskEvents, loading, error, refreshTaskEvents, removeEvent, addEvent, updateEvent } = useTaskEventList();
   // const { deleteTaskEvent } = useTaskEventOperations();
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedTaskEvent, setSelectedTaskEvent] = useState<TaskEvent | undefined>(undefined);
 
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -53,12 +55,12 @@ export const TaskEventList: React.FC<TaskEventListProps> = ({ taskId }) => {
 
   const handleAddEvent = () => {
     setSelectedTaskEvent(undefined);
-    setIsModalOpen(true);
+    setIsCreateModalOpen(true);
   };
 
   const handleEditEvent = (taskEvent: TaskEvent) => {
     setSelectedTaskEvent(taskEvent);
-    setIsModalOpen(true);
+    setIsEditModalOpen(true);
   };
 
   const handleDeleteEvent = (taskEvent: TaskEvent) => {
@@ -293,13 +295,24 @@ export const TaskEventList: React.FC<TaskEventListProps> = ({ taskId }) => {
         </div>
       </div>
 
-      <TaskEventModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        taskId={taskId}
-        taskEvent={selectedTaskEvent}
+      {/* Create Event Modal */}
+      <CreateTaskEventModalForm
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
         onSuccess={refreshTaskEvents}
+        addEvent={addEvent}
       />
+
+      {/* Edit Event Modal */}
+      {selectedTaskEvent && (
+        <UpdateTaskEventModalForm
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          taskEvent={selectedTaskEvent}
+          onSuccess={refreshTaskEvents}
+          updateEvent={updateEvent}
+        />
+      )}
 
       {/* Delete Confirmation for non-recurring event */}
       {isDeleteConfirmOpen && eventToDelete && !isRecurringEvent(eventToDelete) && !isRecurringInstance(eventToDelete) && (

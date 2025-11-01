@@ -10,7 +10,7 @@ import {
 } from '../../utils/date.utils';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
 import PaginationComponent from '../../components/common/Pagination.component';
-import TagItem from '../../components/task/TagItem.component';
+import TagItem from '../../components/tags/TagItem.component';
 
 const ITEMS_PER_PAGE = 10;
 

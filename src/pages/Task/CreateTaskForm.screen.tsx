@@ -5,8 +5,7 @@ import { CreateTaskFormProps } from '../../types/task/props/component.props';
 import { isoToLocalDateTime, localDateTimeToISO } from '../../utils/date.utils';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
 import { X } from 'lucide-react';
-import { CalendarDatePicker } from '../../components/task-event/CalendarDatePicker.component';
-import { TimePickerDropdown } from '../../components/task-event/TimePickerDropdown.component';
+import { TaskDatePicker } from '../../components/task/TaskDatePicker.component';
 
 const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
     title,
@@ -33,9 +32,7 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
     handleCreateNewTag
 }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [showEndDatePicker, setShowEndDatePicker] = useState(false);
-    const [showEndTimePicker, setShowEndTimePicker] = useState(false);
-    const [showDeadlineFields, setShowDeadlineFields] = useState(false);
+    const [showDeadlinePicker, setShowDeadlinePicker] = useState(false);
     const [showAllTags, setShowAllTags] = useState(false);
 
     const { t } = useAppTranslate('task');
@@ -240,102 +237,25 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                 </div>
 
                 {/* Set Deadline Toggle Button */}
-                <div>
-                  <button
-                    type="button"
-                    onClick={() => setShowDeadlineFields(!showDeadlineFields)}
-                    className="flex items-center gap-3 w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <span className="text-gray-700">{t('set_deadline')}</span>
-                    <svg 
-                      className={`w-5 h-5 ml-auto transition-transform ${showDeadlineFields ? 'rotate-180' : ''}`} 
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                </div>
-
-                {/* Deadline Fields - conditional rendering */}
-                {showDeadlineFields && (
-                  <div className="space-y-3 pl-1">
-                    {/* End Date and End Time in same row */}
-                    <div className="grid grid-cols-2 gap-2">
-                      {/* End Date */}
-                      <div className="relative">
-                        <button
-                          type="button"
-                          onClick={() => setShowEndDatePicker(!showEndDatePicker)}
-                          className="flex items-center gap-3 w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                          aria-label={t('select_date')}
-                        >
-                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                          <span className="text-gray-700">
-                            {end_time ? formatDate(end_time) : t('select_date')}
-                          </span>
-                        </button>
-                        {showEndDatePicker && (
-                          <div className="absolute top-full left-0 mt-1 z-50">
-                            <CalendarDatePicker
-                              selectedDate={end_time ? new Date(end_time as any) : new Date()}
-                              onDateSelect={(date) => {
-                                const currentTime = end_time ? new Date(end_time as any) : new Date();
-                                date.setHours(currentTime.getHours(), currentTime.getMinutes(), 0, 0);
-                                setEndTime(new Date(date));
-                                setShowEndDatePicker(false);
-                              }}
-                              isOpen={showEndDatePicker}
-                              onClose={() => setShowEndDatePicker(false)}
-                            />
-                          </div>
-                        )}
-                      </div>
-
-                      {/* End Time */}
-                      <div className="relative">
-                        <button
-                          type="button"
-                          onClick={() => setShowEndTimePicker(!showEndTimePicker)}
-                          className="flex items-center gap-3 w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                          aria-label={t('end_time')}
-                        >
-                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          <span className="text-gray-700">
-                            {end_time ? formatTime(end_time) : t('end_time')}
-                          </span>
-                        </button>
-                        {showEndTimePicker && (
-                          <div className="absolute top-full left-0 mt-1 z-50">
-                            <TimePickerDropdown
-                              selectedTime={end_time ? formatTimeToHHmm(end_time) : ''}
-                              onTimeSelect={(time: string) => {
-                                const [hours, minutes] = time.split(':').map(Number);
-                                const baseDate = end_time ? new Date(end_time as any) : new Date();
-                                baseDate.setHours(hours, minutes, 0, 0);
-                                setEndTime(new Date(baseDate));
-                                setShowEndTimePicker(false);
-                              }}
-                              isOpen={showEndTimePicker}
-                              onClose={() => setShowEndTimePicker(false)}
-                              format24h={true}
-                            />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {errors.time && <div className="text-red-500 text-xs bg-red-50 p-2 rounded">{errors.time}</div>}
-                  </div>
-                )}
+                <TaskDatePicker
+                  selectedDate={end_time instanceof Date ? end_time : undefined}
+                  selectedTime={end_time instanceof Date ? end_time : undefined}
+                  onDateSelect={(date) => {
+                    const currentTime = end_time ? new Date(end_time as any) : new Date();
+                    date.setHours(currentTime.getHours(), currentTime.getMinutes(), 0, 0);
+                    setEndTime(new Date(date));
+                  }}
+                  onTimeSelect={(time: string) => {
+                    const [hours, minutes] = time.split(':').map(Number);
+                    const baseDate = end_time ? new Date(end_time as any) : new Date();
+                    baseDate.setHours(hours, minutes, 0, 0);
+                    setEndTime(new Date(baseDate));
+                  }}
+                  onRemove={() => setEndTime(undefined)}
+                  label={t('set_deadline')}
+                  isOpen={showDeadlinePicker}
+                  onToggle={setShowDeadlinePicker}
+                />
 
                 {/* Description */}
                 <div className="space-y-2">

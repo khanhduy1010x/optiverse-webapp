@@ -3,14 +3,14 @@ import { createPortal } from 'react-dom';
 import styles from './ColorPicker.module.css';
 import { getColorStyle } from '../../utils/task-event/color.utils';
 
-interface ColorPickerProps {
+interface ColorPickerUpdateProps {
   selectedColor: string;
   onColorSelect: (color: string) => void;
   className?: string;
   isModalOpen?: boolean;
 }
 
-export const ColorPicker: React.FC<ColorPickerProps> = ({
+export const ColorPickerUpdate: React.FC<ColorPickerUpdateProps> = ({
   selectedColor,
   onColorSelect,
   className = '',
@@ -50,14 +50,14 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      console.log('Click outside detected in ColorPicker');
+      console.log('Click outside detected in ColorPickerUpdate');
       
       // Only close if clicking outside both dropdown and button
       const clickedOutsideDropdown = !dropdownRef.current || !dropdownRef.current.contains(event.target as Node);
       const clickedOutsideButton = !buttonRef.current || !buttonRef.current.contains(event.target as Node);
       
       if (clickedOutsideDropdown && clickedOutsideButton) {
-        console.log('Closing ColorPicker dropdown');
+        console.log('Closing ColorPickerUpdate dropdown');
         setShowDropdown(false);
       }
     };
@@ -94,7 +94,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
       // Position directly below button with 4px gap
       const topPos = rect.bottom + 4;
       
-      console.log('ColorPicker dropdown position:', { top: topPos, left: leftPos });
+      console.log('ColorPickerUpdate dropdown position:', { top: topPos, left: leftPos });
       
       setDropdownPosition({
         top: topPos,
@@ -126,7 +126,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
         title={getSelectedColorLabel()}
         aria-label="Select color"
         onClick={() => {
-          console.log('Color button clicked! showDropdown was:', showDropdown);
+          console.log('ColorPickerUpdate button clicked! showDropdown was:', showDropdown);
           setShowDropdown(!showDropdown);
         }}
       >

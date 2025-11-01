@@ -21,7 +21,6 @@ interface TaskEventFormState {
   guests: string[];
   repeat_from?: string;
   repeat_to?: string;
-  color?: string;
 }
 
 const initialState: TaskEventFormState = {
@@ -36,7 +35,6 @@ const initialState: TaskEventFormState = {
   guests: [],
   repeat_from: undefined,
   repeat_to: undefined,
-  color: '#3B82F6',
 };
 
 export const useTaskEventForm = (taskEvent?: TaskEvent) => {
@@ -59,7 +57,6 @@ export const useTaskEventForm = (taskEvent?: TaskEvent) => {
           guests: taskEvent.guests || [],
           repeat_from: (taskEvent as any).repeat_from || undefined,
           repeat_to: (taskEvent as any).repeat_to || undefined,
-          color: taskEvent.color || '#3B82F6',
         }
       : initialState
   );
@@ -92,7 +89,6 @@ export const useTaskEventForm = (taskEvent?: TaskEvent) => {
       location: formData.location,
       description: formData.description,
       guests: formData.guests,
-      color: formData.color,
     };
     
     // Add conditional fields based on repeat end type
@@ -118,7 +114,6 @@ export const useTaskEventForm = (taskEvent?: TaskEvent) => {
       location: formData.location,
       description: formData.description,
       guests: formData.guests,
-      color: formData.color,
     };
     
     // Add conditional fields based on repeat end type

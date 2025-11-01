@@ -4,7 +4,7 @@ import { TaskEvent } from '../../types/task-events/task-events.types';
 import { Tag } from '../../types/task/response/tag.response';
 import { format } from 'date-fns';
 import { GROUP_CLASSNAMES } from '../../styles';
-import TagItem from '../task/TagItem.component';
+import TagItem from '../tags/TagItem.component';
 
 interface TaskEventDetailProps {
   event: TaskEvent;
