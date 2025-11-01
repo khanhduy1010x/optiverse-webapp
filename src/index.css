@@ -152,3 +152,151 @@ input[type='checkbox']:checked::before {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+/**
+ * Copyright 2023 LiveKit, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+body {
+  padding: 0;
+  font-family:
+    Avenir,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    'Roboto',
+    'Oxygen',
+    'Ubuntu',
+    'Cantarell',
+    'Fira Sans',
+    'Droid Sans',
+    'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: black;
+  color: rgb(211, 210, 210);
+  box-sizing: border-box;
+  margin: 0;
+  height: 100vh;
+  font-size: 12px;
+  overflow: hidden;
+}
+
+.light {
+  background: white;
+}
+
+.roomContainer {
+  height: 100vh;
+}
+
+.error {
+  color: red;
+}
+
+.lk-grid-layout-wrapper {
+  height: 100%;
+}
+
+.lk-focus-layout {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',
+    'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family:
+    source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+.custom-radius {
+  border-top-right-radius: 0.5rem !important;
+  border-bottom-right-radius: 0.5rem !important;
+  border-top-left-radius: 0.5rem !important;
+  border-bottom-left-radius: 0.5rem !important;
+  border: none !important;
+  overflow: hidden;
+}
+
+.lk-disconnect-button {
+  border-top-right-radius: 0.5rem !important;
+  border-bottom-right-radius: 0.5rem !important;
+}
+
+.lk-grid-layout {
+  padding-right: 0 !important;
+}
+
+.custom-radius-full {
+  border-radius: 50% !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px !important;
+  height: 44px !important;
+  overflow: hidden;
+}
+
+.custom-radius-full button {
+  width: 44px !important;
+  height: 44px !important;
+}
+
+.custom-radius-full-leave button {
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 50% !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px !important;
+  height: 44px !important;
+  overflow: hidden;
+}
+.lk-button.lk-button-menu {
+  background-color: black;
+  border-left: gray 0.5px solid;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE và Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.lk-participant-metadata-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 9999px !important; /* Viên thuốc */
+  background: rgba(0, 0, 0, 0.4); /* Nền mờ */
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  backdrop-filter: blur(6px);
+}
+
+.lk-participant-metadata-item.lk-connection-quality {
+  border-radius: 2px !important;
+  border: none !important;
+}

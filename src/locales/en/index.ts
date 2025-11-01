@@ -17,6 +17,7 @@ import error from './error.json';
 import taskEvent from './task-event.json';
 import workspace from './workspace.json';
 import workspaceTask from './workspace-task.json';
+import focusRoom from './focus-room.json';
 
 export default {
   common,
@@ -38,4 +39,5 @@ export default {
   'task-event': taskEvent,
   workspace,
   'workspace-task': workspaceTask,
+  'focus-room': focusRoom,
 };

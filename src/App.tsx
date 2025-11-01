@@ -42,6 +42,7 @@ import TaskWorkspacePage from './pages/WorkspaceTask/Task.workspace.page';
 import TemplateComponent from './pages/Template/TemplateComponent.page';
 import FocusTimerLayout from './pages/FocusTimer/FocusTimerLayout.page';
 import FocusTimerWorkspacePage from './pages/FocusTimer/workspace/FocusTimer.workspace.page';
+import FocusRoomsPage from './pages/FocusTimer/workspace/FocusRooms.page';
 import ChatPage from './pages/chat/ChatPage';
 import ChatWorkspacePage from './pages/chat/workspace/Chat.workspace.page';
 import { useNewMessageNotification } from './hooks/chat/useNewMessageNotification';
@@ -75,6 +76,8 @@ import WorkspaceMembersPage from './pages/workspace/WorkspaceMembers.page';
 import { Navigate } from 'react-router-dom';
 import MarketplaceHomePage from './pages/Marketplace/Home.page';
 import MyItemsPage from './pages/Marketplace/MyItems.page';
+
+import { Focus } from 'lucide-react';
 
 declare global {
   interface Window {
@@ -114,8 +117,10 @@ const AppContent: React.FC = () => {
           <SliderBar activeSection={activeSection} onNavClick={handleNavClick} />
         )}
 
-        <div className={`flex-1 transition-all duration-300 ease-in-out h-full w-full ${showSidebar && ' pl-16'}`}>
-          <Routes>
+        <div
+          className={`flex-1 overflow-hidden w-full transition-all  overflow-y-auto ${showSidebar && 'h-[calc(100vh-57px)] mt-[57px]'} duration-300  ease-in-out ${showSidebar && 'pl-16'
+            }`}
+        >      <Routes>
             {/* Public routes - accessible without authentication */}
             <Route path="/template" element={<TemplateComponent />} />
             <Route
@@ -144,6 +149,13 @@ const AppContent: React.FC = () => {
                 </ProtectedRoute>
               }
             />
+
+
+            <Route
+              path="rooms"
+              element={<FocusRoomsPage />}
+            />
+
             <Route
               path="/forgot"
               element={
@@ -307,6 +319,10 @@ const AppContent: React.FC = () => {
                 path="statistics"
                 element={<FocusTimerStatistic />}
               />
+              <Route
+                path="rooms"
+                element={<FocusRoomsPage />}
+              />
             </Route>
 
             <Route
@@ -335,16 +351,7 @@ const AppContent: React.FC = () => {
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/workspace/:workspaceId/task"
-              element={
-                <ProtectedRoute>
-                  <WorkspaceGuard>
-                    <TaskWorkspacePage />
-                  </WorkspaceGuard>
-                </ProtectedRoute>
-              }
-            />
+
             <Route
               path="/task-statistic"
               element={

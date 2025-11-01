@@ -5,6 +5,7 @@ import { useAppDispatch } from '../../store/hooks';
 import { setUser } from '../../store/slices/auth.slice';
 import authService from '../../services/auth.service';
 import { useLoginStreak } from '../../hooks/streak/useLoginStreak.hook';
+import { decodeBase64Utf8 } from '../../utils/base64.utils';
 
 interface AuthCheckerProps {
     children: React.ReactNode;
@@ -18,24 +19,7 @@ export const AuthChecker: React.FC<AuthCheckerProps> = ({ children }) => {
     // Use the login streak hook to update streak when user logs in
     useLoginStreak();
 
-    // Helper function to decode base64 with UTF-8 support
-    const decodeBase64UTF8 = (str: string): string => {
-        try {
-            // Decode base64 to bytes
-            const binaryString = atob(str);
-            // Convert to Uint8Array
-            const bytes = new Uint8Array(binaryString.length);
-            for (let i = 0; i < binaryString.length; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
-            }
-            // Decode UTF-8
-            return new TextDecoder('utf-8').decode(bytes);
-        } catch (error) {
-            console.error('Error decoding base64 UTF-8:', error);
-            // Fallback to regular atob
-            return atob(str);
-        }
-    };
+    // Use shared decoder to avoid mojibake for Vietnamese names
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -47,11 +31,18 @@ export const AuthChecker: React.FC<AuthCheckerProps> = ({ children }) => {
 
                         if (userInfo) {
                             // Decode UTF-8 properly for Vietnamese characters
-                            const decodedUserInfo = decodeBase64UTF8(userInfo);
+                            const decodedUserInfo = decodeBase64Utf8(userInfo);
                             console.log('🔍 Decoded user info:', decodedUserInfo);
-                            const userData = JSON.parse(decodedUserInfo);
-                            console.log('👤 User data:', userData);
-                            dispatch(setUser(userData));
+                            try {
+                                const userData = JSON.parse(decodedUserInfo);
+                                console.log('👤 User data:', userData);
+                                // Only dispatch if object looks valid
+                                if (userData && (userData.full_name || userData.email || userData.user_id)) {
+                                    dispatch(setUser(userData));
+                                }
+                            } catch (parseErr) {
+                                console.error('Failed to parse decoded user info JSON:', parseErr);
+                            }
 
                             // Kiểm tra chuyển hướng từ server
                             const redirectUrl = response.headers['x-redirect-url'];

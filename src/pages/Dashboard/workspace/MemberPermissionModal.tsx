@@ -3,6 +3,7 @@ import { useAppTranslate } from '../../../hooks/useAppTranslate';
 import ConfirmModal from '../../../components/common/ConfirmModal';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../store';
+import Icon from '../../../components/common/Icon/Icon.component';
 
 export interface Permission {
     key: string;
@@ -159,12 +160,36 @@ const MemberPermissionModal: React.FC<MemberPermissionModalProps> = ({
     const handlePermissionToggle = (permissionKey: string) => {
         if (!canGrantPermission(permissionKey)) return;
 
-        const newPermissions = memberPermissions.includes(permissionKey)
-            ? memberPermissions.filter(p => p !== permissionKey)
-            : [...memberPermissions, permissionKey];
+        if (permissionKey === 'room_permission') {
+            // Special handling for room permission toggle
+            const hasRoomAdmin = memberPermissions.includes('room_admin');
 
-        setMemberPermissions(newPermissions);
-        onUpdatePermissions(member.user_id, newPermissions);
+            if (hasRoomAdmin) {
+                // Currently admin, switch to user
+                const newPermissions = memberPermissions.filter(p => p !== 'room_admin');
+                if (!newPermissions.includes('room_user')) {
+                    newPermissions.push('room_user');
+                }
+                setMemberPermissions(newPermissions);
+                onUpdatePermissions(member.user_id, newPermissions);
+            } else {
+                // Currently user or no room permission, switch to admin
+                const newPermissions = memberPermissions.filter(p => p !== 'room_user');
+                if (!newPermissions.includes('room_admin')) {
+                    newPermissions.push('room_admin');
+                }
+                setMemberPermissions(newPermissions);
+                onUpdatePermissions(member.user_id, newPermissions);
+            }
+        } else {
+            // Regular permission toggle
+            const newPermissions = memberPermissions.includes(permissionKey)
+                ? memberPermissions.filter(p => p !== permissionKey)
+                : [...memberPermissions, permissionKey];
+
+            setMemberPermissions(newPermissions);
+            onUpdatePermissions(member.user_id, newPermissions);
+        }
     };
 
     // Handle role change
@@ -179,8 +204,6 @@ const MemberPermissionModal: React.FC<MemberPermissionModalProps> = ({
 
         // Update local role state immediately for UI feedback
         setCurrentRole(newRole);
-
-        onClose();
     };
 
     // Handle confirm actions
@@ -308,6 +331,7 @@ const MemberPermissionModal: React.FC<MemberPermissionModalProps> = ({
                                     })
                                     .map((permission) => {
                                         const hasPermission = memberPermissions.includes(permission.key);
+
                                         return (
                                             <div
                                                 key={permission.key}
@@ -343,7 +367,47 @@ const MemberPermissionModal: React.FC<MemberPermissionModalProps> = ({
                         </div>
                     )}
 
-                    {/* Danger Zone */}
+                    {/* Room Access Management */}
+                    {canManagePermissions() && !member.isOwner && (
+                        <div className="space-y-3">
+                            <h3 className="text-base font-semibold text-gray-800">{t('dashboardWorkspace.memberModal.roomAccess')}</h3>
+                            <p className="text-xs text-gray-600">{t('dashboardWorkspace.memberModal.roomAccessDescription')}</p>
+
+                            <div className="space-y-2">
+                                {(() => {
+                                    const hasRoomAdmin = memberPermissions.includes('room_admin');
+
+                                    return (
+                                        <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                                            <div className="flex-1">
+                                                <div className="font-medium text-gray-800 text-sm">{t('dashboardWorkspace.permissions.roomPermission')}</div>
+                                                <div className="text-xs text-gray-600">{t('dashboardWorkspace.permissions.roomPermissionDesc')}</div>
+                                                <div className="text-[11px] text-blue-600 mt-1">
+                                                    {hasRoomAdmin
+                                                        ? t('dashboardWorkspace.permissions.roomAdminStatus')
+                                                        : t('dashboardWorkspace.permissions.roomUserStatus')
+                                                    }
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => handlePermissionToggle('room_permission')}
+                                                disabled={!canGrantPermission('room_permission')}
+                                                className={`relative inline-flex h-5 w-10 items-center rounded-full transition-all duration-200 ${hasRoomAdmin ? 'bg-cyan-500' : 'bg-gray-200'
+                                                    } ${!canGrantPermission('room_permission') ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                            >
+                                                <span
+                                                    className="inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform"
+                                                    style={{
+                                                        transform: hasRoomAdmin ? 'translateX(20px)' : 'translateX(2px)',
+                                                    }}
+                                                />
+                                            </button>
+                                        </div>
+                                    );
+                                })()}
+                            </div>
+                        </div>
+                    )}                    {/* Danger Zone */}
                     {canManageMemberRoles() && !member.isOwner && (
                         <div className="space-y-2 border-t border-gray-100 pt-4">
                             <h3 className="text-base font-semibold text-red-600">{t('dashboardWorkspace.memberModal.dangerZone')}</h3>
@@ -351,18 +415,14 @@ const MemberPermissionModal: React.FC<MemberPermissionModalProps> = ({
                                 onClick={handleRemoveClick}
                                 className="w-full flex items-center gap-2 p-2 border border-red-200 hover:border-red-400 hover:bg-red-50 rounded-lg transition-colors text-red-600 text-sm"
                             >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7" />
-                                </svg>
+                                <Icon name="kickUser" size={22} className="!text-red-200" />
                                 <span>{t('dashboardWorkspace.memberModal.removeFromWorkspace')}</span>
                             </button>
                             <button
                                 onClick={handleBanClick}
                                 className="w-full flex items-center gap-2 p-2 border border-red-200 hover:border-red-400 hover:bg-red-50 rounded-lg transition-colors text-red-600 text-sm"
                             >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636" />
-                                </svg>
+                                <Icon name="banUser" size={22} className="!text-red-200" />
                                 <span>{t('dashboardWorkspace.memberModal.banUser')}</span>
                             </button>
                         </div>

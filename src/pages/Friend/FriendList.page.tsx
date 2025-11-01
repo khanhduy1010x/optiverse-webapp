@@ -169,7 +169,7 @@ const FriendList: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen bg-white">
+    <div className="flex h-full bg-white">
       {/* Sidebar */}
       <FriendSidebar
         activeTab={activeTab}

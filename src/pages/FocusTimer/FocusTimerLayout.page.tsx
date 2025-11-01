@@ -11,9 +11,9 @@ const FocusTimerLayout: React.FC = () => {
   const { t } = useAppTranslate('focus');
 
   return (
-    <View className="w-full dark:border-gray-700  overflow-hidden">
+    <View className="w-full dark:border-gray-700 flex h-full">
       {/* Sidebar and Main Content */}
-      <View className="flex flex-1 overflow-hidden min-h-screen">
+      <View className="flex flex-1 overflow-hidden h-full">
         {/* Sidebar for FocusTimer */}
         <FocusTimerSidebar
           selectedMenu={selectedMenu}

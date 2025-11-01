@@ -146,7 +146,7 @@ const DashboardWorkspacePage: React.FC = () => {
     const canViewMemberManagement = currentUserRole === 'owner' || currentUserRole === 'admin' || workspace?.permissions?.includes('MANAGE_MEMBERS') || workspace?.permissions?.includes('ACCEPT_MEMBER');
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-cyan-50 to-indigo-100 p-6">
+        <div className="h-screen overflow-y-auto bg-gradient-to-br from-cyan-50 to-indigo-100 p-6">
             <div className="w-full">
                 {/* Header */}
                 <div className="bg-white rounded-2xl shadow-lg p-8 mb-6">

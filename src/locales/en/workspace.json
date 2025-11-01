@@ -196,8 +196,10 @@
       "demoteDescription": "Remove admin privileges from this member",
       "permissions": "Permissions",
       "permissionsDescription": "Configure what this member can do in the workspace",
+      "roomAccess": "Room Access",
+      "roomAccessDescription": "Manage this member's access to workspace rooms",
       "dangerZone": "Danger Zone",
-      "removeFromWorkspace": "Remove",
+      "removeFromWorkspace": "Remove user from workspace",
       "banUser": "Ban User",
       "confirmRemove": "Are you sure you want to remove this member?",
       "confirmRemoveTitle": "Remove Member",
@@ -224,7 +226,11 @@
       "acceptMemberDesc": "Allow approving or rejecting join requests",
       "managePermissions": "Manage Permissions",
       "managePermissionsDesc": "Allow granting and revoking permissions for other members (owner only can grant this permission)",
-      "ownerOnlyPermission": "Only the workspace owner can grant this permission"
+      "ownerOnlyPermission": "Only the workspace owner can grant this permission",
+      "roomPermission": "Room Access",
+      "roomPermissionDesc": "Toggle between room admin and room user access",
+      "roomAdminStatus": "Currently: Room Administrator",
+      "roomUserStatus": "Currently: Room User"
     },
     "workspaceGuard": {
       "invalidWorkspaceOrUser": "Invalid workspace or user not authenticated",

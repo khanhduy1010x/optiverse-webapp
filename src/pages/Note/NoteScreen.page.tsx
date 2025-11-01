@@ -12,7 +12,7 @@ const NoteScreen: React.FC<NoteScreenProps> = () => {
   useSharedItems();
 
   return (
-    <div className="flex h-screen relative">
+    <div className="flex h-full relative">
       <div className="flex-1 flex flex-col">
         <MarkdownEditor />
       </div>

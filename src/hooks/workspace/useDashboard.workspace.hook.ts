@@ -100,7 +100,32 @@ const useWorkspaceManagement = () => {
         userId.toString(),
         newRole
       );
-      await reloadWorkspaceData();
+
+      // Update local state instead of reloading
+      setWorkspaceDetail(prevDetail => {
+        if (!prevDetail) return prevDetail;
+
+        const updatedMembers = prevDetail.members.active.map(member =>
+          member.user_id === userId ? { ...member, role: newRole } : member
+        );
+
+        return {
+          ...prevDetail,
+          members: {
+            ...prevDetail.members,
+            active: updatedMembers,
+          },
+        };
+      });
+
+      // Update selectedMember if it's the same user
+      if (selectedMember && selectedMember.id === userId) {
+        setSelectedMember((prevSelected: any) => ({
+          ...prevSelected,
+          role: newRole === 'admin' ? 'Admin' : 'Member',
+          rawRole: newRole,
+        }));
+      }
 
       const actionText =
         newRole === 'admin'
@@ -362,7 +387,32 @@ const useWorkspaceManagement = () => {
         permissions,
         'set'
       );
-      await reloadWorkspaceData();
+
+      // Update local state instead of reloading
+      setWorkspaceDetail(prevDetail => {
+        if (!prevDetail) return prevDetail;
+
+        const updatedMembers = prevDetail.members.active.map(member =>
+          member.user_id === userId ? { ...member, permissions } : member
+        );
+
+        return {
+          ...prevDetail,
+          members: {
+            ...prevDetail.members,
+            active: updatedMembers,
+          },
+        };
+      });
+
+      // Update selectedMember if it's the same user
+      if (selectedMember && selectedMember.id === userId) {
+        setSelectedMember((prevSelected: any) => ({
+          ...prevSelected,
+          permissions: permissions,
+        }));
+      }
+
       showSuccess(t('dashboardWorkspace.toasts.permissionsUpdated'));
     } catch (err) {
       console.error('Failed to update permissions:', err);

@@ -33,7 +33,7 @@ export default function FlashcardDeckList() {
 
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-full">
       <FlashcardSidebar currentSelected="flashcard-deck" />
       <div className="flex-1 transition-all duration-300 ease-in-out h-full w-full overflow-auto ">
         <div className="p-8">

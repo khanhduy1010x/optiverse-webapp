@@ -196,6 +196,8 @@
       "demoteDescription": "Gỡ bỏ quyền quản trị của thành viên này",
       "permissions": "Quyền hạn",
       "permissionsDescription": "Cấu hình những gì thành viên này có thể làm trong workspace",
+      "roomAccess": "Quyền truy cập phòng",
+      "roomAccessDescription": "Quản lý quyền truy cập phòng của thành viên này",
       "dangerZone": "Vùng nguy hiểm",
       "removeFromWorkspace": "Xóa khỏi Workspace",
       "banUser": "Cấm người dùng",
@@ -224,7 +226,11 @@
       "acceptMemberDesc": "Cho phép phê duyệt hoặc từ chối yêu cầu tham gia",
       "managePermissions": "Quản lý quyền",
       "managePermissionsDesc": "Cho phép cấp và thu hồi quyền cho các thành viên khác (chỉ chủ sở hữu mới có thể cấp quyền này)",
-      "ownerOnlyPermission": "Chỉ chủ sở hữu workspace mới có thể cấp quyền này"
+      "ownerOnlyPermission": "Chỉ chủ sở hữu workspace mới có thể cấp quyền này",
+      "roomPermission": "Quyền truy cập phòng",
+      "roomPermissionDesc": "Chuyển đổi giữa quản trị viên phòng và người dùng phòng",
+      "roomAdminStatus": "Hiện tại: Quản trị viên phòng",
+      "roomUserStatus": "Hiện tại: Người dùng phòng"
     },
     "workspaceGuard": {
       "invalidWorkspaceOrUser": "Workspace không hợp lệ hoặc người dùng chưa xác thực",

@@ -20,23 +20,23 @@ import DeleteModal from '../Note/DeleteModal.screen';
 
 const ChatPage: React.FC = () => {
   const { t } = useAppTranslate('chat');
-  
+
   // Group conversation state
   const [activeGroupConversationId, setActiveGroupConversationId] = useState<string | null>(null);
   const [chatMode, setChatMode] = useState<'regular' | 'group'>('regular');
   const [showGroupSettings, setShowGroupSettings] = useState(false);
-  
+
   // Drawing board state
   const [showDrawingBoard, setShowDrawingBoard] = useState(false);
-  
+
   // Group conversations hook
-  const { 
-    groupConversations, 
-    users: groupUsers, 
+  const {
+    groupConversations,
+    users: groupUsers,
     loading: groupLoading,
     getActiveMembers
   } = useGroupConversations();
-  
+
   const {
     // State
     activeConversationId,
@@ -150,8 +150,8 @@ const ChatPage: React.FC = () => {
   const groupTheme = useGroupConversationTheme(activeGroupConversationId);
 
   // Get selected group conversation
-  const selectedGroupConversation = activeGroupConversationId 
-    ? groupConversations.find(gc => gc.id === activeGroupConversationId) 
+  const selectedGroupConversation = activeGroupConversationId
+    ? groupConversations.find(gc => gc.id === activeGroupConversationId)
     : null;
 
   // Thêm biến textColor lấy từ theme (sử dụng group theme cho group chat, regular theme cho chat 1-1)
@@ -171,32 +171,32 @@ const ChatPage: React.FC = () => {
     if (chatMode === 'group' && activeGroupConversationId) {
       // Convert blob to file
       const file = new File([imageBlob], 'drawing.png', { type: 'image/png' });
-      
+
       // Use group chat's image sending functionality
       const { handleFileChange, handleSendGroupMessage } = groupChatData;
-      
+
       // Create a fake file input event
       const fakeEvent = {
         target: {
           files: [file]
         }
       } as any;
-      
+
       // Add the image to selected images
       handleFileChange(fakeEvent);
-      
+
       // Send the message with image
       setTimeout(() => {
         handleSendGroupMessage();
       }, 100);
     }
-    
+
     // Close drawing board after sending
     setShowDrawingBoard(false);
   };
 
   return (
-    <div className="flex h-screen bg-white">
+    <div className="flex h-full bg-white">
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -315,12 +315,12 @@ const ChatPage: React.FC = () => {
           setActiveGroupConversationId(groupId);
           setActiveConversationId(null);
           setChatMode('group');
-          
+
           // Set flag to scroll to bottom when group conversation changes
           if (groupChatData?.setShouldScrollToBottom) {
             groupChatData.setShouldScrollToBottom(true);
           }
-          
+
           console.log('ChatPage activeGroupConversationId set to:', groupId);
         }}
         searchQuery={searchQuery}
@@ -359,7 +359,7 @@ const ChatPage: React.FC = () => {
               handleTogglePinConversation={() => groupChatData?.handleTogglePinConversation(activeGroupConversationId || '')}
               isConversationPinned={groupChatData?.isGroupConversationPinned || (() => false)}
               showMessageSearch={groupChatData?.showMessageSearch || false}
-              setShowMessageSearch={groupChatData?.setShowMessageSearch || (() => {})}
+              setShowMessageSearch={groupChatData?.setShowMessageSearch || (() => { })}
               showPinnedMessages={showPinnedMessages}
               setShowPinnedMessages={setShowPinnedMessages}
               showThemeSelector={showThemeSelector}
@@ -374,16 +374,16 @@ const ChatPage: React.FC = () => {
             <MessageSearchForm
               showMessageSearch={groupChatData?.showMessageSearch || false}
               messageSearchQuery={groupChatData?.messageSearchQuery || ''}
-              setMessageSearchQuery={groupChatData?.setMessageSearchQuery || (() => {})}
-              handleMessageSearchSubmit={groupChatData?.handleMessageSearchSubmit || (() => {})}
-              clearSearch={groupChatData?.clearSearch || (() => {})}
+              setMessageSearchQuery={groupChatData?.setMessageSearchQuery || (() => { })}
+              handleMessageSearchSubmit={groupChatData?.handleMessageSearchSubmit || (() => { })}
+              clearSearch={groupChatData?.clearSearch || (() => { })}
               searchLoading={groupChatData?.searchLoading || false}
               searchError={groupChatData?.searchError || null}
               searchResults={groupChatData?.searchResults || []}
               messageRefs={groupChatData?.messageRefs || {}}
-              setHighlightedMessageId={groupChatData?.setHighlightedMessageId || (() => {})}
+              setHighlightedMessageId={groupChatData?.setHighlightedMessageId || (() => { })}
             />
-            
+
             {/* Group Chat Content Container */}
             <div className="flex-1 flex min-h-0 relative">
               {/* Group Chat Content */}
@@ -473,7 +473,7 @@ const ChatPage: React.FC = () => {
                 )}
 
                 {/* Group Chat Messages */}
-                <div 
+                <div
                   ref={groupChatData?.messageContainerRef}
                   className="flex-1 overflow-y-auto p-4 space-y-4"
                   onScroll={groupChatData?.handleScroll}
@@ -499,7 +499,7 @@ const ChatPage: React.FC = () => {
                           {t('found_results', { count: (groupChatData?.searchResults || []).length })}
                         </p>
                         <button
-                          onClick={groupChatData?.clearSearch || (() => {})}
+                          onClick={groupChatData?.clearSearch || (() => { })}
                           className="text-xs text-[#21b4ca] hover:underline"
                         >
                           {t('clear_search_results')}
@@ -514,11 +514,10 @@ const ChatPage: React.FC = () => {
                             className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'} items-center`}
                           >
                             <div
-                              className={`max-w-xs rounded-lg px-4 py-2 ${
-                                isCurrentUser
+                              className={`max-w-xs rounded-lg px-4 py-2 ${isCurrentUser
                                   ? 'bg-[#21b4ca] text-white'
                                   : 'bg-gray-200 text-gray-800'
-                              }`}
+                                }`}
                             >
                               {!isCurrentUser && (
                                 <p className="text-xs font-semibold mb-1 text-gray-600">
@@ -595,7 +594,7 @@ const ChatPage: React.FC = () => {
                           </div>
                         </div>
                       )}
-                      
+
                       {groupChatData?.groupMessages?.map((message) => (
                         <MessageItem
                           key={message.id}
@@ -619,7 +618,7 @@ const ChatPage: React.FC = () => {
                     </>
                   )}
                 </div>
-                
+
                 {/* Group Chat Input */}
                 <div className="border-t border-gray-200">
                   <MessageInput
@@ -742,11 +741,11 @@ const ChatPage: React.FC = () => {
                           <div className="flex justify-between items-start">
                             <div className="text-xs font-medium text-gray-700">
                               {message.senderId ===
-                              localStorage.getItem('user_id')
+                                localStorage.getItem('user_id')
                                 ? t('you')
                                 : getOtherUserInChat()?.full_name ||
-                                  getOtherUserInChat()?.email ||
-                                  t('user')}
+                                getOtherUserInChat()?.email ||
+                                t('user')}
                             </div>
                             <button
                               onClick={() => unpinMessage(message.id)}
@@ -851,11 +850,10 @@ const ChatPage: React.FC = () => {
                             className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'} items-center`}
                           >
                             <div
-                              className={`max-w-xs rounded-lg px-4 py-2 ${
-                                isCurrentUser
+                              className={`max-w-xs rounded-lg px-4 py-2 ${isCurrentUser
                                   ? 'bg-[#21b4ca] text-white'
                                   : 'bg-gray-200 text-gray-800'
-                              }`}
+                                }`}
                             >
                               <p className="break-words">{message.text}</p>
                               <div className="flex justify-end items-center mt-1 gap-1">
@@ -1018,18 +1016,18 @@ const ChatPage: React.FC = () => {
         selectedItem={
           selectedConversation
             ? {
-                type: 'file',
-                title: t('this_conversation'),
-                content: '',
-                _id: selectedConversation.id,
-                user_id: '',
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-              }
+              type: 'file',
+              title: t('this_conversation'),
+              content: '',
+              _id: selectedConversation.id,
+              user_id: '',
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            }
             : null
         }
         onDelete={confirmDeleteConversation}
-        onOpenActionModal={() => {}}
+        onOpenActionModal={() => { }}
       />
 
       {/* Drawing Board */}
