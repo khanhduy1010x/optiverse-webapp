@@ -17,9 +17,9 @@ export default function NotificationSettingsPage() {
   };
 
   return (
-    <View className="w-full dark:border-gray-700 rounded-lg overflow-hidden">
+    <View className="w-full dark:border-gray-700 rounded-lg h-full overflow-hidden">
       {/* Sidebar and Main Content */}
-      <View className="flex flex-1 overflow-hidden min-h-screen">
+      <View className="flex flex-1 overflow-hidden h-full">
         {/* Sidebar */}
         <ProfileSidebar
           selectedMenu={selectedMenu}

@@ -178,7 +178,11 @@ export const WORKSPACE_ONLY_SECTIONS: NavSection[] = [
 // Dedicated minimal navigation for Marketplace context
 export const MARKETPLACE_SECTIONS: NavSection[] = [
   { label: 'Home', path: '/marketplace', icon: 'home' },
-  { label: 'My marketplace', path: '/marketplace/my-items', icon: 'add_market' },
+  {
+    label: 'My marketplace',
+    path: '/marketplace/my-items',
+    icon: 'add_market',
+  },
 ];
 
 // Map các path con tới path cha để dễ dàng tìm kiếm
@@ -192,7 +196,7 @@ const PATH_MAPPING: Record<string, string> = {
   '/flashcard-statistic': '/flashcard-deck',
   '/flashcard-deck': '/flashcard-deck',
   '/task-statistic': '/task',
-  '/achievements': '/user-profile',
+  '/user-achievements': '/user-profile',
   '/blog': '/blog',
   '/blog/create': '/blog',
   '/blog/edit': '/blog',

@@ -76,8 +76,7 @@ import WorkspaceMembersPage from './pages/workspace/WorkspaceMembers.page';
 import { Navigate } from 'react-router-dom';
 import MarketplaceHomePage from './pages/Marketplace/Home.page';
 import MyItemsPage from './pages/Marketplace/MyItems.page';
-import MarketplaceCreateNewPage from './pages/Marketplace/CreateNew.page';
-import MarketplaceFavoritesPage from './pages/Marketplace/Favorites.page';
+
 import { Focus } from 'lucide-react';
 
 declare global {
@@ -118,8 +117,10 @@ const AppContent: React.FC = () => {
           <SliderBar activeSection={activeSection} onNavClick={handleNavClick} />
         )}
 
-        <div className={`flex-1 transition-all duration-300 ease-in-out  h-screen overflow-y-auto h-full w-full ${showSidebar && ' pl-16'}`}>
-          <Routes>
+        <div
+          className={`flex-1 overflow-hidden w-full transition-all  overflow-y-auto ${showSidebar && 'h-[calc(100vh-57px)] mt-[57px]'} duration-300  ease-in-out ${showSidebar && 'pl-16'
+            }`}
+        >      <Routes>
             {/* Public routes - accessible without authentication */}
             <Route path="/template" element={<TemplateComponent />} />
             <Route
@@ -148,14 +149,7 @@ const AppContent: React.FC = () => {
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/marketplace/favorites"
-              element={
-                <ProtectedRoute>
-                  <MarketplaceFavoritesPage />
-                </ProtectedRoute>
-              }
-            />
+
 
             <Route
               path="rooms"
@@ -357,16 +351,7 @@ const AppContent: React.FC = () => {
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/workspace/:workspaceId/task"
-              element={
-                <ProtectedRoute>
-                  <WorkspaceGuard>
-                    <TaskWorkspacePage />
-                  </WorkspaceGuard>
-                </ProtectedRoute>
-              }
-            />
+
             <Route
               path="/task-statistic"
               element={

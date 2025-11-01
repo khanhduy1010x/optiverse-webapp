@@ -15,7 +15,7 @@ const AchievementManagement: React.FC = () => {
     showForm,
     editingAchievement,
     deleteConfirm,
-    
+
     // Actions
     handleCreate,
     handleEdit,
@@ -38,12 +38,12 @@ const AchievementManagement: React.FC = () => {
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-800">Achievements</h1>
- <Button
-  title="Create new achievement"
-  onClick={handleCreate}
-  style={{ backgroundColor: '#21b4ca', color: '#fff' }}
-  className="px-6 py-2 rounded-lg font-medium shadow-md hover:opacity-90 transition-all"
-/>
+        <Button
+          title="Create new achievement"
+          onClick={handleCreate}
+          style={{ backgroundColor: '#21b4ca', color: '#fff' }}
+          className="px-6 py-2 rounded-lg font-medium shadow-md hover:opacity-90 transition-all"
+        />
 
 
       </div>
@@ -97,7 +97,7 @@ const AchievementManagement: React.FC = () => {
               </div>
               <h3 className="text-lg font-semibold text-gray-900 text-center">Confirm deletion of Achievement</h3>
               <p className="text-sm text-gray-600 text-center mt-1">
-              Are you sure you want to delete this achievement? This action cannot be undone.
+                Are you sure you want to delete this achievement? This action cannot be undone.
               </p>
             </div>
             <div className="flex justify-end gap-3">

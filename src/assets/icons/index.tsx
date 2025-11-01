@@ -86,6 +86,8 @@ import { ReactComponent as paper_clip } from './paper_clip.svg';
 import { ReactComponent as download } from './download.svg';
 import { ReactComponent as cam } from './cam.svg';
 import { ReactComponent as unCam } from './un-cam.svg';
+import { ReactComponent as kickUser } from './kick-user.svg';
+import { ReactComponent as banUser } from './ban-user.svg';
 
 export const ICONS = {
 
@@ -177,6 +179,8 @@ export const ICONS = {
   download: download,
   cam: cam,
   unCam: unCam,
+  kickUser: kickUser,
+  banUser: banUser,
 };
 
 export type IconName = keyof typeof ICONS;

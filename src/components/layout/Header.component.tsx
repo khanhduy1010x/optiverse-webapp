@@ -33,7 +33,7 @@ const Header: React.FC = () => {
     };
 
     return (
-        <div className="sticky top-0 z-50 bg-black border-b border-gray-400 ">
+        <div className="fixed top-0 left-0 right-0 z-50 bg-black border-b border-gray-400 ">
             <div className="h-14 flex items-center ml-2 pr-4 md:pr-6 gap-4">
 
                 {/* Left: Workspace Selector */}

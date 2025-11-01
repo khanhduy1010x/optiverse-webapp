@@ -3,6 +3,7 @@ import authService from '../../services/auth.service';
 import { useAppSelector, useAppDispatch } from '../../store/hooks';
 import { UserRole } from '../../types/admin/user.types';
 import { setUser } from '../../store/slices/auth.slice';
+import { decodeBase64Utf8 } from '../../utils/base64.utils';
 
 export const useAuthStatus = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -30,14 +31,16 @@ export const useAuthStatus = () => {
           // Lấy thông tin user từ response và cập nhật vào Redux store
           if (response.headers && response.headers['x-user-info']) {
             const userInfo = response.headers['x-user-info'];
-            const userData = JSON.parse(atob(userInfo));
-            dispatch(setUser(userData));
-
-            // Cập nhật isAdmin ngay lập tức
-            if (userData && userData.role === UserRole.ADMIN) {
-              setIsAdmin(true);
-            } else {
-              setIsAdmin(false);
+            try {
+              const userData = JSON.parse(decodeBase64Utf8(userInfo));
+              dispatch(setUser(userData));
+              if (userData && userData.role === UserRole.ADMIN) {
+                setIsAdmin(true);
+              } else {
+                setIsAdmin(false);
+              }
+            } catch (e) {
+              console.error('Failed to decode/parse x-user-info:', e);
             }
           }
 
@@ -55,14 +58,19 @@ export const useAuthStatus = () => {
           // Lấy thông tin user từ response và cập nhật vào Redux store
           if (response.headers && response.headers['x-user-info']) {
             const userInfo = response.headers['x-user-info'];
-            const userData = JSON.parse(atob(userInfo));
-            dispatch(setUser(userData));
-
-            // Cập nhật isAdmin ngay lập tức
-            if (userData && userData.role === UserRole.ADMIN) {
-              setIsAdmin(true);
-            } else {
-              setIsAdmin(false);
+            try {
+              const userData = JSON.parse(decodeBase64Utf8(userInfo));
+              dispatch(setUser(userData));
+              if (userData && userData.role === UserRole.ADMIN) {
+                setIsAdmin(true);
+              } else {
+                setIsAdmin(false);
+              }
+            } catch (e) {
+              console.error(
+                'Failed to decode/parse x-user-info (refresh path):',
+                e
+              );
             }
           }
 

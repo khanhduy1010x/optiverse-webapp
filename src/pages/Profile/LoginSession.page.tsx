@@ -33,7 +33,7 @@ export default function LoginSessions() {
   const { t } = useAppTranslate('profile');
 
   return (
-    <View className="w-full h-screen flex">
+    <View className="w-full h-full flex">
       <ConfirmationModal
         isOpen={confirmModal.isOpen}
         onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
@@ -111,8 +111,8 @@ export default function LoginSessions() {
                         {showAllActiveSessions
                           ? t('show_less')
                           : t('show_more', {
-                              count: activeSessions.length - 2,
-                            })}
+                            count: activeSessions.length - 2,
+                          })}
                       </button>
                     )}
                   </div>

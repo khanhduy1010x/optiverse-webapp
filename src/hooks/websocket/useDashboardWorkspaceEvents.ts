@@ -49,15 +49,12 @@ export const useDashboardWorkspaceEvents = ({
           }
         );
 
-        // Trigger workspace data refresh
+        // No need to refresh workspace data since we're using optimistic updates
         if (onRefreshWorkspace) {
           onRefreshWorkspace();
         }
       } else {
-        // Another member's role changed, refresh to show updated member list
-        if (onRefreshWorkspace) {
-          onRefreshWorkspace();
-        }
+        // Another member's role changed, no need to refresh since we use optimistic updates
       }
     };
 
@@ -83,15 +80,15 @@ export const useDashboardWorkspaceEvents = ({
           draggable: true,
         });
 
-        // Trigger workspace data refresh to get new permissions
-        if (onRefreshWorkspace) {
-          onRefreshWorkspace();
-        }
+        // No need to refresh workspace data since we're using optimistic updates
+        // if (onRefreshWorkspace) {
+        //   onRefreshWorkspace();
+        // }
       } else {
-        // Another member's permissions changed, refresh to show updated member list
-        if (onRefreshWorkspace) {
-          onRefreshWorkspace();
-        }
+        // Another member's permissions changed, no need to refresh since we use optimistic updates
+        // if (onRefreshWorkspace) {
+        //   onRefreshWorkspace();
+        // }
       }
     };
 

@@ -601,9 +601,9 @@ const TaskPage: React.FC = () => {
   };
 
   return (
-    <View className="w-full dark:border-gray-700 rounded-lg overflow-hidden">
+    <View className="w-full dark:border-gray-700 rounded-lg  flex h-full relative">
       {/* Sidebar and Main Content */}
-      <View className="flex flex-1 overflow-hidden min-h-screen">
+      <View className="flex flex-1 overflow-hidden ">
         {/* Sidebar */}
         <TaskSidebar selectedMenu={selectedMenu} handleNavigate={handleNavigate} />
 
@@ -719,8 +719,8 @@ const TaskPage: React.FC = () => {
               <button
                 onClick={() => switchModalType('task')}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${modalType === 'task'
-                    ? 'bg-blue-500 text-white'
-                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                  ? 'bg-blue-500 text-white'
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
                   }`}
               >
                 {t('create_task')}
@@ -728,8 +728,8 @@ const TaskPage: React.FC = () => {
               <button
                 onClick={() => switchModalType('event')}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${modalType === 'event'
-                    ? 'bg-blue-500 text-white'
-                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                  ? 'bg-blue-500 text-white'
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
                   }`}
               >
                 {t('create_event')}
@@ -809,8 +809,8 @@ const TaskPage: React.FC = () => {
               <button
                 onClick={() => switchModalType('task')}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${modalType === 'task'
-                    ? 'bg-blue-500 text-white'
-                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                  ? 'bg-blue-500 text-white'
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
                   }`}
               >
                 {t('create_task')}
@@ -818,8 +818,8 @@ const TaskPage: React.FC = () => {
               <button
                 onClick={() => switchModalType('event')}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${modalType === 'event'
-                    ? 'bg-blue-500 text-white'
-                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                  ? 'bg-blue-500 text-white'
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
                   }`}
               >
                 {t('create_event')}

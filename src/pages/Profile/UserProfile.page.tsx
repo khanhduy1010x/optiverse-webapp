@@ -44,7 +44,7 @@ export default function UserProfile() {
   const { t } = useAppTranslate('profile');
 
   return (
-    <View className="w-full dark:border-gray-700 rounded-lg  overflow-hidden">
+    <View className="w-full dark:border-gray-700 rounded-lg h-full  overflow-hidden">
       {/* Avatar View Modal */}
       {showAvatarModal && (
         <div
@@ -81,7 +81,7 @@ export default function UserProfile() {
       )}
 
       {/* Sidebar and Main Content */}
-      <View className="flex flex-1 overflow-hidden min-h-screen">
+      <View className="flex flex-1 overflow-hidden h-full">
         {/* Sidebar - Now using the shared ProfileSidebar component */}
         <ProfileSidebar
           selectedMenu={selectedMenu}

@@ -36,7 +36,7 @@ export default function TemplateComponent() {
   };
 
   return (
-    <div className="w-full flex flex-col gap-10 ">
+    <div className="w-full h-screen overflow-y-auto flex flex-col gap-10 ">
       <ColorPicker></ColorPicker>
       <ColorSwatches></ColorSwatches>
       <div
@@ -81,7 +81,7 @@ export default function TemplateComponent() {
         </div>
         <h3>Text Sample</h3>
         <div className="flex gap-20">
-          <p style={{fontWeight: 'normal'}}>
+          <p style={{ fontWeight: 'normal' }}>
             {`
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque fermentum odio eu sollicitudin accumsan. Aliquam et lectus mattis, aliquet magna in, tempor quam. Maecenas efficitur est ut fermentum rutrum. Aenean vel pulvinar turpis. Aliquam quis mi sed nunc venenatis venenatis. Sed sed erat ut nibh elementum ultrices at tempus arcu. Phasellus vel nibh quis leo vulputate blandit. Suspendisse efficitur fringilla magna sed pulvinar. Suspendisse leo magna, vehicula non convallis in, aliquet nec metus. Pellentesque arcu nisl, dictum a convallis a, consequat tincidunt tortor. Integer sapien metus, facilisis et diam sit amet, dapibus fringilla erat. Nulla ut facilisis dolor. Sed accumsan purus sed augue vestibulum commodo. Nam odio enim, ornare vel ultricies interdum, elementum sed dolor.
           `}

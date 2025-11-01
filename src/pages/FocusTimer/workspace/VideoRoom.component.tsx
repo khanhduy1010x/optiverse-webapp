@@ -112,7 +112,7 @@ const VideoRoom: React.FC<VideoRoomProps> = ({
     return (
         <div
             ref={containerRef}
-            className="flex w-full bg-[#111111] relative"
+            className="flex w-full bg-[#111111] overflow-y-hidden relative"
             style={{ height: 'calc(100vh - 57px)' }}
         >
             {roomId && (
