@@ -6,6 +6,8 @@ import {
   UpdateMarketplaceItemPayload,
   PurchasePayload,
   PurchaseResponse,
+  PurchaseHistoryItem,
+  SalesHistoryItem,
 } from '../types/marketplace/marketplace.types';
 
 // Export types for convenience
@@ -15,6 +17,8 @@ export type {
   UpdateMarketplaceItemPayload,
   PurchasePayload,
   PurchaseResponse,
+  PurchaseHistoryItem,
+  SalesHistoryItem,
 };
 
 const URLBASE = 'productivity/marketplace';
@@ -239,6 +243,33 @@ class MarketplaceServiceClass {
   }
 
   /**
+   * Lấy preview flashcards (20%) của marketplace item
+   */
+  async getPreviewFlashcards(id: string) {
+    try {
+      const response = await api.get<
+        ApiResponse<{
+          flashcards: any[];
+          totalFlashcards: number;
+          previewCount: number;
+        }>
+      >(`${URLBASE}/preview/${id}`);
+
+      return {
+        flashcards: response.data.data.flashcards || [],
+        totalFlashcards: response.data.data.totalFlashcards || 0,
+        previewCount: response.data.data.previewCount || 0,
+      };
+    } catch (error: any) {
+      console.error(`Error fetching preview flashcards for item ${id}:`, {
+        error: error.message,
+        response: error.response?.data,
+      });
+      throw error;
+    }
+  }
+
+  /**
    * Mua marketplace item
    */
   async purchase(payload: PurchasePayload): Promise<PurchaseResponse> {
@@ -256,6 +287,62 @@ class MarketplaceServiceClass {
       });
       throw error;
     }
+  }
+
+  /**
+   * Helper method to fetch paginated history data
+   */
+  private async fetchHistory<T>(
+    endpoint: string,
+    page: number = 1,
+    limit: number = 10,
+    errorMessage: string
+  ): Promise<{ items: T[]; total: number }> {
+    try {
+      const params = { page, limit };
+
+      const response = await api.get<ApiResponse<{ items: T[]; total: number }>>(
+        endpoint,
+        { params }
+      );
+
+      // Handle both response formats
+      const data = response.data.data;
+      return {
+        items: (data?.items) || [],
+        total: (data?.total) || 0,
+      };
+    } catch (error: any) {
+      console.error(errorMessage, {
+        error: error.message,
+        response: error.response?.data,
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Lấy danh sách purchase history (các item đã mua) của user
+   */
+  async getPurchaseHistory(page: number = 1, limit: number = 10) {
+    return this.fetchHistory<PurchaseHistoryItem>(
+      `${URLBASE.replace('marketplace', 'purchase-history')}/my-purchases`,
+      page,
+      limit,
+      'Error fetching purchase history:'
+    );
+  }
+
+  /**
+   * Lấy danh sách sales history (các item đã bán) của user
+   */
+  async getSalesHistory(page: number = 1, limit: number = 10) {
+    return this.fetchHistory<SalesHistoryItem>(
+      `${URLBASE.replace('marketplace', 'purchase-history')}/my-sales`,
+      page,
+      limit,
+      'Error fetching sales history:'
+    );
   }
 }
 

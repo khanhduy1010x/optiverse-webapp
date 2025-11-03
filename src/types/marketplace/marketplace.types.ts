@@ -5,6 +5,12 @@ export interface CreatorInfo {
   avatar_url?: string;
 }
 
+export interface RatingStats {
+  totalRatings: number;
+  averageRating: number;
+  ratingDistribution: Record<number, number>;
+}
+
 export interface MarketplaceItem {
   _id: string;
   creator_id: string;
@@ -16,7 +22,8 @@ export interface MarketplaceItem {
   type: string;
   type_id?: string;
   purchase_count?: number;
-  copied_data?: Record<string, any>;
+  ratingStats?: RatingStats;
+  is_purchased?: boolean;
 }
 
 export interface CreateMarketplaceItemPayload {
@@ -51,4 +58,24 @@ export interface PurchaseResponse {
     buyer_id: string;
     remainingPoints: number;
   };
+}
+
+export interface PurchaseHistoryItem {
+  _id: string;
+  marketplace_item_id: string;
+  buyer_id: string;
+  seller_id: string;
+  price: number;
+  purchased_at: string;
+  item?: MarketplaceItem;
+}
+
+export interface SalesHistoryItem {
+  _id: string;
+  marketplace_item_id: string;
+  buyer_id: string;
+  seller_id: string;
+  price: number;
+  purchased_at: string;
+  item?: MarketplaceItem;
 }

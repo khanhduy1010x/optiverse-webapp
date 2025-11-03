@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import MarketplaceGrid from '../../components/Marketplace/MarketplaceGrid.component';
 import MarketplaceFilterBar from '../../components/Marketplace/MarketplaceFilterBar.component';
 import MarketplaceItemDetailModal from '../../components/Marketplace/MarketplaceItemDetailModal.component';
@@ -6,8 +6,9 @@ import SuccessNotificationModal from '../../components/Marketplace/SuccessNotifi
 import { useMarketplaceItems } from '../../hooks/marketplace/useMarketplaceItems';
 import { useMarketplaceFilter } from '../../hooks/marketplace/useMarketplaceFilter';
 import { usePurchaseMarketplace } from '../../hooks/marketplace/usePurchaseMarketplace';
-import { transformItemsToProducts } from '../../utils/marketplace.transform';
+import { transformItemsToProductsWithRatings } from '../../utils/marketplace.transform';
 import { MarketplaceItem } from '../../types/marketplace/marketplace.types';
+import { MarketplaceProduct } from '../../components/Marketplace/MarketplaceCard.component';
 
 // Hide scrollbar style
 const scrollbarHideStyle = `
@@ -28,13 +29,36 @@ const MarketplaceHomePage: React.FC = () => {
     const [category, setCategory] = useState('all');
     const [selectedItem, setSelectedItem] = useState<MarketplaceItem | null>(null);
     const [showSuccessNotification, setShowSuccessNotification] = useState(false);
+    const [products, setProducts] = useState<MarketplaceProduct[]>([]);
+    const [isTransforming, setIsTransforming] = useState(false);
     
     // Get current user ID from localStorage
     const currentUserId = localStorage.getItem('user_id');
     // Fetch items from hook
     const { items, loading, error, page, setPage, refetch } = useMarketplaceItems(currentUserId);
-    // Transform items to products
-    const products = transformItemsToProducts(items);
+    
+    // Transform items to products with ratings
+    useEffect(() => {
+        const fetchProductsWithRatings = async () => {
+            if (items.length > 0) {
+                setIsTransforming(true);
+                try {
+                    const productsWithRatings = await transformItemsToProductsWithRatings(items);
+                    setProducts(productsWithRatings);
+                } catch (error) {
+                    console.error('Error transforming items:', error);
+                    setProducts([]);
+                } finally {
+                    setIsTransforming(false);
+                }
+            } else {
+                setProducts([]);
+            }
+        };
+
+        fetchProductsWithRatings();
+    }, [items]);
+    
     // Apply filters and sorting
     const filteredProducts = useMarketplaceFilter(products, {
         searchQuery,
@@ -82,7 +106,7 @@ const MarketplaceHomePage: React.FC = () => {
 
             {/* Products Grid Section */}
             <div className="p-6">
-                {loading ? (
+                {loading || isTransforming ? (
                     <div className="flex justify-center items-center h-96">
                         <p className="text-gray-500">Loading data...</p>
                     </div>
