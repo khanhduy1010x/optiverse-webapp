@@ -5,6 +5,8 @@ import { getAllWorkspaces } from '../../store/slices/workspaceslice';
 import {
   selectWorkspaceForDropdown,
   selectWorkspaceLoadingState,
+  selectOwnerWorkspaceNames,
+  selectMemberWorkspaceNames,
 } from '../../store/selector/workspace.selector';
 
 export const useDropDownWorkspace = () => {
@@ -16,10 +18,14 @@ export const useDropDownWorkspace = () => {
 
   // Get data from Redux store
   const workspaces = useAppSelector(selectWorkspaceForDropdown);
+  const ownerWorkspaces = useAppSelector(selectOwnerWorkspaceNames);
+  const memberWorkspaces = useAppSelector(selectMemberWorkspaceNames);
   const { loading: isLoadingWorkspaces } = useAppSelector(
     selectWorkspaceLoadingState
   );
 
+  console.log('Owner Workspaces:', ownerWorkspaces);
+  console.log('Member Workspaces:', memberWorkspaces);
   // Fetch workspaces on mount
   useEffect(() => {
     dispatch(getAllWorkspaces());
@@ -63,6 +69,8 @@ export const useDropDownWorkspace = () => {
     selectedWorkspace,
     isDropdownOpen,
     workspaces,
+    ownerWorkspaces,
+    memberWorkspaces,
     isLoadingWorkspaces,
     isShowCreate,
 

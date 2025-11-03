@@ -9,5 +9,12 @@
   "download_task_template_desc": "Tải template Excel cho task",
   "download_event_template_desc": "Tải template Excel cho sự kiện",
   "import_task_desc": "Import task từ file Excel",
-  "import_event_desc": "Import sự kiện từ file Excel"
+  "import_event_desc": "Import sự kiện từ file Excel",
+  "op_currency_tooltip": "OP là tiền tệ kỹ thuật số của chúng tôi. Kiếm OP bằng cách hoàn thành task, phiên tập trung và streak hàng ngày. Tiêu OP cho các tính năng cao cấp và items trên marketplace.",
+  "op_faq_what": "OP là gì?",
+  "op_faq_what_answer": "OP (Optimization Points) là hệ thống tiền tệ kỹ thuật số của Optiverse giúp bạn được thưởng cho các hoạt động năng suất. Kiếm được thông qua hoàn thành task, duy trì phiên tập trung, xây dựng streak hàng ngày.",
+  "op_faq_how": "Làm sao để có được OP?",
+  "op_faq_how_answer": "Hoàn thành task • Duy trì phiên tập trung • Xây dựng streak hàng ngày • Đạt được mục tiêu • Hoàn thành achievements • Tham gia challenges",
+  "op_faq_cashout": "Tôi có thể rút OP thành tiền mặt không?",
+  "op_faq_cashout_answer": "OP chỉ sử dụng trong Optiverse cho các tính năng cao cấp, marketplace items và nội dung độc quyền. Hiện tại, rút tiền trực tiếp không khả dụng, nhưng OP có thể mở khóa các phần thưởng số giá trị và lợi ích."
 }

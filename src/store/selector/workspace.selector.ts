@@ -10,6 +10,16 @@ export const selectWorkspaces = createSelector(
   workspace => workspace.workspaces
 );
 
+export const selectOwnerWorkspaces = createSelector(
+  selectWorkspaceState,
+  workspace => workspace.ownerWorkspaces
+);
+
+export const selectMemberWorkspaces = createSelector(
+  selectWorkspaceState,
+  workspace => workspace.memberWorkspaces
+);
+
 export const selectCurrentWorkspace = createSelector(
   selectWorkspaceState,
   workspace => workspace.currentWorkspace
@@ -33,7 +43,7 @@ export const selectWorkspaceList = createSelector(
 
 export const selectWorkspaceCount = createSelector(
   selectWorkspaces,
-  workspaces => workspaces.filter(item => item.status === 'accepted').length
+  workspaces => workspaces.filter(item => item.status === 'active').length
 );
 
 export const selectWorkspaceById = createSelector(
@@ -53,18 +63,18 @@ export const selectUserWorkspaceRole = createSelector(
 );
 
 export const selectAdminWorkspaces = createSelector(
-  selectWorkspaces,
-  workspaces =>
-    workspaces.filter(
-      item => item.role === 'admin' && item.status === 'accepted'
+  selectOwnerWorkspaces,
+  ownerWorkspaces =>
+    ownerWorkspaces.filter(
+      item => item.role === 'admin' && item.status === 'active'
     )
 );
 
-export const selectMemberWorkspaces = createSelector(
-  selectWorkspaces,
-  workspaces =>
-    workspaces.filter(
-      item => item.role === 'user' && item.status === 'accepted'
+export const selectUserMemberWorkspaces = createSelector(
+  selectMemberWorkspaces,
+  memberWorkspaces =>
+    memberWorkspaces.filter(
+      item => item.role === 'user' && item.status === 'active'
     )
 );
 
@@ -73,7 +83,7 @@ export const selectWorkspaceNames = createSelector(
   workspaces => {
     if (!workspaces) return [];
     return workspaces
-      .filter(item => item.status === 'accepted') // Lọc ra workspace bị ban
+      .filter(item => item.status === 'active') // Lọc ra workspace bị ban
       .map(item => ({
         id: item?.workspace?._id,
         name: item?.workspace?.name,
@@ -95,7 +105,7 @@ export const selectIsCurrentWorkspaceAdmin = createSelector(
 
 export const selectHasWorkspaces = createSelector(
   selectWorkspaces,
-  workspaces => workspaces.filter(item => item.status === 'accepted').length > 0
+  workspaces => workspaces.filter(item => item.status === 'active').length > 0
 );
 
 export const selectWorkspaceLoadingState = createSelector(
@@ -119,4 +129,60 @@ export const selectWorkspaceForDropdown = createSelector(
       }))
       .filter(item => item.id && item.name) || []),
   ]
+);
+
+// New selectors for owner/member specific data
+export const selectOwnerWorkspaceCount = createSelector(
+  selectOwnerWorkspaces,
+  ownerWorkspaces =>
+    ownerWorkspaces.filter(item => item.status === 'active').length
+);
+
+export const selectMemberWorkspaceCount = createSelector(
+  selectMemberWorkspaces,
+  memberWorkspaces =>
+    memberWorkspaces.filter(item => item.status === 'active').length
+);
+
+export const selectTotalWorkspaceCount = createSelector(
+  [selectOwnerWorkspaceCount, selectMemberWorkspaceCount],
+  (ownerCount, memberCount) => ownerCount + memberCount
+);
+
+export const selectIsOwner = createSelector(
+  [selectOwnerWorkspaces, (_, workspaceId: string) => workspaceId],
+  (ownerWorkspaces, workspaceId) =>
+    ownerWorkspaces.some(item => item.workspace._id === workspaceId)
+);
+
+export const selectOwnerWorkspaceNames = createSelector(
+  selectOwnerWorkspaces,
+  ownerWorkspaces => {
+    if (!ownerWorkspaces) return [];
+    return ownerWorkspaces
+      .filter(item => item.status === 'active')
+      .map(item => ({
+        id: item?.workspace?._id,
+        name: item?.workspace?.name,
+        role: 'owner' as const,
+        locked: item?.locked || false,
+      }))
+      .filter(item => item.id && item.name);
+  }
+);
+
+export const selectMemberWorkspaceNames = createSelector(
+  selectMemberWorkspaces,
+  memberWorkspaces => {
+    if (!memberWorkspaces) return [];
+    return memberWorkspaces
+      .filter(item => item.status === 'active')
+      .map(item => ({
+        id: item?.workspace?._id,
+        name: item?.workspace?.name,
+        role: item?.role || ('member' as const),
+        locked: item?.locked || false,
+      }))
+      .filter(item => item.id && item.name);
+  }
 );

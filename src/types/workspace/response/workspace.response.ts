@@ -5,6 +5,7 @@ export interface Workspace {
   owner_id: string;
   invite_code: string;
   member_count: number;
+  locked?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -14,7 +15,7 @@ export interface WorkspaceMember {
   workspace_id: string;
   user_id: string;
   role: 'admin' | 'user';
-  status: 'accepted' | 'banned';
+  status: 'active' | 'banned';
   joined_at: string;
 }
 
@@ -32,7 +33,13 @@ export interface MyWorkspaceItem {
   role: 'admin' | 'user';
   status: 'accepted' | 'banned';
   joined_at: string;
+  locked?: boolean;
   workspace: Workspace;
+}
+
+export interface MyWorkspacesResponse {
+  owner_workspace: MyWorkspaceItem[];
+  member_workspace: MyWorkspaceItem[];
 }
 
 export interface UserDetailDto {

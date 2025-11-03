@@ -8,7 +8,17 @@
     "inviteFriends": "Invite friends",
     "noFriends": "No friends added yet",
     "cancel": "Cancel",
-    "submit": "Create Workspace"
+    "submit": "Create Workspace",
+    "limitReached": "Workspace Limit Reached",
+    "limitReachedTitle": "Workspace Limit Reached",
+    "limitReachedDesc": "You have reached the maximum number of workspaces allowed for your plan.",
+    "currentUsage": "Current Usage",
+    "usage": "Workspace Usage",
+    "membershipLevel": "Membership",
+    "upgradeTitle": "Need More Workspaces?",
+    "upgradeDesc": "Upgrade your plan to create more workspaces and unlock additional features.",
+    "upgradeBtn": "Upgrade Plan",
+    "close": "Close"
   },
   "passwordModal": {
     "setTitle": "Set Workspace Password",
@@ -41,7 +51,12 @@
   "workspaceSelector": {
     "home": "Home",
     "loading": "Loading workspaces...",
-    "createNew": "Create New Workspace"
+    "createNew": "Create New Workspace",
+    "myWorkspaces": "My Workspaces",
+    "memberOf": "Member Of",
+    "noWorkspaces": "No workspaces yet",
+    "admin": "Admin",
+    "member": "Member"
   },
   "workspaceHub": {
     "title": "Workspace Hub",

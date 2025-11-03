@@ -88,6 +88,13 @@ import { ReactComponent as cam } from './cam.svg';
 import { ReactComponent as unCam } from './un-cam.svg';
 import { ReactComponent as kickUser } from './kick-user.svg';
 import { ReactComponent as banUser } from './ban-user.svg';
+import { ReactComponent as workspace } from './work_space.svg';
+import { ReactComponent as levelFree } from './level_free.svg';
+import { ReactComponent as level0 } from './level_0.svg';
+import { ReactComponent as level1 } from './level_1.svg';
+import { ReactComponent as level2 } from './level_2.svg';
+import { ReactComponent as mps } from './mps.svg';
+
 
 export const ICONS = {
 
@@ -181,6 +188,12 @@ export const ICONS = {
   unCam: unCam,
   kickUser: kickUser,
   banUser: banUser,
+  workspace: workspace,
+  level_free: levelFree,
+  level_0: level0,
+  level_1: level1,
+  level_2: level2,
+  mps: mps
 };
 
 export type IconName = keyof typeof ICONS;

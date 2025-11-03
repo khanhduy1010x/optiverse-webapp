@@ -4,6 +4,7 @@ import {
   WorkspaceMember,
   WorkspaceJoinRequest,
   MyWorkspaceItem,
+  MyWorkspacesResponse,
   WorkspaceDetailDto,
   WorkspaceSearchResponse,
 } from '../types/workspace/response/workspace.response';
@@ -17,6 +18,33 @@ import api from './api.service';
 const URLBASE = 'productivity/workspace';
 
 class WorkspaceServiceClass {
+  async getWorkspaceLimits(): Promise<{
+    current: number;
+    max: number;
+    canCreateMore: boolean;
+    membershipLevel: string;
+    packageName?: string;
+  }> {
+    try {
+      const response = await api.get<
+        ApiResponse<{
+          current: number;
+          max: number;
+          canCreateMore: boolean;
+          membershipLevel: string;
+          packageName?: string;
+        }>
+      >(`${URLBASE}/creation-limits`);
+      return response.data.data;
+    } catch (error: any) {
+      console.error('Failed to fetch workspace limits:', {
+        error: error.message,
+        response: error.response?.data,
+      });
+      throw new Error('Could not fetch workspace limits');
+    }
+  }
+
   async createWorkspace(
     createWorkspaceDto: CreateWorkspaceDto
   ): Promise<Workspace> {
@@ -37,9 +65,9 @@ class WorkspaceServiceClass {
     }
   }
 
-  async getMyWorkspaces(): Promise<MyWorkspaceItem[]> {
+  async getMyWorkspaces(): Promise<MyWorkspacesResponse> {
     try {
-      const response = await api.get<ApiResponse<MyWorkspaceItem[]>>(
+      const response = await api.get<ApiResponse<MyWorkspacesResponse>>(
         `${URLBASE}/my-workspaces`
       );
       return response.data.data;

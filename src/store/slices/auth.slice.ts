@@ -10,6 +10,12 @@ interface AuthState {
     full_name?: string;
     avatar_url?: string;
     role?: UserRole;
+    membership?: {
+      packageName?: string;
+      level?: number;
+      hasActiveMembership?: boolean;
+      endDate?: string;
+    };
   } | null;
 }
 

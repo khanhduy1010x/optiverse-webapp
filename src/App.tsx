@@ -52,7 +52,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { typingAnimationStyles, countdownAnimationStyles } from './styles/global.style';
 import WorkspaceGuard from './components/auth/WorkspaceGuard';
 import AdminDashboard from './pages/Admin/UserManagement.page';
-import UserManagement from './pages/Admin/UserManagement';
+import MpsManagement from './pages/Admin/MpsManagement.screen';
 import SystemSettings from './pages/Admin/SystemSettings';
 import AdminLayout from './pages/Admin/AdminLayout';
 import { useEffect, useState } from 'react';
@@ -82,8 +82,8 @@ import { Navigate } from 'react-router-dom';
 import MarketplaceHomePage from './pages/Marketplace/Home.page';
 import MyItemsPage from './pages/Marketplace/MyItems.page';
 import PurchaseHistoryPage from './pages/Marketplace/PurchaseHistory.page';
+import MembershipScreen from './pages/Membership/Membership.screen';
 
-import { Focus } from 'lucide-react';
 
 declare global {
   interface Window {
@@ -155,6 +155,15 @@ const AppContent: React.FC = () => {
                 </ProtectedRoute>
               }
             />
+            {/* Membership route */}
+            <Route
+              path="/membership"
+              element={
+                <ProtectedRoute>
+                  <MembershipScreen />
+                </ProtectedRoute>
+              }
+            />
 
 
             <Route
@@ -216,7 +225,7 @@ const AppContent: React.FC = () => {
                 </ProtectedRoute>
               }
             />
-            
+
             {/* Workspace Chat Route - NEW */}
             <Route
               path="/workspace/:workspaceId/chat"
@@ -224,6 +233,16 @@ const AppContent: React.FC = () => {
                 <ProtectedRoute>
                   <WorkspaceGuard>
                     <WorkspaceChatPage />
+                  </WorkspaceGuard>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/workspace/:workspaceId/task"
+              element={
+                <ProtectedRoute>
+                  <WorkspaceGuard>
+                    <TaskWorkspacePage />
                   </WorkspaceGuard>
                 </ProtectedRoute>
               }
@@ -239,7 +258,7 @@ const AppContent: React.FC = () => {
               }
             >
               <Route path="dashboard" element={<AdminDashboard />} />
-              <Route path="users" element={<UserManagement />} />
+              <Route path="users" element={<MpsManagement />} />
               <Route path="settings" element={<SystemSettings />} />
               <Route path="achievements" element={<AchievementManagement />} />
 
@@ -535,6 +554,7 @@ const AppContent: React.FC = () => {
         </div>
       </div>
     </div>
+
   );
 };
 
