@@ -76,6 +76,7 @@ import WorkspaceMembersPage from './pages/workspace/WorkspaceMembers.page';
 import { Navigate } from 'react-router-dom';
 import MarketplaceHomePage from './pages/Marketplace/Home.page';
 import MyItemsPage from './pages/Marketplace/MyItems.page';
+import PurchaseHistoryPage from './pages/Marketplace/PurchaseHistory.page';
 
 import { Focus } from 'lucide-react';
 
@@ -156,6 +157,14 @@ const AppContent: React.FC = () => {
               element={<FocusRoomsPage />}
             />
 
+            <Route
+              path="/marketplace/purchase-history"
+              element={
+                <ProtectedRoute>
+                  <PurchaseHistoryPage />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/forgot"
               element={

@@ -183,6 +183,8 @@ export const MARKETPLACE_SECTIONS: NavSection[] = [
     path: '/marketplace/my-items',
     icon: 'add_market',
   },
+  { label: 'My marketplace', path: '/marketplace/my-items', icon: 'add_market' },
+  { label: 'Purchase History', path: '/marketplace/purchase-history', icon: 'calendar' },
 ];
 
 // Map các path con tới path cha để dễ dàng tìm kiếm
@@ -210,6 +212,7 @@ const PATH_MAPPING: Record<string, string> = {
   '/admin/achievements': '/admin/dashboard',
   '/marketplace': '/marketplace',
   '/marketplace/my-items': '/marketplace',
+  '/marketplace/purchase-history': '/marketplace',
 };
 
 export const getSectionKeyFromPath = (path: string): string => {

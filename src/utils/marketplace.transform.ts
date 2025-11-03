@@ -1,5 +1,6 @@
 import { MarketplaceItem } from '../types/marketplace/marketplace.types';
 import { MarketplaceProduct } from '../components/Marketplace/MarketplaceCard.component';
+import ratingService from '../services/rating.service';
 
 const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400&h=300&fit=crop';
 
@@ -15,9 +16,51 @@ export const transformItemsToProducts = (items: MarketplaceItem[]): MarketplaceP
         sellerName: item.creator_info?.full_name || 'Unknown',
         sellerInfo: item.creator_info,
         purchaseCount: item.purchase_count || 0,
-        rating: 4.5,
-        ratingCount: 0,
+        rating: item.ratingStats?.averageRating || 0,
+        ratingCount: item.ratingStats?.totalRatings || 0,
     }));
+};
+
+/**
+ * Transform marketplace items with async rating stats fetch
+ */
+export const transformItemsToProductsWithRatings = async (
+    items: MarketplaceItem[]
+): Promise<MarketplaceProduct[]> => {
+    const productsWithRatings = await Promise.all(
+        items.map(async (item) => {
+            try {
+                const stats = await ratingService.getRatingStats(item._id);
+                return {
+                    id: item._id,
+                    name: item.title,
+                    image: item.images?.[0] || DEFAULT_IMAGE,
+                    price: item.price,
+                    sellerName: item.creator_info?.full_name || 'Unknown',
+                    sellerInfo: item.creator_info,
+                    purchaseCount: item.purchase_count || 0,
+                    rating: stats.averageRating || 0,
+                    ratingCount: stats.totalRatings || 0,
+                };
+            } catch (error) {
+                console.error(`Error fetching ratings for item ${item._id}:`, error);
+                // Fallback to default if rating fetch fails
+                return {
+                    id: item._id,
+                    name: item.title,
+                    image: item.images?.[0] || DEFAULT_IMAGE,
+                    price: item.price,
+                    sellerName: item.creator_info?.full_name || 'Unknown',
+                    sellerInfo: item.creator_info,
+                    purchaseCount: item.purchase_count || 0,
+                    rating: 0,
+                    ratingCount: 0,
+                };
+            }
+        })
+    );
+
+    return productsWithRatings;
 };
 
 /**
@@ -159,3 +202,87 @@ export const validateMarketplaceItem = (data: ValidateMarketplaceItemInput): { v
 
     return { valid: true };
 };
+
+// ============ PURCHASE HISTORY VALIDATION FUNCTIONS ============
+
+/**
+ * Validate pagination parameters
+ */
+export const validatePaginationParams = (page: number, limit: number): { valid: boolean; error?: string } => {
+    if (!Number.isInteger(page) || page < 1) {
+        return { valid: false, error: 'Page must be a positive integer' };
+    }
+    if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
+        return { valid: false, error: 'Limit must be between 1 and 100' };
+    }
+    return { valid: true };
+};
+
+/**
+ * Validate purchase history item
+ */
+export interface ValidatePurchaseHistoryItemInput {
+    _id: string;
+    buyer_id: string;
+    seller_id: string;
+    marketplace_item_id: string;
+    price: number;
+    purchased_at: string;
+}
+
+export const validatePurchaseHistoryItem = (item: any): { valid: boolean; error?: string } => {
+    if (!item._id || typeof item._id !== 'string') {
+        return { valid: false, error: 'Invalid purchase history ID' };
+    }
+
+    if (!item.buyer_id || typeof item.buyer_id !== 'string') {
+        return { valid: false, error: 'Invalid buyer ID' };
+    }
+
+    if (!item.seller_id || typeof item.seller_id !== 'string') {
+        return { valid: false, error: 'Invalid seller ID' };
+    }
+
+    if (!item.marketplace_item_id || typeof item.marketplace_item_id !== 'string') {
+        return { valid: false, error: 'Invalid marketplace item ID' };
+    }
+
+    if (typeof item.price !== 'number' || item.price < 0) {
+        return { valid: false, error: 'Invalid price' };
+    }
+
+    if (!item.purchased_at || isNaN(new Date(item.purchased_at).getTime())) {
+        return { valid: false, error: 'Invalid purchase date' };
+    }
+
+    // item field is optional and can be any object
+    if (item.item && typeof item.item !== 'object') {
+        return { valid: false, error: 'Invalid item object' };
+    }
+
+    return { valid: true };
+};
+
+/**
+ * Validate purchase history response
+ */
+export const validatePurchaseHistoryResponse = (data: any): { valid: boolean; error?: string } => {
+    if (!Array.isArray(data.items)) {
+        return { valid: false, error: 'Invalid items format' };
+    }
+
+    if (typeof data.total !== 'number' || data.total < 0) {
+        return { valid: false, error: 'Invalid total count' };
+    }
+
+    // Validate each item
+    for (const item of data.items) {
+        const itemValidation = validatePurchaseHistoryItem(item);
+        if (!itemValidation.valid) {
+            return itemValidation;
+        }
+    }
+
+    return { valid: true };
+};
+

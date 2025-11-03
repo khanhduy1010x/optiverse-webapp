@@ -1,5 +1,7 @@
 import React, { useEffect } from 'react';
 import Modal from 'react-modal';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 import { useFlashcardDecks } from '../../hooks/useFlashcardDecks';
 import { useCreateMarketplaceItem, MarketplaceItemType } from '../../hooks/marketplace/useCreateMarketplaceItem';
 
@@ -55,6 +57,26 @@ const CreateMarketplaceModal: React.FC<CreateMarketplaceModalProps> = ({
                     -ms-overflow-style: none;
                     scrollbar-width: none;
                 }
+                .ql-toolbar {
+                    border-top-left-radius: 0.5rem;
+                    border-top-right-radius: 0.5rem;
+                    border-color: #d1d5db;
+                }
+                .ql-container {
+                    border-bottom-left-radius: 0.5rem;
+                    border-bottom-right-radius: 0.5rem;
+                    border-color: #d1d5db;
+                    font-size: 0.875rem;
+                }
+                .ql-editor {
+                    min-height: 200px;
+                }
+                .ql-toolbar.ql-snow {
+                    padding: 8px;
+                }
+                .ql-toolbar.ql-snow .ql-formats {
+                    margin-right: 8px;
+                }
             `}</style>
             <div className="p-8">
                 {/* Header */}
@@ -100,13 +122,32 @@ const CreateMarketplaceModal: React.FC<CreateMarketplaceModalProps> = ({
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             Description
                         </label>
-                        <textarea
-                            name="description"
+                        <ReactQuill
                             value={formData.description}
-                            onChange={handleInputChange}
+                            onChange={(content) => {
+                                handleInputChange({
+                                    target: { name: 'description', value: content }
+                                } as React.ChangeEvent<HTMLInputElement>);
+                            }}
+                            modules={{
+                                toolbar: [
+                                    ['bold', 'italic', 'underline', 'strike'],
+                                    ['blockquote', 'code-block'],
+                                    [{ 'header': 1 }, { 'header': 2 }],
+                                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                                    ['link', 'image'],
+                                    ['clean']
+                                ]
+                            }}
+                            formats={[
+                                'bold', 'italic', 'underline', 'strike',
+                                'blockquote', 'code-block', 'header',
+                                'list', 'link', 'image'
+                            ]}
+                            theme="snow"
                             placeholder="Describe your item..."
-                            rows={3}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                            className="bg-white"
+                            style={{ height: '200px', marginBottom: '40px' }}
                         />
                     </div>
 
