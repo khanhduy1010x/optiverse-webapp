@@ -437,9 +437,9 @@ class BlogService {
   }
 
   /**
-   * Lấy thông tin author
+   * Lấy thông tin author (public method for hooks)
    */
-  private async getAuthorInfo(authorId: string): Promise<BlogAuthor | null> {
+  async getAuthorInfo(authorId: string): Promise<BlogAuthor | null> {
     try {
       // Gọi API để lấy thông tin user
       const response = await api.post<ApiResponse<any>>(

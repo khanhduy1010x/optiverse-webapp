@@ -51,7 +51,7 @@ const CommentSection: React.FC<BlogCommentSectionProps> = ({
     <div className={`space-y-6 ${className}`}>
       {/* Header */}
       <div className="border-b border-gray-200 dark:border-gray-700 pb-4">
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+        <h3 className="text-xl font-semibold text-gray-900">
           Bình luận ({comments.length})
         </h3>
       </div>

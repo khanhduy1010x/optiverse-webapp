@@ -48,6 +48,7 @@ export interface BlogPostDetailProps {
   onTagClick?: (tag: string) => void;
   isAdmin?: boolean;
   currentUserId?: string;
+  workspaceCreatorId?: string;
   className?: string;
 }
 

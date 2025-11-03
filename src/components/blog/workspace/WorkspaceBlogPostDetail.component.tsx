@@ -44,6 +44,7 @@ const WorkspaceBlogPostDetail: React.FC<WorkspaceBlogPostDetailProps> = ({
   } = useComments(postId || '');
 
   const [post, setPost] = useState<BlogPostWithAuthor | null>(null);
+  const [workspace, setWorkspace] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,6 +56,11 @@ const WorkspaceBlogPostDetail: React.FC<WorkspaceBlogPostDetailProps> = ({
       try {
         setLoading(true);
         setError(null);
+
+        // Fetch workspace info
+        const workspaceService = (await import('../../../services/workspace.service')).default;
+        const workspaceData = await workspaceService.getWorkspaceById(workspaceId);
+        setWorkspace(workspaceData);
 
         // Fetch post từ Firebase
         const postData = await blogService.getPostById(postId);
@@ -89,7 +95,7 @@ const WorkspaceBlogPostDetail: React.FC<WorkspaceBlogPostDetailProps> = ({
     };
 
     fetchPost();
-  }, [postId, workspaceId]);
+  }, [postId, workspaceId, user]);
 
   // Handlers - Reuse 100% từ BlogHomePage
   const handleLike = async (postId: string) => {
@@ -191,17 +197,17 @@ const WorkspaceBlogPostDetail: React.FC<WorkspaceBlogPostDetailProps> = ({
   };
 
   const handleDelete = async (postId: string) => {
-    if (!window.confirm('Are you sure you want to delete this post?')) {
+    if (!window.confirm('Bạn có chắc muốn xóa bài viết này?')) {
       return;
     }
 
     try {
       await blogService.deletePost(postId);
-      alert('Post deleted successfully');
+      alert('Đã xóa bài viết thành công');
       onBack?.();
     } catch (error) {
       console.error('Error deleting post:', error);
-      alert('Failed to delete post');
+      alert('Không thể xóa bài viết');
     }
   };
 
@@ -302,6 +308,10 @@ const WorkspaceBlogPostDetail: React.FC<WorkspaceBlogPostDetailProps> = ({
   }
 
   // ✅ Reuse 100% BlogPostDetail component
+  // Check if user is workspace creator to show delete button
+  const isWorkspaceCreator = workspace?.createdBy === user?.user_id;
+  const canDelete = isAdmin || post.authorId === user?.user_id || isWorkspaceCreator;
+
   return (
     <>
       <BlogPostDetail
@@ -309,11 +319,12 @@ const WorkspaceBlogPostDetail: React.FC<WorkspaceBlogPostDetailProps> = ({
         onLike={handleLike}
         onBookmark={handleBookmark}
         onShare={handleShare}
-        onReport={handleReport}
-        onDelete={isAdmin || post.authorId === user?.user_id ? handleDelete : undefined}
+        onReport={undefined} // No report in workspace
+        onDelete={canDelete ? handleDelete : undefined}
         onTagClick={handleTagClick}
         isAdmin={isAdmin}
         currentUserId={user?.user_id}
+        workspaceCreatorId={workspace?.createdBy}
       />
 
       {/* ✅ Comments Section - Reuse 100% */}

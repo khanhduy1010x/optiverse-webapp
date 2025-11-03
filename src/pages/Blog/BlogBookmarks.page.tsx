@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BlogList } from '../../components/blog';
-import { useLikes } from '../../hooks/blog';
+import BlogCard from '../../components/blog/BlogCard.component';
+import ReportModal from '../../components/blog/ReportModal.component';
+import { useLikes, useReports } from '../../hooks/blog';
 import { useAuthState } from "../../hooks/useAuthState.hook";
+import { useAuthStatus } from '../../hooks/auth/useAuthStatus.hook';
 import { BlogPostWithAuthor } from '../../types/blog/blog.types';
 
 const BlogBookmarksPage: React.FC = () => {
@@ -11,12 +13,35 @@ const BlogBookmarksPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Report Modal state
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [reportPostId, setReportPostId] = useState<string>('');
+  const [reportPostTitle, setReportPostTitle] = useState<string>('');
+
+  // Bookmark state (using localStorage for now)
+  const [bookmarkedPostIds, setBookmarkedPostIds] = useState<Set<string>>(new Set());
+
   const { user } = useAuthState();
+  const { isAdmin } = useAuthStatus();
   const { fetchBookmarkedPostsWithDetails, togglePostLike } = useLikes();
+  const { createReport } = useReports();
 
   useEffect(() => {
     loadBookmarkedPosts();
-  }, []);
+    
+    // Load bookmark IDs from localStorage
+    if (user?.user_id) {
+      const saved = localStorage.getItem(`bookmarks_${user.user_id}`);
+      if (saved) {
+        try {
+          const bookmarks = JSON.parse(saved);
+          setBookmarkedPostIds(new Set(bookmarks));
+        } catch (error) {
+          console.error('Error loading bookmark IDs:', error);
+        }
+      }
+    }
+  }, [user?.user_id]);
 
   const loadBookmarkedPosts = async () => {
     try {
@@ -46,120 +71,183 @@ const BlogBookmarksPage: React.FC = () => {
     }
   };
 
+  const handleBookmarkPost = (postId: string) => {
+    if (!user) {
+      alert('Please login to bookmark posts');
+      return;
+    }
+
+    try {
+      const newBookmarks = new Set(bookmarkedPostIds);
+      if (newBookmarks.has(postId)) {
+        newBookmarks.delete(postId);
+        // Remove from displayed list
+        setBookmarkedPosts(prev => prev.filter(p => p.id !== postId));
+      } else {
+        newBookmarks.add(postId);
+      }
+      
+      setBookmarkedPostIds(newBookmarks);
+      localStorage.setItem(`bookmarks_${user.user_id}`, JSON.stringify(Array.from(newBookmarks)));
+    } catch (error) {
+      console.error('Error bookmarking post:', error);
+    }
+  };
+
   const handleTagClick = (tag: string) => {
     navigate(`/blog?search=${encodeURIComponent(tag)}`);
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Breadcrumb */}
-        <nav className="flex mb-6" aria-label="Breadcrumb">
-          <ol className="inline-flex items-center space-x-1 md:space-x-3">
-            <li className="inline-flex items-center">
-              <button
-                onClick={() => navigate('/blog')}
-                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white transition-colors duration-200"
-              >
-                <svg className="w-3 h-3 mr-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="m19.707 9.293-2-2-7-7a1 1 0 0 0-1.414 0l-7 7-2 2a1 1 0 0 0 1.414 1.414L2 10.414V18a2 2 0 0 0 2 2h3a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h3a2 2 0 0 0 2-2v-7.586l.293.293a1 1 0 0 0 1.414-1.414Z"/>
-                </svg>
-                Blog
-              </button>
-            </li>
-            <li>
-              <div className="flex items-center">
-                <svg className="w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
-                  <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 9 4-4-4-4"/>
-                </svg>
-                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 dark:text-gray-400">Bài đã lưu</span>
-              </div>
-            </li>
-          </ol>
-        </nav>
+  const handleReportPost = (postId: string, postTitle: string) => {
+    setReportPostId(postId);
+    setReportPostTitle(postTitle);
+    setReportModalOpen(true);
+  };
 
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-            <div className="mb-4 lg:mb-0">
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                Bài đã lưu
-              </h1>
-              <p className="mt-2 text-gray-600 dark:text-gray-400">
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 to-blue-50">
+      {/* Header */}
+      <div className="bg-white/90 backdrop-blur-sm border-b border-cyan-100 sticky top-0 z-10 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            {/* Title Section */}
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <button
+                  onClick={() => navigate('/blog')}
+                  className="text-gray-600 hover:text-gray-900 transition-colors"
+                  title="Back to Blog"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  </svg>
+                </button>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
+                  Bài đã lưu
+                </h1>
+              </div>
+              <p className="text-sm text-gray-600 ml-7">
                 Danh sách các bài viết bạn đã bookmark
               </p>
             </div>
-            
-            <div className="flex flex-col sm:flex-row gap-4">
-              <button
-                onClick={() => navigate('/blog')}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 ease-in-out hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transform hover:scale-105"
-              >
-                <svg className="h-4 w-4 mr-2 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                Quay lại Blog
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
-          <div className="lg:col-span-1">
-            {error ? (
-              <div className="text-center py-12">
-                <div className="max-w-md mx-auto">
-                  <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                  </svg>
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                    Có lỗi xảy ra
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-400 mb-4">
-                    {error}
-                  </p>
-                  <button
-                    onClick={loadBookmarkedPosts}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                    Thử lại
-                  </button>
-                </div>
-              </div>
-            ) : bookmarkedPosts.length === 0 && !isLoading ? (
-              <div className="text-center py-12">
-                <div className="max-w-md mx-auto">
-                  <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                  </svg>
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                    Chưa có bài viết nào được lưu
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-400 mb-4">
-                    Hãy bookmark những bài viết yêu thích để xem lại sau
-                  </p>
-                  <button
-                    onClick={() => navigate('/blog')}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                    Khám phá bài viết
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <BlogList
-                posts={bookmarkedPosts}
-                loading={isLoading}
-                onPostClick={handlePostClick}
-                onLike={handleLike}
-                currentUserId={user?.userId}
-                onTagClick={handleTagClick}
-              />
-            )}
           </div>
         </div>
       </div>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Stats Bar */}
+        <div className="mb-6">
+          <p className="text-gray-600">
+            {bookmarkedPosts.length > 0 ? (
+              <>
+                Showing <span className="font-semibold text-gray-900">{bookmarkedPosts.length}</span> saved article{bookmarkedPosts.length !== 1 ? 's' : ''}
+              </>
+            ) : (
+              'No saved articles'
+            )}
+          </p>
+        </div>
+
+        {/* Content */}
+        <div>
+          {error ? (
+            <div className="text-center py-20">
+              <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-red-100 to-orange-100 flex items-center justify-center">
+                <svg className="w-12 h-12 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-1.964-1.333-2.732 0L3.082 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                Có lỗi xảy ra
+              </h3>
+              <p className="text-gray-600 mb-6">
+                {error}
+              </p>
+              <button
+                onClick={loadBookmarkedPosts}
+                className="px-8 py-3 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                style={{
+                  background: 'linear-gradient(135deg, #21b4ca 0%, #1e90ff 100%)',
+                }}
+              >
+                Thử lại
+              </button>
+            </div>
+          ) : bookmarkedPosts.length === 0 && !isLoading ? (
+            <div className="text-center py-20">
+              <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-cyan-100 to-blue-100 flex items-center justify-center">
+                <svg className="w-12 h-12 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                Chưa có bài viết nào được lưu
+              </h3>
+              <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                Hãy bookmark những bài viết yêu thích để xem lại sau
+              </p>
+              <button
+                onClick={() => navigate('/blog')}
+                className="px-8 py-3 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                style={{
+                  background: 'linear-gradient(135deg, #21b4ca 0%, #1e90ff 100%)',
+                }}
+              >
+                Khám phá bài viết
+              </button>
+            </div>
+          ) : isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-sm animate-pulse">
+                  <div className="h-56 bg-gray-200"></div>
+                  <div className="p-6">
+                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-3"></div>
+                    <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+                    <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {bookmarkedPosts.map((post) => {
+                const postWithBookmark = {
+                  ...post,
+                  isBookmarked: bookmarkedPostIds.has(post.id)
+                };
+                
+                return (
+                  <BlogCard
+                    key={post.id}
+                    post={postWithBookmark}
+                    onPostClick={handlePostClick}
+                    onLike={handleLike}
+                    onBookmark={handleBookmarkPost}
+                    onTagClick={handleTagClick}
+                    onReport={handleReportPost}
+                    currentUserId={user?.user_id}
+                    isAdmin={isAdmin}
+                  />
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Report Modal */}
+      <ReportModal
+        isOpen={reportModalOpen}
+        postId={reportPostId}
+        postTitle={reportPostTitle}
+        onClose={() => setReportModalOpen(false)}
+        onReportSuccess={() => {
+          setReportModalOpen(false);
+          alert('Report submitted successfully');
+        }}
+      />
     </div>
   );
 };

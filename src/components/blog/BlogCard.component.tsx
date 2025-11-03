@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { BlogPostWithAuthor } from '../../types/blog';
 import { format } from 'date-fns';
 
@@ -9,8 +9,11 @@ interface BlogCardProps {
   onBookmark?: (postId: string) => void;
   onTagClick?: (tag: string) => void;
   onReport?: (postId: string, postTitle: string) => void;
+  onDeletePost?: (postId: string) => void;
   currentUserId?: string;
   isAdmin?: boolean;
+  isWorkspace?: boolean;
+  workspaceCreatorId?: string;
 }
 
 /**
@@ -24,9 +27,38 @@ const BlogCard: React.FC<BlogCardProps> = ({
   onBookmark,
   onTagClick,
   onReport,
+  onDeletePost,
   currentUserId,
-  isAdmin
+  isAdmin,
+  isWorkspace = false,
+  workspaceCreatorId
 }) => {
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(post.isBookmarked || false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Sync bookmark state with props
+  useEffect(() => {
+    setIsBookmarked(post.isBookmarked || false);
+  }, [post.isBookmarked]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+
+    if (showDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showDropdown]);
+
   // Get featured image - use first image from images array or extract from content
   const getPostImage = (): string => {
     // Priority 1: Use first image from images array
@@ -199,42 +231,62 @@ const BlogCard: React.FC<BlogCardProps> = ({
               <span>{post.commentCount || 0}</span>
             </div>
 
-            {/* Bookmark - Interactive */}
-            {onBookmark && (
+            {/* More Actions - Dropdown Menu */}
+            <div className="relative" ref={dropdownRef}>
               <button
-                className={`flex items-center gap-1 hover:text-cyan-600 transition-colors ${post.isBookmarked ? 'text-cyan-600' : ''}`}
-                title={post.isBookmarked ? 'Remove bookmark' : 'Bookmark'}
+                className="flex items-center justify-center w-8 h-8 hover:bg-gray-100 rounded-full transition-colors"
+                title="More actions"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onBookmark(post.id);
+                  setShowDropdown(!showDropdown);
                 }}
               >
-                <svg 
-                  className="w-4 h-4" 
-                  fill={post.isBookmarked ? 'currentColor' : 'none'} 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                 </svg>
               </button>
-            )}
 
-            {/* Report - Interactive (Admin or owner only) */}
-            {onReport && (currentUserId !== post.authorId || isAdmin) && (
-              <button
-                className="flex items-center gap-1 hover:text-orange-600 transition-colors"
-                title="Report post"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onReport(post.id, post.title);
-                }}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-1.964-1.333-2.732 0L3.082 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-              </button>
-            )}
+              {/* Dropdown Menu */}
+              {showDropdown && (
+                <div className="absolute right-0 bottom-full mb-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-1 z-50">
+                  {/* Delete Option for Workspace Creator */}
+                  {isWorkspace && onDeletePost && workspaceCreatorId === currentUserId && (
+                    <button
+                      className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-3 transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (window.confirm('Bạn có chắc muốn xóa bài viết này?')) {
+                          onDeletePost(post.id);
+                        }
+                        setShowDropdown(false);
+                      }}
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      <span>Xóa bài viết</span>
+                    </button>
+                  )}
+                  
+                  {/* Report Option (only show in main blog, not workspace) */}
+                  {!isWorkspace && onReport && (currentUserId !== post.authorId || isAdmin) && (
+                    <button
+                      className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onReport(post.id, post.title);
+                        setShowDropdown(false);
+                      }}
+                    >
+                      <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-1.964-1.333-2.732 0L3.082 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                      <span>Báo cáo bài viết</span>
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

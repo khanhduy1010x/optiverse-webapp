@@ -15,6 +15,7 @@ const BlogPostDetail: React.FC<BlogPostDetailProps> = ({
   onTagClick,
   isAdmin = false,
   currentUserId,
+  workspaceCreatorId,
   className = ''
 }) => {
   // Debug: Log post data
@@ -251,12 +252,18 @@ const BlogPostDetail: React.FC<BlogPostDetailProps> = ({
               </button>
             )}
 
-            {/* Delete button - chỉ hiển thị cho admin hoặc tác giả */}
-            {onDelete && (isAdmin || currentUserId === post.author?.userId) && (
+            {/* Delete button - hiển thị cho admin, tác giả, hoặc workspace creator */}
+            {onDelete && (isAdmin || currentUserId === post.author?.userId || (workspaceCreatorId && currentUserId === workspaceCreatorId)) && (
               <button
                 onClick={handleDelete}
-                className="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-800 transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
-                title={isAdmin ? "Xóa bài viết (Admin)" : "Xóa bài viết của bạn"}
+                className="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium bg-red-100 text-red-700 hover:bg-red-200 transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
+                title={
+                  isAdmin 
+                    ? "Xóa bài viết (Admin)" 
+                    : workspaceCreatorId && currentUserId === workspaceCreatorId
+                    ? "Xóa bài viết (Workspace Creator)"
+                    : "Xóa bài viết của bạn"
+                }
               >
                 <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
@@ -326,7 +333,7 @@ const BlogPostDetail: React.FC<BlogPostDetailProps> = ({
             </div>
             
             <div className="flex items-center space-x-1.5">
-              <svg className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="h-5 w-5 text-gray-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
               <span className="font-medium text-gray-900">{post.commentCount} bình luận</span>

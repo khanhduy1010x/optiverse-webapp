@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { 
-  BlogPost, 
+  BlogPost,
+  BlogPostWithAuthor,
   BlogComment, 
   BlogSearchFilters, 
   BlogSortBy,
@@ -9,8 +10,8 @@ import {
 import { ReportWithPost } from '../../types/blog/report.types';
 
 interface BlogState {
-  // Posts state
-  posts: BlogPost[];
+  // Posts state (can be BlogPost or BlogPostWithAuthor from real-time listener)
+  posts: (BlogPost | BlogPostWithAuthor)[];
   currentPost: BlogPost | null;
   postsLoading: boolean;
   postsError: string | null;
@@ -134,14 +135,14 @@ const blogSlice = createSlice({
     setPostsError: (state, action: PayloadAction<string | null>) => {
       state.postsError = action.payload;
     },
-    setPosts: (state, action: PayloadAction<BlogPost[]>) => {
+    setPosts: (state, action: PayloadAction<(BlogPost | BlogPostWithAuthor)[]>) => {
       state.posts = action.payload;
       state.postsError = null;
     },
-    addPost: (state, action: PayloadAction<BlogPost>) => {
+    addPost: (state, action: PayloadAction<BlogPost | BlogPostWithAuthor>) => {
       state.posts.unshift(action.payload);
     },
-    updatePost: (state, action: PayloadAction<BlogPost>) => {
+    updatePost: (state, action: PayloadAction<BlogPost | BlogPostWithAuthor>) => {
       const index = state.posts.findIndex(post => post.id === action.payload.id);
       if (index !== -1) {
         state.posts[index] = action.payload;
@@ -159,7 +160,7 @@ const blogSlice = createSlice({
     setCurrentPost: (state, action: PayloadAction<BlogPost | null>) => {
       state.currentPost = action.payload;
     },
-    appendPosts: (state, action: PayloadAction<BlogPost[]>) => {
+    appendPosts: (state, action: PayloadAction<(BlogPost | BlogPostWithAuthor)[]>) => {
       state.posts.push(...action.payload);
     },
     
