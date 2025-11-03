@@ -8,7 +8,17 @@
     "inviteFriends": "Mời bạn bè",
     "noFriends": "Chưa thêm bạn nào",
     "cancel": "Hủy",
-    "submit": "Tạo không gian làm việc"
+    "submit": "Tạo không gian làm việc",
+    "limitReached": "Đã đạt giới hạn Workspace",
+    "limitReachedTitle": "Đã đạt giới hạn Workspace",
+    "limitReachedDesc": "Bạn đã đạt giới hạn số lượng workspace cho gói của bạn.",
+    "currentUsage": "Sử dụng hiện tại",
+    "usage": "Sử dụng Workspace",
+    "membershipLevel": "Gói thành viên",
+    "upgradeTitle": "Cần thêm Workspace?",
+    "upgradeDesc": "Nâng cấp gói của bạn để tạo thêm workspace và mở khóa các tính năng bổ sung.",
+    "upgradeBtn": "Nâng cấp gói",
+    "close": "Đóng"
   },
   "passwordModal": {
     "setTitle": "Thiết lập mật khẩu workspace",
@@ -41,7 +51,12 @@
   "workspaceSelector": {
     "home": "Trang chủ",
     "loading": "Đang tải workspace...",
-    "createNew": "Tạo workspace mới"
+    "createNew": "Tạo Workspace Mới",
+    "myWorkspaces": "Workspace Của Tôi",
+    "memberOf": "Thành Viên Của",
+    "noWorkspaces": "Chưa có workspace nào",
+    "admin": "Quản trị",
+    "member": "Thành viên"
   },
   "workspaceHub": {
     "title": "Trung tâm Workspace",

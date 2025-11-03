@@ -149,9 +149,9 @@ export const NAV_SECTIONS: NavSection[] = [
         parentPath: '/admin/dashboard',
       },
       {
-        label: 'User Management',
+        label: 'MPs Management',
         path: '/admin/users',
-        icon: 'group',
+        icon: 'mps',
         parentPath: '/admin/dashboard',
       },
       {

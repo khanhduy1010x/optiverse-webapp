@@ -9,5 +9,12 @@
   "download_task_template_desc": "Download Excel template for tasks",
   "download_event_template_desc": "Download Excel template for events",
   "import_task_desc": "Import tasks from Excel file",
-  "import_event_desc": "Import events from Excel file"
+  "import_event_desc": "Import events from Excel file",
+  "op_currency_tooltip": "OP is our digital currency. Earn OP by completing tasks, focus sessions, and daily streaks. Spend OP on premium features and marketplace items.",
+  "op_faq_what": "What is OP currency?",
+  "op_faq_what_answer": "OP (Optimization Points) is Optiverse's digital currency system that rewards you for productivity and engagement. It's earned through completing tasks, maintaining focus sessions, and building streaks.",
+  "op_faq_how": "How to earn OP?",
+  "op_faq_how_answer": "Complete tasks • Maintain focus sessions • Build daily streaks • Achieve milestones • Complete achievements • Participate in challenges",
+  "op_faq_cashout": "Can I withdraw OP to real money?",
+  "op_faq_cashout_answer": "OP is used exclusively within Optiverse for premium features, marketplace items, and exclusive content. Currently, direct cashout is not available, but OP can unlock valuable digital rewards and benefits."
 }

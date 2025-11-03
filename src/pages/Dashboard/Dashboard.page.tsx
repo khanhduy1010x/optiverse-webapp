@@ -85,7 +85,7 @@ const Dashboard: React.FC = () => {
         <div className="flex flex-col items-center bg-white rounded-xl shadow p-4 border-t-4 border-blue-300">
           <FaRegStar className="text-blue-300 text-2xl mb-1" />
           <div className="text-xs text-gray-500">{t('percent_reviewed')}</div>
-          <div className="text-xl font-bold text-blue-500">{flashcardPercentReviewed}%</div>
+          <div className="text-xl font-bold text-blue-500">{flashcardPercentReviewed.toFixed(2)}%</div>
         </div>
         {/* Task: Tasks Completed Today */}
         <div className="flex flex-col items-center bg-white rounded-xl shadow p-4 border-t-4 border-green-400">
