@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import BlogCard from '../../components/blog/BlogCard.component';
-import ReportModal from '../../components/blog/ReportModal.component';
-import { useLikes, useReports } from '../../hooks/blog';
-import { useAuthState } from "../../hooks/useAuthState.hook";
-import { useAuthStatus } from '../../hooks/auth/useAuthStatus.hook';
-import { BlogPostWithAuthor } from '../../types/blog/blog.types';
+import { useParams, useNavigate } from 'react-router-dom';
+import BlogCard from '../../../components/blog/BlogCard.component';
+import ReportModal from '../../../components/blog/ReportModal.component';
+import { useLikes, useReports } from '../../../hooks/blog';
+import { useAuthState } from '../../../hooks/useAuthState.hook';
+import { useAuthStatus } from '../../../hooks/auth/useAuthStatus.hook';
+import { BlogPostWithAuthor } from '../../../types/blog/blog.types';
 
-const BlogBookmarksPage: React.FC = () => {
+/**
+ * Workspace Blog Bookmarks Page
+ */
+const WorkspaceBlogBookmarksPage: React.FC = () => {
+  const { workspaceId } = useParams<{ workspaceId: string }>();
   const navigate = useNavigate();
   const [bookmarkedPosts, setBookmarkedPosts] = useState<BlogPostWithAuthor[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -48,7 +52,10 @@ const BlogBookmarksPage: React.FC = () => {
       setIsLoading(true);
       setError(null);
       const posts = await fetchBookmarkedPostsWithDetails();
-      setBookmarkedPosts(posts);
+      
+      // Filter only workspace posts
+      const workspacePosts = posts.filter(post => post.workspaceId === workspaceId);
+      setBookmarkedPosts(workspacePosts);
     } catch (err) {
       console.error('Error loading bookmarked posts:', err);
       setError('Không thể tải danh sách bài đã lưu');
@@ -58,13 +65,12 @@ const BlogBookmarksPage: React.FC = () => {
   };
 
   const handlePostClick = (postId: string) => {
-    navigate(`/blog/post/${postId}`);
+    navigate(`/workspace/${workspaceId}/blog/post/${postId}`);
   };
 
   const handleLike = async (postId: string) => {
     try {
       await togglePostLike(postId);
-      // Refresh bookmarked posts để cập nhật like status
       await loadBookmarkedPosts();
     } catch (error) {
       console.error('Error liking post:', error);
@@ -81,7 +87,6 @@ const BlogBookmarksPage: React.FC = () => {
       const newBookmarks = new Set(bookmarkedPostIds);
       if (newBookmarks.has(postId)) {
         newBookmarks.delete(postId);
-        // Remove from displayed list
         setBookmarkedPosts(prev => prev.filter(p => p.id !== postId));
       } else {
         newBookmarks.add(postId);
@@ -95,7 +100,7 @@ const BlogBookmarksPage: React.FC = () => {
   };
 
   const handleTagClick = (tag: string) => {
-    navigate(`/blog?search=${encodeURIComponent(tag)}`);
+    navigate(`/workspace/${workspaceId}/blog?search=${encodeURIComponent(tag)}`);
   };
 
   const handleReportPost = (postId: string, postTitle: string) => {
@@ -114,9 +119,9 @@ const BlogBookmarksPage: React.FC = () => {
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <button
-                  onClick={() => navigate('/blog')}
+                  onClick={() => navigate(`/workspace/${workspaceId}/blog`)}
                   className="text-gray-600 hover:text-gray-900 transition-colors"
-                  title="Back to Blog"
+                  title="Back to Workspace Blog"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -127,7 +132,7 @@ const BlogBookmarksPage: React.FC = () => {
                 </h1>
               </div>
               <p className="text-sm text-gray-600 ml-7">
-                Danh sách các bài viết bạn đã bookmark
+                Danh sách các bài viết workspace bạn đã bookmark
               </p>
             </div>
           </div>
@@ -188,7 +193,7 @@ const BlogBookmarksPage: React.FC = () => {
                 Hãy bookmark những bài viết yêu thích để xem lại sau
               </p>
               <button
-                onClick={() => navigate('/blog')}
+                onClick={() => navigate(`/workspace/${workspaceId}/blog`)}
                 className="px-8 py-3 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
                 style={{
                   background: 'linear-gradient(135deg, #21b4ca 0%, #1e90ff 100%)',
@@ -252,4 +257,4 @@ const BlogBookmarksPage: React.FC = () => {
   );
 };
 
-export default BlogBookmarksPage;
+export default WorkspaceBlogBookmarksPage;

@@ -36,29 +36,35 @@ class BlogService {
       // Clean HTML content before saving
       const cleanContent = this.cleanHtmlContent(postData.content);
       
+      const timestamp = Date.now();
+      const isPublished = !postData.isDraft && postData.isPublic;
+      
       const newPost: BlogPost = {
         id: postId,
         title: postData.title,
         content: cleanContent,
-        status: postData.status || 'draft',
-        visibility: postData.visibility || 'public',
+        excerpt: postData.excerpt,
         authorId: userId,
         tags: postData.tags || [],
         images: postData.images || [],
+        isPublic: postData.isPublic,
+        isDraft: postData.isDraft,
         metaTitle: postData.metaTitle || postData.title,
-
-        readTime: this.calculateReadTime(cleanContent),
         viewCount: 0,
         likeCount: 0,
         commentCount: 0,
         bookmarkCount: 0,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-        publishedAt: postData.status === 'published' ? Date.now() : undefined,
-        seoKeywords: postData.seoKeywords || []
+        createdAt: timestamp,
+        updatedAt: timestamp,
+        ...(isPublished && { publishedAt: timestamp })
       };
 
-      await update(postRef, newPost);
+      // Remove undefined values before updating Firebase
+      const cleanPost = Object.fromEntries(
+        Object.entries(newPost).filter(([_, v]) => v !== undefined)
+      );
+
+      await update(postRef, cleanPost);
       
       // Lấy thông tin author
       const authorInfo = await this.getAuthorInfo(userId);
@@ -205,6 +211,10 @@ class BlogService {
 
       const posts = snapshot.val();
       let postsArray = Object.values(posts) as BlogPost[];
+
+      // ✅ FIX: Loại bỏ workspace blog posts khỏi blog global
+      // Chỉ lấy posts KHÔNG có workspaceId (tức là blog posts công khai)
+      postsArray = postsArray.filter(post => !post.workspaceId);
 
       // Lọc theo status (mặc định chỉ lấy published posts)
       const statusFilter = filters.status || 'published';
@@ -427,9 +437,9 @@ class BlogService {
   }
 
   /**
-   * Lấy thông tin author
+   * Lấy thông tin author (public method for hooks)
    */
-  private async getAuthorInfo(authorId: string): Promise<BlogAuthor | null> {
+  async getAuthorInfo(authorId: string): Promise<BlogAuthor | null> {
     try {
       // Gọi API để lấy thông tin user
       const response = await api.post<ApiResponse<any>>(
@@ -532,6 +542,127 @@ class BlogService {
       // Có thể implement sau nếu cần thiết
     } catch (error) {
       console.error('Error cleaning up post data:', error);
+    }
+  }
+
+  /**
+   * ========================================
+   * WORKSPACE BLOG INTEGRATION
+   * ========================================
+   */
+
+  /**
+   * Tạo workspace blog post
+   */
+  async createWorkspaceBlogPost(
+    workspaceId: string,
+    postData: CreateBlogPostRequest
+  ): Promise<BlogPostWithAuthor> {
+    try {
+      const userId = localStorage.getItem('user_id');
+      if (!userId) throw new Error('User not logged in');
+
+      const postRef = push(ref(db, this.POSTS_PATH));
+      const postId = postRef.key!;
+
+      const cleanContent = this.cleanHtmlContent(postData.content);
+      
+      const timestamp = Date.now();
+      const isPublished = !postData.isDraft && postData.isPublic;
+      
+      const newPost: BlogPost = {
+        id: postId,
+        title: postData.title,
+        content: cleanContent,
+        excerpt: postData.excerpt,
+        authorId: userId,
+        tags: postData.tags || [],
+        images: postData.images || [],
+        isPublic: postData.isPublic,
+        isDraft: postData.isDraft,
+        metaTitle: postData.metaTitle || postData.title,
+        viewCount: 0,
+        likeCount: 0,
+        commentCount: 0,
+        bookmarkCount: 0,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+        ...(isPublished && { publishedAt: timestamp }), // Only add publishedAt if published
+        
+        // Workspace Integration
+        workspaceId: workspaceId
+      };
+
+      // Remove undefined values before updating Firebase
+      const cleanPost = Object.fromEntries(
+        Object.entries(newPost).filter(([_, v]) => v !== undefined)
+      );
+
+      await update(postRef, cleanPost);
+      
+      const authorInfo = await this.getAuthorInfo(userId);
+      
+      return {
+        ...newPost,
+        author: authorInfo
+      } as BlogPostWithAuthor;
+    } catch (error) {
+      console.error('Error creating workspace blog post:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Lấy tất cả blog posts của workspace
+   */
+  async getWorkspaceBlogPosts(workspaceId: string): Promise<BlogPostWithAuthor[]> {
+    try {
+      const postsRef = ref(db, this.POSTS_PATH);
+      const snapshot = await get(postsRef);
+      
+      if (!snapshot.exists()) {
+        return [];
+      }
+
+      const allPosts = snapshot.val();
+      
+      // Filter posts by workspaceId
+      const workspacePosts = Object.entries(allPosts)
+        .filter(([_, post]: [string, any]) => post.workspaceId === workspaceId)
+        .map(([id, post]: [string, any]) => ({
+          ...post,
+          id
+        })) as BlogPost[];
+
+      // Get author info for all posts
+      const postsWithAuthors = await Promise.all(
+        workspacePosts.map(async (post) => {
+          const authorInfo = await this.getAuthorInfo(post.authorId);
+          return {
+            ...post,
+            author: authorInfo
+          } as BlogPostWithAuthor;
+        })
+      );
+
+      // Sort by createdAt desc
+      return postsWithAuthors.sort((a, b) => b.createdAt - a.createdAt);
+    } catch (error) {
+      console.error('Error getting workspace blog posts:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Check if workspace blog exists (có ít nhất 1 post)
+   */
+  async checkWorkspaceBlogExists(workspaceId: string): Promise<boolean> {
+    try {
+      const posts = await this.getWorkspaceBlogPosts(workspaceId);
+      return posts.length > 0;
+    } catch (error) {
+      console.error('Error checking workspace blog:', error);
+      return false;
     }
   }
 }

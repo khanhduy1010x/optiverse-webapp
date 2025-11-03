@@ -1,5 +1,7 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { ref, onValue, get } from 'firebase/database';
+import { db } from '../../firebase';
 import { RootState, AppDispatch } from '../../store';
 import {
   setPostsLoading,
@@ -15,8 +17,10 @@ import {
   setTrendingPosts
 } from '../../store/slices/blog.slice';
 import { BlogService, SearchService } from '../../services/blog';
+import blogService from '../../services/blog/blog.service';
 import { 
-  BlogPost, 
+  BlogPost,
+  BlogPostWithAuthor,
   CreateBlogPostRequest, 
   UpdateBlogPostRequest
 } from '../../types/blog';
@@ -35,8 +39,119 @@ export function useBlog() {
     trendingPosts
   } = useSelector((state: RootState) => state.blog);
 
+  // Track if real-time listener is active
+  const listenerActiveRef = useRef(false);
+  const currentUserIdRef = useRef<string | null>(null);
+
+  // Get current user ID from localStorage
+  useEffect(() => {
+    try {
+      const userId = localStorage.getItem('user_id');
+      currentUserIdRef.current = userId;
+    } catch (error) {
+      console.error('Error getting user from localStorage:', error);
+    }
+  }, []);
+
   /**
-   * Lấy danh sách blog posts
+   * Setup real-time listener for blog posts (MAIN BLOG ONLY - not workspace)
+   */
+  useEffect(() => {
+    if (listenerActiveRef.current) return;
+    
+    console.log('📡 useBlog: Setting up real-time listener for main blog');
+    listenerActiveRef.current = true;
+
+    const postsRef = ref(db, 'blogPosts');
+    
+    const unsubscribe = onValue(
+      postsRef,
+      async (snapshot) => {
+        try {
+          const data = snapshot.val();
+
+          if (!data) {
+            console.log('⚠️ useBlog: No posts found');
+            dispatch(setPosts([]));
+            return;
+          }
+
+          // Filter MAIN blog posts (không có workspaceId)
+          const mainBlogPosts = Object.entries(data)
+            .filter(([_, post]: [string, any]) => !post.workspaceId)
+            .map(([id, post]: [string, any]) => ({
+              ...post,
+              id
+            })) as BlogPost[];
+
+          console.log(`✅ useBlog: Found ${mainBlogPosts.length} main blog posts`);
+
+          // Get author info for all posts
+          const postsWithAuthors = await Promise.all(
+            mainBlogPosts.map(async (post) => {
+              try {
+                const authorInfo = await blogService['getAuthorInfo'](post.authorId);
+                
+                // Check if current user liked this post
+                let isLiked = false;
+                if (currentUserIdRef.current) {
+                  const likePath = `blogLikes/${post.id}/${currentUserIdRef.current}`;
+                  const likeRef = ref(db, likePath);
+                  const likeSnapshot = await get(likeRef);
+                  isLiked = likeSnapshot.exists();
+                }
+
+                return {
+                  ...post,
+                  author: authorInfo,
+                  isLiked
+                } as BlogPostWithAuthor;
+              } catch (error) {
+                console.error(`Error fetching data for post ${post.id}:`, error);
+                return {
+                  ...post,
+                  author: {
+                    id: post.authorId,
+                    userId: post.authorId,
+                    name: 'Unknown',
+                    displayName: 'Unknown User',
+                    postCount: 0,
+                    followerCount: 0,
+                    followingCount: 0,
+                    isVerified: false,
+                    createdAt: Date.now(),
+                    updatedAt: Date.now()
+                  },
+                  isLiked: false
+                } as BlogPostWithAuthor;
+              }
+            })
+          );
+
+          // Sort by createdAt desc (newest first)
+          postsWithAuthors.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+          dispatch(setPosts(postsWithAuthors));
+        } catch (error) {
+          console.error('❌ useBlog: Error in real-time listener:', error);
+          dispatch(setPostsError(error instanceof Error ? error.message : 'Failed to fetch posts'));
+        }
+      },
+      (error) => {
+        console.error('❌ useBlog: Firebase listener error:', error);
+        dispatch(setPostsError(error.message));
+      }
+    );
+
+    return () => {
+      console.log('🔌 useBlog: Cleaning up real-time listener');
+      unsubscribe();
+      listenerActiveRef.current = false;
+    };
+  }, [dispatch]);
+
+  /**
+   * Lấy danh sách blog posts (manual fetch - not needed with real-time listener)
    */
   const fetchPosts = useCallback(async (options?: {
     page?: number;
@@ -44,37 +159,10 @@ export function useBlog() {
     sortBy?: string;
     reset?: boolean;
   }) => {
-    const {
-      page = 0,
-      limit = 20,
-      sortBy: optionSortBy,
-      reset = false
-    } = options || {};
-
-    try {
-      dispatch(setPostsLoading(true));
-      dispatch(setPostsError(null));
-
-      const currentSortBy = optionSortBy || sortBy;
-      const fetchedPosts = await BlogService.getPosts({ sortBy: currentSortBy }, limit, page * limit);
-      
-      if (reset || page === 0) {
-        dispatch(setPosts(fetchedPosts));
-        dispatch(setCurrentPage(0));
-      } else {
-        dispatch(appendPosts(fetchedPosts));
-        dispatch(setCurrentPage(page));
-      }
-
-      // Kiểm tra có còn posts để load không
-      dispatch(setHasMore(fetchedPosts.length === limit));
-    } catch (error) {
-      console.error('Error fetching posts:', error);
-      dispatch(setPostsError(error instanceof Error ? error.message : 'Failed to fetch posts'));
-    } finally {
-      dispatch(setPostsLoading(false));
-    }
-  }, [dispatch, sortBy]);
+    // Real-time listener handles this automatically
+    // This function kept for compatibility but does nothing
+    console.log('ℹ️ fetchPosts called but real-time listener handles updates automatically');
+  }, []);
 
   /**
    * Lấy posts theo author
@@ -254,23 +342,25 @@ export function useBlog() {
    * Generate excerpt từ content
    */
   const generateExcerpt = useCallback((content: string, maxLength: number = 200) => {
-    return BlogService.generateExcerpt(content, maxLength);
+    // Simple excerpt generation
+    const plainText = content.replace(/<[^>]*>/g, '').trim();
+    return plainText.length > maxLength 
+      ? plainText.substring(0, maxLength) + '...'
+      : plainText;
   }, []);
 
   /**
    * Tính read time
    */
   const calculateReadTime = useCallback((content: string) => {
-    return BlogService.calculateReadTime(content);
+    const wordsPerMinute = 200;
+    const plainText = content.replace(/<[^>]*>/g, '');
+    const words = plainText.trim().split(/\s+/).length;
+    const minutes = Math.ceil(words / wordsPerMinute);
+    return minutes;
   }, []);
 
-  // Auto-fetch posts khi component mount
-  useEffect(() => {
-    if (posts.length === 0) {
-      fetchPosts(0, 20, true);
-    }
-  }, []);
-
+  // Note: Real-time listener handles auto-fetch, no need for manual fetch on mount
   // Auto-fetch trending posts
   useEffect(() => {
     if (trendingPosts.length === 0) {

@@ -15,6 +15,7 @@ const BlogPostDetail: React.FC<BlogPostDetailProps> = ({
   onTagClick,
   isAdmin = false,
   currentUserId,
+  workspaceCreatorId,
   className = ''
 }) => {
   // Debug: Log post data
@@ -108,33 +109,33 @@ const BlogPostDetail: React.FC<BlogPostDetailProps> = ({
 
   return (
     <>
-      <article className={`max-w-4xl mx-auto ${className}`}>
+      <article className={`bg-white rounded-2xl shadow-sm p-8 ${className}`}>
       {/* Header */}
       <header className="mb-8">
 
 
         {/* Title */}
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4 leading-tight">
+        <h1 className="text-4xl font-bold text-gray-900 mb-4 leading-tight">
           {post.title}
         </h1>
 
 
 
         {/* Author and Meta Info */}
-        <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-6">
+        <div className="flex items-center justify-between border-b border-gray-200 pb-6">
           <div className="flex items-center space-x-4">
             {post.author && (
               <>
                 <div className="flex-shrink-0">
                   {post.author.avatar ? (
                     <img
-                      className="h-12 w-12 rounded-full object-cover"
+                      className="h-12 w-12 rounded-full object-cover ring-2 ring-white shadow-sm"
                       src={post.author.avatar}
                       alt={post.author.displayName}
                     />
                   ) : (
-                    <div className="h-12 w-12 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
-                      <span className="text-lg font-medium text-gray-700 dark:text-gray-300">
+                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center shadow-sm">
+                      <span className="text-lg font-semibold text-white">
                         {post.author.displayName?.charAt(0)?.toUpperCase() || 'U'}
                       </span>
                     </div>
@@ -142,12 +143,12 @@ const BlogPostDetail: React.FC<BlogPostDetailProps> = ({
                 </div>
                 <div>
                   <div className="flex items-center">
-                    <p className="text-lg font-medium text-gray-900 dark:text-white">
+                    <p className="text-lg font-medium text-gray-900">
                       {post.author.displayName || 'Unknown User'}
                     </p>
                     {post.author.isVerified && (
                       <svg
-                        className="ml-1 h-5 w-5 text-blue-500"
+                        className="ml-1 h-5 w-5 text-cyan-500"
                         fill="currentColor"
                         viewBox="0 0 20 20"
                       >
@@ -159,7 +160,7 @@ const BlogPostDetail: React.FC<BlogPostDetailProps> = ({
                       </svg>
                     )}
                   </div>
-                  <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 space-x-2">
+                  <div className="flex items-center text-sm text-gray-500 space-x-2">
                     <span>{formatDate(post.publishedAt || post.createdAt)}</span>
                     <span>•</span>
                     <span>{calculateReadTime(post.content)} phút đọc</span>
@@ -175,10 +176,10 @@ const BlogPostDetail: React.FC<BlogPostDetailProps> = ({
           <div className="flex items-center space-x-2">
             <button
               onClick={handleLike}
-              className={`inline-flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
+              className={`inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105 ${
                 isLiked
-                  ? 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  ? 'bg-red-50 text-red-600 hover:bg-red-100'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
               <svg
@@ -199,10 +200,10 @@ const BlogPostDetail: React.FC<BlogPostDetailProps> = ({
 
             <button
               onClick={handleBookmark}
-              className={`inline-flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
+              className={`inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105 ${
                 isBookmarked
-                  ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  ? 'bg-cyan-50 text-cyan-600 hover:bg-cyan-100'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
               <svg
@@ -222,7 +223,7 @@ const BlogPostDetail: React.FC<BlogPostDetailProps> = ({
 
             <button
               onClick={handleShare}
-              className="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200"
+              className="inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all duration-200 hover:scale-105"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
@@ -237,7 +238,7 @@ const BlogPostDetail: React.FC<BlogPostDetailProps> = ({
             {onReport && !isAdmin && currentUserId !== post.author?.userId && (
               <button
                 onClick={() => onReport(post.id, post.title)}
-                className="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-red-100 dark:hover:bg-red-900 hover:text-red-700 dark:hover:text-red-300 transition-colors duration-200"
+                className="inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-all duration-200 hover:scale-105"
                 title="Tố cáo bài viết"
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -251,12 +252,18 @@ const BlogPostDetail: React.FC<BlogPostDetailProps> = ({
               </button>
             )}
 
-            {/* Delete button - chỉ hiển thị cho admin hoặc tác giả */}
-            {onDelete && (isAdmin || currentUserId === post.author?.userId) && (
+            {/* Delete button - hiển thị cho admin, tác giả, hoặc workspace creator */}
+            {onDelete && (isAdmin || currentUserId === post.author?.userId || (workspaceCreatorId && currentUserId === workspaceCreatorId)) && (
               <button
                 onClick={handleDelete}
-                className="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-800 transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
-                title={isAdmin ? "Xóa bài viết (Admin)" : "Xóa bài viết của bạn"}
+                className="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium bg-red-100 text-red-700 hover:bg-red-200 transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
+                title={
+                  isAdmin 
+                    ? "Xóa bài viết (Admin)" 
+                    : workspaceCreatorId && currentUserId === workspaceCreatorId
+                    ? "Xóa bài viết (Workspace Creator)"
+                    : "Xóa bài viết của bạn"
+                }
               >
                 <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
@@ -287,70 +294,62 @@ const BlogPostDetail: React.FC<BlogPostDetailProps> = ({
 
       {/* Content */}
       <div className="w-full mb-8">
-        <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 border-b-2 border-blue-500 pb-2">
-          📝 Nội dung bài viết
-        </h3>
-        <div className="w-full min-h-[150px] p-8 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 rounded-xl border-2 border-blue-200 dark:border-blue-600 shadow-lg">
-          <div className="text-lg text-gray-900 dark:text-gray-100 leading-relaxed whitespace-pre-wrap font-medium">
-            {post.content ? (
-              <div className="text-xl leading-8">{post.content}</div>
-            ) : (
-              <div className="text-red-600 dark:text-red-400 text-xl font-bold text-center py-8">
-                ❌ KHÔNG CÓ NỘI DUNG HOẶC KHÔNG TẢI ĐƯỢC
-              </div>
-            )}
-          </div>
+        <div className="prose prose-lg max-w-none">
+          <div 
+            className="text-gray-800 leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: post.content }}
+          />
         </div>
       </div>
 
       {/* Tags */}
       {post.tags && post.tags.length > 0 && (
-        <div className="border-t border-gray-200 dark:border-gray-700 pt-6 mb-8">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Tags</h3>
+        <div className="border-t border-gray-200 pt-6 mb-8">
+          <h3 className="text-lg font-semibold text-gray-900 mb-3">Tags</h3>
           <div className="flex flex-wrap gap-2">
             {post.tags.map((tag) => (
-              <span
+              <button
                 key={tag}
                 onClick={() => onTagClick?.(tag)}
-                className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200 cursor-pointer"
+                className="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-cyan-50 text-cyan-700 hover:bg-cyan-100 transition-colors duration-200 cursor-pointer"
               >
                 #{tag}
-              </span>
+              </button>
             ))}
           </div>
         </div>
       )}
 
       {/* Stats */}
-      <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-        <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+      <div className="border-t border-gray-200 pt-6">
+        <div className="flex items-center justify-between text-sm">
           <div className="flex items-center space-x-6">
-            <div className="flex items-center space-x-1">
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="flex items-center space-x-1.5">
+              <svg className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
               </svg>
-              <span>{post.viewCount} lượt xem</span>
+              <span className="font-medium text-gray-900">{post.viewCount} lượt xem</span>
             </div>
             
-            <div className="flex items-center space-x-1">
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="flex items-center space-x-1.5">
+              <svg className="h-5 w-5 text-gray-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
-              <span>{post.commentCount} bình luận</span>
+              <span className="font-medium text-gray-900">{post.commentCount} bình luận</span>
             </div>
 
-            <div className="flex items-center space-x-1">
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="flex items-center space-x-1.5">
+              <svg className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
               </svg>
-              <span>{post.bookmarkCount} lưu</span>
+              <span className="font-medium text-gray-900">{post.bookmarkCount} lưu</span>
             </div>
           </div>
 
           {post.updatedAt !== post.createdAt && (
             <div>
-              <span>Cập nhật lần cuối: {formatRelativeDate(post.updatedAt)}</span>
+              <span className="font-medium text-gray-700">Cập nhật lần cuối: {formatRelativeDate(post.updatedAt)}</span>
             </div>
           )}
         </div>

@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import WorkspaceService from '../../services/workspace.service';
+import groupService from '../../services/group.service';
 import {
   WorkspaceDetailDto,
   UserDetailDto,
@@ -52,11 +53,54 @@ const useWorkspaceManagement = () => {
       const data = await WorkspaceService.getWorkspaceById(workspaceId);
       setWorkspaceDetail(data);
       setHasPassword(data.hasPassword || false);
+      
+      // Auto-create workspace chat if not exists
+      await ensureWorkspaceChat(data);
     } catch (err) {
       console.error('Failed to load workspace:', err);
       showError(t('dashboardWorkspace.toasts.workspaceLoadFailed'));
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Ensure workspace chat exists and sync members
+  const ensureWorkspaceChat = async (workspace: WorkspaceDetailDto) => {
+    if (!workspaceId) return;
+    
+    try {
+      console.log('🔍 Checking workspace chat...');
+      
+      // Check if workspace chat exists
+      const existingChat = await groupService.getWorkspaceChat(workspaceId);
+      
+      if (!existingChat) {
+        console.log('🆕 Creating workspace chat...');
+        
+        // Get all active member IDs
+        const activeMemberIds = workspace.members?.active?.map(m => m.user_id) || [];
+        
+        // Create workspace chat
+        const chatId = await groupService.createWorkspaceChat(
+          workspaceId,
+          workspace.name,
+          activeMemberIds
+        );
+        
+        if (chatId) {
+          console.log('✅ Workspace chat created:', chatId);
+        } else {
+          console.warn('⚠️ Failed to create workspace chat');
+        }
+      } else {
+        console.log('✅ Workspace chat already exists:', existingChat.id);
+        
+        // Sync members to make sure they're up to date
+        const activeMemberIds = workspace.members?.active?.map(m => m.user_id) || [];
+        await groupService.syncWorkspaceMembers(workspaceId, activeMemberIds);
+      }
+    } catch (error) {
+      console.error('❌ Error ensuring workspace chat:', error);
     }
   };
 
@@ -83,6 +127,34 @@ const useWorkspaceManagement = () => {
     : null;
 
   const reloadWorkspaceData = loadWorkspaceData;
+
+  // Sync workspace chat members
+  const syncWorkspaceChat = async () => {
+    if (!workspaceId || !workspaceDetail) return;
+    
+    try {
+      console.log('🔄 Syncing workspace chat members...');
+      
+      // Get all active member IDs
+      const activeMemberIds = members.map(m => m.user_id);
+      
+      console.log('Active members to sync:', activeMemberIds);
+      
+      // Sync members to workspace chat
+      const synced = await groupService.syncWorkspaceMembers(
+        workspaceId,
+        activeMemberIds
+      );
+      
+      if (synced) {
+        console.log('✅ Workspace chat members synced successfully');
+      } else {
+        console.warn('⚠️ Failed to sync workspace chat members');
+      }
+    } catch (error) {
+      console.error('❌ Error syncing workspace chat:', error);
+    }
+  };
 
   const handleUpRole = async (userId: string) => {
     if (!workspaceId) return;
@@ -147,6 +219,9 @@ const useWorkspaceManagement = () => {
         userId.toString()
       );
       await reloadWorkspaceData();
+      
+      // Sync workspace chat after removing member
+      await syncWorkspaceChat();
     } catch (err) {
       console.error('Failed to remove member:', err);
       showError(t('dashboardWorkspace.toasts.memberRemoveFailed'));
@@ -173,6 +248,10 @@ const useWorkspaceManagement = () => {
       console.log('Accepting request for userId:', userId);
       await WorkspaceService.approveJoinRequest(workspaceId, userId.toString());
       await reloadWorkspaceData();
+      
+      // Sync workspace chat members after accepting
+      await syncWorkspaceChat();
+      
       showSuccess(t('dashboardWorkspace.toasts.requestAccepted'));
     } catch (err) {
       console.error('Failed to accept request:', err);
@@ -198,6 +277,9 @@ const useWorkspaceManagement = () => {
     try {
       await WorkspaceService.banMember(workspaceId, userId.toString());
       await reloadWorkspaceData();
+      
+      // Sync workspace chat after banning
+      await syncWorkspaceChat();
     } catch (err) {
       console.error('Failed to ban user:', err);
       showError(t('dashboardWorkspace.toasts.userBanFailed'));
@@ -255,6 +337,10 @@ const useWorkspaceManagement = () => {
     try {
       await WorkspaceService.unbanUser(workspaceId, userId, 'unban');
       await reloadWorkspaceData();
+      
+      // Sync workspace chat after unbanning
+      await syncWorkspaceChat();
+      
       showSuccess(t('dashboardWorkspace.toasts.unbanAndRestoreSuccess'));
     } catch (err) {
       console.error('Failed to unban user:', err);

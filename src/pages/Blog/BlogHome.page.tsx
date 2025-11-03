@@ -1,12 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { 
-  BlogList, 
-  BlogSidebar, 
-  SearchBar,
-  ReportModal 
-} from '../../components/blog';
-
+import BlogCard from '../../components/blog/BlogCard.component';
+import ReportModal from '../../components/blog/ReportModal.component';
 import { useBlog, useSearch, useLikes, useReports } from '../../hooks/blog';
 import { useAuthState } from "../../hooks/useAuthState.hook";
 import { useAuthStatus } from '../../hooks/auth/useAuthStatus.hook';
@@ -16,18 +11,11 @@ import { BlogPostWithAuthor } from '../../types/blog';
 const BlogHomePage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [sortBy, setSortBy] = useState<BlogSortBy>('newest');
+  const [sortBy, setSortBy] = useState<BlogSortBy>(BlogSortBy.NEWEST);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchType, setSearchType] = useState<SearchType>('all');
   const [popularPosts, setPopularPosts] = useState<BlogPostWithAuthor[]>([]);
-  const [filters, setFilters] = useState<BlogSearchFilters>({
-    query: '',
-    tags: [],
-    authorId: '',
-    sortBy: BlogSortBy.CREATED_DESC,
-    page: 0,
-    limit: 20
-  });
+  const [filteredPosts, setFilteredPosts] = useState<BlogPostWithAuthor[]>([]);
 
   // Report Modal state
   const [reportModalOpen, setReportModalOpen] = useState(false);
@@ -37,8 +25,8 @@ const BlogHomePage: React.FC = () => {
   const {
     posts,
     trendingPosts,
-    isLoading,
-    error,
+    postsLoading,
+    postsError,
     pagination,
     fetchPosts,
     fetchPopularPosts,
@@ -48,11 +36,10 @@ const BlogHomePage: React.FC = () => {
 
   const {
     searchResults,
-    isSearching,
+    searchLoading,
     searchPosts,
     clearSearch,
     popularTags,
-    fetchPopularTags
   } = useSearch();
 
   const { user } = useAuthState();
@@ -62,6 +49,24 @@ const BlogHomePage: React.FC = () => {
 
   // Ref cho scroll container
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Bookmark state (using localStorage for now)
+  const [bookmarkedPosts, setBookmarkedPosts] = useState<Set<string>>(new Set());
+
+  // Load bookmarks from localStorage on mount
+  useEffect(() => {
+    if (user?.user_id) {
+      const saved = localStorage.getItem(`bookmarks_${user.user_id}`);
+      if (saved) {
+        try {
+          const bookmarks = JSON.parse(saved);
+          setBookmarkedPosts(new Set(bookmarks));
+        } catch (error) {
+          console.error('Error loading bookmarks:', error);
+        }
+      }
+    }
+  }, [user?.user_id]);
 
   // Function để scroll lên đầu
   const scrollToTop = () => {
@@ -73,44 +78,49 @@ const BlogHomePage: React.FC = () => {
     }
   };
 
-  // Xử lý URL search params khi component mount
+  // Filter and sort posts
   useEffect(() => {
-    const searchParam = searchParams.get('search');
-    if (searchParam) {
-      setSearchQuery(searchParam);
-      setSearchType('tags');
-      searchPosts({ 
-        query: searchParam, 
-        searchType: 'tags' 
-      });
-    } else {
-      fetchPosts({ 
-        page: 0, 
-        limit: 12, 
-        sortBy
-      });
-    }
-  }, [searchParams, sortBy]);
+    let filtered = searchQuery ? [...searchResults] : [...posts];
 
-  useEffect(() => {
-    if (!searchParams.get('search')) {
-      fetchPosts({ 
-        page: 0, 
-        limit: 12, 
-        sortBy
+    // Search filter (if not using searchResults from useSearch)
+    if (searchQuery.trim() && searchResults.length === 0) {
+      const query = searchQuery.toLowerCase();
+      filtered = posts.filter(post => {
+        const postWithAuthor = post as BlogPostWithAuthor;
+        if (searchType === 'title') {
+          return postWithAuthor.title.toLowerCase().includes(query);
+        } else if (searchType === 'tags') {
+          return postWithAuthor.tags?.some(tag => tag.toLowerCase().includes(query));
+        } else if (searchType === 'author') {
+          return postWithAuthor.author?.displayName?.toLowerCase().includes(query) ||
+                 postWithAuthor.author?.name?.toLowerCase().includes(query);
+        } else {
+          // 'all' - search in title, content, and tags
+          return postWithAuthor.title.toLowerCase().includes(query) ||
+                 postWithAuthor.content.toLowerCase().includes(query) ||
+                 postWithAuthor.tags?.some(tag => tag.toLowerCase().includes(query));
+        }
       });
     }
-  }, [sortBy]);
 
-  // Tự động search lại khi searchType thay đổi
-  useEffect(() => {
-    if (searchQuery.trim()) {
-      searchPosts({
-        query: searchQuery,
-        searchType: searchType
-      });
+    // Sort
+    switch (sortBy) {
+      case BlogSortBy.NEWEST:
+        filtered.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        break;
+      case BlogSortBy.OLDEST:
+        filtered.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+        break;
+      case BlogSortBy.MOST_VIEWED:
+        filtered.sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
+        break;
+      case BlogSortBy.MOST_LIKED:
+        filtered.sort((a, b) => (b.likeCount || 0) - (a.likeCount || 0));
+        break;
     }
-  }, [searchType]);
+
+    setFilteredPosts(filtered as BlogPostWithAuthor[]);
+  }, [posts, searchResults, searchQuery, searchType, sortBy]);
 
   // Fetch popular posts khi component mount
   useEffect(() => {
@@ -128,7 +138,6 @@ const BlogHomePage: React.FC = () => {
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    setFilters(prev => ({ ...prev, query }));
     if (query.trim()) {
       searchPosts({
         query: query.trim(),
@@ -141,7 +150,6 @@ const BlogHomePage: React.FC = () => {
 
   const handleClearSearch = () => {
     setSearchQuery('');
-    setFilters(prev => ({ ...prev, query: '' }));
     clearSearch();
   };
 
@@ -149,260 +157,376 @@ const BlogHomePage: React.FC = () => {
     navigate(`/blog/post/${postId}`);
   };
 
-  const handleLike = async (postId: string) => {
+  const handleLikePost = async (postId: string) => {
+    if (!user) {
+      alert('Please login to like posts');
+      return;
+    }
+
     try {
       await togglePostLike(postId);
     } catch (error) {
-      console.error('Error toggling like:', error);
+      console.error('Error liking post:', error);
     }
   };
 
-  const handleDelete = async (postId: string) => {
+  const handleBookmarkPost = (postId: string) => {
+    if (!user) {
+      alert('Please login to bookmark posts');
+      return;
+    }
+
     try {
-      await deletePost(postId);
-      // Refresh posts after deletion
-      await fetchPosts({ page: 0, limit: 12, sortBy, reset: true });
+      const newBookmarks = new Set(bookmarkedPosts);
+      if (newBookmarks.has(postId)) {
+        newBookmarks.delete(postId);
+      } else {
+        newBookmarks.add(postId);
+      }
+      
+      setBookmarkedPosts(newBookmarks);
+      localStorage.setItem(`bookmarks_${user.user_id}`, JSON.stringify(Array.from(newBookmarks)));
     } catch (error) {
-      console.error('Error deleting post:', error);
+      console.error('Error bookmarking post:', error);
     }
   };
 
-  const handleReport = (postId: string, postTitle: string) => {
+  const handleTagClick = (tag: string) => {
+    setSearchQuery(tag);
+    setSearchType('tags');
+    // Scroll to top to see results
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleReportPost = (postId: string, postTitle: string) => {
     setReportPostId(postId);
     setReportPostTitle(postTitle);
     setReportModalOpen(true);
   };
 
-  const handleReportSuccess = () => {
-    setReportModalOpen(false);
-    setReportPostId('');
-    setReportPostTitle('');
-    // Có thể thêm toast notification ở đây
-  };
-
-  const handleTagClick = (tagName: string) => {
-    setSearchQuery(tagName);
-    setSearchType('tags');
-    searchPosts({ 
-      query: tagName, 
-      searchType: 'tags' 
-    });
-  };
-
-  const handleLoadMore = () => {
-    if (searchQuery) {
-      // Load more search results
-      searchPosts({
-        query: searchQuery,
-        searchType: searchType
-      });
-    } else {
-      // Load more regular posts
-      loadMorePosts();
-    }
-  };
-
-  const displayPosts = searchQuery ? searchResults : posts;
-  const showLoadMore = searchQuery 
-    ? searchResults.length > 0 && searchResults.length % 12 === 0
-    : pagination.hasMore;
+  if (postsError) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center text-red-600">
+          <p>Error loading blog: {postsError}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Thử lại
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
-      {/* Fixed Header */}
-      <div className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 to-blue-50">
+      {/* Header */}
+      <div className="bg-white/90 backdrop-blur-sm border-b border-cyan-100 sticky top-0 z-10 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          {/* Header */}
-          <div className="mb-6">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-              <div className="mb-4 lg:mb-0">
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                  Blog
-                </h1>
-                <p className="mt-2 text-gray-600 dark:text-gray-400">
-                  Khám phá những bài viết thú vị và hữu ích
-                </p>
-              </div>
-              
-              <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            {/* Title Section */}
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
+                Blog
+              </h1>
+              <p className="text-sm text-gray-600">
+                The latest industry news, interviews, technologies, and resources
+              </p>
+            </div>
+            
+            {/* Actions */}
+            <div className="flex items-center gap-3">
+              {/* Bookmarks Button */}
+              <button
+                onClick={() => navigate('/blog/bookmarks')}
+                className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500"
+                title="View bookmarked posts"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                </svg>
+                Bài đã lưu
+              </button>
+
+              {/* Reports Button (Admin only) */}
+              {isAdmin && (
                 <button
-                  onClick={() => navigate('/blog/bookmarks')}
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 ease-in-out hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transform hover:scale-105"
+                  onClick={() => navigate('/blog/reports')}
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                  title="View reports"
                 >
-                  <svg className="h-4 w-4 mr-2 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-1.964-1.333-2.732 0L3.082 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>
-                  Bài đã lưu
+                  Báo cáo
                 </button>
-                {isAdmin && (
-                  <button
-                    onClick={() => navigate('/blog/reports')}
-                    className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 ease-in-out hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transform hover:scale-105"
-                  >
-                    <svg className="h-4 w-4 mr-2 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                    </svg>
-                    Báo cáo
-                  </button>
-                )}
+              )}
+
+              {/* Create Post Button */}
+              {user && (
                 <button
                   onClick={() => navigate('/blog/create')}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-[#21B4CA] hover:bg-[#1a9bb0] transition-all duration-200 ease-in-out hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#21B4CA] transform hover:scale-105"
+                  className="px-6 py-2.5 text-sm font-semibold text-white rounded-lg transition-all hover:scale-105 shadow-lg hover:shadow-xl"
+                  style={{
+                    background: 'linear-gradient(135deg, #21b4ca 0%, #1e90ff 100%)',
+                  }}
                 >
-                  <svg className="h-4 w-4 mr-2 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  Viết bài mới
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Search Bar */}
-          <div className="mb-6">
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <SearchBar
-                  value={searchQuery}
-                  onSearch={handleSearch}
-                  onClear={handleClearSearch}
-                  placeholder={
-                    searchType === 'title' ? 'Tìm kiếm theo tiêu đề...' :
-                    searchType === 'author' ? 'Tìm kiếm theo tác giả...' :
-                    searchType === 'content' ? 'Tìm kiếm theo nội dung...' :
-                    searchType === 'tags' ? 'Tìm kiếm theo tags...' :
-                    'Tìm kiếm bài viết...'
-                  }
-                  className="w-full"
-                />
-              </div>
-              <select
-                value={searchType}
-                onChange={(e) => setSearchType(e.target.value as SearchType)}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="all">Tất cả</option>
-                <option value="title">Tiêu đề</option>
-                <option value="author">Tác giả</option>
-                <option value="content">Nội dung</option>
-                <option value="tags">Tags</option>
-              </select>
-              {searchQuery && (
-                <button
-                  onClick={handleClearSearch}
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                  Clear Results
+                  <span className="flex items-center gap-2">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Create Post
+                  </span>
                 </button>
               )}
             </div>
           </div>
 
-          {/* Sort Options - Fixed */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Sắp xếp:
-              </span>
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => {
-                    setSortBy('newest');
-                    scrollToTop();
-                  }}
-                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                    sortBy === 'newest'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
-                  } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
-                >
-                  Mới nhất
-                </button>
-                <button
-                  onClick={() => {
-                    setSortBy('popular');
-                    scrollToTop();
-                  }}
-                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                    sortBy === 'popular'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
-                  } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
-                >
-                  Phổ biến
-                </button>
+          {/* Search & Filter Bar */}
+          <div className="mt-6 space-y-4">
+            {/* Search Input + Filter */}
+            <div className="flex gap-3">
+              <div className="flex-1 relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search articles..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent bg-white/80 backdrop-blur-sm"
+                />
               </div>
+              
+              {/* Search Type Filter - Next to search */}
+              <select
+                value={searchType}
+                onChange={(e) => setSearchType(e.target.value as SearchType)}
+                className="px-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-white/80 backdrop-blur-sm"
+              >
+                <option value="all">All Fields</option>
+                <option value="title">Title Only</option>
+                <option value="tags">Tags</option>
+                <option value="author">Author</option>
+              </select>
             </div>
 
-            {searchQuery && (
-              <div className="text-sm text-gray-600 dark:text-gray-400">
-                Tìm thấy {searchResults.length} kết quả cho "{searchQuery}"
-              </div>
-            )}
+            {/* Tabs for sorting - Desktop */}
+            <div className="hidden md:flex items-center gap-2 border-b border-gray-200">
+              <button
+                onClick={() => setSortBy(BlogSortBy.NEWEST)}
+                className={`px-4 py-2 text-sm font-medium transition-all ${
+                  sortBy === BlogSortBy.NEWEST
+                    ? 'text-cyan-600 border-b-2 border-cyan-600'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Newest
+              </button>
+              <button
+                onClick={() => setSortBy(BlogSortBy.MOST_VIEWED)}
+                className={`px-4 py-2 text-sm font-medium transition-all ${
+                  sortBy === BlogSortBy.MOST_VIEWED
+                    ? 'text-cyan-600 border-b-2 border-cyan-600'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Popular
+              </button>
+              <button
+                onClick={() => setSortBy(BlogSortBy.MOST_LIKED)}
+                className={`px-4 py-2 text-sm font-medium transition-all ${
+                  sortBy === BlogSortBy.MOST_LIKED
+                    ? 'text-cyan-600 border-b-2 border-cyan-600'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Trending
+              </button>
+              <button
+                onClick={() => setSortBy(BlogSortBy.OLDEST)}
+                className={`px-4 py-2 text-sm font-medium transition-all ${
+                  sortBy === BlogSortBy.OLDEST
+                    ? 'text-cyan-600 border-b-2 border-cyan-600'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Oldest
+              </button>
+            </div>
+
+            {/* Mobile Dropdown */}
+            <div className="md:hidden flex gap-3">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as BlogSortBy)}
+                className="flex-1 px-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-white/80 backdrop-blur-sm"
+              >
+                <option value={BlogSortBy.NEWEST}>Newest First</option>
+                <option value={BlogSortBy.MOST_VIEWED}>Popular</option>
+                <option value={BlogSortBy.MOST_LIKED}>Trending</option>
+                <option value={BlogSortBy.OLDEST}>Oldest First</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Scrollable Content Area */}
-      <div className="flex-1 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 h-full">
-            {/* Main Content - Scrollable */}
-            <div ref={scrollContainerRef} className="lg:col-span-3 overflow-y-auto pr-4 blog-list-scrollbar">
-              <div className="py-6">
-
-                {/* Blog Posts */}
-                {error ? (
-                  <div className="text-center py-12">
-                    <div className="text-red-600 dark:text-red-400 mb-4">
-                      <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                      Có lỗi xảy ra
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-400 mb-4">
-                      {error}
-                    </p>
-                    <button
-                      onClick={() => window.location.reload()}
-                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
-                      Thử lại
-                    </button>
-                  </div>
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* Blog Posts - Left Side (3 columns) */}
+          <div className="lg:col-span-3">
+            {/* Stats Bar */}
+            <div className="mb-6 flex items-center justify-between text-sm">
+              <p className="text-gray-600">
+                {filteredPosts.length > 0 ? (
+                  <>
+                    Showing <span className="font-semibold text-gray-900">{filteredPosts.length}</span> article{filteredPosts.length !== 1 ? 's' : ''}
+                  </>
                 ) : (
-                  <BlogList
-                    posts={displayPosts}
-                    loading={isLoading || isSearching}
-                    onPostClick={handlePostClick}
-                    onLike={handleLike}
-                    onDelete={handleDelete}
-                    onReport={handleReport}
-                    currentUserId={user?.user_id}
-                    onLoadMore={showLoadMore ? handleLoadMore : undefined}
-                    hasMore={showLoadMore}
-                    onTagClick={handleTagClick}
-                    isAdmin={isAdmin}
-                  />
+                  'No articles found'
                 )}
-              </div>
+              </p>
+              
+              {searchQuery && (
+                <button
+                  onClick={handleClearSearch}
+                  className="text-cyan-600 hover:text-cyan-700 font-medium"
+                >
+                  Clear search
+                </button>
+              )}
             </div>
 
-            {/* Sidebar - Fixed */}
-            <div className="lg:col-span-1 overflow-y-auto">
-              <div className="sticky top-0 py-6">
-                <BlogSidebar
-                  popularPosts={popularPosts}
-                  tags={popularTags}
-                  onPostClick={handlePostClick}
-                  onTagClick={handleTagClick}
-                />
+            {/* Blog Cards Grid */}
+            {postsLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-sm animate-pulse">
+                    <div className="h-56 bg-gray-200"></div>
+                    <div className="p-6">
+                      <div className="h-4 bg-gray-200 rounded w-3/4 mb-3"></div>
+                      <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+                      <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                    </div>
+                  </div>
+                ))}
               </div>
+            ) : filteredPosts.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" ref={scrollContainerRef}>
+                {filteredPosts.map((post) => {
+                  // Add bookmark status to post
+                  const postWithBookmark = {
+                    ...post,
+                    isBookmarked: bookmarkedPosts.has(post.id)
+                  };
+                  
+                  return (
+                    <BlogCard
+                      key={post.id}
+                      post={postWithBookmark}
+                      onPostClick={handlePostClick}
+                      onLike={handleLikePost}
+                      onBookmark={handleBookmarkPost}
+                      onTagClick={handleTagClick}
+                      onReport={handleReportPost}
+                      currentUserId={user?.user_id}
+                      isAdmin={isAdmin}
+                    />
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-20">
+                <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-cyan-100 to-blue-100 flex items-center justify-center">
+                  <svg className="w-12 h-12 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                  No articles yet
+                </h3>
+                <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                  {searchQuery ? 
+                    "We couldn't find any articles matching your search. Try different keywords." :
+                    "Be the first to share your insights!"
+                  }
+                </p>
+                {user && !searchQuery && (
+                  <button
+                    onClick={() => navigate('/blog/create')}
+                    className="px-8 py-3 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                    style={{
+                      background: 'linear-gradient(135deg, #21b4ca 0%, #1e90ff 100%)',
+                    }}
+                  >
+                    Create Your First Post
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Sidebar - Top 5 Popular Posts - Right Side (1 column) */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-24 bg-white rounded-2xl shadow-sm p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <svg className="w-5 h-5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
+                Top 5 Popular Posts
+              </h3>
+              
+              {popularPosts.length > 0 ? (
+                <div className="space-y-4">
+                  {popularPosts.map((post, index) => (
+                    <div
+                      key={post.id}
+                      onClick={() => handlePostClick(post.id)}
+                      className="group cursor-pointer"
+                    >
+                      <div className="flex gap-3">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-cyan-100 to-blue-100 flex items-center justify-center">
+                          <span className="text-sm font-bold text-cyan-600">#{index + 1}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-sm font-semibold text-gray-900 group-hover:text-cyan-600 transition-colors line-clamp-2">
+                            {post.title}
+                          </h4>
+                          <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                            <span className="flex items-center gap-1">
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
+                              {post.viewCount || 0}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                              </svg>
+                              {post.likeCount || 0}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      {index < popularPosts.length - 1 && (
+                        <div className="mt-4 border-b border-gray-100"></div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500 text-center py-4">
+                  No popular posts yet
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -411,10 +535,13 @@ const BlogHomePage: React.FC = () => {
       {/* Report Modal */}
       <ReportModal
         isOpen={reportModalOpen}
-        onClose={() => setReportModalOpen(false)}
         postId={reportPostId}
         postTitle={reportPostTitle}
-        onReportSuccess={handleReportSuccess}
+        onClose={() => setReportModalOpen(false)}
+        onReportSuccess={() => {
+          setReportModalOpen(false);
+          alert('Report submitted successfully');
+        }}
       />
     </div>
   );

@@ -48,6 +48,7 @@ export interface BlogPostDetailProps {
   onTagClick?: (tag: string) => void;
   isAdmin?: boolean;
   currentUserId?: string;
+  workspaceCreatorId?: string;
   className?: string;
 }
 
@@ -55,6 +56,7 @@ export interface BlogEditorProps {
   post?: BlogPost;
   onSave?: (post: Partial<BlogPost>) => void;
   onCancel?: () => void;
+  onImageUpload?: (file: File) => Promise<string>;
   loading?: boolean;
   className?: string;
 }

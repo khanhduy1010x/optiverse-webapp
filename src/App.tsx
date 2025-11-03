@@ -45,6 +45,7 @@ import FocusTimerWorkspacePage from './pages/FocusTimer/workspace/FocusTimer.wor
 import FocusRoomsPage from './pages/FocusTimer/workspace/FocusRooms.page';
 import ChatPage from './pages/chat/ChatPage';
 import ChatWorkspacePage from './pages/chat/workspace/Chat.workspace.page';
+import WorkspaceChatPage from './pages/workspace/WorkspaceChatPage';
 import { useNewMessageNotification } from './hooks/chat/useNewMessageNotification';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -66,6 +67,10 @@ import {
   BlogEditPage
 } from './pages/Blog';
 import BlogWorkspacePage from './pages/Blog/workspace/Blog.workspace.page';
+import WorkspaceBlogCreatePage from './pages/Blog/workspace/BlogCreate.workspace.page';
+import WorkspaceBlogPostPage from './pages/Blog/workspace/BlogPost.workspace.page';
+import WorkspaceBlogBookmarksPage from './pages/Blog/workspace/BlogBookmarks.workspace.page';
+import WorkspaceBlogReportsPage from './pages/Blog/workspace/BlogReports.workspace.page';
 import BlogBookmarksPage from './pages/Blog/BlogBookmarks.page';
 import BlogReportsPage from './pages/Blog/BlogReports.page';
 import Login from './pages/Auth/Login.screen';
@@ -207,6 +212,18 @@ const AppContent: React.FC = () => {
                 <ProtectedRoute>
                   <WorkspaceGuard>
                     <DashboardWorkspacePage />
+                  </WorkspaceGuard>
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Workspace Chat Route - NEW */}
+            <Route
+              path="/workspace/:workspaceId/chat"
+              element={
+                <ProtectedRoute>
+                  <WorkspaceGuard>
+                    <WorkspaceChatPage />
                   </WorkspaceGuard>
                 </ProtectedRoute>
               }
@@ -403,9 +420,7 @@ const AppContent: React.FC = () => {
               path="/workspace/:workspaceId/chat"
               element={
                 <ProtectedRoute>
-                  <WorkspaceGuard>
-                    <ChatWorkspacePage />
-                  </WorkspaceGuard>
+                  <ChatWorkspacePage />
                 </ProtectedRoute>
               }
             />
@@ -439,9 +454,39 @@ const AppContent: React.FC = () => {
               path="/workspace/:workspaceId/blog"
               element={
                 <ProtectedRoute>
-                  <WorkspaceGuard>
-                    <BlogWorkspacePage />
-                  </WorkspaceGuard>
+                  <BlogWorkspacePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/workspace/:workspaceId/blog/bookmarks"
+              element={
+                <ProtectedRoute>
+                  <WorkspaceBlogBookmarksPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/workspace/:workspaceId/blog/reports"
+              element={
+                <ProtectedRoute>
+                  <WorkspaceBlogReportsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/workspace/:workspaceId/blog/create"
+              element={
+                <ProtectedRoute>
+                  <WorkspaceBlogCreatePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/workspace/:workspaceId/blog/post/:postId"
+              element={
+                <ProtectedRoute>
+                  <WorkspaceBlogPostPage />
                 </ProtectedRoute>
               }
             />

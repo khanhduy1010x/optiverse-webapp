@@ -530,6 +530,53 @@ class WorkspaceServiceClass {
       throw new Error('Could not invite users to workspace');
     }
   }
+
+  /**
+   * ========== WORKSPACE CHAT METHODS - NEW ==========
+   */
+
+  /**
+   * Get workspace chat info từ backend
+   * Backend chỉ return metadata, frontend check Firebase
+   */
+  async getWorkspaceChat(
+    workspaceId: string
+  ): Promise<{ workspaceId: string; shouldCreate: boolean }> {
+    try {
+      const response = await api.get<
+        ApiResponse<{ workspaceId: string; shouldCreate: boolean }>
+      >(`${URLBASE}/${workspaceId}/chat`);
+
+      return response.data.data;
+    } catch (error: any) {
+      console.error('Failed to get workspace chat info:', {
+        error: error.message,
+        response: error.response?.data,
+      });
+      throw new Error('Could not get workspace chat info');
+    }
+  }
+
+  /**
+   * Signal backend để sync members
+   */
+  async syncWorkspaceChatMembers(
+    workspaceId: string
+  ): Promise<{ success: boolean }> {
+    try {
+      const response = await api.post<ApiResponse<{ success: boolean }>>(
+        `${URLBASE}/${workspaceId}/chat/sync-members`
+      );
+
+      return response.data.data;
+    } catch (error: any) {
+      console.error('Failed to sync workspace chat members:', {
+        error: error.message,
+        response: error.response?.data,
+      });
+      throw new Error('Could not sync workspace chat members');
+    }
+  }
 }
 
 // Tạo instance của class

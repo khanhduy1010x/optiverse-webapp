@@ -16,6 +16,9 @@ export interface BlogPost {
   createdAt: number;
   updatedAt: number;
   publishedAt?: number;
+  
+  // Workspace Integration - Simplified (chỉ cần workspaceId)
+  workspaceId?: string; // Nếu có workspaceId => đây là workspace blog
 }
 
 
