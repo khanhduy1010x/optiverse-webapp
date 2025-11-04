@@ -98,6 +98,10 @@ export const TimePickerInput: React.FC<TimePickerInputProps> = ({
 
     if (!value) {
       setFilteredTimes(timeOptions);
+      // Allow clearing the input
+      if (onTimeSelect) {
+        onTimeSelect(''); // Notify parent that time is cleared
+      }
       return;
     }
 
@@ -160,6 +164,14 @@ export const TimePickerInput: React.FC<TimePickerInputProps> = ({
       const normalized = normalizeTime(inputValue);
       if (validateTimeInput(normalized)) {
         handleTimeSelect(normalized);
+      }
+    } else if (!inputValue) {
+      // User cleared the input - allow empty value
+      setInputValue('');
+      setFilteredTimes(timeOptions);
+      setInputError('');
+      if (onTimeSelect) {
+        onTimeSelect(''); // Pass empty value to parent
       }
     }
   };
