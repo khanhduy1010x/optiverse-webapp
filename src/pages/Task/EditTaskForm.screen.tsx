@@ -277,6 +277,12 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
                 setEndTime(new Date(date));
               }}
               onTimeSelect={(time: string) => {
+                if (!time) {
+                  // Allow clearing the time
+                  setEndTime(undefined);
+                  setStatus('pending');
+                  return;
+                }
                 const [hours, minutes] = time.split(':').map(Number);
                 const baseDate = end_time ? new Date(end_time as any) : new Date();
                 baseDate.setHours(hours, minutes, 0, 0);

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import Modal from 'react-modal';
@@ -117,200 +118,204 @@ const WorkspaceTaskDetailModal: React.FC<WorkspaceTaskDetailModalProps> = ({
     : null;
 
   return (
-    <Modal
-      isOpen={true}
-      className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[450px] max-w-[90vw] bg-white rounded-2xl shadow-2xl z-[2000] outline-none"
-      overlayClassName="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000]"
-    >
-      <div className={GROUP_CLASSNAMES.taskModalContent}>
-        {/* Task title */}
-        <div className={GROUP_CLASSNAMES.taskDetailHeader}>
-          <h2 className="text-xl font-medium text-gray-900">
-            {task.title}
-          </h2>
-        </div>
-
-        {/* Description */}
-        {task.description && (
-          <div className={GROUP_CLASSNAMES.taskDetailDescription}>
-            <p className="text-sm text-gray-600 whitespace-pre-wrap">
-              {task.description}
-            </p>
+    <>
+      <Modal
+        isOpen={true}
+        className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[450px] max-w-[90vw] bg-white rounded-2xl shadow-2xl z-[2000] outline-none"
+        overlayClassName="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000]"
+      >
+        <div className={GROUP_CLASSNAMES.taskModalContent}>
+          {/* Task title */}
+          <div className={GROUP_CLASSNAMES.taskDetailHeader}>
+            <h2 className="text-xl font-medium text-gray-900">
+              {task.title}
+            </h2>
           </div>
-        )}
 
-        <div className={GROUP_CLASSNAMES.taskDetailSection}>
-          <div className="space-y-2">
-            {/* Status */}
-            <div className="flex items-center py-2">
-              <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <div className="text-sm text-gray-700">{t('status_label', 'Status')}:</div>
-              <span className={`ml-auto px-3 py-1 rounded-full text-sm font-medium ${
-                task.status === 'done' ? 'bg-green-100 text-green-700' :
-                task.status === 'in-progress' ? 'bg-blue-100 text-blue-700' :
-                'bg-gray-100 text-gray-700'
-              }`}>
-                {getStatusLabel(task.status)}
-              </span>
+          {/* Description */}
+          {task.description && (
+            <div className={GROUP_CLASSNAMES.taskDetailDescription}>
+              <p className="text-sm text-gray-600 whitespace-pre-wrap">
+                {task.description}
+              </p>
             </div>
+          )}
 
-            {/* End Time */}
-            {task.end_time && (
+          <div className={GROUP_CLASSNAMES.taskDetailSection}>
+            <div className="space-y-2">
+              {/* Status */}
               <div className="flex items-center py-2">
                 <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <div className="text-sm text-gray-700">{t('due_label', 'Due')}:</div>
-                <span className="ml-auto text-sm text-gray-600">
-                  {formatConsistentDateTime(task.end_time)}
+                <div className="text-sm text-gray-700">{t('status_label', 'Status')}:</div>
+                <span className={`ml-auto px-3 py-1 rounded-full text-sm font-medium ${
+                  task.status === 'done' ? 'bg-green-100 text-green-700' :
+                  task.status === 'in-progress' ? 'bg-blue-100 text-blue-700' :
+                  'bg-gray-100 text-gray-700'
+                }`}>
+                  {getStatusLabel(task.status)}
                 </span>
               </div>
-            )}
 
-            {/* Assigned Members */}
-            <div className="flex items-center py-2">
-              <svg className="w-5 h-5 text-gray-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3a6 6 0 016-6h6a6 6 0 016 6z" />
-              </svg>
-              <div className="text-sm text-gray-700 flex-shrink-0">{t('assigned_label', 'Assigned To')}:</div>
-              <div className="ml-auto flex-1 text-right">
-                {assignedMembers.length > 0 ? (
-                  <div className="flex items-center justify-end gap-1">
-                    {assignedMembers.map((member, index) => (
+              {/* End Time */}
+              {task.end_time && (
+                <div className="flex items-center py-2">
+                  <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div className="text-sm text-gray-700">{t('due_label', 'Due')}:</div>
+                  <span className="ml-auto text-sm text-gray-600">
+                    {formatConsistentDateTime(task.end_time)}
+                  </span>
+                </div>
+              )}
+
+              {/* Assigned Members */}
+              <div className="flex items-center py-2">
+                <svg className="w-5 h-5 text-gray-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3a6 6 0 016-6h6a6 6 0 016 6z" />
+                </svg>
+                <div className="text-sm text-gray-700 flex-shrink-0">{t('assigned_label', 'Assigned To')}:</div>
+                <div className="ml-auto flex-1 text-right">
+                  {assignedMembers.length > 0 ? (
+                    <div className="flex items-center justify-end gap-1">
+                      {assignedMembers.map((member, index) => (
+                        <div
+                          key={member?._id}
+                          className={`w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 text-white flex items-center justify-center text-xs font-semibold flex-shrink-0 border-2 border-white shadow-sm hover:shadow-md transition-all ${index > 0 ? '-ml-3' : ''}`}
+                          title={member?.full_name || 'Unknown'}
+                        >
+                          {member?.avatar_url ? (
+                            <img
+                              src={member.avatar_url}
+                              alt={member?.full_name}
+                              className="w-full h-full object-cover rounded-full"
+                            />
+                          ) : (
+                            member?.full_name?.[0]?.toUpperCase() || '?'
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : assignedMember ? (
+                    <div className="flex items-center justify-end gap-1">
                       <div
-                        key={member?._id}
-                        className={`w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 text-white flex items-center justify-center text-xs font-semibold flex-shrink-0 border-2 border-white shadow-sm hover:shadow-md transition-all ${index > 0 ? '-ml-3' : ''}`}
-                        title={member?.full_name || 'Unknown'}
+                        className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 text-white flex items-center justify-center text-xs font-semibold flex-shrink-0 border-2 border-white shadow-sm"
+                        title={assignedMember?.full_name || 'Unknown'}
                       >
-                        {member?.avatar_url ? (
+                        {assignedMember?.avatar_url ? (
                           <img
-                            src={member.avatar_url}
-                            alt={member?.full_name}
+                            src={assignedMember.avatar_url}
+                            alt={assignedMember?.full_name}
                             className="w-full h-full object-cover rounded-full"
                           />
                         ) : (
-                          member?.full_name?.[0]?.toUpperCase() || '?'
+                          assignedMember?.full_name?.[0]?.toUpperCase() || '?'
                         )}
                       </div>
-                    ))}
-                  </div>
-                ) : assignedMember ? (
-                  <div className="flex items-center justify-end gap-1">
-                    <div
-                      className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 text-white flex items-center justify-center text-xs font-semibold flex-shrink-0 border-2 border-white shadow-sm"
-                      title={assignedMember?.full_name || 'Unknown'}
-                    >
-                      {assignedMember?.avatar_url ? (
-                        <img
-                          src={assignedMember.avatar_url}
-                          alt={assignedMember?.full_name}
-                          className="w-full h-full object-cover rounded-full"
-                        />
-                      ) : (
-                        assignedMember?.full_name?.[0]?.toUpperCase() || '?'
-                      )}
                     </div>
-                  </div>
-                ) : (
-                  <span className="text-sm text-gray-500 italic">{t('unassigned_label', 'Unassigned')}</span>
-                )}
+                  ) : (
+                    <span className="text-sm text-gray-500 italic">{t('unassigned_label', 'Unassigned')}</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Created Date */}
+              <div className="flex items-center py-2">
+                <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m7-4a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div className="text-sm text-gray-700">{t('created_label', 'Created')}:</div>
+                <span className="ml-auto text-sm text-gray-600">
+                  {new Date(task.createdAt).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })}
+                </span>
               </div>
             </div>
+          </div>
 
-            {/* Created Date */}
-            <div className="flex items-center py-2">
-              <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m7-4a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <div className="text-sm text-gray-700">{t('created_label', 'Created')}:</div>
-              <span className="ml-auto text-sm text-gray-600">
-                {new Date(task.createdAt).toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric',
-                })}
-              </span>
+          {/* Bottom buttons */}
+          <div className={GROUP_CLASSNAMES.taskDetailFooter}>
+            <button
+              type="button"
+              onClick={onClose}
+              className="text-sm text-gray-500 hover:text-gray-700"
+            >
+              {t('close', 'Close')}
+            </button>
+            <div className="flex space-x-2">
+              {canAssignTask() && (
+                <button
+                  type="button"
+                  onClick={() => setIsAssignModalOpen(true)}
+                  disabled={loading}
+                  className="px-4 py-2 text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  title="Assign task members"
+                >
+                  {t('assign_button', 'Assign')}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setIsEditModalOpen(true)}
+                disabled={loading || !canEditTask()}
+                className="px-4 py-2 text-sm bg-red-500 hover:bg-red-600 text-white rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                title={!canEditTask() ? 'Only Owner or assigned member can edit' : 'Edit task'}
+              >
+                {t('edit_button', 'Edit')}
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteTask}
+                disabled={loading || !canDeleteTask()}
+                className="px-4 py-2 text-sm bg-gray-200 hover:bg-gray-300 text-red-600 rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                title={!canDeleteTask() ? 'Only Owner, creator, or assigned member can delete' : 'Delete task'}
+              >
+                {t('delete_button', 'Delete')}
+              </button>
             </div>
           </div>
-        </div>
 
-        {/* Bottom buttons */}
-        <div className={GROUP_CLASSNAMES.taskDetailFooter}>
+          {/* Close button */}
           <button
             type="button"
             onClick={onClose}
-            className="text-sm text-gray-500 hover:text-gray-700"
+            className={GROUP_CLASSNAMES.taskModalCloseButton}
+            aria-label={t('close_aria', 'Close modal')}
+            title={t('close_title', 'Close')}
           >
-            {t('close', 'Close')}
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
-          <div className="flex space-x-2">
-            {canAssignTask() && (
-              <button
-                type="button"
-                onClick={() => setIsAssignModalOpen(true)}
-                disabled={loading}
-                className="px-4 py-2 text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                title="Assign task members"
-              >
-                {t('assign_button', 'Assign')}
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={() => setIsEditModalOpen(true)}
-              disabled={loading || !canEditTask()}
-              className="px-4 py-2 text-sm bg-red-500 hover:bg-red-600 text-white rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              title={!canEditTask() ? 'Only Owner or assigned member can edit' : 'Edit task'}
-            >
-              {t('edit_button', 'Edit')}
-            </button>
-            <button
-              type="button"
-              onClick={handleDeleteTask}
-              disabled={loading || !canDeleteTask()}
-              className="px-4 py-2 text-sm bg-gray-200 hover:bg-gray-300 text-red-600 rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              title={!canDeleteTask() ? 'Only Owner, creator, or assigned member can delete' : 'Delete task'}
-            >
-              {t('delete_button', 'Delete')}
-            </button>
-          </div>
         </div>
+      </Modal>
 
-        {/* Close button */}
-        <button
-          type="button"
-          onClick={onClose}
-          className={GROUP_CLASSNAMES.taskModalCloseButton}
-          aria-label={t('close_aria', 'Close modal')}
-          title={t('close_title', 'Close')}
-        >
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-
-      {/* Modals */}
-      {isEditModalOpen && (
+      {/* Modals rendered outside with Portal to avoid z-index stacking context issues */}
+      {isEditModalOpen && createPortal(
         <WorkspaceEditTaskModal
           task={task}
           workspaceId={workspaceId}
           onClose={() => setIsEditModalOpen(false)}
-        />
+        />,
+        document.body
       )}
-      {isAssignModalOpen && (
+      {isAssignModalOpen && createPortal(
         <WorkspaceAssignMemberModal
           task={task}
           workspaceId={workspaceId}
           members={workspaceMembers}
           onClose={() => setIsAssignModalOpen(false)}
-        />
+        />,
+        document.body
       )}
 
       {/* Delete Confirm Modal */}
-      {showDeleteConfirm && (
+      {showDeleteConfirm && createPortal(
         <WorkspaceConfirmModal
           isOpen={showDeleteConfirm}
           title={t('delete_confirm_title', 'Delete Task')}
@@ -322,9 +327,10 @@ const WorkspaceTaskDetailModal: React.FC<WorkspaceTaskDetailModalProps> = ({
           onCancel={() => {
             setShowDeleteConfirm(false);
           }}
-        />
+        />,
+        document.body
       )}
-    </Modal>
+    </>
   );
 };
 

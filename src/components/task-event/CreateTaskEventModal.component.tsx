@@ -404,6 +404,11 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
                   <TimePickerInput
                     selectedTime={formData.start_time ? formatTimeToHHmm(formData.start_time) : ''}
                     onTimeSelect={(time: string) => {
+                      if (!time) {
+                        // Allow clearing the time
+                        handleInputChange('start_time', '');
+                        return;
+                      }
                       const currentDate = formData.start_time ? new Date(formData.start_time) : new Date();
                       const [hours, minutes] = time.split(':').map(Number);
                       currentDate.setHours(hours, minutes);
@@ -422,6 +427,11 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
                   <TimePickerInput
                     selectedTime={formData.end_time ? formatTimeToHHmm(formData.end_time) : ''}
                     onTimeSelect={(time: string) => {
+                      if (!time) {
+                        // Allow clearing the time
+                        handleInputChange('end_time', '');
+                        return;
+                      }
                       const currentDate = formData.end_time ? new Date(formData.end_time) : new Date(formData.start_time || new Date());
                       const [hours, minutes] = time.split(':').map(Number);
                       currentDate.setHours(hours, minutes);
