@@ -3,6 +3,7 @@ import { Achievement } from '../../types/achievement/achievement.types'
 import { motion } from 'framer-motion'
 import RichTextDisplay from '../common/RichTextDisplay.component'
 import '../common/RichTextDisplay.style.css'
+import { useAppTranslate } from '../../hooks/useAppTranslate'
 
 interface AchievementCardProps {
   achievement: Achievement
@@ -11,6 +12,7 @@ interface AchievementCardProps {
 }
 
 const AchievementCard: React.FC<AchievementCardProps> = ({ achievement, onEdit, onDelete }) => {
+  const { t } = useAppTranslate('achievement')
   return (
     <motion.div
       whileHover={{ scale: 1.02 }}
@@ -36,12 +38,12 @@ const AchievementCard: React.FC<AchievementCardProps> = ({ achievement, onEdit, 
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900 truncate">{achievement.title}</h3>
               <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gradient-to-r from-indigo-50 to-blue-50 text-blue-700 ring-1 ring-blue-200 whitespace-nowrap">
-                {achievement.reward} points
+                {achievement.reward} {t('points')}
               </span>
             </div>
             <div className="mt-2 text-sm text-gray-600 overflow-hidden max-h-12">
               <RichTextDisplay 
-                content={achievement.description || 'No description'} 
+                content={achievement.description || t('no_description')} 
                 className="compact"
                 maxLength={80}
               />
@@ -54,13 +56,13 @@ const AchievementCard: React.FC<AchievementCardProps> = ({ achievement, onEdit, 
             onClick={() => onEdit(achievement)}
             className="px-3 py-1.5 rounded-md text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 text-sm font-medium transition-colors"
           >
-            Edit
+            {t('edit')}
           </button>
           <button
             onClick={() => achievement._id && onDelete(achievement._id)}
             className="px-3 py-1.5 rounded-md text-red-600 hover:text-red-700 hover:bg-red-50 text-sm font-medium transition-colors"
           >
-            Delete
+            {t('delete')}
           </button>
         </div>
       </div>

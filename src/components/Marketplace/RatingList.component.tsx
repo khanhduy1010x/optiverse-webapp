@@ -4,6 +4,7 @@ import { Rating } from '../../services/rating.service';
 import ratingService from '../../services/rating.service';
 import { formatRatingDate, getRatingPercentage, getStarLabel, getUserDisplayName } from '../../utils/rating.display';
 import { toast } from 'react-toastify';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 interface RatingListProps {
   marketplaceId: string;
@@ -19,6 +20,7 @@ export const RatingList: React.FC<RatingListProps> = ({
   marketplaceId,
   onRatingDeleted,
 }) => {
+  const { t } = useAppTranslate('marketplace');
   const {
     ratings,
     stats,
@@ -103,7 +105,7 @@ export const RatingList: React.FC<RatingListProps> = ({
       (ratings as any).length = 0;
       (ratings as any).push(...updatedRatings);
 
-      toast.success('Cập nhật đánh giá thành công');
+      toast.success('Rating updated successfully');
       setEditingId(null);
       setEditingRating(null);
     } catch (error: any) {
@@ -197,7 +199,7 @@ export const RatingList: React.FC<RatingListProps> = ({
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Rating: {editingRating.tempRating} ⭐
+                {t('rating_label')}: {editingRating.tempRating} ⭐
               </label>
               <div className="flex gap-2">
                 {Array.from({ length: 5 }).map((_, index) => (
@@ -223,7 +225,7 @@ export const RatingList: React.FC<RatingListProps> = ({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Comment
+                {t('comment_label')}
               </label>
               <textarea
                 value={editingRating.tempComment}
@@ -245,14 +247,14 @@ export const RatingList: React.FC<RatingListProps> = ({
                 disabled={updatingId === rating._id}
                 className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-50"
               >
-                Cancel
+                {t('cancel')}
               </button>
               <button
                 onClick={handleSaveEdit}
                 disabled={updatingId === rating._id}
                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
               >
-                {updatingId === rating._id ? 'Saving...' : 'Save'}
+                {updatingId === rating._id ? t('processing') : t('save')}
               </button>
             </div>
           </div>
@@ -297,16 +299,16 @@ export const RatingList: React.FC<RatingListProps> = ({
               <button
                 onClick={() => handleEditClick(rating)}
                 className="px-3 py-1 text-sm text-black hover:text-gray-600 transition-colors"
-                title="Edit"
+                title={t('edit')}
               >
-                Edit
+                {t('edit')}
               </button>
               <button
                 onClick={() => handleDeleteClick(rating._id)}
                 className="px-3 py-1 text-sm text-black hover:text-gray-600 transition-colors"
-                title="Delete"
+                title={t('delete')}
               >
-                Delete
+                {t('delete')}
               </button>
             </div>
           )}
@@ -323,10 +325,10 @@ export const RatingList: React.FC<RatingListProps> = ({
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[2000]">
         <div className="bg-white rounded-lg p-6 max-w-sm mx-auto shadow-2xl">
           <h2 className="text-lg font-semibold mb-4 text-gray-800">
-            Confirm Delete Rating
+            {t('confirm_delete_rating')}
           </h2>
           <p className="text-gray-600 mb-6">
-            Are you sure you want to delete this rating? This action cannot be undone.
+            {t('are_you_sure_delete_rating')}
           </p>
           
           {deleteError && (
@@ -341,13 +343,13 @@ export const RatingList: React.FC<RatingListProps> = ({
               onClick={handleCancelDelete}
               className="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 transition-colors"
             >
-              Cancel
+              {t('cancel')}
             </button>
             <button
               onClick={handleConfirmDelete}
               className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
             >
-              Delete
+              {t('delete')}
             </button>
           </div>
         </div>
@@ -356,13 +358,13 @@ export const RatingList: React.FC<RatingListProps> = ({
   };
 
   if (loading && ratings.length === 0) {
-    return <div className="text-center py-8 text-gray-500">Loading reviews...</div>;
+    return <div className="text-center py-8 text-gray-500">{t('loading_reviews')}</div>;
   }
 
   if (ratings.length === 0 && !loading) {
     return (
       <div className="text-center py-8 text-gray-500">
-        No reviews yet. Be the first to leave a review!
+        {t('no_reviews')}
       </div>
     );
   }
@@ -376,7 +378,7 @@ export const RatingList: React.FC<RatingListProps> = ({
       <RatingStatsBar />
 
       {/* Ratings */}
-      <h3 className="text-lg font-semibold mb-4">Reviews ({total})</h3>
+      <h3 className="text-lg font-semibold mb-4">{t('reviews')} ({total})</h3>
 
       {ratings.map((rating) => (
         <RatingItem key={rating._id} rating={rating} />
@@ -390,11 +392,11 @@ export const RatingList: React.FC<RatingListProps> = ({
             disabled={!hasPreviousPage()}
             className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50"
           >
-            Previous
+            {t('previous')}
           </button>
 
           <span className="px-4 py-2 text-gray-600">
-            Page {page} / {getTotalPages()}
+            {t('page')} {page} / {getTotalPages()}
           </span>
 
           <button
@@ -402,7 +404,7 @@ export const RatingList: React.FC<RatingListProps> = ({
             disabled={!hasNextPage()}
             className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50"
           >
-            Next
+            {t('next')}
           </button>
         </div>
       )}

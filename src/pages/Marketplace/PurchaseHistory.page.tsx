@@ -3,8 +3,10 @@ import { usePurchaseHistory } from '../../hooks/marketplace/usePurchaseHistory';
 import PurchaseHistoryDetailModal from '../../components/Marketplace/PurchaseHistoryDetailModal.component';
 import { MarketplaceItem } from '../../types/marketplace/marketplace.types';
 import { formatPrice } from '../../utils/marketplace.transform';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 const PurchaseHistoryPage: React.FC = () => {
+  const { t } = useAppTranslate('marketplace');
   const { items, loading, error, page, total, setPage, refetch } = usePurchaseHistory();
   const [selectedItem, setSelectedItem] = useState<MarketplaceItem | null>(null);
   const [selectedPurchase, setSelectedPurchase] = useState<any>(null);
@@ -36,7 +38,7 @@ const PurchaseHistoryPage: React.FC = () => {
         <div className="max-w-7xl mx-auto">
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading purchase history...</p>
+            <p className="mt-4 text-gray-600">{t('loading')}</p>
           </div>
         </div>
       </div>
@@ -47,9 +49,9 @@ const PurchaseHistoryPage: React.FC = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Header Section */}
       <div className="bg-white border-b border-gray-200 p-6">
-        <h1 className="text-3xl font-bold text-gray-900">Purchase History</h1>
+        <h1 className="text-3xl font-bold text-gray-900">{t('purchase_history')}</h1>
         <p className="text-gray-600 mt-1">
-          All items you have purchased from the marketplace
+          {t('all_items_purchased')}
         </p>
       </div>
 
@@ -66,13 +68,13 @@ const PurchaseHistoryPage: React.FC = () => {
         {items.length === 0 ? (
           <div className="bg-white rounded-xl shadow-md p-12 text-center max-w-4xl">
             <div className="text-6xl mb-4">🛍️</div>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-2">No Purchase History</h2>
-            <p className="text-gray-600 mb-6">You haven't purchased any items from the marketplace yet</p>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-2">{t('no_purchase_history')}</h2>
+            <p className="text-gray-600 mb-6">{t('no_purchase_history_msg')}</p>
             <a
               href="/marketplace"
               className="inline-block bg-sky-500 hover:bg-sky-600 text-white font-semibold py-2 px-6 rounded-lg transition-colors"
             >
-              Explore Marketplace
+              {t('explore_marketplace')}
             </a>
           </div>
         ) : (
@@ -135,7 +137,7 @@ const PurchaseHistoryPage: React.FC = () => {
 
                     {/* Date and Price */}
                     <div className="mb-3">
-                      <p className="text-xs text-gray-500 mb-1">Purchased:</p>
+                      <p className="text-xs text-gray-500 mb-1">{t('purchased_date')}:</p>
                       <p className="text-xs font-semibold text-gray-900">
                         {new Date(purchaseRecord.purchased_at).toLocaleDateString('en-US')}
                       </p>
@@ -144,7 +146,7 @@ const PurchaseHistoryPage: React.FC = () => {
                     {/* Price */}
                     <div className="mb-4">
                       <p className="text-xs text-gray-500 mb-1">Price</p>
-                      <p className="text-lg font-bold text-blue-600">{purchaseRecord.price === 0 ? 'Free' : `${purchaseRecord.price} OP`}</p>
+                      <p className="text-lg font-bold text-blue-600">{purchaseRecord.price === 0 ? t('free') : `${purchaseRecord.price} OP`}</p>
                     </div>
 
                     {/* Button */}
@@ -155,7 +157,7 @@ const PurchaseHistoryPage: React.FC = () => {
                       }}
                       className="w-full px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors mt-auto"
                     >
-                      View
+                      {t('view')}
                     </button>
                   </div>
                 </div>
@@ -171,7 +173,7 @@ const PurchaseHistoryPage: React.FC = () => {
                   disabled={page === 1}
                   className="px-4 py-2 bg-white rounded-lg border border-gray-200 text-gray-700 font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                 >
-                  ← Previous
+                  ← {t('previous')}
                 </button>
 
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
@@ -193,7 +195,7 @@ const PurchaseHistoryPage: React.FC = () => {
                   disabled={page === totalPages}
                   className="px-4 py-2 bg-white rounded-lg border border-gray-200 text-gray-700 font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                 >
-                  Next →
+                  {t('next')} →
                 </button>
               </div>
             )}

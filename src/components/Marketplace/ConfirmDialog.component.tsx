@@ -1,6 +1,14 @@
 import React from 'react';
 import Modal from 'react-modal';
 
+interface PricingInfo {
+  original_price?: number;
+  discount_percentage?: number;
+  discount_amount?: number;
+  final_price?: number;
+  membership_tier?: string;
+}
+
 interface ConfirmDialogProps {
   isOpen: boolean;
   title: string;
@@ -11,6 +19,7 @@ interface ConfirmDialogProps {
   onConfirm: () => void;
   onCancel: () => void;
   isDangerous?: boolean;
+  pricing?: PricingInfo;
 }
 
 const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
@@ -23,7 +32,16 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   onConfirm,
   onCancel,
   isDangerous = false,
+  pricing,
 }) => {
+  const formatPrice = (price: number): string => {
+    const formatted = new Intl.NumberFormat('vi-VN', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(price);
+    return `${formatted} OP`;
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -40,9 +58,55 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         </h2>
 
         {/* Content */}
-        <p className="text-gray-600 mb-8">
+        <p className="text-gray-600 mb-6">
           {message}
         </p>
+
+        {/* Pricing Breakdown (if available) */}
+        {pricing && pricing.final_price && (
+          <div className="bg-blue-50 rounded-lg p-4 mb-6 space-y-2">
+            {/* Original Price */}
+            {pricing.original_price && (
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-700">Original Price:</span>
+                <span className="font-semibold line-through text-gray-500">
+                  {formatPrice(pricing.original_price)}
+                </span>
+              </div>
+            )}
+
+            {/* Discount */}
+            {pricing.discount_percentage && pricing.discount_amount && (
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-700">Discount:</span>
+                <span className="font-semibold text-red-600">
+                  -{pricing.discount_percentage}% ({formatPrice(pricing.discount_amount)})
+                </span>
+              </div>
+            )}
+
+            {/* Membership Tier */}
+            {pricing.membership_tier && (
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-700">Membership:</span>
+                <span className="inline-flex items-center text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded-full font-semibold">
+                  {pricing.membership_tier}
+                </span>
+              </div>
+            )}
+
+            {/* Separator */}
+            <div className="border-t border-blue-200 pt-2" />
+
+            {/* Final Price */}
+            <div className="flex justify-between items-center">
+              <span className="font-bold text-gray-900">You Pay:</span>
+              <span className="text-lg font-bold text-green-600">
+                {formatPrice(pricing.final_price)}
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Footer */}
         <div className="flex justify-end gap-3">

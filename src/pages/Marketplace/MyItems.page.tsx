@@ -7,6 +7,7 @@ import ConfirmDialog from '../../components/Marketplace/ConfirmDialog.component'
 import { RatingList } from '../../components/Marketplace/RatingList.component';
 import Modal from 'react-modal';
 import { MarketplaceItem } from '../../types/marketplace/marketplace.types';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 // Hide scrollbar style
 const scrollbarHideStyle = `
@@ -20,6 +21,7 @@ const scrollbarHideStyle = `
 `;
 
 const MyItemsPage: React.FC = () => {
+  const { t } = useAppTranslate('marketplace');
   const { items, loading, error, page, setPage, refetch } = useMyItems();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
@@ -41,7 +43,7 @@ const MyItemsPage: React.FC = () => {
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
-                <p className="text-gray-500">Loading data...</p>
+                <p className="text-gray-500">{t('loading')}</p>
             </div>
         );
     }
@@ -54,16 +56,16 @@ const MyItemsPage: React.FC = () => {
             <div className="bg-white border-b border-gray-200 p-6">
                 <div className="flex justify-between items-center">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900">My Items</h1>
+                        <h1 className="text-3xl font-bold text-gray-900">{t('my_items')}</h1>
                         <p className="text-gray-600 mt-1">
-                            Manage the marketplace items you've created
+                            {t('manage_marketplace_items')}
                         </p>
                     </div>
                     <button
                         onClick={() => setShowCreateModal(true)}
                         className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition"
                     >
-                        Create New Item
+                        {t('create_new_item')}
                     </button>
                 </div>
             </div>
@@ -84,12 +86,12 @@ const MyItemsPage: React.FC = () => {
 
                 {items.length === 0 ? (
                     <div className="bg-white rounded-lg shadow p-12 text-center">
-                        <p className="text-gray-500 mb-4">You haven't created any marketplace items yet</p>
+                        <p className="text-gray-500 mb-4">{t('no_items_yet')}</p>
                         <button
                             onClick={() => setShowCreateModal(true)}
                             className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition"
                         >
-                            Create New Item
+                            {t('create_new_item')}
                         </button>
                     </div>
                 ) : (
@@ -109,7 +111,7 @@ const MyItemsPage: React.FC = () => {
                                         />
                                         {item.price === 0 && (
                                             <div className="absolute top-3 right-3 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
-                                                Free
+                                                {t('free')}
                                             </div>
                                         )}
                                     </div>
@@ -135,7 +137,7 @@ const MyItemsPage: React.FC = () => {
                                                 </p>
                                             ) : (
                                                 <p className="text-xl font-bold text-gray-900">
-                                                    Free
+                                                    {t('free')}
                                                 </p>
                                             )}
                                         </div>
@@ -149,7 +151,7 @@ const MyItemsPage: React.FC = () => {
                                                 }}
                                                 className="px-3 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-medium text-sm hover:bg-gray-50 transition-colors"
                                             >
-                                                Edit
+                                                {t('edit')}
                                             </button>
                                             <button
                                                 onClick={() => {
@@ -165,7 +167,7 @@ const MyItemsPage: React.FC = () => {
                                                 disabled={isDeleting}
                                                 className="px-3 py-2.5 border border-red-300 text-red-600 rounded-lg font-medium text-sm hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
-                                                Delete
+                                                {t('delete')}
                                             </button>
                                         </div>
                                     </div>
@@ -180,7 +182,7 @@ const MyItemsPage: React.FC = () => {
                                 disabled={page === 1}
                                 className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300"
                             >
-                                Previous
+                                {t('previous')}
                             </button>
                             <span className="px-4 py-2">{page}</span>
                             <button
@@ -188,7 +190,7 @@ const MyItemsPage: React.FC = () => {
                                 disabled={items.length < 10}
                                 className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300"
                             >
-                                Next
+                                {t('next')}
                             </button>
                         </div>
                     </>
@@ -223,10 +225,10 @@ const MyItemsPage: React.FC = () => {
             {/* Delete Confirmation Dialog */}
             <ConfirmDialog
                 isOpen={showDeleteConfirm}
-                title="Delete Item"
-                message={`Are you sure you want to delete "${itemToDelete?.title}"? This action cannot be undone.`}
-                confirmButtonText="Delete"
-                cancelButtonText="Cancel"
+                title={t('delete_item')}
+                message={`${t('are_you_sure_delete', { item_name: itemToDelete?.title })}`}
+                confirmButtonText={t('delete')}
+                cancelButtonText={t('cancel')}
                 isLoading={isDeleting}
                 isDangerous={true}
                 onConfirm={handleConfirmDelete}
@@ -247,7 +249,7 @@ const MyItemsPage: React.FC = () => {
                     {/* Header */}
                     <div className="flex justify-between items-start mb-6">
                         <div>
-                            <h2 className="text-2xl font-bold text-gray-900">Item Ratings</h2>
+                            <h2 className="text-2xl font-bold text-gray-900">{t('item_ratings')}</h2>
                            
                         </div>
                         <button
@@ -279,7 +281,7 @@ const MyItemsPage: React.FC = () => {
                         }}
                         className="w-full mt-6 px-4 py-3 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-lg font-medium transition"
                     >
-                        Close
+                        {t('close')}
                     </button>
                 </div>
             </Modal>
