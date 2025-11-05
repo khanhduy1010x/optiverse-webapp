@@ -184,7 +184,7 @@ export const MARKETPLACE_SECTIONS: NavSection[] = [
     icon: 'add_market',
   },
   
-  { label: 'Purchase History', path: '/marketplace/purchase-history', icon: 'calendar' },
+  // { label: 'Purchase History', path: '/marketplace/purchase-history', icon: 'calendar' },
   { 
     label: 'Favorites', 
     path: '/marketplace/favorites', 
