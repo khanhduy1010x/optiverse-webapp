@@ -1,6 +1,7 @@
 import { ReactComponent as add } from './add.svg';
 import { ReactComponent as adjust } from './adjust.svg';
 import { ReactComponent as admin } from './admin.svg';
+import { ReactComponent as analytics } from './analytics.svg';
 import { ReactComponent as android } from './android.svg';
 import { ReactComponent as array } from './array.svg';
 import { ReactComponent as arrowDropdown } from './arrow-dropdown.svg';
@@ -29,6 +30,7 @@ import { ReactComponent as flashcard } from './flashcard.svg';
 import { ReactComponent as folder } from './folder.svg';
 import { ReactComponent as googleIcon } from './google-icon.svg';
 import { ReactComponent as group } from './group.svg';
+import { ReactComponent as heart } from './heart.svg';
 import { ReactComponent as hiddenEye } from './hidden-eye.svg';
 import { ReactComponent as home } from './home.svg';
 import { ReactComponent as hourglass } from './hourglass.svg';
@@ -101,6 +103,7 @@ export const ICONS = {
   add: add,
   adjust: adjust,
   admin: admin,
+  analytics: analytics,
   android: android,
   array: array,
   arrowDropdown: arrowDropdown,
@@ -129,6 +132,7 @@ export const ICONS = {
   folder: folder,
   googleIcon: googleIcon,
   group: group,
+  heart: heart,
   hiddenEye: hiddenEye,
   home: home,
   hourglass: hourglass,
