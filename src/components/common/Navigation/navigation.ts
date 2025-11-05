@@ -183,7 +183,7 @@ export const MARKETPLACE_SECTIONS: NavSection[] = [
     path: '/marketplace/my-items',
     icon: 'add_market',
   },
-  { label: 'My marketplace', path: '/marketplace/my-items', icon: 'add_market' },
+  
   { label: 'Purchase History', path: '/marketplace/purchase-history', icon: 'calendar' },
 ];
 

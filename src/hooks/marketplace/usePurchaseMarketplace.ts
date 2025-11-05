@@ -9,7 +9,8 @@ interface UsePurchaseMarketplaceResult {
 }
 
 export const usePurchaseMarketplace = (
-    onSuccess?: () => void
+    onSuccess?: () => void,
+    onRefresh?: () => void
 ): UsePurchaseMarketplaceResult => {
     const [isPurchasing, setIsPurchasing] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -22,6 +23,12 @@ export const usePurchaseMarketplace = (
                 marketplace_item_id: itemId,
             });
             console.log('Purchase successful:', response);
+            
+            // Refetch item immediately to update is_purchased status
+            if (onRefresh) {
+                onRefresh();
+            }
+            
             onSuccess?.();
         } catch (err: any) {
             console.error('Error purchasing item:', err);

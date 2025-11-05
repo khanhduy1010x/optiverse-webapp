@@ -97,7 +97,7 @@ const PurchaseHistoryDetailModal: React.FC<PurchaseHistoryDetailModalProps> = ({
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <p className="text-xs font-semibold text-gray-600 mb-1">Purchase Price</p>
-                                    <p className="text-2xl font-bold text-blue-600">{purchasePrice || 0} OP</p>
+                                    <p className="text-2xl font-bold text-blue-600">{purchasePrice === 0 ? 'Free' : `${purchasePrice || 0} OP`}</p>
                                 </div>
                                 <div>
                                     <p className="text-xs font-semibold text-gray-600 mb-1">Purchase Date</p>

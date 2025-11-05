@@ -4,6 +4,8 @@ import { useDeleteMarketplaceItem } from '../../hooks/marketplace/useDeleteMarke
 import CreateMarketplaceModal from '../../components/Marketplace/CreateMarketplaceModal.component';
 import UpdateMarketplaceModal from '../../components/Marketplace/UpdateMarketplaceModal.component';
 import ConfirmDialog from '../../components/Marketplace/ConfirmDialog.component';
+import { RatingList } from '../../components/Marketplace/RatingList.component';
+import Modal from 'react-modal';
 import { MarketplaceItem } from '../../types/marketplace/marketplace.types';
 
 // Hide scrollbar style
@@ -21,6 +23,7 @@ const MyItemsPage: React.FC = () => {
   const { items, loading, error, page, setPage, refetch } = useMyItems();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [showRatingsModal, setShowRatingsModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState<MarketplaceItem | null>(null);
   
   const {
@@ -95,36 +98,40 @@ const MyItemsPage: React.FC = () => {
                             {items.map(item => (
                                 <div
                                     key={item._id}
-                                    className="bg-white rounded-lg shadow hover:shadow-lg transition overflow-hidden"
+                                    className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all overflow-hidden border border-gray-100"
                                 >
                                     {/* Image */}
-                                    <div className="relative h-48 bg-gray-200 overflow-hidden">
+                                    <div className="relative h-48 bg-gray-100 overflow-hidden">
                                         <img
                                             src={item.images?.[0] || 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400&h=300&fit=crop'}
                                             alt={item.title}
                                             className="w-full h-full object-cover"
                                         />
                                         {item.price === 0 && (
-                                            <div className="absolute top-3 right-3 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                                            <div className="absolute top-3 right-3 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
                                                 Free
                                             </div>
                                         )}
                                     </div>
 
                                     {/* Content */}
-                                    <div className="p-4">
-                                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                                    <div className="p-5">
+                                        <h3 className="text-base font-semibold text-gray-900 mb-1 line-clamp-2">
                                             {item.title}
                                         </h3>
-                                        <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                                            {item.description || 'No description'}
-                                        </p>
+                                        <div className="text-gray-600 text-xs mb-4 line-clamp-2 prose prose-sm max-w-none">
+                                            {item.description ? (
+                                                <div dangerouslySetInnerHTML={{ __html: item.description }} />
+                                            ) : (
+                                                <p>No description</p>
+                                            )}
+                                        </div>
 
                                         {/* Price */}
-                                        <div className="mb-4">
+                                        <div className="mb-5 pb-5 border-b border-gray-100">
                                             {item.price > 0 ? (
                                                 <p className="text-2xl font-bold text-blue-600">
-                                                    {item.price} <span className="text-sm font-normal">OP</span>
+                                                    {item.price} <span className="text-sm font-normal text-gray-600">OP</span>
                                                 </p>
                                             ) : (
                                                 <p className="text-xl font-bold text-gray-900">
@@ -134,22 +141,31 @@ const MyItemsPage: React.FC = () => {
                                         </div>
 
                                         {/* Actions */}
-                                        <div className="flex gap-2">
+                                        <div className="grid grid-cols-3 gap-2">
                                             <button
                                                 onClick={() => {
                                                     setSelectedItem(item);
                                                     setShowUpdateModal(true);
                                                 }}
-                                                className="flex-1 px-3 py-2 border border-blue-600 text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition"
+                                                className="px-3 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-medium text-sm hover:bg-gray-50 transition-colors"
                                             >
                                                 Edit
                                             </button>
                                             <button
+                                                onClick={() => {
+                                                    setSelectedItem(item);
+                                                    setShowRatingsModal(true);
+                                                }}
+                                                className="px-3 py-2.5 border border-yellow-400 text-yellow-600 rounded-lg font-medium text-sm hover:bg-yellow-50 transition-colors"
+                                            >
+                                                ★
+                                            </button>
+                                            <button
                                                 onClick={() => handleDeleteClick(item)}
                                                 disabled={isDeleting}
-                                                className="flex-1 px-3 py-2 border border-red-600 text-red-600 rounded-lg font-medium hover:bg-red-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                                className="px-3 py-2.5 border border-red-300 text-red-600 rounded-lg font-medium text-sm hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
-                                                {isDeleting ? 'Deleting...' : 'Delete'}
+                                                Delete
                                             </button>
                                         </div>
                                     </div>
@@ -216,6 +232,57 @@ const MyItemsPage: React.FC = () => {
                 onConfirm={handleConfirmDelete}
                 onCancel={handleCancelDelete}
             />
+
+            {/* Ratings Modal */}
+            <Modal
+                isOpen={showRatingsModal && !!selectedItem}
+                onRequestClose={() => {
+                    setShowRatingsModal(false);
+                    setSelectedItem(null);
+                }}
+                className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[700px] max-w-[95vw] max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-2xl z-[2000] outline-none"
+                overlayClassName="fixed inset-0 bg-black/50 backdrop-blur-sm z-[2000]"
+            >
+                <div className="p-8">
+                    {/* Header */}
+                    <div className="flex justify-between items-start mb-6">
+                        <div>
+                            <h2 className="text-2xl font-bold text-gray-900">Item Ratings</h2>
+                           
+                        </div>
+                        <button
+                            onClick={() => {
+                                setShowRatingsModal(false);
+                                setSelectedItem(null);
+                            }}
+                            className="text-gray-400 hover:text-gray-600 text-2xl"
+                        >
+                            ✕
+                        </button>
+                    </div>
+
+                    {/* Rating List */}
+                    {selectedItem && (
+                        <RatingList
+                            marketplaceId={selectedItem._id}
+                            onRatingDeleted={() => {
+                                // Refresh if needed
+                            }}
+                        />
+                    )}
+
+                    {/* Close Button */}
+                    <button
+                        onClick={() => {
+                            setShowRatingsModal(false);
+                            setSelectedItem(null);
+                        }}
+                        className="w-full mt-6 px-4 py-3 bg-gray-200 hover:bg-gray-300 text-gray-900 rounded-lg font-medium transition"
+                    >
+                        Close
+                    </button>
+                </div>
+            </Modal>
         </div>
         </>
     );
