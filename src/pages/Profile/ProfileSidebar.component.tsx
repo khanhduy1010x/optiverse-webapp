@@ -41,6 +41,12 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
       path: '/notifications',
       icon: 'notification' as IconName,
     },
+    {
+      id: 'payment-history',
+      label: t('notifications'),
+      path: '/payment-history',
+      icon: 'payment' as IconName,
+    },
   ];
 
   return (
@@ -64,10 +70,9 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
               onClick={() => handleNavigate(menu.id, menu.path)}
               className={`
                 px-6 py-3 rounded-lg text-left cursor-pointer transition-all duration-200 flex items-center
-                ${
-                  selectedMenu === menu.id
-                    ? 'bg-[#e7f6f7] text-[#21b4ca]'
-                    : 'text-gray-700 hover:bg-gray-50'
+                ${selectedMenu === menu.id
+                  ? 'bg-[#e7f6f7] text-[#21b4ca]'
+                  : 'text-gray-700 hover:bg-gray-50'
                 }
               `}
             >

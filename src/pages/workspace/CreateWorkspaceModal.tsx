@@ -113,7 +113,7 @@ const CreateWorkspaceModal: React.FC<CreateWorkspaceModalProps> = ({
           {limits && !limits.canCreateMore && !isLoading && !error && (
             <div className="px-5 py-8">
               <div className="text-center mb-6">
-                <div className="text-amber-500 mb-4">
+                <div className="text-red-500 mb-4">
                   <svg className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
                   </svg>
@@ -129,24 +129,23 @@ const CreateWorkspaceModal: React.FC<CreateWorkspaceModalProps> = ({
               </div>
 
               {/* Current Usage */}
-              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+              <div className="bg-red-50 rounded-lg p-4 mb-6 border border-red-200">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium text-gray-700">
+                  <span className="text-sm font-medium text-red-700">
                     {t('createWorkspace.currentUsage', 'Current Usage')}
                   </span>
-                  <span className="text-sm font-bold text-gray-900">
+                  <span className="text-sm font-bold text-red-900">
                     {limits.current} / {limits.max}
                   </span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="w-full bg-red-200 rounded-full h-2">
                   <div
-                    className="bg-amber-500 h-2 rounded-full"
-                    style={{ width: `${(limits.current / limits.max) * 100}%` }}
+                    className="bg-red-600 h-2 rounded-full"
+                    style={{ width: `${Math.min((limits.current / limits.max) * 100, 100)}%` }}
                   ></div>
                 </div>
-                <div className="mt-2 text-xs text-gray-500">
+                <div className="mt-2 text-xs text-red-600">
                   {t('createWorkspace.membershipLevel', 'Membership')}: {limits.membershipLevel}
-                  {limits.packageName}
                 </div>
               </div>
 
@@ -182,22 +181,22 @@ const CreateWorkspaceModal: React.FC<CreateWorkspaceModalProps> = ({
               {/* Body */}
               <div className="px-5 py-4 space-y-5 flex flex-col gap-4">
                 {/* Usage Progress Bar */}
-                <div className="bg-blue-50 rounded-lg p-3 mb-2">
+                <div className={`rounded-lg p-3 mb-2 ${limits.current >= limits.max ? 'bg-red-50' : 'bg-blue-50'}`}>
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs font-medium text-blue-700">
+                    <span className={`text-xs font-medium ${limits.current >= limits.max ? 'text-red-700' : 'text-blue-700'}`}>
                       {t('createWorkspace.usage', 'Workspace Usage')}
                     </span>
-                    <span className="text-xs font-bold text-blue-900">
+                    <span className={`text-xs font-bold ${limits.current >= limits.max ? 'text-red-900' : 'text-blue-900'}`}>
                       {limits.current} / {limits.max}
                     </span>
                   </div>
-                  <div className="w-full bg-blue-200 rounded-full h-1.5">
+                  <div className={`w-full rounded-full h-1.5 ${limits.current >= limits.max ? 'bg-red-200' : 'bg-blue-200'}`}>
                     <div
-                      className="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
-                      style={{ width: `${(limits.current / limits.max) * 100}%` }}
+                      className={`h-1.5 rounded-full transition-all duration-300 ${limits.current >= limits.max ? 'bg-red-600' : 'bg-blue-600'}`}
+                      style={{ width: `${Math.min((limits.current / limits.max) * 100, 100)}%` }}
                     ></div>
                   </div>
-                  <div className="mt-1 text-xs text-blue-600">
+                  <div className={`mt-1 text-xs ${limits.current >= limits.max ? 'text-red-600' : 'text-blue-600'}`}>
                     {limits.membershipLevel}
                   </div>
                 </div>

@@ -8,7 +8,7 @@ import { formatVND } from '../../utils/currency.utils';
 
 const MembershipScreen: React.FC = () => {
     const navigate = useNavigate();
-    const { t } = useAppTranslate('common');
+    const { t } = useAppTranslate('membership');
     const [packages, setPackages] = useState<MembershipPackage[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -117,14 +117,14 @@ const MembershipScreen: React.FC = () => {
         if (days <= 30) {
             return `${days} days`;
         }
-        
+
         const months = Math.floor(days / 30);
         const remainingDays = days % 30;
-        
+
         // Convert months to years if 12 or more
         const years = Math.floor(months / 12);
         const remainingMonths = months % 12;
-        
+
         if (years > 0) {
             if (remainingMonths === 0 && remainingDays === 0) {
                 return `${years} year${years > 1 ? 's' : ''}`;
@@ -134,7 +134,7 @@ const MembershipScreen: React.FC = () => {
             }
             return `${years} year${years > 1 ? 's' : ''} ${remainingMonths} month${remainingMonths > 1 ? 's' : ''} ${remainingDays} day${remainingDays > 1 ? 's' : ''}`;
         }
-        
+
         if (remainingMonths === 0) {
             return `${months} month${months > 1 ? 's' : ''}`;
         }
@@ -172,17 +172,17 @@ const MembershipScreen: React.FC = () => {
                 <div className="text-center mb-12">
 
                     <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-                        Membership Plans
+                        {t('title')}
                     </h1>
                     <p className="text-lg text-gray-400 max-w-2xl mx-auto">
-                        Choose the perfect plan for your learning journey
+                        {t('subtitle')}
                     </p>
                 </div>
 
                 {/* No Packages Message */}
                 {packages.length === 0 ? (
                     <div className="text-center py-12">
-                        <p className="text-gray-400 text-lg">No membership packages available at the moment.</p>
+                        <p className="text-gray-400 text-lg">{t('no_packages')}</p>
                     </div>
                 ) : (
                     <>
@@ -198,11 +198,11 @@ const MembershipScreen: React.FC = () => {
                                         <div className="flex items-center gap-3 mb-2">
                                             <Icon name={getLevelIcon(level)} size={28} className={getLevelIconColor(level)} />
                                             <h2 className={`text-3xl font-bold ${getLevelTextColor(level)}`}>
-                                                {level === 0 ? 'Basic' : level === 1 ? 'Plus' : 'Business'} Plans
+                                                {level === 0 ? t('basic_plans') : level === 1 ? t('plus_plans') : t('business_plans')}
                                             </h2>
                                         </div>
                                         <p className="text-gray-400 ml-11">
-                                            {level === 0 ? 'Perfect for getting started' : level === 1 ? 'Best for active learners' : 'For power users'}
+                                            {level === 0 ? t('basic_description') : level === 1 ? t('plus_description') : t('business_description')}
                                         </p>
                                     </div>
 
@@ -218,7 +218,7 @@ const MembershipScreen: React.FC = () => {
                                                         <div>
                                                             <h3 className="text-xl font-bold text-white">{pkg.name}</h3>
                                                             <p className={`text-sm font-medium ${getLevelTextColor(pkg.level)}`}>
-                                                                Level {pkg.level}
+                                                                {t('level')} {pkg.level}
                                                             </p>
                                                         </div>
                                                     </div>
@@ -227,10 +227,10 @@ const MembershipScreen: React.FC = () => {
                                                     <div className="mb-6">
                                                         <div className="flex items-baseline gap-1 mb-2">
                                                             <span className="text-4xl font-bold text-white">
-                                                                {pkg.price === 0 ? 'Free' : formatVND(pkg.price, false)}
+                                                                {pkg.price === 0 ? t('free') : formatVND(pkg.price, false)}
                                                             </span>
                                                             {pkg.price > 0 && (
-                                                                <span className="text-gray-400 text-sm">/{pkg.duration_days} days</span>
+                                                                <span className="text-gray-400 text-sm">/{pkg.duration_days} {t('price_suffix')}</span>
                                                             )}
                                                         </div>
                                                         <p className="text-gray-400 text-sm">
@@ -242,38 +242,39 @@ const MembershipScreen: React.FC = () => {
                                                     <div className="space-y-4 mb-8">
                                                         <div className="flex items-center gap-3">
                                                             <Icon name="check" size={18} className={getLevelTextColor(pkg.level)} />
-                                                            <span className="text-gray-300">{formatVND(pkg.opBonusCredits || 0, false)} OP bonus</span>
+                                                            <span className="text-gray-300">{formatVND(pkg.opBonusCredits || 0, false)} {t('op_bonus')}</span>
                                                         </div>
                                                         <div className="flex items-center gap-3">
                                                             <Icon name="check" size={18} className={getLevelTextColor(pkg.level)} />
-                                                            <span className="text-gray-300">{formatDuration(pkg.duration_days)} access</span>
+                                                            <span className="text-gray-300">{formatDuration(pkg.duration_days)} {t('access')}</span>
                                                         </div>
                                                         <div className="flex items-center gap-3">
                                                             <Icon name="check" size={18} className={getLevelTextColor(pkg.level)} />
-                                                            <span className="text-gray-300">Premium features</span>
+                                                            <span className="text-gray-300">{t('premium_features')}</span>
                                                         </div>
                                                         <div className="flex items-center gap-3">
                                                             <Icon name="check" size={18} className={getLevelTextColor(pkg.level)} />
-                                                            <span className="text-gray-300">Priority support</span>
+                                                            <span className="text-gray-300">{t('priority_support')}</span>
                                                         </div>
                                                     </div>
 
                                                     {/* Subscriber Count */}
                                                     {pkg.subscriber_count !== undefined && (
                                                         <div className="mb-6 p-3 bg-gray-700/30 rounded-lg text-center">
-                                                            <p className="text-gray-400 text-xs">Active Subscribers</p>
+                                                            <p className="text-gray-400 text-xs">{t('active_subscribers')}</p>
                                                             <p className="text-white font-semibold text-lg">{pkg.subscriber_count.toLocaleString()}</p>
                                                         </div>
                                                     )}
 
                                                     {/* Action Button */}
                                                     <Button
+                                                        onClick={() => navigate(`/membership/payment?packageId=${pkg._id}`)}
                                                         className={`w-full py-2 px-4 rounded-lg transition-all font-medium mt-auto ${pkg.price === 0
                                                             ? `${getLevelBadgeColor(pkg.level)} hover:opacity-80`
                                                             : `bg-white text-black hover:bg-gray-200`
                                                             }`}
                                                     >
-                                                        {pkg.price === 0 ? 'Start Free' : 'Upgrade Now'}
+                                                        {pkg.price === 0 ? t('start_free') : t('upgrade_now')}
                                                     </Button>
                                                 </div>
                                             </div>
@@ -286,12 +287,12 @@ const MembershipScreen: React.FC = () => {
                         {/* Features Comparison */}
                         {packages.length > 1 && (
                             <div className="bg-gray-800/30 backdrop-blur border border-gray-700/50 rounded-2xl p-8 mb-12">
-                                <h2 className="text-2xl font-bold text-white mb-8 text-center">Compare All Features</h2>
+                                <h2 className="text-2xl font-bold text-white mb-8 text-center">{t('compare_features')}</h2>
                                 <div className="overflow-x-auto">
                                     <table className="w-full">
                                         <thead>
                                             <tr className="border-b border-gray-700">
-                                                <th className="text-left py-4 px-4 text-gray-400 font-semibold">Feature</th>
+                                                <th className="text-left py-4 px-4 text-gray-400 font-semibold">{t('feature')}</th>
                                                 {packages.map(pkg => (
                                                     <th key={pkg._id} className={`text-center py-4 px-4 font-semibold ${getLevelTextColor(pkg.level)}`}>
                                                         {pkg.name}
@@ -301,15 +302,15 @@ const MembershipScreen: React.FC = () => {
                                         </thead>
                                         <tbody>
                                             <tr className="border-b border-gray-700/50 hover:bg-gray-700/20 transition-colors">
-                                                <td className="py-4 px-4 text-gray-300">Price</td>
+                                                <td className="py-4 px-4 text-gray-300">{t('price')}</td>
                                                 {packages.map(pkg => (
                                                     <td key={pkg._id} className="text-center py-4 px-4 text-white font-semibold">
-                                                        {pkg.price === 0 ? 'Free' : formatVND(pkg.price, false)}
+                                                        {pkg.price === 0 ? t('free') : formatVND(pkg.price, false)}
                                                     </td>
                                                 ))}
                                             </tr>
                                             <tr className="border-b border-gray-700/50 hover:bg-gray-700/20 transition-colors">
-                                                <td className="py-4 px-4 text-gray-300">Duration</td>
+                                                <td className="py-4 px-4 text-gray-300">{t('duration')}</td>
                                                 {packages.map(pkg => (
                                                     <td key={pkg._id} className="text-center py-4 px-4">
                                                         <Icon name="check" size={20} className={`${getLevelTextColor(pkg.level)} mx-auto`} />
@@ -317,7 +318,7 @@ const MembershipScreen: React.FC = () => {
                                                 ))}
                                             </tr>
                                             <tr className="border-b border-gray-700/50 hover:bg-gray-700/20 transition-colors">
-                                                <td className="py-4 px-4 text-gray-300">OP Bonus</td>
+                                                <td className="py-4 px-4 text-gray-300">{t('op_bonus')}</td>
                                                 {packages.map(pkg => (
                                                     <td key={pkg._id} className="text-center py-4 px-4">
                                                         <span className="text-white font-semibold">
@@ -334,19 +335,19 @@ const MembershipScreen: React.FC = () => {
 
                         {/* FAQ Section */}
                         <div className="max-w-3xl mx-auto">
-                            <h2 className="text-2xl font-bold text-white mb-8 text-center">Frequently Asked Questions</h2>
+                            <h2 className="text-2xl font-bold text-white mb-8 text-center">{t('faq_title')}</h2>
                             <div className="space-y-4">
                                 <div className="bg-gray-800/30 backdrop-blur border border-gray-700/50 rounded-lg p-6 hover:border-gray-600/50 transition-colors">
-                                    <h3 className="text-lg font-semibold text-white mb-2">Can I upgrade or downgrade anytime?</h3>
-                                    <p className="text-gray-400">Yes, you can change your plan anytime. Changes take effect at the start of your next billing cycle.</p>
+                                    <h3 className="text-lg font-semibold text-white mb-2">{t('faq_1')}</h3>
+                                    <p className="text-gray-400">{t('faq_1_answer')}</p>
                                 </div>
                                 <div className="bg-gray-800/30 backdrop-blur border border-gray-700/50 rounded-lg p-6 hover:border-gray-600/50 transition-colors">
-                                    <h3 className="text-lg font-semibold text-white mb-2">What payment methods do you accept?</h3>
-                                    <p className="text-gray-400">We accept all major credit cards and digital payment methods.</p>
+                                    <h3 className="text-lg font-semibold text-white mb-2">{t('faq_2')}</h3>
+                                    <p className="text-gray-400">{t('faq_2_answer')}</p>
                                 </div>
                                 <div className="bg-gray-800/30 backdrop-blur border border-gray-700/50 rounded-lg p-6 hover:border-gray-600/50 transition-colors">
-                                    <h3 className="text-lg font-semibold text-white mb-2">Do I need a credit card for the Basic plan?</h3>
-                                    <p className="text-gray-400">No, the Basic plan is completely free and requires no payment method.</p>
+                                    <h3 className="text-lg font-semibold text-white mb-2">{t('faq_3')}</h3>
+                                    <p className="text-gray-400">{t('faq_3_answer')}</p>
                                 </div>
                             </div>
                         </div>
