@@ -144,7 +144,7 @@ const PurchaseHistoryPage: React.FC = () => {
                     {/* Price */}
                     <div className="mb-4">
                       <p className="text-xs text-gray-500 mb-1">Price</p>
-                      <p className="text-lg font-bold text-blue-600">{purchaseRecord.price} OP</p>
+                      <p className="text-lg font-bold text-blue-600">{purchaseRecord.price === 0 ? 'Free' : `${purchaseRecord.price} OP`}</p>
                     </div>
 
                     {/* Button */}

@@ -13,6 +13,8 @@ export interface MarketplaceProduct {
     purchaseCount: number;
     rating: number;
     ratingCount?: number;
+    description?: string;
+    isPurchased?: boolean;
 }
 
 interface MarketplaceCardProps {
@@ -28,10 +30,10 @@ const MarketplaceCard: React.FC<MarketplaceCardProps> = ({ product, onClick }) =
     return (
         <div
             onClick={onClick}
-            className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 cursor-pointer"
+            className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer border border-gray-100 overflow-hidden"
         >
             {/* Image Container */}
-            <div className="relative w-full h-48 bg-gray-200 overflow-hidden">
+            <div className="relative w-full h-48 bg-gray-100 overflow-hidden">
                 <img
                     src={product.image}
                     alt={product.name}
@@ -39,25 +41,25 @@ const MarketplaceCard: React.FC<MarketplaceCardProps> = ({ product, onClick }) =
                 />
                 {/* Discount Badge */}
                 {product.discount && (
-                    <div className="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 rounded-md font-semibold text-sm">
+                    <div className="absolute top-3 right-3 bg-red-500 text-white px-3 py-1 rounded-full font-semibold text-xs">
                         -{product.discount}%
                     </div>
                 )}
             </div>
 
             {/* Content Container */}
-            <div className="p-4 flex flex-col gap-3">
-                {/* Product Name & Price */}
-                <div className="flex justify-between items-start gap-2">
-                    <h3 className="font-semibold text-base line-clamp-2 text-gray-800 flex-1">
+            <div className="p-5 flex flex-col gap-3.5">
+                {/* Product Name & Price Row */}
+                <div className="flex justify-between items-center gap-3">
+                    <h3 className="font-semibold text-sm line-clamp-2 text-gray-900 flex-1 min-w-0">
                         {product.name}
                     </h3>
                     <div className="text-right flex-shrink-0">
-                        <span className="text-lg font-bold text-gray-900">
-                            {discountedPrice.toLocaleString()} OP
+                        <span className="text-lg font-bold text-blue-600">
+                            {discountedPrice === 0 ? 'Free' : `${discountedPrice.toLocaleString()} OP`}
                         </span>
                         {product.discount && (
-                            <div className="text-xs text-gray-500 line-through">
+                            <div className="text-xs text-gray-400 line-through">
                                 {product.price.toLocaleString()} OP
                             </div>
                         )}
@@ -65,38 +67,36 @@ const MarketplaceCard: React.FC<MarketplaceCardProps> = ({ product, onClick }) =
                 </div>
 
                 {/* Seller Info */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2.5 py-3 border-t border-b border-gray-100">
                     <img
                         src={product.sellerInfo?.avatar_url || `https://ui-avatars.com/api/?name=${product.sellerInfo?.full_name || 'Unknown'}&background=random&size=32`}
                         alt={product.sellerInfo?.full_name || 'Seller'}
                         className="w-8 h-8 rounded-full object-cover"
                     />
-                    <p className="text-xs text-gray-600">
-                        <span className="font-medium">{product.sellerInfo?.full_name || product.sellerName}</span>
-                    </p>
+                    <div className="flex-1 flex items-center justify-between">
+                        <p className="text-xs text-gray-600 flex-1">
+                            <span className="font-medium text-gray-900">{product.sellerInfo?.full_name || product.sellerName}</span>
+                        </p>
+                        {product.isPurchased && (
+                            <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded ml-2">
+                                Already Purchased
+                            </span>
+                        )}
+                    </div>
                 </div>
 
                 {/* Bottom Stats Row */}
-                <div className="flex items-center justify-between text-xs text-gray-600 pt-2 border-t border-gray-100">
+                <div className="flex items-center justify-between text-xs">
                     {/* Purchase Count */}
-                    <div className="flex items-center gap-1">
-                        <Icon name="check" size={14} className="text-gray-500" />
+                    <div className="flex items-center gap-1 text-gray-600">
+                        <span>✓</span>
                         <span>{product.purchaseCount} purchased</span>
                     </div>
 
-                    {/* Rating Stars */}
+                    {/* Rating */}
                     <div className="flex items-center gap-1">
-                        <div className="flex gap-0.5">
-                            {[...Array(5)].map((_, i) => (
-                                <Icon
-                                    key={i}
-                                    name="star"
-                                    size={14}
-                                    className={i < Math.round(product.rating) ? 'text-yellow-400' : 'text-gray-300'}
-                                />
-                            ))}
-                        </div>
-                        <span className="text-gray-600">
+                        <span className="text-yellow-400">★</span>
+                        <span className="text-gray-900 font-medium">
                             {product.rating.toFixed(1)}
                             {product.ratingCount && ` (${product.ratingCount})`}
                         </span>

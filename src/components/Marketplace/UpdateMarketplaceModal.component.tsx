@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 import marketplaceService from '../../services/marketplace.service';
 import { useFlashcardDecks } from '../../hooks/useFlashcardDecks';
 import { MarketplaceItem } from '../../types/marketplace/marketplace.types';
@@ -186,6 +188,35 @@ const UpdateMarketplaceModal: React.FC<UpdateMarketplaceModalProps> = ({
             className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] max-w-[90vw] max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-2xl z-[2000] outline-none"
             overlayClassName="fixed inset-0 bg-black/40 backdrop-blur-sm z-[2000]"
         >
+            <style>{`
+                .update-marketplace-modal::-webkit-scrollbar {
+                    display: none;
+                }
+                .update-marketplace-modal {
+                    -ms-overflow-style: none;
+                    scrollbar-width: none;
+                }
+                .ql-toolbar {
+                    border-top-left-radius: 0.5rem;
+                    border-top-right-radius: 0.5rem;
+                    border-color: #d1d5db;
+                }
+                .ql-container {
+                    border-bottom-left-radius: 0.5rem;
+                    border-bottom-right-radius: 0.5rem;
+                    border-color: #d1d5db;
+                    font-size: 0.875rem;
+                }
+                .ql-editor {
+                    min-height: 200px;
+                }
+                .ql-toolbar.ql-snow {
+                    padding: 8px;
+                }
+                .ql-toolbar.ql-snow .ql-formats {
+                    margin-right: 8px;
+                }
+            `}</style>
             <div className="p-8">
                 {/* Header */}
                 <div className="flex justify-between items-start mb-6">
@@ -230,13 +261,33 @@ const UpdateMarketplaceModal: React.FC<UpdateMarketplaceModalProps> = ({
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             Description
                         </label>
-                        <textarea
-                            name="description"
+                        <ReactQuill
                             value={formData.description}
-                            onChange={handleInputChange}
-                            placeholder="Describe your item..."
-                            rows={3}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                            onChange={(content) => {
+                                setFormData(prev => ({
+                                    ...prev,
+                                    description: content
+                                }));
+                            }}
+                            modules={{
+                                toolbar: [
+                                    ['bold', 'italic', 'underline', 'strike'],
+                                    ['blockquote', 'code-block'],
+                                    [{ 'header': 1 }, { 'header': 2 }],
+                                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                                    ['link', 'image'],
+                                    ['clean']
+                                ]
+                            }}
+                            formats={[
+                                'bold', 'italic', 'underline', 'strike',
+                                'blockquote', 'code-block', 'header',
+                                'list', 'link', 'image'
+                            ]}
+                            theme="snow"
+                            placeholder=""
+                            className="bg-white"
+                            style={{ height: '200px', marginBottom: '40px' }}
                         />
                     </div>
 

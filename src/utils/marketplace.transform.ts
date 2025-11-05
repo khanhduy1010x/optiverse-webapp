@@ -18,6 +18,8 @@ export const transformItemsToProducts = (items: MarketplaceItem[]): MarketplaceP
         purchaseCount: item.purchase_count || 0,
         rating: item.ratingStats?.averageRating || 0,
         ratingCount: item.ratingStats?.totalRatings || 0,
+        description: item.description,
+        isPurchased: item.is_purchased || false,
     }));
 };
 
@@ -41,6 +43,8 @@ export const transformItemsToProductsWithRatings = async (
                     purchaseCount: item.purchase_count || 0,
                     rating: stats.averageRating || 0,
                     ratingCount: stats.totalRatings || 0,
+                    description: item.description,
+                    isPurchased: item.is_purchased || false,
                 };
             } catch (error) {
                 console.error(`Error fetching ratings for item ${item._id}:`, error);
@@ -55,6 +59,8 @@ export const transformItemsToProductsWithRatings = async (
                     purchaseCount: item.purchase_count || 0,
                     rating: 0,
                     ratingCount: 0,
+                    description: item.description,
+                    isPurchased: item.is_purchased || false,
                 };
             }
         })

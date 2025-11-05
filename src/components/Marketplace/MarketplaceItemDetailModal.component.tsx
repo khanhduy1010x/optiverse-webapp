@@ -9,6 +9,7 @@ import { RatingForm } from './RatingForm.component';
 import { RatingList } from './RatingList.component';
 import { scrollbarHideStyle } from './MarketplaceItemDetailModal.styles';
 import { useMarketplaceItemDetailModal } from '../../hooks/marketplace/useMarketplaceItemDetailModal';
+import marketplaceService from '../../services/marketplace.service';
 
 interface MarketplaceItemDetailModalProps {
     item: MarketplaceItem | null;
@@ -23,6 +24,8 @@ const MarketplaceItemDetailModal: React.FC<MarketplaceItemDetailModalProps> = ({
     onClose,
     onPurchaseSuccess,
 }) => {
+    const [displayItem, setDisplayItem] = useState<MarketplaceItem | null>(item);
+
     const {
         selectedImageIndex,
         setSelectedImageIndex,
@@ -48,10 +51,28 @@ const MarketplaceItemDetailModal: React.FC<MarketplaceItemDetailModalProps> = ({
         handlePreviewClick,
         handlePurchaseClick,
     } = useMarketplaceItemDetailModal({
-        item,
+        item: displayItem,
         isOpen,
-        onPurchaseSuccess,
+        onPurchaseSuccess: async () => {
+            // Fetch fresh item data to update is_purchased
+            if (item) {
+                try {
+                    const freshItem = await marketplaceService.getById(item._id);
+                    setDisplayItem(freshItem);
+                } catch (err) {
+                    console.error('Error fetching fresh item:', err);
+                }
+            }
+            onPurchaseSuccess?.();
+        },
     });
+
+    // Update display item when item changes
+    useEffect(() => {
+        if (item) {
+            setDisplayItem(item);
+        }
+    }, [item]);
 
     if (!isOpen || !item) {
         return null;
@@ -60,6 +81,52 @@ const MarketplaceItemDetailModal: React.FC<MarketplaceItemDetailModalProps> = ({
     return (
         <>
             <style>{scrollbarHideStyle}</style>
+            <style>{`
+                .description-content h1 {
+                    font-size: 1.875rem;
+                    font-weight: bold;
+                    margin: 1rem 0;
+                    color: #111827;
+                }
+                .description-content h2 {
+                    font-size: 1.5rem;
+                    font-weight: bold;
+                    margin: 0.875rem 0;
+                    color: #111827;
+                }
+                .description-content h3 {
+                    font-size: 1.25rem;
+                    font-weight: bold;
+                    margin: 0.75rem 0;
+                    color: #111827;
+                }
+                .description-content p {
+                    margin-bottom: 0.75rem;
+                    color: #374151;
+                }
+                .description-content strong {
+                    font-weight: 600;
+                    color: #111827;
+                }
+                .description-content em {
+                    font-style: italic;
+                }
+                .description-content ul, .description-content ol {
+                    margin: 0.5rem 0;
+                    padding-left: 1.5rem;
+                }
+                .description-content li {
+                    margin: 0.25rem 0;
+                    color: #374151;
+                }
+                .description-content blockquote {
+                    border-left: 4px solid #e5e7eb;
+                    padding-left: 1rem;
+                    margin: 1rem 0;
+                    font-style: italic;
+                    color: #6b7280;
+                }
+            `}</style>
             <Modal
                 isOpen={isOpen}
                 onRequestClose={onClose}
@@ -143,7 +210,7 @@ const MarketplaceItemDetailModal: React.FC<MarketplaceItemDetailModalProps> = ({
                                 <div className="text-xs font-medium opacity-90 mb-1">PRICE</div>
                                 <div className="flex items-center justify-between">
                                     <div className="text-3xl font-bold">
-                                        {item.price === 0 ? 'Free' : `${item.price} OP`}
+                                        {item.price === 0 ? 'Free' : `${formatPrice(item.price)} `}
                                     </div>
                                     {item.price === 0 && (
                                         <span className="text-xs font-semibold bg-white/20 px-3 py-1 rounded-full">
@@ -185,9 +252,10 @@ const MarketplaceItemDetailModal: React.FC<MarketplaceItemDetailModalProps> = ({
                             {item.description && (
                                 <div className="mb-6">
                                     <p className="text-xs font-semibold text-gray-600 mb-2">DESCRIPTION</p>
-                                    <p className="text-sm text-gray-700 leading-relaxed line-clamp-4">
-                                        {item.description}
-                                    </p>
+                                    <div 
+                                        dangerouslySetInnerHTML={{ __html: item.description }}
+                                        className="description-content text-sm text-gray-700 leading-relaxed"
+                                    />
                                 </div>
                             )}
 
