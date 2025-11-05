@@ -1,6 +1,7 @@
 import React from 'react';
 import Icon from '../common/Icon/Icon.component';
 import { CreatorInfo } from '../../types/marketplace/marketplace.types';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 export interface MarketplaceProduct {
     id: string;
@@ -23,6 +24,7 @@ interface MarketplaceCardProps {
 }
 
 const MarketplaceCard: React.FC<MarketplaceCardProps> = ({ product, onClick }) => {
+    const { t } = useAppTranslate('marketplace');
     const discountedPrice = product.discount
         ? Math.round(product.price * (1 - product.discount / 100))
         : product.price;
@@ -56,7 +58,7 @@ const MarketplaceCard: React.FC<MarketplaceCardProps> = ({ product, onClick }) =
                     </h3>
                     <div className="text-right flex-shrink-0">
                         <span className="text-lg font-bold text-blue-600">
-                            {discountedPrice === 0 ? 'Free' : `${discountedPrice.toLocaleString()} OP`}
+                            {discountedPrice === 0 ? t('free') : `${discountedPrice.toLocaleString()} OP`}
                         </span>
                         {product.discount && (
                             <div className="text-xs text-gray-400 line-through">
@@ -79,7 +81,7 @@ const MarketplaceCard: React.FC<MarketplaceCardProps> = ({ product, onClick }) =
                         </p>
                         {product.isPurchased && (
                             <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded ml-2">
-                                Already Purchased
+                                {t('status_already_purchased')}
                             </span>
                         )}
                     </div>
@@ -90,7 +92,7 @@ const MarketplaceCard: React.FC<MarketplaceCardProps> = ({ product, onClick }) =
                     {/* Purchase Count */}
                     <div className="flex items-center gap-1 text-gray-600">
                         <span>✓</span>
-                        <span>{product.purchaseCount} purchased</span>
+                        <span>{product.purchaseCount} {t('purchased')}</span>
                     </div>
 
                     {/* Rating */}

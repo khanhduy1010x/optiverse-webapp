@@ -4,6 +4,14 @@ import { usePurchaseMarketplace } from './usePurchaseMarketplace';
 import { usePreviewFlashcards } from './usePreviewFlashcards';
 import { useRatingStats } from './useRatingStats';
 
+interface PricingInfo {
+    original_price?: number;
+    discount_percentage?: number;
+    discount_amount?: number;
+    final_price?: number;
+    membership_tier?: string;
+}
+
 interface UseMarketplaceItemDetailModalProps {
     item: MarketplaceItem | null;
     isOpen: boolean;
@@ -24,6 +32,7 @@ interface UseMarketplaceItemDetailModalReturn {
     mainImage: string;
     isPurchasing: boolean;
     error: string | null;
+    errorCode?: number;
     setError: (error: string | null) => void;
     handlePurchase: (itemId: string) => Promise<void>;
     flashcards: any[];
@@ -35,6 +44,7 @@ interface UseMarketplaceItemDetailModalReturn {
     refreshRatingStats: () => void;
     handlePreviewClick: () => Promise<void>;
     handlePurchaseClick: () => void;
+    pricingInfo: PricingInfo | null;
 }
 
 export const useMarketplaceItemDetailModal = ({
@@ -49,7 +59,7 @@ export const useMarketplaceItemDetailModal = ({
     const [ratingRefreshKey, setRatingRefreshKey] = useState(0);
 
     // Custom hooks
-    const { isPurchasing, error, setError, handlePurchase } = usePurchaseMarketplace(onPurchaseSuccess);
+    const { isPurchasing, error, errorCode, setError, handlePurchase } = usePurchaseMarketplace(onPurchaseSuccess);
     const { flashcards, totalFlashcards, previewCount, loading: previewLoading, fetchPreviewFlashcards } = usePreviewFlashcards();
     const { stats: ratingStats, refreshStats: refreshRatingStats } = useRatingStats(item?._id || '');
 
@@ -75,6 +85,15 @@ export const useMarketplaceItemDetailModal = ({
 
     // Get main image
     const mainImage = item?.images?.[selectedImageIndex] || 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=600&h=400&fit=crop';
+
+    // Get pricing info from item
+    const pricingInfo: PricingInfo | null = item?.pricing ? {
+        original_price: item.pricing.original_price,
+        discount_percentage: item.pricing.discount_percentage,
+        discount_amount: item.pricing.discount_amount,
+        final_price: item.pricing.final_price,
+        membership_tier: item.pricing.membership_tier,
+    } : null;
 
     // Handle preview click
     const handlePreviewClick = async () => {
@@ -103,6 +122,7 @@ export const useMarketplaceItemDetailModal = ({
         mainImage,
         isPurchasing,
         error,
+        errorCode,
         setError,
         handlePurchase,
         flashcards,
@@ -114,5 +134,6 @@ export const useMarketplaceItemDetailModal = ({
         refreshRatingStats,
         handlePreviewClick,
         handlePurchaseClick,
+        pricingInfo,
     };
 };

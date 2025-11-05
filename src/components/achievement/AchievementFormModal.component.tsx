@@ -5,6 +5,7 @@ import Button from '../common/Button.component';
 import RuleFormModal from './RuleFormModal.component';
 import { AchievementFormData } from '../../types/achievement/request/achievement.request';
 import AchievementEditor from './AchievementEditor.component';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 interface AchievementFormModalProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ const AchievementFormModal: React.FC<AchievementFormModalProps> = ({
   onSubmit,
   onCancel
 }) => {
+  const { t } = useAppTranslate('achievement');
   const {
     // Form data
     formData,
@@ -64,7 +66,7 @@ const AchievementFormModal: React.FC<AchievementFormModalProps> = ({
           {/* Header */}
           <div className="px-6 py-4 flex justify-between items-center" style={{ background: '#22b4ca' }}>
             <h2 className="text-base font-bold text-white" style={{ color: '#fff' }}>
-              {achievement ? 'Edit Achievement' : 'Create New Achievement'}
+              {achievement ? t('edit_achievement') : t('create_new_achievement')}
             </h2>
             <button
               onClick={onCancel}
@@ -83,7 +85,7 @@ const AchievementFormModal: React.FC<AchievementFormModalProps> = ({
               {/* Title Field */}
               <div>
                 <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
-                  Title *
+                  {t('title')} *
                 </label>
                 <input
                   type="text"
@@ -94,7 +96,7 @@ const AchievementFormModal: React.FC<AchievementFormModalProps> = ({
                   onBlur={() => handleBlur('title')}
                   className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 ${hasError('title') ? 'border-red-300 bg-red-50' : 'border-gray-300'
                     }`}
-                  placeholder="Enter achievement title"
+                  placeholder={t('enter_title')}
                 />
                 {hasError('title') && (
                   <p className="mt-1 text-sm text-red-600">{getError('title')}</p>
@@ -104,14 +106,14 @@ const AchievementFormModal: React.FC<AchievementFormModalProps> = ({
               {/* Description Field */}
               <div>
                 <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-                  Description *
+                  {t('description')} *
                 </label>
                 <AchievementEditor
                   value={formData.description}
                   onChange={(value) => handleInputChange({ target: { name: 'description', value } } as any)}
                   onBlur={() => handleBlur('description')}
                   hasError={hasError('description')}
-                  placeholder="Enter achievement description..."
+                  placeholder={t('enter_description')}
                 />
                 {hasError('description') && (
                   <p className="mt-1 text-sm text-red-600">{getError('description')}</p>
@@ -121,7 +123,7 @@ const AchievementFormModal: React.FC<AchievementFormModalProps> = ({
               {/* Reward Field */}
               <div>
                 <label htmlFor="reward" className="block text-sm font-medium text-gray-700 mb-2">
-                  Reward *
+                  {t('reward')} *
                 </label>
                 <input
                   type="number"
@@ -133,7 +135,7 @@ const AchievementFormModal: React.FC<AchievementFormModalProps> = ({
                   min="0"
                   className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 ${hasError('reward') ? 'border-red-300 bg-red-50' : 'border-gray-300'
                     }`}
-                  placeholder="Enter reward points"
+                  placeholder={t('enter_reward_points')}
                 />
                 {hasError('reward') && (
                   <p className="mt-1 text-sm text-red-600">{getError('reward')}</p>
@@ -143,7 +145,7 @@ const AchievementFormModal: React.FC<AchievementFormModalProps> = ({
               {/* Logic Operator */}
               <div>
                 <label htmlFor="logic_operator" className="block text-sm font-medium text-gray-700 mb-2">
-                  Logic Operator *
+                  {t('logic_operator')} *
                 </label>
                 <select
                   id="logic_operator"
@@ -165,7 +167,7 @@ const AchievementFormModal: React.FC<AchievementFormModalProps> = ({
               {/* File Upload */}
               <div>
                 <label htmlFor="file" className="block text-sm font-medium text-gray-700 mb-2">
-                  Achievement Image
+                  {t('achievement_image')}
                 </label>
                 <div className="space-y-4">
                   {!previewUrl && (
@@ -207,11 +209,11 @@ const AchievementFormModal: React.FC<AchievementFormModalProps> = ({
               <div>
                 <div className="flex justify-between items-center mb-4">
                   <label className="block text-sm font-medium text-gray-700">
-                    Rules *
+                    {t('rules')} *
                   </label>
                   <Button
                     type="button"
-                    title="Add Rule"
+                    title={t('add_rule')}
                     onClick={handleAddRule}
                     className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
                   />
@@ -223,7 +225,7 @@ const AchievementFormModal: React.FC<AchievementFormModalProps> = ({
 
                 {(formData.rules?.length || 0) === 0 ? (
                   <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center">
-                    <p className="text-gray-500">No rules added yet. Click "Add Rule" to create your first rule.</p>
+                    <p className="text-gray-500">{t('no_rules_added_yet')}</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -244,14 +246,14 @@ const AchievementFormModal: React.FC<AchievementFormModalProps> = ({
                             onClick={() => handleEditRule(rule, index)}
                             className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                           >
-                            Edit
+                            {t('edit')}
                           </button>
                           <button
                             type="button"
                             onClick={() => handleDeleteRule(index)}
                             className="text-red-600 hover:text-red-800 text-sm font-medium"
                           >
-                            Delete
+                            {t('delete')}
                           </button>
                         </div>
                       </div>
@@ -264,13 +266,13 @@ const AchievementFormModal: React.FC<AchievementFormModalProps> = ({
               <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
                 <Button
                   type="button"
-                  title="Cancel"
+                  title={t('cancel')}
                   onClick={onCancel}
                   className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-medium transition-colors"
                 />
                 <Button
                   type="submit"
-                  title={achievement ? 'Update Achievement' : 'Create Achievement'}
+                  title={achievement ? t('update_achievement') : t('create_achievement')}
                   style={{ backgroundColor: '#21b4ca', color: '#fff' }}
                   className="px-6 py-3 rounded-xl font-medium shadow-md hover:opacity-90 transition-all"
                 />

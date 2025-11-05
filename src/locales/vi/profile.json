@@ -63,5 +63,6 @@
   "permanently_delete_account_description": "Xóa vĩnh viễn tài khoản và loại bỏ quyền truy cập khỏi tất cả workspace.",
   "delete": "Xóa",
   "logging_out": "Đang đăng xuất...",
-  "logout": "Đăng xuất"
+  "logout": "Đăng xuất",
+  "language": "Ngôn ngữ"
 }

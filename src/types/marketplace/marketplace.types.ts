@@ -11,6 +11,14 @@ export interface RatingStats {
   ratingDistribution: Record<number, number>;
 }
 
+export interface PricingInfo {
+  original_price: number;
+  discount_percentage: number;
+  discount_amount: number;
+  final_price: number;
+  membership_tier?: string;
+}
+
 export interface MarketplaceItem {
   _id: string;
   creator_id: string;
@@ -24,6 +32,7 @@ export interface MarketplaceItem {
   purchase_count?: number;
   ratingStats?: RatingStats;
   is_purchased?: boolean;
+  pricing?: PricingInfo;
 }
 
 export interface CreateMarketplaceItemPayload {
@@ -52,7 +61,15 @@ export interface PurchaseResponse {
   marketplace_item_id: string;
   purchased_flashcard_id: string;
   purchased_deck_id: string;
-  details: {
+  discount_details?: {
+    original_price: number;
+    discount_percentage: number;
+    discount_amount: number;
+    final_price: number;
+    remainingPoints?: number;
+    membership_tier?: string;
+  };
+  details?: {
     price: number;
     seller_id: string;
     buyer_id: string;

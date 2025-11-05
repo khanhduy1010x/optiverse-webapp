@@ -4,12 +4,14 @@ import { MarketplaceItem } from '../../types/marketplace/marketplace.types';
 import { formatPrice } from '../../utils/marketplace.transform';
 import ConfirmDialog from './ConfirmDialog.component';
 import ErrorModal from '../common/ErrorModal.component';
+import MembershipUpgradeErrorModal from './MembershipUpgradeErrorModal.component';
 import FlashcardPreviewModal from './FlashcardPreviewModal.component';
 import { RatingForm } from './RatingForm.component';
 import { RatingList } from './RatingList.component';
-import { scrollbarHideStyle } from './MarketplaceItemDetailModal.styles';
+import { scrollbarHideStyle } from './styles/MarketplaceItemDetailModal.styles';
 import { useMarketplaceItemDetailModal } from '../../hooks/marketplace/useMarketplaceItemDetailModal';
 import marketplaceService from '../../services/marketplace.service';
+import { PriceDisplay } from './PriceDisplay.component';
 
 interface MarketplaceItemDetailModalProps {
     item: MarketplaceItem | null;
@@ -25,6 +27,10 @@ const MarketplaceItemDetailModal: React.FC<MarketplaceItemDetailModalProps> = ({
     onPurchaseSuccess,
 }) => {
     const [displayItem, setDisplayItem] = useState<MarketplaceItem | null>(item);
+    const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+    const [purchasePrice, setPurchasePrice] = useState<number | null>(null);
+    const [purchaseTitle, setPurchaseTitle] = useState<string>('');
+    const [showMembershipUpgradeError, setShowMembershipUpgradeError] = useState(false);
 
     const {
         selectedImageIndex,
@@ -40,6 +46,7 @@ const MarketplaceItemDetailModal: React.FC<MarketplaceItemDetailModalProps> = ({
         mainImage,
         isPurchasing,
         error,
+        errorCode,
         setError,
         handlePurchase,
         flashcards,
@@ -50,6 +57,7 @@ const MarketplaceItemDetailModal: React.FC<MarketplaceItemDetailModalProps> = ({
         refreshRatingStats,
         handlePreviewClick,
         handlePurchaseClick,
+        pricingInfo,
     } = useMarketplaceItemDetailModal({
         item: displayItem,
         isOpen,
@@ -67,12 +75,52 @@ const MarketplaceItemDetailModal: React.FC<MarketplaceItemDetailModalProps> = ({
         },
     });
 
-    // Update display item when item changes
+    // Fetch detailed item data with pricing when modal opens
     useEffect(() => {
-        if (item) {
+        if (isOpen && item && !isLoadingDetails) {
+            const fetchDetailedItem = async () => {
+                try {
+                    setIsLoadingDetails(true);
+                    const detailedItem = await marketplaceService.getById(item._id);
+                    setDisplayItem(detailedItem);
+                } catch (err) {
+                    console.error('Error fetching detailed item:', err);
+                    // Fallback to the item from props if fetch fails
+                    setDisplayItem(item);
+                } finally {
+                    setIsLoadingDetails(false);
+                }
+            };
+            fetchDetailedItem();
+        }
+    }, [isOpen, item?._id]);
+
+    // Update display item when item changes (for non-detailed updates)
+    useEffect(() => {
+        if (item && !isLoadingDetails) {
             setDisplayItem(item);
         }
-    }, [item]);
+    }, [item?.title]); // Only re-set if title changes (indicates different item)
+
+    // Update purchase price when showConfirmation changes
+    useEffect(() => {
+        if (showConfirmation && displayItem) {
+            // Use displayItem pricing if available, otherwise use item price
+            const price = displayItem.pricing?.final_price ?? displayItem.price ?? item?.price ?? 0;
+            const title = displayItem.title || item?.title || 'Unknown Item';
+            setPurchasePrice(price);
+            setPurchaseTitle(title);
+        }
+    }, [showConfirmation, displayItem?.pricing, displayItem?.title, item?.title]);
+
+    // Detect membership upgrade error and show special modal
+    useEffect(() => {
+        // Error code 1213 = MARKETPLACE_BUY_LIMIT_EXCEEDED
+        if (errorCode === 1213) {
+            setShowMembershipUpgradeError(true);
+            setShowErrorDialog(false);
+        }
+    }, [errorCode]);
 
     if (!isOpen || !item) {
         return null;
@@ -206,19 +254,25 @@ const MarketplaceItemDetailModal: React.FC<MarketplaceItemDetailModalProps> = ({
                             </div>
 
                             {/* Price Badge */}
-                            <div className="badge-primary rounded-xl p-4 mb-6 text-white">
-                                <div className="text-xs font-medium opacity-90 mb-1">PRICE</div>
-                                <div className="flex items-center justify-between">
-                                    <div className="text-3xl font-bold">
-                                        {item.price === 0 ? 'Free' : `${formatPrice(item.price)} `}
-                                    </div>
-                                    {item.price === 0 && (
+                            {item.price === 0 ? (
+                                <div className="badge-primary rounded-xl p-4 mb-6 text-white">
+                                    <div className="text-xs font-medium opacity-90 mb-1">PRICE</div>
+                                    <div className="flex items-center justify-between">
+                                        <div className="text-3xl font-bold">Free</div>
                                         <span className="text-xs font-semibold bg-white/20 px-3 py-1 rounded-full">
                                             FREE
                                         </span>
-                                    )}
+                                    </div>
                                 </div>
-                            </div>
+                            ) : (
+                                <div className="mb-6">
+                                    <PriceDisplay
+                                        originalPrice={item.price}
+                                        pricing={item.pricing}
+                                        showBreakdown={true}
+                                    />
+                                </div>
+                            )}
 
                             {/* Quick Stats */}
                             <div className="bg-gray-100 rounded-lg p-4 mb-6">
@@ -327,10 +381,11 @@ const MarketplaceItemDetailModal: React.FC<MarketplaceItemDetailModalProps> = ({
             <ConfirmDialog
                 isOpen={showConfirmation}
                 title="Confirm Purchase"
-                message={`Are you sure you want to ${item.price === 0 ? 'get this free item' : `purchase "${item.title}" for ${item.price} OP`}?`}
-                confirmButtonText={item.price === 0 ? '✓ Get Free' : '✓ Purchase'}
+                message={`Are you sure you want to ${(displayItem?.price ?? item?.price) === 0 ? 'get this free item' : `purchase "${purchaseTitle || displayItem?.title || item?.title || 'this item'}" for ${purchasePrice ?? displayItem?.pricing?.final_price ?? displayItem?.price ?? item?.price} OP`}?`}
+                confirmButtonText={(displayItem?.price ?? item?.price) === 0 ? '✓ Get Free' : '✓ Purchase'}
                 cancelButtonText="✕ Cancel"
                 isLoading={isPurchasing}
+                pricing={displayItem?.pricing || undefined}
                 onConfirm={async () => {
                     setShowConfirmation(false);
                     await handlePurchase(item!._id);
@@ -347,6 +402,17 @@ const MarketplaceItemDetailModal: React.FC<MarketplaceItemDetailModalProps> = ({
                     setError(null);
                 }}
                 autoCloseMs={3000}
+            />
+
+            {/* Membership Upgrade Error Modal */}
+            <MembershipUpgradeErrorModal
+                isOpen={showMembershipUpgradeError}
+                message={error || 'Bạn cần nâng cấp gói để có thể mua thêm'}
+                onClose={() => {
+                    setShowMembershipUpgradeError(false);
+                    setError(null);
+                }}
+                autoCloseMs={0}
             />
 
             {/* Flashcard Preview Modal */}

@@ -68,7 +68,7 @@ const MarketplaceHomePage: React.FC = () => {
     });
 
     // Use purchase hook
-    const { isPurchasing, handlePurchase } = usePurchaseMarketplace(
+    const { isPurchasing, handlePurchase, lastPurchaseDiscount } = usePurchaseMarketplace(
         () => {
             // On success
             setSelectedItem(null);
@@ -164,6 +164,7 @@ const MarketplaceHomePage: React.FC = () => {
                 onClose={() => setShowSuccessNotification(false)}
                 title="Purchase Successful"
                 message="Your flashcard deck has been added to your collection!"
+                discountDetails={lastPurchaseDiscount || undefined}
             />
         </div>
         </>

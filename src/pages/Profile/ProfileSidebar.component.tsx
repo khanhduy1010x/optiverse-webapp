@@ -25,7 +25,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
     },
     {
       id: 'achievements',
-      label: 'Achievements',
+      label: t('achievements'),
       path: '/user-achievements',
       icon: 'trophy' as IconName,
     },
