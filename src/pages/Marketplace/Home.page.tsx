@@ -156,6 +156,9 @@ const MarketplaceHomePage: React.FC = () => {
                     setShowSuccessNotification(true);
                     refetch();
                 }}
+                onFavoriteChange={() => {
+                    // No need to refetch here as favorite doesn't affect main list
+                }}
             />
 
             {/* Success Notification Modal */}

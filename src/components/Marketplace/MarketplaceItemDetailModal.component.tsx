@@ -12,12 +12,15 @@ import { scrollbarHideStyle } from './styles/MarketplaceItemDetailModal.styles';
 import { useMarketplaceItemDetailModal } from '../../hooks/marketplace/useMarketplaceItemDetailModal';
 import marketplaceService from '../../services/marketplace.service';
 import { PriceDisplay } from './PriceDisplay.component';
+import { useToggleFavorite } from '../../hooks/marketplace/useToggleFavorite';
+import { useFavoriteStatus } from '../../hooks/marketplace/useFavoriteStatus';
 
 interface MarketplaceItemDetailModalProps {
     item: MarketplaceItem | null;
     isOpen: boolean;
     onClose: () => void;
     onPurchaseSuccess?: () => void;
+    onFavoriteChange?: () => void;
 }
 
 const MarketplaceItemDetailModal: React.FC<MarketplaceItemDetailModalProps> = ({
@@ -25,6 +28,7 @@ const MarketplaceItemDetailModal: React.FC<MarketplaceItemDetailModalProps> = ({
     isOpen,
     onClose,
     onPurchaseSuccess,
+    onFavoriteChange,
 }) => {
     const [displayItem, setDisplayItem] = useState<MarketplaceItem | null>(item);
     const [isLoadingDetails, setIsLoadingDetails] = useState(false);
@@ -121,6 +125,21 @@ const MarketplaceItemDetailModal: React.FC<MarketplaceItemDetailModalProps> = ({
             setShowErrorDialog(false);
         }
     }, [errorCode]);
+    // Favorite functionality
+    const { isFavorited, setIsFavorited } = useFavoriteStatus(item?._id || null);
+    const { isToggling, toggleFavorite } = useToggleFavorite(
+        isFavorited,
+        (newStatus) => {
+            setIsFavorited(newStatus);
+            onFavoriteChange?.();
+        }
+    );
+
+    const handleFavoriteClick = async () => {
+        if (item) {
+            await toggleFavorite(item._id);
+        }
+    };
 
     if (!isOpen || !item) {
         return null;
@@ -238,11 +257,39 @@ const MarketplaceItemDetailModal: React.FC<MarketplaceItemDetailModalProps> = ({
 
                         {/* RIGHT SECTION - Details */}
                         <div className="animate-slide-up flex flex-col">
-                            {/* Header */}
+                            {/* Header with Favorite Button */}
                             <div className="mb-6">
-                                <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                                    {item.title}
-                                </h1>
+                                <div className="flex items-start justify-between gap-3 mb-2">
+                                    <h1 className="text-3xl font-bold text-gray-900 flex-1">
+                                        {item.title}
+                                    </h1>
+                                    <button
+                                        onClick={handleFavoriteClick}
+                                        disabled={isToggling}
+                                        className="shrink-0 bg-gray-100 hover:bg-gray-200 rounded-full p-3 transition-all disabled:opacity-50"
+                                        title={isFavorited ? 'Xóa khỏi yêu thích' : 'Thêm vào yêu thích'}
+                                    >
+                                        {isToggling ? (
+                                            <div className="w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+                                        ) : (
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                className={`w-6 h-6 transition-colors ${
+                                                    isFavorited ? 'fill-red-500 text-red-500' : 'fill-none text-gray-600'
+                                                }`}
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
+                                                strokeWidth={2}
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                                                />
+                                            </svg>
+                                        )}
+                                    </button>
+                                </div>
                                 <div className="flex items-center gap-2">
                                     <span className="inline-flex items-center gap-1 text-sm text-gray-600">
                                         ★ {ratingStats?.averageRating?.toFixed(1) || '0'}

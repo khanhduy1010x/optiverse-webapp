@@ -2,6 +2,8 @@ import React from 'react';
 import Icon from '../common/Icon/Icon.component';
 import { CreatorInfo } from '../../types/marketplace/marketplace.types';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
+import { useToggleFavorite } from '../../hooks/marketplace/useToggleFavorite';
+import { useFavoriteStatus } from '../../hooks/marketplace/useFavoriteStatus';
 
 export interface MarketplaceProduct {
     id: string;
@@ -21,19 +23,64 @@ export interface MarketplaceProduct {
 interface MarketplaceCardProps {
     product: MarketplaceProduct;
     onClick?: () => void;
+    onFavoriteChange?: () => void;
 }
 
-const MarketplaceCard: React.FC<MarketplaceCardProps> = ({ product, onClick }) => {
-    const { t } = useAppTranslate('marketplace');
+const MarketplaceCard: React.FC<MarketplaceCardProps> = ({ product, onClick, onFavoriteChange }) => {
+        const { t } = useAppTranslate('marketplace');
+
     const discountedPrice = product.discount
         ? Math.round(product.price * (1 - product.discount / 100))
         : product.price;
+
+    // Check favorite status
+    const { isFavorited, setIsFavorited } = useFavoriteStatus(product.id);
+    const { isToggling, toggleFavorite } = useToggleFavorite(
+        isFavorited,
+        (newStatus) => {
+            setIsFavorited(newStatus);
+            onFavoriteChange?.();
+        }
+    );
+
+    const handleFavoriteClick = async (e: React.MouseEvent) => {
+        e.stopPropagation(); // Ngăn click vào card
+        await toggleFavorite(product.id);
+    };
 
     return (
         <div
             onClick={onClick}
             className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer border border-gray-100 overflow-hidden"
         >
+            {/* Favorite Button */}
+            <button
+                onClick={handleFavoriteClick}
+                disabled={isToggling}
+                className="absolute top-3 left-3 z-10 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-md hover:bg-white transition-all disabled:opacity-50"
+                title={isFavorited ? 'Xóa khỏi yêu thích' : 'Thêm vào yêu thích'}
+            >
+                {isToggling ? (
+                    <div className="w-5 h-5 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+                ) : (
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className={`w-5 h-5 transition-colors ${
+                            isFavorited ? 'fill-red-500 text-red-500' : 'fill-none text-gray-600'
+                        }`}
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                    >
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                        />
+                    </svg>
+                )}
+            </button>
+
             {/* Image Container */}
             <div className="relative w-full h-48 bg-gray-100 overflow-hidden">
                 <img

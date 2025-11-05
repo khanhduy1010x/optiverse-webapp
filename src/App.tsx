@@ -82,6 +82,8 @@ import { Navigate } from 'react-router-dom';
 import MarketplaceHomePage from './pages/Marketplace/Home.page';
 import MyItemsPage from './pages/Marketplace/MyItems.page';
 import PurchaseHistoryPage from './pages/Marketplace/PurchaseHistory.page';
+import FavoritesPage from './pages/Marketplace/Favorites.page';
+import SalesAnalyticsPage from './pages/Marketplace/SalesAnalytics.page';
 import MembershipScreen from './pages/Membership/Membership.screen';
 
 
@@ -176,6 +178,22 @@ const AppContent: React.FC = () => {
               element={
                 <ProtectedRoute>
                   <PurchaseHistoryPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/marketplace/favorites"
+              element={
+                <ProtectedRoute>
+                  <FavoritesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/marketplace/analytics"
+              element={
+                <ProtectedRoute>
+                  <SalesAnalyticsPage />
                 </ProtectedRoute>
               }
             />

@@ -179,12 +179,27 @@ export const WORKSPACE_ONLY_SECTIONS: NavSection[] = [
 export const MARKETPLACE_SECTIONS: NavSection[] = [
   { label: 'Home', path: '/marketplace', icon: 'home' },
   {
-    label: 'My marketplace',
+    label: 'My Items',
     path: '/marketplace/my-items',
     icon: 'add_market',
   },
   
   { label: 'Purchase History', path: '/marketplace/purchase-history', icon: 'calendar' },
+  { 
+    label: 'Favorites', 
+    path: '/marketplace/favorites', 
+    icon: 'heart' 
+  },
+  { 
+    label: 'Purchase History', 
+    path: '/marketplace/purchase-history', 
+    icon: 'calendar' 
+  },
+  { 
+    label: 'Analytics', 
+    path: '/marketplace/analytics', 
+    icon: 'analytics' 
+  },
 ];
 
 // Map các path con tới path cha để dễ dàng tìm kiếm
@@ -211,8 +226,10 @@ const PATH_MAPPING: Record<string, string> = {
   '/admin/settings': '/admin/dashboard',
   '/admin/achievements': '/admin/dashboard',
   '/marketplace': '/marketplace',
-  '/marketplace/my-items': '/marketplace',
-  '/marketplace/purchase-history': '/marketplace',
+  '/marketplace/my-items': '/marketplace/my-items',
+  '/marketplace/favorites': '/marketplace/favorites',
+  '/marketplace/purchase-history': '/marketplace/purchase-history',
+  '/marketplace/analytics': '/marketplace/analytics',
 };
 
 export const getSectionKeyFromPath = (path: string): string => {

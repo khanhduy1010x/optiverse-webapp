@@ -344,6 +344,38 @@ class MarketplaceServiceClass {
       'Error fetching sales history:'
     );
   }
+
+  /**
+   * Lấy sales analytics của seller
+   */
+  async getSalesAnalytics() {
+    try {
+      const response = await api.get<ApiResponse<{
+        totalRevenue: number;
+        totalSales: number;
+        salesByMonth: Array<{
+          _id: { year: number; month: number };
+          revenue: number;
+          count: number;
+        }>;
+        topSellingItems: Array<{
+          _id: string;
+          totalRevenue: number;
+          totalSales: number;
+          title: string;
+          price: number;
+        }>;
+      }>>(`${URLBASE.replace('marketplace', 'purchase-history')}/analytics`);
+
+      return response.data.data;
+    } catch (error: any) {
+      console.error('Error fetching sales analytics:', {
+        error: error.message,
+        response: error.response?.data,
+      });
+      throw error;
+    }
+  }
 }
 
 export default new MarketplaceServiceClass();
