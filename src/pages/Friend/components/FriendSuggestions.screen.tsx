@@ -74,16 +74,16 @@ const FriendSuggestions: React.FC<FriendSuggestionsProps> = ({
           </svg>
         </div>
         <h3 className="text-xl font-semibold text-gray-800 mb-2">
-          Không có Friend suggestion
+          {t('no_friend_suggestions')}
         </h3>
         <p className="text-gray-500 mb-6">
-          Hiện tại không có Friend suggestion nào cho bạn. Hãy thử lại sau!
+          {t('no_friend_suggestions_description')}
         </p>
         <button
           onClick={onRefresh}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
-          Làm mới
+          {t('refresh_suggestions')}
         </button>
       </div>
     );
@@ -107,7 +107,7 @@ const FriendSuggestions: React.FC<FriendSuggestionsProps> = ({
                 {suggestion.friendInfo?.avatar_url ? (
                   <img
                     src={suggestion.friendInfo.avatar_url}
-                    alt={suggestion.friendInfo.full_name || 'Friend suggestion'}
+                    alt={suggestion.friendInfo.full_name || t('friend_suggestion')}
                     className="w-16 h-16 rounded-full object-cover mr-4"
                     onError={e => {
                       e.currentTarget.onerror = null;
@@ -180,7 +180,7 @@ const FriendSuggestions: React.FC<FriendSuggestionsProps> = ({
                               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                             ></path>
                           </svg>
-                          Đang gửi...
+                          {t('sending')}
                         </div>
                       ) : (
                         <div className="flex items-center">
@@ -198,7 +198,7 @@ const FriendSuggestions: React.FC<FriendSuggestionsProps> = ({
                               d="M12 6v6m0 0v6m0-6h6m-6 0H6"
                             />
                           </svg>
-                          Kết bạn
+                          {t('add_as_friend')}
                         </div>
                       )}
                     </button>

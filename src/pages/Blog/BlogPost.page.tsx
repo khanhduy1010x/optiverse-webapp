@@ -5,10 +5,12 @@ import { useBlog, useComments, useLikes, useReports } from '../../hooks/blog';
 import { useAuthState } from "../../hooks/useAuthState.hook";
 import { useAuthStatus } from '../../hooks/auth/useAuthStatus.hook';
 import { BlogPostWithAuthor } from '../../types/blog/blog.types';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 const BlogPostPage: React.FC = () => {
   const { id: postId } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useAppTranslate('blog');
   const [post, setPost] = useState<BlogPostWithAuthor | null>(null);
   const [popularPosts, setPopularPosts] = useState<BlogPostWithAuthor[]>([]);
 

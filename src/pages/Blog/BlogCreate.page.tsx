@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { BlogEditor } from '../../components/blog';
 import { useBlog } from '../../hooks/blog';
 import { BlogFormData } from '../../types/blog/blog.types';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 const BlogCreatePage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useAppTranslate('blog');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {

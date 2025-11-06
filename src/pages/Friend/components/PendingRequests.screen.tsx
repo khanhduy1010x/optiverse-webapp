@@ -92,7 +92,7 @@ const PendingRequests: React.FC<PendingRequestsProps> = ({
                 {request.friendInfo?.avatar_url ? (
                   <img
                     src={request.friendInfo.avatar_url}
-                    alt={request.friendInfo.full_name || 'User'}
+                    alt={request.friendInfo.full_name || t('user')}
                     className="w-16 h-16 rounded-lg object-cover mr-4 shadow-sm"
                     onError={e => {
                       e.currentTarget.onerror = null;

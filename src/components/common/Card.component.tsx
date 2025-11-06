@@ -1,6 +1,6 @@
 import React from 'react';
 import COLORS from '../../constants/colors.constant';
-import { formatElapsedTime } from '../../utils/date.utils';
+import { formatElapsedTime, getElapsedTimeForI18n } from '../../utils/date.utils';
 import { FlashcardChips } from './Chip.component';
 import Icon from './Icon/Icon.component';
 import Text from './Text.component';
@@ -11,6 +11,7 @@ import {
   CardInteractionProps,
   useCardInteractions,
 } from '../../hooks/useCardInteraction.hook';
+import { useTranslation } from 'react-i18next';
 
 interface FlashcardCardProps extends CardInteractionProps {
   title: string;
@@ -20,12 +21,16 @@ interface FlashcardCardProps extends CardInteractionProps {
   learningFlashcard: number;
   reviewingFlashcard: number;
   style?: React.CSSProperties;
+  creatorName?: string;
+  showCreator?: boolean;
 }
 
 export const FlashcardDeckCard: React.FC<FlashcardCardProps> = ({
   title,
   transparent,
   lastReview,
+  showCreator,
+  creatorName,
   newFlashcard,
   learningFlashcard,
   reviewingFlashcard,
@@ -35,8 +40,11 @@ export const FlashcardDeckCard: React.FC<FlashcardCardProps> = ({
   onContextMenu,
 }) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const { handleMouseDown, handleMouseUp, handleContextMenu } =
     useCardInteractions({ onClick, onLongPress, onContextMenu });
+  
+  const elapsedTime = getElapsedTimeForI18n(lastReview);
 
   return (
     <div
@@ -71,6 +79,11 @@ export const FlashcardDeckCard: React.FC<FlashcardCardProps> = ({
       <div
         style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}
       >
+        {showCreator && creatorName && (
+          <Text style={{ fontSize: 11, color: COLORS.black300, fontStyle: 'italic' }}>
+            {t('flashcard:created_by')} {creatorName}
+          </Text>
+        )}
         <Text
           style={{
             fontWeight: 'bold',
@@ -84,7 +97,7 @@ export const FlashcardDeckCard: React.FC<FlashcardCardProps> = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <Icon name="clock" color={COLORS.black200} />
           <Text style={{ fontSize: 12, color: COLORS.black200 }}>
-            Last review {formatElapsedTime(lastReview)} ago
+            {t('flashcard:last_review')} {elapsedTime.value > 0 ? `${elapsedTime.value} ${t(elapsedTime.key)}` : t(elapsedTime.key)} {elapsedTime.value > 0 && t('flashcard:ago')}
           </Text>
         </div>
         <div style={{ display: 'flex', flexDirection: 'row' }}>

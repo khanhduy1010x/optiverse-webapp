@@ -36,6 +36,12 @@ export interface FlashcardDeckResponse
   extends ReviewLearning,
     WithSomeRequired<FlashcardDeckBase, '_id' | 'user_id' | 'title'> {
   flashcards: FlashcardResponse[];
+  creator?: {
+    _id: string;
+    username?: string;
+    email?: string;
+    full_name?: string;
+  };
 }
 
 export const reviewMock: ReviewResponse = {

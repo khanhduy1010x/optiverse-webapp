@@ -15,6 +15,7 @@ const FriendHeader: React.FC<FriendHeaderProps> = ({
     pending: t('pending_requests'),
     sent: t('sent_requests'),
     search: t('search_users'),
+    suggestions: t('friend_suggestions'),
   };
 
   return (
@@ -49,6 +50,7 @@ const FriendHeader: React.FC<FriendHeaderProps> = ({
         {activeTab === 'pending' && t('accept_decline_requests')}
         {activeTab === 'sent' && t('view_manage_sent_requests')}
         {activeTab === 'search' && t('search_add_friends')}
+        {activeTab === 'suggestions' && t('view_suggestions_description')}
       </p>
       <div className="h-1 bg-gray-200 mt-4"></div>
     </div>

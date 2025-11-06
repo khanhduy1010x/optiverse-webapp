@@ -89,5 +89,17 @@
   "no_matching_friends": "Không tìm thấy bạn bè phù hợp",
   "cancel": "Hủy",
   "add": "Thêm",
-  "adding": "Đang thêm..."
+  "adding": "Đang thêm...",
+  "reply": "Trả lời",
+  "reply_to_message": "Trả lời tin nhắn",
+  "pin_message": "Ghim tin nhắn",
+  "unpin_message": "Bỏ ghim tin nhắn",
+  "show_message": "Hiện tin nhắn",
+  "hide_message": "Ẩn tin nhắn",
+  "delete_message": "Xóa tin nhắn",
+  "more_options": "Tùy chọn khác",
+  "add_reaction": "Thêm cảm xúc",
+  "clear_reactions": "Xóa",
+  "workspace_chat": "Chat Workspace",
+  "workspace_chat_placeholder": "Giao diện mẫu cho Chat trong workspace."
 }

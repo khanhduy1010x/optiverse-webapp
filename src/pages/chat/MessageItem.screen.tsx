@@ -24,6 +24,7 @@ import {
     ReactionButtonsContainer
 } from './MessageItem.styles';
 import './MessageItem.css';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 interface MessageItemProps {
     message: MessageType;
@@ -54,6 +55,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
     isGroupChat = false,
     showSenderName = false
 }) => {
+    const { t } = useAppTranslate('chat');
     const {
         anchorEl,
         showReactionPicker,
@@ -293,17 +295,17 @@ const MessageItem: React.FC<MessageItemProps> = ({
                             left: isCurrentUser ? '0' : 'auto',
                         }}
                     >
-                        <Tooltip title="Reply">
+                        <Tooltip title={t('reply')}>
                             <IconButton size="small" onClick={handleReplyMessage}>
                                 <ReplyIcon fontSize="small" />
                             </IconButton>
                         </Tooltip>
-                        <Tooltip title="Add reaction">
+                        <Tooltip title={t('attach_image')}>
                             <IconButton size="small" onClick={handleReactionPickerOpen}>
                                 😊
                             </IconButton>
                         </Tooltip>
-                        <Tooltip title="More options">
+                        <Tooltip title={t('reply')}>
                             <IconButton size="small" onClick={handleMenuOpen}>
                                 <MoreVertIcon fontSize="small" />
                             </IconButton>
@@ -365,7 +367,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
                     {message.reactions?.[currentUserId] && (
                         <StyledReactionButton onClick={handleRemoveReaction}>
                             <span style={{ fontSize: 14 }}>🧹</span>
-                            <Typography variant="caption" sx={{ ml: 0.5 }}>Clear</Typography>
+                            <Typography variant="caption" sx={{ ml: 0.5 }}>{t('clear_reactions')}</Typography>
                         </StyledReactionButton>
                     )}
                 </ReactionButtonsContainer>
@@ -387,28 +389,28 @@ const MessageItem: React.FC<MessageItemProps> = ({
             >
                 <MenuItem onClick={handleReplyMessage}>
                     <ReplyIcon fontSize="small" sx={{ mr: 1 }} />
-                    Reply to message
+                    {t('reply_to_message')}
                 </MenuItem>
                 <MenuItem onClick={handlePinMessage}>
                     <PinIcon fontSize="small" sx={{ mr: 1 }} />
-                    Pin message
+                    {t('pin_message')}
                 </MenuItem>
                 <MenuItem onClick={handleToggleVisibility}>
                     {isHidden ? (
                         <>
                             <VisibilityIcon fontSize="small" sx={{ mr: 1 }} />
-                            Show message
+                            {t('show_message')}
                         </>
                     ) : (
                         <>
                             <VisibilityOffIcon fontSize="small" sx={{ mr: 1 }} />
-                            Hide message
+                            {t('hide_message')}
                         </>
                     )}
                 </MenuItem>
                 <MenuItem onClick={handleDeleteMessage}>
                     <DeleteIcon fontSize="small" sx={{ mr: 1 }} />
-                    Delete message
+                    {t('delete_message')}
                 </MenuItem>
             </Menu>
         </Box>

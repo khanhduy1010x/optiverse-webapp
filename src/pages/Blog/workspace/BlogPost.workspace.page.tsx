@@ -1,6 +1,7 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import WorkspaceBlogPostDetail from '../../../components/blog/workspace/WorkspaceBlogPostDetail.component';
+import { useAppTranslate } from '../../../hooks/useAppTranslate';
 
 /**
  * Workspace Blog Post Detail Page
@@ -10,6 +11,7 @@ import WorkspaceBlogPostDetail from '../../../components/blog/workspace/Workspac
 const WorkspaceBlogPostPage: React.FC = () => {
   const { workspaceId, postId } = useParams<{ workspaceId: string; postId: string }>();
   const navigate = useNavigate();
+  const { t } = useAppTranslate('blog');
 
   const handleBack = () => {
     navigate(`/workspace/${workspaceId}/blog`);
@@ -41,7 +43,7 @@ const WorkspaceBlogPostPage: React.FC = () => {
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            Back to Workspace Blog
+            {t('back_to_workspace_blog')}
           </button>
         </div>
       </div>

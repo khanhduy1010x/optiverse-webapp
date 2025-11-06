@@ -6,6 +6,7 @@ import { useLikes, useReports } from '../../../hooks/blog';
 import { useAuthState } from '../../../hooks/useAuthState.hook';
 import { useAuthStatus } from '../../../hooks/auth/useAuthStatus.hook';
 import { BlogPostWithAuthor } from '../../../types/blog/blog.types';
+import { useAppTranslate } from '../../../hooks/useAppTranslate';
 
 /**
  * Workspace Blog Bookmarks Page
@@ -13,6 +14,7 @@ import { BlogPostWithAuthor } from '../../../types/blog/blog.types';
 const WorkspaceBlogBookmarksPage: React.FC = () => {
   const { workspaceId } = useParams<{ workspaceId: string }>();
   const navigate = useNavigate();
+  const { t } = useAppTranslate('blog');
   const [bookmarkedPosts, setBookmarkedPosts] = useState<BlogPostWithAuthor[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -58,7 +60,7 @@ const WorkspaceBlogBookmarksPage: React.FC = () => {
       setBookmarkedPosts(workspacePosts);
     } catch (err) {
       console.error('Error loading bookmarked posts:', err);
-      setError('Không thể tải danh sách bài đã lưu');
+      setError(t('error_loading_saved_posts'));
     } finally {
       setIsLoading(false);
     }
@@ -79,7 +81,7 @@ const WorkspaceBlogBookmarksPage: React.FC = () => {
 
   const handleBookmarkPost = (postId: string) => {
     if (!user) {
-      alert('Please login to bookmark posts');
+      alert(t('please_login_to_bookmark'));
       return;
     }
 
@@ -121,18 +123,18 @@ const WorkspaceBlogBookmarksPage: React.FC = () => {
                 <button
                   onClick={() => navigate(`/workspace/${workspaceId}/blog`)}
                   className="text-gray-600 hover:text-gray-900 transition-colors"
-                  title="Back to Workspace Blog"
+                  title={t('back_to_workspace_blog')}
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                   </svg>
                 </button>
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
-                  Bài đã lưu
+                  {t('saved_posts')}
                 </h1>
               </div>
               <p className="text-sm text-gray-600 ml-7">
-                Danh sách các bài viết workspace bạn đã bookmark
+                {t('workspace_bookmarked_posts_description')}
               </p>
             </div>
           </div>
@@ -146,10 +148,10 @@ const WorkspaceBlogBookmarksPage: React.FC = () => {
           <p className="text-gray-600">
             {bookmarkedPosts.length > 0 ? (
               <>
-                Showing <span className="font-semibold text-gray-900">{bookmarkedPosts.length}</span> saved article{bookmarkedPosts.length !== 1 ? 's' : ''}
+                {t('showing_saved_articles')} <span className="font-semibold text-gray-900">{bookmarkedPosts.length}</span> {bookmarkedPosts.length === 1 ? t('saved_article') : t('saved_articles')}
               </>
             ) : (
-              'No saved articles'
+              t('no_saved_articles')
             )}
           </p>
         </div>
@@ -164,7 +166,7 @@ const WorkspaceBlogBookmarksPage: React.FC = () => {
                 </svg>
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                Có lỗi xảy ra
+                {t('error_occurred')}
               </h3>
               <p className="text-gray-600 mb-6">
                 {error}
@@ -176,7 +178,7 @@ const WorkspaceBlogBookmarksPage: React.FC = () => {
                   background: 'linear-gradient(135deg, #21b4ca 0%, #1e90ff 100%)',
                 }}
               >
-                Thử lại
+                {t('retry')}
               </button>
             </div>
           ) : bookmarkedPosts.length === 0 && !isLoading ? (
@@ -187,10 +189,10 @@ const WorkspaceBlogBookmarksPage: React.FC = () => {
                 </svg>
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                Chưa có bài viết nào được lưu
+                {t('no_saved_posts_yet')}
               </h3>
               <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                Hãy bookmark những bài viết yêu thích để xem lại sau
+                {t('bookmark_favorite_posts')}
               </p>
               <button
                 onClick={() => navigate(`/workspace/${workspaceId}/blog`)}
@@ -199,7 +201,7 @@ const WorkspaceBlogBookmarksPage: React.FC = () => {
                   background: 'linear-gradient(135deg, #21b4ca 0%, #1e90ff 100%)',
                 }}
               >
-                Khám phá bài viết
+                {t('explore_posts')}
               </button>
             </div>
           ) : isLoading ? (

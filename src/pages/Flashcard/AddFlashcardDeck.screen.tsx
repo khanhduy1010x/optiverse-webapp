@@ -8,16 +8,18 @@ import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 export default function AddFlashcardDeck({
   clear,
+  workspaceId,
 }: {
   clear: () => Promise<void>;
+  workspaceId?: string;
 }) {
   const { t } = useAppTranslate('flashcard');
   const { handleSubmit, control, watch } = useForm<FlashcardDeckForm>();
 
   const onSubmit = async (data: FlashcardDeckForm) => {
-    console.log('Add:', { data });
+    console.log('Add:', { data, workspaceId });
 
-    await flashcardService.createFlashcardDeck(watch('title'));
+    await flashcardService.createFlashcardDeck(watch('title'), workspaceId);
 
     await clear();
   };

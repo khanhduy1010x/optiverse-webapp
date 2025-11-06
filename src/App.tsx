@@ -13,6 +13,7 @@ import FlashcardStatistic from './pages/Flashcard/FlashcardStatistic.page';
 import GoogleCallback from './pages/Auth/GoogleCallback.page';
 import FlashcardDeckList from './pages/Flashcard/FlashcardDeckList.page';
 import FlashcardWorkspacePage from './pages/Flashcard/workspace/Flashcard.workspace.page';
+import FlashcardWorkspaceStatistic from './pages/Flashcard/workspace/FlashcardWorkspaceStatistic.page';
 import './App.css';
 import "./i18n.ts"
 import { getMainSidebarActiveSection } from './components/common/Navigation/navigation';
@@ -371,6 +372,46 @@ const AppContent: React.FC = () => {
                 <ProtectedRoute>
                   <WorkspaceGuard>
                     <FlashcardWorkspacePage />
+                  </WorkspaceGuard>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/workspace/:workspaceId/flashcard-statistic"
+              element={
+                <ProtectedRoute>
+                  <WorkspaceGuard>
+                    <FlashcardWorkspaceStatistic />
+                  </WorkspaceGuard>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/workspace/:workspaceId/flashcard-deck/:deckId"
+              element={
+                <ProtectedRoute>
+                  <WorkspaceGuard>
+                    <FlashcardList />
+                  </WorkspaceGuard>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/workspace/:workspaceId/flashcard-deck/:deckId/add"
+              element={
+                <ProtectedRoute>
+                  <WorkspaceGuard>
+                    <AddFlashcard />
+                  </WorkspaceGuard>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/workspace/:workspaceId/flashcard-deck/:deckId/learn"
+              element={
+                <ProtectedRoute>
+                  <WorkspaceGuard>
+                    <FlashcardReview />
                   </WorkspaceGuard>
                 </ProtectedRoute>
               }

@@ -12,6 +12,7 @@ import notification from './notification.json';
 import error from './error.json';
 import taskEvent from './task-event.json';
 import chat from './chat.json';
+import blog from './blog.json';
 import workspace from './workspace.json';
 import workspaceTask from './workspace-task.json';
 import focusRoom from './focus-room.json';
@@ -34,6 +35,7 @@ export default {
   error,
   'task-event': taskEvent,
   chat,
+  blog,
   workspace,
   'workspace-task': workspaceTask,
   'focus-room': focusRoom,

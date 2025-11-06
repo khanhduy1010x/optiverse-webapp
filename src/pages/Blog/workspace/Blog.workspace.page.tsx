@@ -9,6 +9,7 @@ import { useAuthStatus } from '../../../hooks/auth/useAuthStatus.hook';
 import { BlogSortBy, BlogSearchFilters, SearchType } from '../../../types/blog/blog.types';
 import { BlogPostWithAuthor } from '../../../types/blog';
 import workspaceService from '../../../services/workspace.service';
+import { useAppTranslate } from '../../../hooks/useAppTranslate';
 
 /**
  * Workspace Blog Page
@@ -17,6 +18,7 @@ import workspaceService from '../../../services/workspace.service';
 const BlogWorkspacePage: React.FC = () => {
   const navigate = useNavigate();
   const { workspaceId } = useParams<{ workspaceId: string }>();
+  const { t } = useAppTranslate('blog');
   
   const [workspace, setWorkspace] = useState<any>(null);
   const [sortBy, setSortBy] = useState<BlogSortBy>(BlogSortBy.NEWEST);
@@ -171,24 +173,24 @@ const BlogWorkspacePage: React.FC = () => {
   };
 
   const handleDeletePost = async (postId: string) => {
-    if (!window.confirm('Bạn có chắc muốn xóa bài viết này?')) {
+    if (!window.confirm(t('confirm_delete_post'))) {
       return;
     }
 
     try {
       const blogService = (await import('../../../services/blog/blog.service')).default;
       await blogService.deletePost(postId);
-      alert('Đã xóa bài viết thành công');
+      alert(t('post_deleted_success'));
       // Posts will auto-refresh from useWorkspaceBlog hook
     } catch (error) {
       console.error('Error deleting post:', error);
-      alert('Không thể xóa bài viết');
+      alert(t('post_delete_failed'));
     }
   };
 
   const handleLikePost = async (postId: string) => {
     if (!user) {
-      alert('Please login to like posts');
+      alert(t('please_login_to_like'));
       return;
     }
 
@@ -201,7 +203,7 @@ const BlogWorkspacePage: React.FC = () => {
 
   const handleBookmarkPost = (postId: string) => {
     if (!user) {
-      alert('Please login to bookmark posts');
+      alert(t('please_login_to_bookmark'));
       return;
     }
 
@@ -237,12 +239,12 @@ const BlogWorkspacePage: React.FC = () => {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center text-red-600">
-          <p>Error loading blog: {postsError}</p>
+          <p>{t('error_loading_blog')}: {postsError}</p>
           <button
             onClick={() => navigate(`/workspace/${workspaceId}/dashboard`)}
             className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
-            Quay lại Workspace
+            {t('back_to_workspace_button')}
           </button>
         </div>
       </div>
@@ -255,7 +257,7 @@ const BlogWorkspacePage: React.FC = () => {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
-          <p className="text-gray-600">Loading workspace...</p>
+          <p className="text-gray-600">{t('loading_workspace')}</p>
         </div>
       </div>
     );
@@ -273,7 +275,7 @@ const BlogWorkspacePage: React.FC = () => {
                 <button
                   onClick={() => navigate(`/workspace/${workspaceId}/dashboard`)}
                   className="text-gray-600 hover:text-gray-900 transition-colors"
-                  title="Back to Workspace"
+                  title={t('back_to_workspace')}
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -284,7 +286,7 @@ const BlogWorkspacePage: React.FC = () => {
                 </h1>
               </div>
               <p className="text-sm text-gray-600 ml-7">
-                The latest industry news, interviews, technologies, and resources
+                {t('latest_news_description')}
               </p>
             </div>
             
@@ -294,12 +296,12 @@ const BlogWorkspacePage: React.FC = () => {
               <button
                 onClick={() => navigate(`/workspace/${workspaceId}/blog/bookmarks`)}
                 className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500"
-                title="View bookmarked posts"
+                title={t('saved_posts')}
               >
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                 </svg>
-                Bài đã lưu
+                {t('saved_posts')}
               </button>
 
               {/* Reports Button - Hidden in workspace */}
@@ -318,7 +320,7 @@ const BlogWorkspacePage: React.FC = () => {
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
-                    Create Post
+                    {t('create_post')}
                   </span>
                 </button>
               )}
@@ -337,7 +339,7 @@ const BlogWorkspacePage: React.FC = () => {
                 </div>
                 <input
                   type="text"
-                  placeholder="Search articles..."
+                  placeholder={t('search_articles')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent bg-white/80 backdrop-blur-sm"
@@ -350,10 +352,10 @@ const BlogWorkspacePage: React.FC = () => {
                 onChange={(e) => setSearchType(e.target.value as SearchType)}
                 className="px-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-white/80 backdrop-blur-sm"
               >
-                <option value="all">All Fields</option>
-                <option value="title">Title Only</option>
-                <option value="tags">Tags</option>
-                <option value="author">Author</option>
+                <option value="all">{t('all_fields')}</option>
+                <option value="title">{t('title_only')}</option>
+                <option value="tags">{t('tags')}</option>
+                <option value="author">{t('author')}</option>
               </select>
             </div>
 
@@ -367,7 +369,7 @@ const BlogWorkspacePage: React.FC = () => {
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                Newest
+                {t('newest')}
               </button>
               <button
                 onClick={() => setSortBy(BlogSortBy.MOST_VIEWED)}
@@ -377,7 +379,7 @@ const BlogWorkspacePage: React.FC = () => {
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                Popular
+                {t('popular')}
               </button>
               <button
                 onClick={() => setSortBy(BlogSortBy.MOST_LIKED)}
@@ -387,7 +389,7 @@ const BlogWorkspacePage: React.FC = () => {
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                Trending
+                {t('trending')}
               </button>
               <button
                 onClick={() => setSortBy(BlogSortBy.OLDEST)}
@@ -397,7 +399,7 @@ const BlogWorkspacePage: React.FC = () => {
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                Oldest
+                {t('oldest')}
               </button>
             </div>
 
@@ -408,10 +410,10 @@ const BlogWorkspacePage: React.FC = () => {
                 onChange={(e) => setSortBy(e.target.value as BlogSortBy)}
                 className="flex-1 px-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-white/80 backdrop-blur-sm"
               >
-                <option value={BlogSortBy.NEWEST}>Newest First</option>
-                <option value={BlogSortBy.MOST_VIEWED}>Popular</option>
-                <option value={BlogSortBy.MOST_LIKED}>Trending</option>
-                <option value={BlogSortBy.OLDEST}>Oldest First</option>
+                <option value={BlogSortBy.NEWEST}>{t('newest')}</option>
+                <option value={BlogSortBy.MOST_VIEWED}>{t('popular')}</option>
+                <option value={BlogSortBy.MOST_LIKED}>{t('trending')}</option>
+                <option value={BlogSortBy.OLDEST}>{t('oldest')}</option>
               </select>
             </div>
           </div>
@@ -425,10 +427,10 @@ const BlogWorkspacePage: React.FC = () => {
           <p className="text-gray-600">
             {filteredPosts.length > 0 ? (
               <>
-                Showing <span className="font-semibold text-gray-900">{filteredPosts.length}</span> article{filteredPosts.length !== 1 ? 's' : ''}
+                {t('showing_articles')} <span className="font-semibold text-gray-900">{filteredPosts.length}</span> {filteredPosts.length === 1 ? t('article') : t('articles')}
               </>
             ) : (
-              'No articles found'
+              t('no_articles_found')
             )}
           </p>
           
@@ -437,7 +439,7 @@ const BlogWorkspacePage: React.FC = () => {
               onClick={handleClearSearch}
               className="text-cyan-600 hover:text-cyan-700 font-medium"
             >
-              Clear search
+              {t('clear_search')}
             </button>
           )}
         </div>
@@ -490,12 +492,12 @@ const BlogWorkspacePage: React.FC = () => {
               </svg>
             </div>
             <h3 className="text-2xl font-bold text-gray-900 mb-2">
-              No articles yet
+              {t('no_articles_yet')}
             </h3>
             <p className="text-gray-600 mb-6 max-w-md mx-auto">
               {searchQuery ? 
-                "We couldn't find any articles matching your search. Try different keywords." :
-                "Be the first to share your insights with the team!"
+                t('no_search_results') :
+                t('be_first_to_post')
               }
             </p>
             {user && !searchQuery && (
@@ -506,7 +508,7 @@ const BlogWorkspacePage: React.FC = () => {
                   background: 'linear-gradient(135deg, #21b4ca 0%, #1e90ff 100%)',
                 }}
               >
-                Create Your First Post
+                {t('create_first_post')}
               </button>
             )}
           </div>
@@ -521,7 +523,7 @@ const BlogWorkspacePage: React.FC = () => {
         onClose={() => setReportModalOpen(false)}
         onReportSuccess={() => {
           setReportModalOpen(false);
-          alert('Report submitted successfully');
+          alert(t('report_submitted_success'));
         }}
       />
     </div>

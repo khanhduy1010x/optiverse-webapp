@@ -3,10 +3,12 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { BlogEditor } from '../../components/blog';
 import { useBlog } from '../../hooks/blog';
 import { BlogFormData, BlogPost } from '../../types/blog/blog.types';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 const BlogEditPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useAppTranslate('blog');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [post, setPost] = useState<BlogPost | null>(null);
   const [isLoading, setIsLoading] = useState(true);

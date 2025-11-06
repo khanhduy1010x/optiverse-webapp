@@ -13,6 +13,7 @@ import dashboard from './dashboard.json';
 import tag from './tag.json';
 import admin from './admin.json';
 import chat from './chat.json';
+import blog from './blog.json';
 import error from './error.json';
 import taskEvent from './task-event.json';
 import workspace from './workspace.json';
@@ -38,6 +39,7 @@ export default {
   tag,
   admin,
   chat,
+  blog,
   error,
   'task-event': taskEvent,
   workspace,

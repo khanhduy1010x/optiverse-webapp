@@ -4,9 +4,11 @@ import { ReportWithPost, ReportStatus, REPORT_REASON_LABELS } from '../../types/
 import { ReportService } from '../../services/blog';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 const BlogReportsPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useAppTranslate('blog');
   const [reports, setReports] = useState<ReportWithPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');

@@ -89,5 +89,17 @@
   "no_matching_friends": "No matching friends found",
   "cancel": "Cancel",
   "add": "Add",
-  "adding": "Adding..."
+  "adding": "Adding...",
+  "reply": "Reply",
+  "reply_to_message": "Reply to message",
+  "pin_message": "Pin message",
+  "unpin_message": "Unpin message",
+  "show_message": "Show message",
+  "hide_message": "Hide message",
+  "delete_message": "Delete message",
+  "more_options": "More options",
+  "add_reaction": "Add reaction",
+  "clear_reactions": "Clear",
+  "workspace_chat": "Workspace Chat",
+  "workspace_chat_placeholder": "UI template for Chat in workspace."
 }

@@ -2,6 +2,8 @@ import React from 'react';
 import COLORS from '../../constants/colors.constant';
 import View from './View.component';
 import Text from './Text.component';
+import { useTranslation } from 'react-i18next';
+
 interface ChipProps {
   title: string;
   textType?: 'regular' | 'bold';
@@ -49,15 +51,17 @@ const FlashcardChips: React.FC<FlashcardChipsProps> = ({
   className = '',
   style,
 }) => {
+  const { t } = useTranslation();
+  
   return (
     <View
       className={`transition-all duration-300 w-full flex gap-4 ${className}`}
       style={{ backgroundColor: 'transparent', ...style }}
     >
-      <Chip title={`${newFlashcard} New`} bgColor={COLORS.green700} />
-      <Chip title={`${learningFlashcard} Learning`} bgColor={COLORS.red700} />
+      <Chip title={`${newFlashcard} ${t('flashcard:new')}`} bgColor={COLORS.green700} />
+      <Chip title={`${learningFlashcard} ${t('flashcard:learning')}`} bgColor={COLORS.red700} />
       <Chip
-        title={`${reviewingFlashcard} Reviewing`}
+        title={`${reviewingFlashcard} ${t('flashcard:reviewing')}`}
         bgColor={COLORS.yellow700}
       />
     </View>

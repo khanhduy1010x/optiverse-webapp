@@ -832,7 +832,7 @@ const SearchUsers: React.FC<SearchUsersProps> = props => {
                       {user.avatar_url ? (
                         <img
                           src={user.avatar_url}
-                          alt={user.full_name || user.email || 'User'}
+                          alt={user.full_name || user.email || t('user')}
                           className="w-14 h-14 rounded-full object-cover mr-4"
                           onError={e => {
                             e.currentTarget.onerror = null;
