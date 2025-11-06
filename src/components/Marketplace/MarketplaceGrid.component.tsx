@@ -1,5 +1,6 @@
 import React from 'react';
 import MarketplaceCard, { MarketplaceProduct } from './MarketplaceCard.component';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 interface MarketplaceGridProps {
     products: MarketplaceProduct[];
@@ -12,6 +13,7 @@ const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({
     isLoading = false,
     onProductClick,
 }) => {
+    const { t } = useAppTranslate('marketplace');
     if (isLoading) {
         return (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -28,7 +30,7 @@ const MarketplaceGrid: React.FC<MarketplaceGridProps> = ({
     if (products.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-12">
-                <p className="text-gray-500 text-lg">Không có sản phẩm nào</p>
+                <p className="text-gray-500 text-lg">{t('no_products')}</p>
             </div>
         );
     }

@@ -1,6 +1,8 @@
 import React from 'react';
 import Modal from 'react-modal';
 import { MarketplaceItem } from '../../types/marketplace/marketplace.types';
+import RichTextDisplay from '../common/RichTextDisplay.component';
+import '../common/RichTextDisplay.style.css';
 
 interface PurchaseHistoryDetailModalProps {
     item: MarketplaceItem | null;
@@ -89,7 +91,14 @@ const PurchaseHistoryDetailModal: React.FC<PurchaseHistoryDetailModalProps> = ({
                         {/* Description */}
                         <div className="mb-6">
                             <h3 className="text-sm font-semibold text-gray-700 mb-2">Description</h3>
-                            <p className="text-gray-600 text-sm leading-relaxed">{item.description}</p>
+                            {item.description && (
+                                <RichTextDisplay 
+                                    content={item.description}
+                                    className="text-gray-600 text-sm leading-relaxed"
+                                />
+                            ) || (
+                                <p className="text-gray-600 text-sm leading-relaxed">No description available</p>
+                            )}
                         </div>
 
                         {/* Purchase Info */}

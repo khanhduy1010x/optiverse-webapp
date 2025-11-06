@@ -16,6 +16,8 @@ import workspace from './workspace.json';
 import workspaceTask from './workspace-task.json';
 import focusRoom from './focus-room.json';
 import membership from './membership.json';
+import marketplace from './marketplace.json';
+import leaderboard from './leaderboard.json';
 
 export default {
   common,
@@ -36,4 +38,6 @@ export default {
   'workspace-task': workspaceTask,
   'focus-room': focusRoom,
   membership,
+  marketplace,
+  leaderboard,
 };

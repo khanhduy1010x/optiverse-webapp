@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Icon from '../common/Icon/Icon.component';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 interface MarketplaceFilterBarProps {
     searchQuery: string;
@@ -26,6 +27,7 @@ const MarketplaceFilterBar: React.FC<MarketplaceFilterBarProps> = ({
     sortBy,
     onSortChange,
 }) => {
+    const { t } = useAppTranslate('marketplace');
     const [expandedDropdown, setExpandedDropdown] = useState<string | null>(null);
 
     const toggleDropdown = (dropdown: string) => {
@@ -33,34 +35,34 @@ const MarketplaceFilterBar: React.FC<MarketplaceFilterBarProps> = ({
     };
 
     const priceRanges = [
-        { label: 'All', min: 0, max: 1000 },
-        { label: 'Free', min: 0, max: 0 },
+        { label: t('all'), min: 0, max: 1000 },
+        { label: t('free'), min: 0, max: 0 },
         { label: '0 - 10 OP', min: 0, max: 10 },
         { label: '10 - 25 OP', min: 10, max: 25 },
         { label: '25+ OP', min: 25, max: 1000 },
     ];
 
     const popularityOptions = [
-        { label: 'All', value: 'all' },
-        { label: 'Top 100', value: 'top-100' },
-        { label: '1000+ purchases', value: 'top-1000' },
-        { label: '500+ purchases', value: 'top-500' },
+        { label: t('all'), value: 'all' },
+        { label: t('top_100'), value: 'top-100' },
+        { label: t('1000_purchases'), value: 'top-1000' },
+        { label: t('500_purchases'), value: 'top-500' },
     ];
 
     const categoryOptions = [
-        { label: 'All Categories', value: 'all' },
-        { label: 'Template', value: 'template' },
-        { label: 'Plugin', value: 'plugin' },
-        { label: 'Icon Pack', value: 'icons' },
-        { label: 'Component', value: 'component' },
+        { label: t('all_categories'), value: 'all' },
+        { label: t('template'), value: 'template' },
+        { label: t('plugin'), value: 'plugin' },
+        { label: t('icon_pack'), value: 'icons' },
+        { label: t('component'), value: 'component' },
     ];
 
     const sortOptions = [
-        { label: 'Newest', value: 'newest' },
-        { label: 'Oldest', value: 'oldest' },
-        { label: 'Price: High to Low', value: 'price-high' },
-        { label: 'Price: Low to High', value: 'price-low' },
-        { label: 'Most Popular', value: 'popular' },
+        { label: t('newest'), value: 'newest' },
+        { label: t('oldest'), value: 'oldest' },
+        { label: t('price_high_to_low'), value: 'price-high' },
+        { label: t('price_low_to_high'), value: 'price-low' },
+        { label: t('most_popular'), value: 'popular' },
     ];
 
     const getDisplayLabel = (value: string, options: Array<{ label: string; value: string }>) => {
@@ -68,8 +70,8 @@ const MarketplaceFilterBar: React.FC<MarketplaceFilterBarProps> = ({
     };
 
     const getDisplayPrice = (range: { min: number; max: number }) => {
-        if (range.min === 0 && range.max === 0) return 'Free';
-        if (range.max === 1000) return 'All';
+        if (range.min === 0 && range.max === 0) return t('free');
+        if (range.max === 1000) return t('all');
         return `${range.min} - ${range.max} OP`;
     };
 
@@ -80,7 +82,7 @@ const MarketplaceFilterBar: React.FC<MarketplaceFilterBarProps> = ({
                 <div className="flex-1 relative">
                     <input
                         type="text"
-                        placeholder="Search items..."
+                        placeholder={t('search_items')}
                         value={searchQuery}
                         onChange={(e) => onSearchChange(e.target.value)}
                         className="w-full pl-4 pr-12 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition shadow-sm"
@@ -101,7 +103,7 @@ const MarketplaceFilterBar: React.FC<MarketplaceFilterBarProps> = ({
                         onClick={() => toggleDropdown('price')}
                         className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition bg-white"
                     >
-                        <span className="text-sm font-medium text-gray-700">Price: {getDisplayPrice(priceRange)}</span>
+                        <span className="text-sm font-medium text-gray-700">{t('price')}: {getDisplayPrice(priceRange)}</span>
                         <Icon
                             name="chevron"
                             size={16}
@@ -136,7 +138,7 @@ const MarketplaceFilterBar: React.FC<MarketplaceFilterBarProps> = ({
                         onClick={() => toggleDropdown('popularity')}
                         className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition bg-white"
                     >
-                        <span className="text-sm font-medium text-gray-700">Popularity: {getDisplayLabel(popularity, popularityOptions)}</span>
+                        <span className="text-sm font-medium text-gray-700">{t('popularity')}: {getDisplayLabel(popularity, popularityOptions)}</span>
                         <Icon
                             name="chevron"
                             size={16}
@@ -171,7 +173,7 @@ const MarketplaceFilterBar: React.FC<MarketplaceFilterBarProps> = ({
                         onClick={() => toggleDropdown('category')}
                         className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition bg-white"
                     >
-                        <span className="text-sm font-medium text-gray-700">Category: {getDisplayLabel(category, categoryOptions)}</span>
+                        <span className="text-sm font-medium text-gray-700">{t('category')}: {getDisplayLabel(category, categoryOptions)}</span>
                         <Icon
                             name="chevron"
                             size={16}
@@ -206,7 +208,7 @@ const MarketplaceFilterBar: React.FC<MarketplaceFilterBarProps> = ({
                         onClick={() => toggleDropdown('sort')}
                         className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition bg-white"
                     >
-                        <span className="text-sm font-medium text-gray-700">Sort by: {getDisplayLabel(sortBy, sortOptions)}</span>
+                        <span className="text-sm font-medium text-gray-700">{t('sort_by')}: {getDisplayLabel(sortBy, sortOptions)}</span>
                         <Icon
                             name="chevron"
                             size={16}

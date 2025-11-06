@@ -90,6 +90,7 @@ import PaymentMethodScreen from './pages/Membership/PaymentMethod.screen';
 import PaymentCallbackScreen from './pages/Membership/PaymenCallBack.screen';
 import PayOSCheckoutScreen from './pages/Membership/PayOSCheckout.screen';
 import MoMoCheckoutScreen from './pages/Membership/MoMoCheckout.screen';
+import Leaderboard from './components/leaderboard/Leaderboard';
 
 
 declare global {
@@ -221,7 +222,7 @@ const AppContent: React.FC = () => {
                 </ProtectedRoute>
               }
             />
-            <Route
+                 <Route
               path="/marketplace/favorites"
               element={
                 <ProtectedRoute>
@@ -229,11 +230,27 @@ const AppContent: React.FC = () => {
                 </ProtectedRoute>
               }
             />
+           <Route
+              path="/marketplace/leaderboard"
+              element={
+                <ProtectedRoute>
+                  <Leaderboard />                
+                  </ProtectedRoute>
+              }
+            />
             <Route
               path="/marketplace/analytics"
               element={
                 <ProtectedRoute>
                   <SalesAnalyticsPage />
+                       </ProtectedRoute>
+              }
+            />
+                  <Route
+              path="/leaderboard"
+              element={
+                <ProtectedRoute>
+                  <Leaderboard />
                 </ProtectedRoute>
               }
             />
