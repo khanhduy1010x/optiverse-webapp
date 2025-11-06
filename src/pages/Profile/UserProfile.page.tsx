@@ -2,7 +2,7 @@ import React from 'react';
 import { useTheme } from '../../contexts/theme.context';
 import View from '../../components/common/View.component';
 import Text from '../../components/common/Text.component';
-import IconProps from '../../components/common/Icon/Icon.component';
+import Icon from '../../components/common/Icon/Icon.component';
 import { useUserProfile } from '../../hooks/profile/useUserProfile.hook';
 import ChangePasswordPopup from './ChangePasswordPopup.screen';
 import { GROUP_CLASSNAMES } from '../../styles/group-class-name.style';
@@ -43,6 +43,39 @@ export default function UserProfile() {
 
   const { t } = useAppTranslate('profile');
 
+  // Get membership badge style based on package type
+  const getMembershipBadgeStyle = (packageName?: string) => {
+    switch (packageName?.toLowerCase()) {
+      case 'free':
+        return 'text-gray-300 bg-gray-600 bg-opacity-20';
+      case 'basic':
+        return 'text-amber-400 bg-amber-500/20 border border-amber-400/30';
+      case 'plus':
+        return 'text-emerald-400 bg-emerald-600/20 border border-emerald-400/30';
+      case 'business':
+        return 'text-sky-300 bg-sky-500/15 border border-sky-300/25';
+      default:
+        return 'text-blue-400 bg-blue-500 bg-opacity-10';
+    }
+  };
+
+  // Get membership badge icon name based on package type
+  const getMembershipIconName = (packageName?: string): string => {
+    switch (packageName?.toLowerCase()) {
+      case 'free':
+        return 'level_free';
+      case 'basic':
+        return 'level_0';
+      case 'plus':
+        return 'level_1';
+      case 'business':
+        return 'level_2';
+      default:
+        return 'star';
+    }
+  };
+
+  console.log(profileData);
   return (
     <View className="w-full dark:border-gray-700 rounded-lg h-full  overflow-hidden">
       {/* Avatar View Modal */}
@@ -129,7 +162,7 @@ export default function UserProfile() {
 
             {isLoading ? (
               <div className="flex justify-center items-center h-40">
-                <Text>{t('loading_profile_data')}</Text>
+                <Text title="Loading">{t('loading_profile_data')}</Text>
               </div>
             ) : (
               <View className="max-w-2xl">
@@ -313,48 +346,143 @@ export default function UserProfile() {
                         placeholder={t('email')}
                       />
                     </View>
-                  </View>
 
-                  <button
-                    onClick={() => setShowChangePasswordPopup(true)}
-                    className="px-4 py-2 bg-white border border-gray-200 rounded-md text-sm text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
-                  >
-                    {t('change_password')}
-                  </button>
+                    <button
+                      onClick={() => setShowChangePasswordPopup(true)}
+                      className="mt-4 px-4 py-2 bg-white border border-gray-200 rounded-md text-sm text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
+                    >
+                      {t('change_password')}
+                    </button>
+                  </View>
                 </View>
               </View>
             )}
 
+            {/* Membership Section - Separated Below */}
+            {!isLoading && profileData.membership && profileData.membership.package_id && (
+              <View className="mt-12 mb-4">
+                <Text
+                  title='                  Your Plans
+'
+                  className="mb-4 font-semibold text-xl text-slate-900 dark:text-white"
+                >
+                </Text>
 
+                <div className="p-6 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm">
 
-            <Text textStyle="regular20" className="mb-4 font-semibold mt-8">
-              {t('others_settings')}
-            </Text>
+                  {/* Header */}
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold ${getMembershipBadgeStyle(profileData.membership.package_id.name)?.includes('text-gray') ? 'bg-gray-600' : getMembershipBadgeStyle(profileData.membership.package_id.name)?.includes('text-amber') ? 'bg-amber-600' : getMembershipBadgeStyle(profileData.membership.package_id.name)?.includes('text-emerald') ? 'bg-emerald-600' : 'bg-sky-600'}`}>
+                        <Icon
+                          name={getMembershipIconName(profileData.membership.package_id.name) as any}
+                          size={24}
+                          className="text-white"
+                        />
+                      </div>
+
+                      <div>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">Active Plan</p>
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                          {profileData.membership.package_id.name}
+                        </h3>
+                      </div>
+                    </div>
+
+                    <span className={`px-3 py-1.5 text-xs font-semibold rounded-md border ${getMembershipBadgeStyle(profileData.membership.package_id.name)}`}>
+                      {profileData.membership.status.toUpperCase()}
+                    </span>
+                  </div>
+
+                  {/* Grid Info */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div className="p-4 bg-white border border-slate-200 dark:bg-slate-700/50 dark:border-slate-600 rounded-xl">
+                      <p className="text-xs text-slate-500 font-semibold mb-1">OP BONUS</p>
+                      <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                        +{profileData.membership.package_id.opBonusCredits.toLocaleString()}
+                      </p>
+                    </div>
+
+                    <div className="p-4 bg-white border border-slate-200 dark:bg-slate-700/50 dark:border-slate-600 rounded-xl">
+                      <p className="text-xs text-slate-500 font-semibold mb-1">DURATION</p>
+                      <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                        {profileData.membership.package_id.duration_days}
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">days</p>
+                    </div>
+
+                    <div className="p-4 bg-white border border-slate-200 dark:bg-slate-700/50 dark:border-slate-600 rounded-xl">
+                      <p className="text-xs text-slate-500 font-semibold mb-1">STARTED</p>
+                      <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                        {new Date(profileData.membership.start_date).toLocaleDateString()}
+                      </p>
+                    </div>
+
+                    <div className="p-4 bg-white border border-slate-200 dark:bg-slate-700/50 dark:border-slate-600 rounded-xl">
+                      <p className="text-xs text-slate-500 font-semibold mb-1">EXPIRES</p>
+                      <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                        {new Date(profileData.membership.end_date).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Progress */}
+                  {(() => {
+                    const start = new Date(profileData.membership.start_date).getTime();
+                    const end = new Date(profileData.membership.end_date).getTime();
+                    const now = Date.now();
+                    const percentage = Math.min(Math.max(((now - start) / (end - start)) * 100, 0), 100);
+
+                    return (
+                      <div className="mb-6">
+                        <div className="flex justify-between text-sm text-slate-600 mb-1">
+                          <span>Membership Usage</span>
+                          <span>{Math.round(percentage)}%</span>
+                        </div>
+                        <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-slate-800 rounded-full transition-all"
+                            style={{ width: `${percentage}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Button */}
+                  <button
+                    onClick={() => handleNavigate('membership', '/membership')}
+                    className="w-full py-3 px-4 !bg-white hover:bg-slate-800 text-black text-sm font-medium rounded-lg transition-all active:scale-[0.98]"
+                  >
+                    Upgrade or Renew Plan
+                  </button>
+
+                </div>
+              </View>
+            )}
+
             <hr className="mb-6 border-gray-300 dark:border-gray-600" />
 
             <View className="space-y-6">
-              <View className="flex items-center justify-between">
-                <Text>{t('language')}</Text>
+              {/* <View className="flex items-center justify-between">
+                <Text title="Language">{t('language')}</Text>
                 <select className="w-32 p-1 border border-gray-300 rounded dark:bg-gray-800 dark:text-gray-200">
                   <option>{t('dropdown')}</option>
                 </select>
               </View>
               <View className="flex items-center justify-between">
-                <Text>{t('theme')}</Text>
+                <Text title="Theme">{t('theme')}</Text>
                 <button
                   onClick={toggleTheme}
                   className="w-32 p-1 border border-dark-300 rounded dark:bg-dark-800 dark:text-dark-200 hover:bg-dark-300 dark:hover:bg-dark-600"
                 >
                   {theme.colors.primary}
                 </button>
-              </View>
+              </View> */}
               <View className="flex items-center justify-between">
                 <View>
-                  <Text>{t('delete_my_account')}</Text>
-                  <Text
-                    textStyle="regular12"
-                    className="block text-sm text-gray-500 dark:text-gray-400"
-                  >
+                  <Text title="Delete Account">{t('delete_my_account')}</Text>
+                  <Text title="Description" className="block text-sm text-gray-500 dark:text-gray-400">
                     {t('permanently_delete_account_description')}
                   </Text>
                 </View>

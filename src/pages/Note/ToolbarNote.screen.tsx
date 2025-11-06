@@ -3,6 +3,24 @@ import Icon from '../../components/common/Icon/Icon.component';
 import { useTranslation } from 'react-i18next';
 import { ToolBarNoteProps } from '../../types/note/props/component.props';
 
+// Add custom CSS for toolbar icons
+const toolbarStyles = `
+  .toolbar-note button svg {
+    color: #1f2937 !important;
+    fill: #1f2937 !important;
+  }
+  
+  .toolbar-note button:hover svg {
+    color: #374151 !important;
+    fill: #374151 !important;
+  }
+  
+  .toolbar-note button.active svg {
+    color: #0891b2 !important;
+    fill: #0891b2 !important;
+  }
+`;
+
 const ToolBarNote: React.FC<ToolBarNoteProps> = ({ onAction, formatState }) => {
   const { t } = useTranslation();
   const [showColorPicker, setShowColorPicker] = useState(false);
@@ -10,6 +28,16 @@ const ToolBarNote: React.FC<ToolBarNoteProps> = ({ onAction, formatState }) => {
   const [showAlignMenu, setShowAlignMenu] = useState(false);
   const [showFontMenu, setShowFontMenu] = useState(false);
   const [showSizeMenu, setShowSizeMenu] = useState(false);
+
+  // Inject toolbar styles
+  React.useEffect(() => {
+    const styleElement = document.createElement('style');
+    styleElement.innerHTML = toolbarStyles;
+    document.head.appendChild(styleElement);
+    return () => {
+      document.head.removeChild(styleElement);
+    };
+  }, []);
 
   const colors = [
     '#000000', '#e60000', '#ff9900', '#ffff00', '#008a00',
@@ -29,7 +57,7 @@ const ToolBarNote: React.FC<ToolBarNoteProps> = ({ onAction, formatState }) => {
   const sizes = ['small', 'normal', 'large', 'huge'];
 
   return (
-    <div className="flex items-center border-t border-gray-200 p-2 bg-white">
+    <div className="toolbar-note flex items-center border-t border-gray-200 p-2 bg-white">
       <div className="flex items-center space-x-1">
         <button
           onClick={() => onAction('bold')}

@@ -30,6 +30,22 @@ const quillFormats = [
   'highlight'
 ];
 
+// Add custom CSS to fix text color
+const editorStyles = `
+  .markdown-editor .ql-editor {
+    color: #1f2937 !important;
+  }
+  
+  .markdown-editor .ql-editor.ql-blank::before {
+    color: #9ca3af;
+    font-style: italic;
+  }
+  
+  .markdown-editor .ql-editor p {
+    color: #1f2937;
+  }
+`;
+
 const MarkdownEditor: React.FC<MarkdownEditorProps> = () => {
   const {
     quillRef,
@@ -70,6 +86,17 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = () => {
 
     return () => clearInterval(interval);
   }, [quillRef]);
+
+  useEffect(() => {
+    // Add editor text color styles
+    const styleElement = document.createElement('style');
+    styleElement.innerHTML = editorStyles;
+    document.head.appendChild(styleElement);
+
+    return () => {
+      document.head.removeChild(styleElement);
+    };
+  }, []);
 
   const handleExportPDF = async () => {
     if (isExporting) return;

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Modal from 'react-modal';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
@@ -17,6 +17,7 @@ const CreateMarketplaceModal: React.FC<CreateMarketplaceModalProps> = ({
     onSuccess,
 }) => {
     const { decks, loading: deckLoading } = useFlashcardDecks();
+    const [isFree, setIsFree] = useState(false);
     const {
         formData,
         previewUrls,
@@ -28,6 +29,36 @@ const CreateMarketplaceModal: React.FC<CreateMarketplaceModalProps> = ({
         handleRemoveImage,
         handleSubmit,
     } = useCreateMarketplaceItem(onSuccess, onClose);
+
+    // Handle free checkbox change
+    const handleFreeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const isChecked = e.target.checked;
+        setIsFree(isChecked);
+        if (isChecked) {
+            handleInputChange({
+                target: { name: 'price', value: '0' }
+            } as React.ChangeEvent<HTMLInputElement>);
+        }
+    };
+
+    // Format price input as VND (no suffix)
+    const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (isFree) return; // Don't allow changes if free is checked
+
+        let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+        if (value === '') {
+            handleInputChange({
+                target: { name: 'price', value: '' }
+            } as React.ChangeEvent<HTMLInputElement>);
+        } else {
+            const numberValue = parseInt(value);
+            // Format with thousand separators
+            const formattedValue = numberValue.toLocaleString('vi-VN');
+            handleInputChange({
+                target: { name: 'price', value: numberValue.toString() }
+            } as React.ChangeEvent<HTMLInputElement>);
+        }
+    };
 
     // Lock scroll when modal is open
     useEffect(() => {
@@ -134,7 +165,7 @@ const CreateMarketplaceModal: React.FC<CreateMarketplaceModalProps> = ({
                                     ['bold', 'italic', 'underline', 'strike'],
                                     ['blockquote', 'code-block'],
                                     [{ 'header': 1 }, { 'header': 2 }],
-                                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
                                     ['link', 'image'],
                                     ['clean']
                                 ]
@@ -192,23 +223,39 @@ const CreateMarketplaceModal: React.FC<CreateMarketplaceModalProps> = ({
 
                     {/* Price */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-3">
                             Price (OP) <span className="text-red-500">*</span>
                         </label>
-                        <div className="relative">
-                            <span className="absolute left-4 top-2.5 text-gray-500 text-sm">OP</span>
+
+                        {/* Free Checkbox */}
+                        <div className="mb-3 flex items-center gap-3">
                             <input
-                                type="number"
+                                type="checkbox"
+                                id="free-checkbox"
+                                checked={isFree}
+                                onChange={handleFreeChange}
+                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                            />
+                            <label htmlFor="free-checkbox" className="text-sm text-gray-700 cursor-pointer">
+                                Make this item free
+                            </label>
+                        </div>
+
+                        {/* Price Input */}
+                        <div className="relative">
+                            <span className="absolute left-4 top-2.5 text-gray-500 text-sm font-medium">OP</span>
+                            <input
+                                type="text"
                                 name="price"
-                                value={formData.price}
-                                onChange={handleInputChange}
-                                min="0"
-                                step="1"
+                                value={formData.price && !isFree ? parseInt(formData.price.toString()).toLocaleString('vi-VN') : (formData.price || '')}
+                                onChange={handlePriceChange}
+                                disabled={isFree}
                                 placeholder="0"
-                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                             />
                         </div>
-                        <p className="mt-1 text-xs text-gray-500">Enter 0 for free</p>
+                        {!isFree && <p className="mt-1 text-xs text-gray-500">Enter amount in OP</p>}
+                        {isFree && <p className="mt-1 text-xs text-green-600 font-medium">✓ This item is free</p>}
                     </div>
 
                     {/* Image Upload */}

@@ -15,6 +15,7 @@ import chat from './chat.json';
 import workspace from './workspace.json';
 import workspaceTask from './workspace-task.json';
 import focusRoom from './focus-room.json';
+import membership from './membership.json';
 
 export default {
   common,
@@ -34,4 +35,5 @@ export default {
   workspace,
   'workspace-task': workspaceTask,
   'focus-room': focusRoom,
+  membership,
 };

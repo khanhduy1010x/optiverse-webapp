@@ -100,7 +100,7 @@ const FolderFileComponent: React.FC<FolderFileComponentProps> = ({
         <div className="font-medium text-gray-900 flex items-center justify-between">
           <div className='flex items-center justify-between'>
             <div className="truncate" title={title}>
-              <span className='leading-[24px] flex items-center h-[24px]'>
+              <span className='leading-[24px] text-sm flex items-center h-[24px]'>
                 {truncateText(title)}
               </span>
             </div>

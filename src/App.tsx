@@ -21,6 +21,7 @@ import Header from './components/layout/Header.component';
 import AddFlashcard from './pages/Flashcard/AddFlashcard.page';
 import UserProfile from './pages/Profile/UserProfile.page';
 import NotificationSettingsPage from './pages/Profile/NotificationSettingsPage';
+import PaymentHistoryPage from './pages/Profile/PaymentHistory.page';
 import FocusTimer from './pages/FocusTimer/FocusTimer.page';
 import FocusTimerStatistic from './pages/FocusTimer/FocusTimerStatistic.page';
 import { ThemeProvider } from './contexts/theme.context';
@@ -85,6 +86,10 @@ import PurchaseHistoryPage from './pages/Marketplace/PurchaseHistory.page';
 import FavoritesPage from './pages/Marketplace/Favorites.page';
 import SalesAnalyticsPage from './pages/Marketplace/SalesAnalytics.page';
 import MembershipScreen from './pages/Membership/Membership.screen';
+import PaymentMethodScreen from './pages/Membership/PaymentMethod.screen';
+import PaymentCallbackScreen from './pages/Membership/PaymenCallBack.screen';
+import PayOSCheckoutScreen from './pages/Membership/PayOSCheckout.screen';
+import MoMoCheckoutScreen from './pages/Membership/MoMoCheckout.screen';
 
 
 declare global {
@@ -167,6 +172,41 @@ const AppContent: React.FC = () => {
               }
             />
 
+            <Route
+              path="/membership/payment"
+              element={
+                <ProtectedRoute>
+                  <PaymentMethodScreen />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/membership/payos-checkout"
+              element={
+                <ProtectedRoute>
+                  <PayOSCheckoutScreen />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/membership/momo-checkout"
+              element={
+                <ProtectedRoute>
+                  <MoMoCheckoutScreen />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/membership/callback"
+              element={
+                <ProtectedRoute>
+                  <PaymentCallbackScreen />
+                </ProtectedRoute>
+              }
+            />
 
             <Route
               path="rooms"
@@ -355,6 +395,14 @@ const AppContent: React.FC = () => {
               element={
                 <ProtectedRoute>
                   <NotificationSettingsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/payment-history"
+              element={
+                <ProtectedRoute>
+                  <PaymentHistoryPage />
                 </ProtectedRoute>
               }
             />

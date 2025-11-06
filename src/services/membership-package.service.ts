@@ -46,6 +46,24 @@ class MembershipPackageService {
   }
 
   /**
+   * Get membership package by ID
+   */
+  async getMembershipPackageById(
+    packageId: string
+  ): Promise<MembershipPackage> {
+    try {
+      const response = await api.get(`${CONTROLLER_PATH}/by-id/${packageId}`);
+      return response.data?.data;
+    } catch (error) {
+      console.error(
+        `Failed to fetch membership package with ID ${packageId}:`,
+        error
+      );
+      throw error;
+    }
+  }
+
+  /**
    * Create membership package (Admin only)
    */
   async createMembershipPackage(

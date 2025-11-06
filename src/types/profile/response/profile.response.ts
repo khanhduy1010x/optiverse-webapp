@@ -1,3 +1,19 @@
+export interface MembershipPackage {
+  _id: string;
+  name: string;
+  level: number;
+  opBonusCredits: number;
+  duration_days: number;
+  price?: number;
+}
+
+export interface UserMembership {
+  package_id: MembershipPackage;
+  start_date: string;
+  end_date: string;
+  status: 'active' | 'expired' | 'cancelled';
+}
+
 export interface ProfileData {
   _id: string;
   user_id?: string;
@@ -7,6 +23,7 @@ export interface ProfileData {
   createdAt?: string;
   updatedAt?: string;
   has_password?: boolean;
+  membership?: UserMembership;
 }
 
 export interface UserSession {
