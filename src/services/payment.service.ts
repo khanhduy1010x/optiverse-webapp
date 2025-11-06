@@ -1,10 +1,12 @@
 import api from './api.service';
 
 export interface PaymentResponse {
-  payUrl: string;
+  payUrl?: string;
+  checkoutUrl?: string;
   orderId: string;
   requestId: string;
-  resultCode: number;
+  resultCode?: number;
+  code?: string;
   message: string;
 }
 
@@ -27,6 +29,22 @@ class PaymentService {
       return response.data?.data;
     } catch (error) {
       console.error('Failed to create MoMo payment:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Create PayOS payment (QR Code)
+   * @param packageId - The membership package ID
+   */
+  async createPayOSPayment(packageId: string): Promise<PaymentResponse> {
+    try {
+      const response = await api.post(`${CONTROLLER_PATH}/pay-payos`, {
+        packageId,
+      });
+      return response.data?.data;
+    } catch (error) {
+      console.error('Failed to create PayOS payment:', error);
       throw error;
     }
   }

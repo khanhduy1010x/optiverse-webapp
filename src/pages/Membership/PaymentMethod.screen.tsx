@@ -13,7 +13,7 @@ const PaymentMethodScreen: React.FC = () => {
     const [searchParams] = useSearchParams();
     const packageId = searchParams.get('packageId');
 
-    const [selectedMethod, setSelectedMethod] = useState<'momo' | 'vpay' | null>(null);
+    const [selectedMethod, setSelectedMethod] = useState<'momo' | 'payos' | 'vpay' | null>(null);
     const [processing, setProcessing] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [packageInfo, setPackageInfo] = useState<MembershipPackage | null>(null);
@@ -41,23 +41,14 @@ const PaymentMethodScreen: React.FC = () => {
 
     const handleMomoPayment = async () => {
         if (!selectedMethod || selectedMethod !== 'momo') return;
+        // Navigate to MoMo checkout screen
+        navigate(`/membership/momo-checkout?packageId=${packageId}`);
+    };
 
-        setProcessing(true);
-        try {
-            const response = await paymentService.createMomoPayment(packageId!);
-            if (response.payUrl) {
-                // Open payment URL in a new tab
-                window.open(response.payUrl, '_blank');
-                setProcessing(false);
-            } else {
-                setError('Failed to get payment URL');
-                setProcessing(false);
-            }
-        } catch (err) {
-            console.error('Payment error:', err);
-            setError('Payment failed. Please try again.');
-            setProcessing(false);
-        }
+    const handlePayOSPayment = async () => {
+        if (!selectedMethod || selectedMethod !== 'payos') return;
+        // Navigate to PayOS checkout screen
+        navigate(`/membership/payos-checkout?packageId=${packageId}`);
     };
 
     if (!packageId) {
@@ -70,7 +61,7 @@ const PaymentMethodScreen: React.FC = () => {
             <div className="h-[calc(100vh-57px)] bg-gradient-to-br from-gray-900 via-gray-800 to-black pt-20 pb-12 px-4 md:px-6 flex items-center justify-center">
                 <div className="text-center">
                     <div className="inline-flex animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
-                    <p className="text-gray-400">Loading payment details...</p>
+                    <p className="text-gray-400">{t('loading_payment_details')}</p>
                 </div>
             </div>
         );
@@ -80,12 +71,12 @@ const PaymentMethodScreen: React.FC = () => {
         return (
             <div className="h-[calc(100vh-57px)] bg-gradient-to-br from-gray-900 via-gray-800 to-black pt-20 pb-12 px-4 md:px-6 flex items-center justify-center">
                 <div className="text-center">
-                    <p className="text-red-400 mb-4">{error || 'Package not found'}</p>
+                    <p className="text-red-400 mb-4">{error || t('package_not_found')}</p>
                     <Button
                         onClick={() => navigate('/membership')}
                         className="bg-white text-black px-4 py-2 rounded-lg hover:bg-gray-200"
                     >
-                        Back to Membership
+                        {t('back_to_membership')}
                     </Button>
                 </div>
             </div>
@@ -186,7 +177,7 @@ const PaymentMethodScreen: React.FC = () => {
                             </div>
                             <div className="flex items-center gap-1.5">
                                 <Icon name="check" size={14} className={packageInfo.level === 0 ? 'text-amber-400' : packageInfo.level === 1 ? 'text-emerald-400' : 'text-sky-400'} />
-                                <span className="text-gray-300 text-xs">Unlimited updates</span>
+                                <span className="text-gray-300 text-xs">{t('unlimited_updates')}</span>
                             </div>
                         </div>
                     </div>
@@ -251,6 +242,37 @@ const PaymentMethodScreen: React.FC = () => {
                                 </div>
                             </div>
 
+                            {/* PayOS QR Code Option */}
+                            <div
+                                onClick={() => setSelectedMethod('payos')}
+                                className={`relative cursor-pointer rounded-xl transition-all duration-200 ${selectedMethod === 'payos'
+                                    ? 'bg-white/10 ring-2 ring-white/30'
+                                    : 'bg-white/5 hover:bg-white/8'
+                                    }`}
+                            >
+                                <div className="flex items-center justify-between p-3">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-9 h-9">
+                                            <img src='/qrcode.jpg' alt='PayOS QR Code' className='w-full h-full rounded-sm object-contain' />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-sm font-semibold text-white">{t('qr_code') || 'QR Code'}</h3>
+                                            <p className="text-xs text-gray-400">
+                                                {t('qr_code_description') || 'Scan QR code to pay'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${selectedMethod === 'payos'
+                                        ? 'border-sky-400 bg-sky-400'
+                                        : 'border-gray-600'
+                                        }`}>
+                                        {selectedMethod === 'payos' && (
+                                            <div className="w-1.5 h-1.5 rounded-full bg-white"></div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
                             {/* VPay Option */}
                             <div
                                 className="relative rounded-xl bg-white/5 opacity-40 cursor-not-allowed"
@@ -258,7 +280,7 @@ const PaymentMethodScreen: React.FC = () => {
                                 <div className="flex items-center justify-between p-3">
                                     <div className="flex items-center gap-3">
                                         <div className="w-9 h-9">
-                                            <img src='/vnpay.jpg' alt='MoMo Logo' className='w-full h-full rounded-[8px] object-contain' />
+                                            <img src='/vnpay.jpg' alt='VPay Logo' className='w-full h-full rounded-[8px] object-contain' />
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-1">
@@ -295,7 +317,13 @@ const PaymentMethodScreen: React.FC = () => {
                         {t('cancel')}
                     </Button>
                     <Button
-                        onClick={handleMomoPayment}
+                        onClick={() => {
+                            if (selectedMethod === 'momo') {
+                                handleMomoPayment();
+                            } else if (selectedMethod === 'payos') {
+                                handlePayOSPayment();
+                            }
+                        }}
                         disabled={!selectedMethod || processing || selectedMethod === 'vpay'}
                         className={`flex-1 px-4 py-2 text-sm rounded-lg transition-colors font-medium text-white ${!selectedMethod || processing || selectedMethod === 'vpay'
                             ? 'bg-gray-600 cursor-not-allowed opacity-50'

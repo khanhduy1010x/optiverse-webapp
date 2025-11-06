@@ -1,0 +1,17 @@
+<!doctype html>
+<html>
+  <body>
+    <script>
+      const query = window.location.search; // lấy phần ?paymentId=...&packageId=...
+
+      window.parent.postMessage(
+        {
+          status: 'success',
+          query,
+        },
+        '*'
+      );
+    </script>
+    Đang xử lý thanh toán...
+  </body>
+</html>

@@ -1,0 +1,20 @@
+<!doctype html>
+<html>
+  <body>
+    <script>
+      const query = window.location.search;
+      window.parent.postMessage(
+        {
+          status: 'momo',
+          query,
+        },
+        '*'
+      );
+
+      window.parent.postMessage({ status: 'momo', query }, '*');
+    </script>
+    <p>Processing...</p>
+  </body>
+</html>
+
+</html>

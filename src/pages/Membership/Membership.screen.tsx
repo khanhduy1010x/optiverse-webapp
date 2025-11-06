@@ -146,7 +146,7 @@ const MembershipScreen: React.FC = () => {
             <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black pt-20 pb-12 px-4 md:px-6 flex items-center justify-center">
                 <div className="text-center">
                     <div className="inline-flex animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
-                    <p className="text-gray-400">Loading membership packages...</p>
+                    <p className="text-gray-400">{t('loading_packages')}</p>
                 </div>
             </div>
         );
@@ -158,7 +158,7 @@ const MembershipScreen: React.FC = () => {
                 <div className="text-center">
                     <p className="text-red-400 mb-4">{error}</p>
                     <Button onClick={fetchMembershipPackages} className="bg-white text-black px-4 py-2 rounded">
-                        Try Again
+                        {t('try_again')}
                     </Button>
                 </div>
             </div>
@@ -234,7 +234,7 @@ const MembershipScreen: React.FC = () => {
                                                             )}
                                                         </div>
                                                         <p className="text-gray-400 text-sm">
-                                                            {pkg.description || 'Perfect for your learning needs'}
+                                                            {pkg.description || t('package_description')}
                                                         </p>
                                                     </div>
 

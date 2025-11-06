@@ -87,7 +87,9 @@ import FavoritesPage from './pages/Marketplace/Favorites.page';
 import SalesAnalyticsPage from './pages/Marketplace/SalesAnalytics.page';
 import MembershipScreen from './pages/Membership/Membership.screen';
 import PaymentMethodScreen from './pages/Membership/PaymentMethod.screen';
-import PaymentSuccessScreen from './pages/Membership/PaymentSuccess.screen';
+import PaymentCallbackScreen from './pages/Membership/PaymenCallBack.screen';
+import PayOSCheckoutScreen from './pages/Membership/PayOSCheckout.screen';
+import MoMoCheckoutScreen from './pages/Membership/MoMoCheckout.screen';
 
 
 declare global {
@@ -180,10 +182,28 @@ const AppContent: React.FC = () => {
             />
 
             <Route
+              path="/membership/payos-checkout"
+              element={
+                <ProtectedRoute>
+                  <PayOSCheckoutScreen />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/membership/momo-checkout"
+              element={
+                <ProtectedRoute>
+                  <MoMoCheckoutScreen />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
               path="/membership/callback"
               element={
                 <ProtectedRoute>
-                  <PaymentSuccessScreen />
+                  <PaymentCallbackScreen />
                 </ProtectedRoute>
               }
             />

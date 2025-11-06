@@ -1,0 +1,18 @@
+<!doctype html>
+<html>
+  <body>
+    <script>
+      const query = window.location.search;
+      window.parent.postMessage(
+        {
+          status: 'cancel',
+          query,
+        },
+        '*'
+      );
+
+      window.parent.postMessage({ status: 'cancel', query }, '*');
+    </script>
+    <p>Processing...</p>
+  </body>
+</html>

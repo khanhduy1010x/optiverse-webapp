@@ -27,6 +27,7 @@ class ProfileService {
         full_name: profileData.full_name,
         avatar: profileData.avatar_url,
         has_password: profileData.has_password,
+        membership: profileData.membership,
       };
     } catch (error: any) {
       console.error('Error fetching profile:', error);

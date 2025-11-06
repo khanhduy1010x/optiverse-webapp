@@ -6,18 +6,28 @@ import Icon from '../../components/common/Icon/Icon.component';
 import ProfileSidebar from './ProfileSidebar.component';
 import { useNavigate } from 'react-router-dom';
 
+interface PayagePackage {
+    _id: string;
+    name: string;
+    level: number;
+    price: number;
+    opBonusCredits: number;
+    duration_days: number;
+}
+
 interface Payment {
-    packageId: string;
+    _id: string;
+    orderId: string;
+    requestId: string;
     amount: number;
-    status: string;
-    name?: string;
-    level?: number;
-    price?: number;
-    duration_days?: number;
-    opBonusCredits?: number;
-    description?: string;
-    is_active?: boolean;
-    createdAt?: string;
+    status: 'pending' | 'paid' | 'failed' | 'expired';
+    paymentMethod: string;
+    transactionId?: string;
+    createdAt: string;
+    updatedAt: string;
+    paidAt?: string;
+    expiresAt?: string;
+    package: PayagePackage;
 }
 
 export default function PaymentHistoryPage() {
@@ -40,8 +50,10 @@ export default function PaymentHistoryPage() {
         try {
             setLoading(true);
             setError(null);
-            const data = await paymentService.getPaymentHistory();
-            setPayments(data || []);
+            const response: any = await paymentService.getPaymentHistory();
+            // Handle ApiResponse format - data is inside response.data
+            const payments = Array.isArray(response) ? response : (response?.data || []);
+            setPayments(payments);
         } catch (err) {
             console.error('Failed to fetch payment history:', err);
             setError('Failed to load payment history');
@@ -66,14 +78,53 @@ export default function PaymentHistoryPage() {
     const getLevelColor = (level?: number) => {
         switch (level) {
             case 0:
-                return 'text-amber-400';
+                return 'text-amber-600';
             case 1:
-                return 'text-emerald-400';
+                return 'text-emerald-600';
             case 2:
-                return 'text-blue-400';
+                return 'text-blue-600';
             default:
-                return 'text-gray-400';
+                return 'text-gray-600';
         }
+    };
+
+    const getStatusColor = (status: string) => {
+        switch (status.toLowerCase()) {
+            case 'paid':
+            case 'success':
+                return 'bg-gradient-to-br from-green-400 to-emerald-500';
+            case 'pending':
+                return 'bg-gradient-to-br from-yellow-400 to-amber-500';
+            case 'failed':
+            case 'cancelled':
+                return 'bg-gradient-to-br from-red-400 to-pink-500';
+            default:
+                return 'bg-gradient-to-br from-gray-400 to-slate-500';
+        }
+    };
+
+    const getPaymentMethodIcon = (method?: string) => {
+        const m = method?.toLowerCase() || '';
+        if (m.includes('momo')) return 'payment' as const;
+        if (m.includes('qr') || m.includes('payos')) return 'payment' as const;
+        if (m.includes('vpay')) return 'payment' as const;
+        return 'payment' as const;
+    };
+
+    const getPaymentMethodLabel = (method?: string) => {
+        const m = method?.toLowerCase() || '';
+        if (m.includes('momo')) return 'MoMo';
+        if (m.includes('qr') || m.includes('payos')) return 'PayOS (QR)';
+        if (m.includes('vpay')) return 'VPay';
+        return 'Payment';
+    };
+
+    const getPaymentMethodColor = (method?: string) => {
+        const m = method?.toLowerCase() || '';
+        if (m.includes('momo')) return 'bg-pink-100 text-pink-700 border-pink-200';
+        if (m.includes('qr') || m.includes('payos')) return 'bg-blue-100 text-blue-700 border-blue-200';
+        if (m.includes('vpay')) return 'bg-purple-100 text-purple-700 border-purple-200';
+        return 'bg-gray-100 text-gray-700 border-gray-200';
     };
 
     const getStatusBadge = (status: string) => {
@@ -136,8 +187,8 @@ export default function PaymentHistoryPage() {
                             <button
                                 onClick={() => setViewType('card')}
                                 className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${viewType === 'card'
-                                        ? 'bg-blue-500 text-white'
-                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                    ? 'bg-blue-500 text-white'
+                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                                     }`}
                             >
                                 <div className="flex items-center gap-2">
@@ -151,8 +202,8 @@ export default function PaymentHistoryPage() {
                             <button
                                 onClick={() => setViewType('table')}
                                 className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${viewType === 'table'
-                                        ? 'bg-blue-500 text-white'
-                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                    ? 'bg-blue-500 text-white'
+                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                                     }`}
                             >
                                 <div className="flex items-center gap-2">
@@ -200,11 +251,13 @@ export default function PaymentHistoryPage() {
                                     </div>
                                     <div className="space-y-1">
                                         <p className="text-gray-500 text-xs font-medium uppercase tracking-wide">
-                                            Total Spent
+                                            Total Spent (Paid)
                                         </p>
                                         <p className="text-2xl font-semibold text-gray-900">
                                             {formatVND(
-                                                payments.reduce((sum, p) => sum + (p.amount || 0), 0),
+                                                payments
+                                                    .filter(p => p.status.toLowerCase() === 'paid' || p.status.toLowerCase() === 'success')
+                                                    .reduce((sum, p) => sum + (p.amount || 0), 0),
                                                 false
                                             )}
                                         </p>
@@ -263,21 +316,15 @@ export default function PaymentHistoryPage() {
                                     {payments.map((payment, index) => (
                                         <div
                                             key={index}
-                                            className="bg-white rounded-lg border border-gray-200 p-4 hover:border-gray-300 hover:shadow-sm transition-all duration-200"
+                                            className="bg-white rounded-lg border border-gray-200 p-4 hover:border-gray-300 hover:shadow-md transition-all duration-200"
                                         >
                                             <div className="flex items-start justify-between gap-4">
                                                 {/* Left - Package Info */}
                                                 <div className="flex items-start gap-4 flex-1">
                                                     {/* Package Icon */}
-                                                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br flex items-center justify-center flex-shrink-0 border border-gray-100"
-                                                        style={{
-                                                            backgroundImage: payment.level === 0 ? 'linear-gradient(to bottom right, rgb(251, 191, 36), rgb(251, 146, 60))' :
-                                                                payment.level === 1 ? 'linear-gradient(to bottom right, rgb(52, 211, 153), rgb(16, 185, 129))' :
-                                                                    'linear-gradient(to bottom right, rgb(96, 165, 250), rgb(59, 130, 246))'
-                                                        }}
-                                                    >
+                                                    <div className={`w-14 h-14 rounded-xl ${getStatusColor(payment.status)} flex items-center justify-center flex-shrink-0 border border-white/20 shadow-lg`}>
                                                         <Icon
-                                                            name={getLevelIcon(payment.level)}
+                                                            name={getLevelIcon(payment.package?.level)}
                                                             size={28}
                                                             className="text-white"
                                                         />
@@ -285,53 +332,65 @@ export default function PaymentHistoryPage() {
 
                                                     {/* Package Details */}
                                                     <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center gap-2 mb-1">
+                                                        <div className="flex items-center gap-2 mb-2">
                                                             <h3 className="text-gray-900 font-semibold text-sm">
-                                                                {payment.name || 'Membership Package'}
+                                                                {payment.package?.name || 'Membership Package'}
                                                             </h3>
-                                                            {payment.level !== undefined && (
-                                                                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${getLevelColor(payment.level)}`}>
-                                                                    Level {payment.level}
+                                                            {payment.package?.level !== undefined && (
+                                                                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full bg-gradient-to-r ${payment.package.level === 0
+                                                                    ? 'from-amber-100 to-orange-100 text-amber-800'
+                                                                    : payment.package.level === 1
+                                                                        ? 'from-emerald-100 to-teal-100 text-emerald-800'
+                                                                        : 'from-blue-100 to-cyan-100 text-blue-800'
+                                                                    }`}>
+                                                                    Level {payment.package.level}
                                                                 </span>
                                                             )}
                                                         </div>
 
-                                                        {payment.description && (
-                                                            <p className="text-xs text-gray-600 mb-2">
-                                                                {payment.description}
-                                                            </p>
-                                                        )}
+                                                        <div className="flex flex-wrap items-center gap-2 mb-3 text-xs">
+                                                            {/* Payment Method Badge */}
+                                                            <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full border ${getPaymentMethodColor(payment.paymentMethod)}`}>
+                                                                <Icon name={getPaymentMethodIcon(payment.paymentMethod)} size={12} />
+                                                                <span className="font-medium">{getPaymentMethodLabel(payment.paymentMethod)}</span>
+                                                            </div>
 
-                                                        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 mb-2">
-                                                            {payment.duration_days && (
-                                                                <div className="flex items-center gap-1">
+                                                            {/* Duration */}
+                                                            {payment.package?.duration_days && (
+                                                                <div className="flex items-center gap-1 bg-gray-50 rounded-full px-2.5 py-1">
                                                                     <Icon name="calendar" size={14} className="text-gray-400" />
-                                                                    <span>{payment.duration_days} days access</span>
+                                                                    <span className="text-gray-600">{payment.package.duration_days === 999999 ? '∞' : payment.package.duration_days} days</span>
                                                                 </div>
                                                             )}
-                                                            {payment.opBonusCredits && payment.opBonusCredits > 0 && (
-                                                                <div className="flex items-center gap-1">
-                                                                    <Icon name="star" size={14} className="text-amber-400" />
-                                                                    <span>{formatVND(payment.opBonusCredits, false)} OP Bonus</span>
+
+                                                            {/* OP Bonus */}
+                                                            {payment.package?.opBonusCredits && payment.package.opBonusCredits > 0 && (
+                                                                <div className="flex items-center gap-1 bg-amber-50 rounded-full px-2.5 py-1">
+                                                                    <Icon name="star" size={14} className="text-amber-500" />
+                                                                    <span className="font-medium text-amber-700">+{formatVND(payment.package.opBonusCredits, false)} OP</span>
                                                                 </div>
                                                             )}
                                                         </div>
 
-                                                        <p className="text-xs text-gray-400">
-                                                            Order ID: {payment.packageId}
-                                                        </p>
+                                                        <div className="flex gap-2 text-xs text-gray-500">
+                                                            <span>Order ID: <span className="font-mono text-gray-700">{payment.orderId}</span></span>
+                                                        </div>
                                                     </div>
                                                 </div>
 
                                                 {/* Right - Amount & Status */}
-                                                <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                                                    <p className="text-gray-900 font-bold text-lg">
-                                                        {payment.amount === 0
-                                                            ? 'FREE'
-                                                            : formatVND(payment.amount, false)}
-                                                    </p>
-                                                    <div className="flex items-center gap-2">
-                                                        <Icon name="check" size={16} className={payment.status.toLowerCase() === 'paid' || payment.status.toLowerCase() === 'success' ? 'text-green-500' : 'text-gray-400'} />
+                                                <div className="flex flex-col items-end gap-3 flex-shrink-0">
+                                                    <div className="text-right">
+                                                        <p className="text-gray-900 font-bold text-xl">
+                                                            {payment.amount === 0
+                                                                ? 'FREE'
+                                                                : formatVND(payment.amount, false)}
+                                                        </p>
+                                                        <p className="text-xs text-gray-400 mt-1">
+                                                            {new Date(payment.createdAt).toLocaleDateString()}
+                                                        </p>
+                                                    </div>
+                                                    <div>
                                                         {getStatusBadge(payment.status)}
                                                     </div>
                                                 </div>
@@ -346,10 +405,12 @@ export default function PaymentHistoryPage() {
                                         <thead>
                                             <tr className="border-b border-gray-200 bg-gray-50">
                                                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Package</th>
+                                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Payment Method</th>
                                                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Duration</th>
                                                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">OP Bonus</th>
                                                 <th className="px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">Amount</th>
                                                 <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
+                                                <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Date</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -357,35 +418,44 @@ export default function PaymentHistoryPage() {
                                                 <tr key={index} className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
                                                     <td className="px-6 py-4">
                                                         <div className="flex items-center gap-3">
-                                                            <div className="w-10 h-10 rounded-lg bg-gradient-to-br flex items-center justify-center flex-shrink-0"
-                                                                style={{
-                                                                    backgroundImage: payment.level === 0 ? 'linear-gradient(to bottom right, rgb(251, 191, 36), rgb(251, 146, 60))' :
-                                                                        payment.level === 1 ? 'linear-gradient(to bottom right, rgb(52, 211, 153), rgb(16, 185, 129))' :
-                                                                            'linear-gradient(to bottom right, rgb(96, 165, 250), rgb(59, 130, 246))'
-                                                                }}
-                                                            >
+                                                            <div className={`w-10 h-10 rounded-lg ${getStatusColor(payment.status)} flex items-center justify-center flex-shrink-0 shadow-md`}>
                                                                 <Icon
-                                                                    name={getLevelIcon(payment.level)}
+                                                                    name={getLevelIcon(payment.package?.level)}
                                                                     size={20}
                                                                     className="text-white"
                                                                 />
                                                             </div>
                                                             <div>
-                                                                <p className="font-medium text-gray-900 text-sm">{payment.name}</p>
-                                                                <p className="text-xs text-gray-500">{payment.description}</p>
+                                                                <p className="font-semibold text-gray-900 text-sm">{payment.package?.name}</p>
+                                                                {payment.package?.level !== undefined && (
+                                                                    <p className={`text-xs font-medium ${getLevelColor(payment.package.level)}`}>
+                                                                        Level {payment.package.level}
+                                                                    </p>
+                                                                )}
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    <td className="px-6 py-4 text-sm text-gray-600">
-                                                        {payment.duration_days} days
+                                                    <td className="px-6 py-4">
+                                                        <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border font-medium text-xs ${getPaymentMethodColor(payment.paymentMethod)}`}>
+                                                            <Icon name={getPaymentMethodIcon(payment.paymentMethod)} size={14} />
+                                                            {getPaymentMethodLabel(payment.paymentMethod)}
+                                                        </div>
                                                     </td>
-                                                    <td className="px-6 py-4 text-sm text-gray-600">
-                                                        {payment.opBonusCredits && payment.opBonusCredits > 0
-                                                            ? formatVND(payment.opBonusCredits, false)
-                                                            : '-'}
+                                                    <td className="px-6 py-4 text-sm text-gray-600 font-medium">
+                                                        {payment.package?.duration_days === 999999 ? '∞ (Unlimited)' : `${payment.package?.duration_days} days`}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-sm">
+                                                        {payment.package?.opBonusCredits && payment.package.opBonusCredits > 0 ? (
+                                                            <div className="flex items-center gap-1">
+                                                                <Icon name="star" size={14} className="text-amber-500" />
+                                                                <span className="font-semibold text-gray-900">+{formatVND(payment.package.opBonusCredits, false)}</span>
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-gray-400">-</span>
+                                                        )}
                                                     </td>
                                                     <td className="px-6 py-4 text-right">
-                                                        <p className="font-semibold text-gray-900">
+                                                        <p className="font-bold text-gray-900">
                                                             {payment.amount === 0
                                                                 ? 'FREE'
                                                                 : formatVND(payment.amount, false)}
@@ -393,6 +463,13 @@ export default function PaymentHistoryPage() {
                                                     </td>
                                                     <td className="px-6 py-4 text-center">
                                                         {getStatusBadge(payment.status)}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-center text-sm text-gray-600">
+                                                        {new Date(payment.createdAt).toLocaleDateString('vi-VN', {
+                                                            day: '2-digit',
+                                                            month: '2-digit',
+                                                            year: 'numeric'
+                                                        })}
                                                     </td>
                                                 </tr>
                                             ))}
