@@ -184,7 +184,6 @@ export const MARKETPLACE_SECTIONS: NavSection[] = [
     icon: 'add_market',
   },
   
-<<<<<<< HEAD
   // { label: 'Purchase History', path: '/marketplace/purchase-history', icon: 'calendar' },
   { 
     label: 'Favorites', 
@@ -201,10 +200,7 @@ export const MARKETPLACE_SECTIONS: NavSection[] = [
     path: '/marketplace/analytics', 
     icon: 'analytics' 
   },
-=======
-  { label: 'Purchase History', path: '/marketplace/purchase-history', icon: 'calendar' },
   { label: 'Leaderboard', path: '/marketplace/leaderboard', icon: 'trophy' },
->>>>>>> 56ea2e3 (OPTV-40: leaderbroard)
 ];
 
 // Map các path con tới path cha để dễ dàng tìm kiếm
@@ -231,17 +227,12 @@ const PATH_MAPPING: Record<string, string> = {
   '/admin/settings': '/admin/dashboard',
   '/admin/achievements': '/admin/dashboard',
   '/marketplace': '/marketplace',
-<<<<<<< HEAD
-  '/marketplace/my-items': '/marketplace/my-items',
   '/marketplace/favorites': '/marketplace/favorites',
-  '/marketplace/purchase-history': '/marketplace/purchase-history',
   '/marketplace/analytics': '/marketplace/analytics',
-=======
   '/marketplace/my-items': '/marketplace',
   '/marketplace/purchase-history': '/marketplace',
   '/marketplace/leaderboard': '/marketplace',
   '/leaderboard': '/leaderboard',
->>>>>>> 56ea2e3 (OPTV-40: leaderbroard)
 };
 
 export const getSectionKeyFromPath = (path: string): string => {

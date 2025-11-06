@@ -225,13 +225,8 @@ const CreateMarketplaceModal: React.FC<CreateMarketplaceModalProps> = ({
 
                     {/* Price */}
                     <div>
-<<<<<<< HEAD
-                        <label className="block text-sm font-medium text-gray-700 mb-3">
-                            Price (OP) <span className="text-red-500">*</span>
-=======
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             {t('price')} (OP) <span className="text-red-500">*</span>
->>>>>>> 56ea2e3 (OPTV-40: leaderbroard)
                         </label>
 
                         {/* Free Checkbox */}
@@ -261,12 +256,7 @@ const CreateMarketplaceModal: React.FC<CreateMarketplaceModalProps> = ({
                                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                             />
                         </div>
-<<<<<<< HEAD
-                        {!isFree && <p className="mt-1 text-xs text-gray-500">Enter amount in OP</p>}
-                        {isFree && <p className="mt-1 text-xs text-green-600 font-medium">✓ This item is free</p>}
-=======
                         <p className="mt-1 text-xs text-gray-500">{t('enter_0_for_free')}</p>
->>>>>>> 56ea2e3 (OPTV-40: leaderbroard)
                     </div>
 
                     {/* Image Upload */}
