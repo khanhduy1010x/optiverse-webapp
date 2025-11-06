@@ -11,6 +11,7 @@ import friendReducer from './slices/friend.slice';
 import blogReducer from './slices/blog.slice';
 import workspaceReducer from './slices/workspaceslice';
 import workspaceTaskReducer from './slices/workspace_task.slice';
+import workspaceNoteReducer from './slices/workspaceNoteSlice';
 
 const persistConfig = {
   key: 'root',
@@ -29,6 +30,7 @@ const rootReducer = combineReducers({
   blog: blogReducer,
   workspace: workspaceReducer,
   workspaceTask: workspaceTaskReducer,
+  workspaceNote: workspaceNoteReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

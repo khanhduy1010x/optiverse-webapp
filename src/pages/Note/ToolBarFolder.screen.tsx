@@ -53,18 +53,7 @@ const ToolBarFolder: React.FC<ToolBarFolderProps> = ({
           />
         </svg>
       </button>
-      <button className="p-2 cursor-pointer" disabled={isSharedView}>
-        <svg width="32" height="32" viewBox="0 0 24 24" fill={isSharedView ? "#CCCCCC" : "#000"}>
-          <path d="M12 8H4v4h8V8zm0 6H4v4h8v-4zm10-6h-8v4h8V8zm0 6h-8v4h8v-4z" />
-        </svg>
-      </button>
-      <button className="p-2 cursor-pointer" disabled={isSharedView}>
-        <svg width="32" height="32" viewBox="0 0 24 24" fill={isSharedView ? "#CCCCCC" : "#000"}>
-          <path
-            d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"
-          />
-        </svg>
-      </button>
+
     </div>
   );
 };
