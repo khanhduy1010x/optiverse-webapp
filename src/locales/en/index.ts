@@ -46,10 +46,7 @@ export default {
   workspace,
   'workspace-task': workspaceTask,
   'focus-room': focusRoom,
-<<<<<<< HEAD
   membership,
-=======
   marketplace,
   leaderboard,
->>>>>>> 56ea2e3 (OPTV-40: leaderbroard)
 };
