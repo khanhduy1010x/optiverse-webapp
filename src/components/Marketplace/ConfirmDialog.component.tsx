@@ -1,5 +1,6 @@
 import React from 'react';
 import Modal from 'react-modal';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 interface PricingInfo {
   original_price?: number;
@@ -34,6 +35,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   isDangerous = false,
   pricing,
 }) => {
+  const { t } = useAppTranslate('marketplace');
   const formatPrice = (price: number): string => {
     const formatted = new Intl.NumberFormat('vi-VN', {
       minimumFractionDigits: 0,
@@ -68,7 +70,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
             {/* Original Price */}
             {pricing.original_price && (
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-700">Original Price:</span>
+                <span className="text-sm text-gray-700">{t('original_price')}:</span>
                 <span className="font-semibold line-through text-gray-500">
                   {formatPrice(pricing.original_price)}
                 </span>
@@ -78,7 +80,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
             {/* Discount */}
             {pricing.discount_percentage && pricing.discount_amount && (
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-700">Discount:</span>
+                <span className="text-sm text-gray-700">{t('discount')}:</span>
                 <span className="font-semibold text-red-600">
                   -{pricing.discount_percentage}% ({formatPrice(pricing.discount_amount)})
                 </span>
@@ -88,7 +90,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
             {/* Membership Tier */}
             {pricing.membership_tier && (
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-700">Membership:</span>
+                <span className="text-sm text-gray-700">{t('membership')}:</span>
                 <span className="inline-flex items-center text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded-full font-semibold">
                   {pricing.membership_tier}
                 </span>
@@ -100,7 +102,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
 
             {/* Final Price */}
             <div className="flex justify-between items-center">
-              <span className="font-bold text-gray-900">You Pay:</span>
+              <span className="font-bold text-gray-900">{t('you_pay')}:</span>
               <span className="text-lg font-bold text-green-600">
                 {formatPrice(pricing.final_price)}
               </span>
@@ -126,7 +128,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
                 : 'bg-blue-600 text-white hover:bg-blue-700'
             }`}
           >
-            {isLoading ? 'Processing...' : confirmButtonText}
+            {isLoading ? t('processing') : confirmButtonText}
           </button>
         </div>
       </div>

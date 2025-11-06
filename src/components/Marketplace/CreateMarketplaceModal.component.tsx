@@ -4,6 +4,7 @@ import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import { useFlashcardDecks } from '../../hooks/useFlashcardDecks';
 import { useCreateMarketplaceItem, MarketplaceItemType } from '../../hooks/marketplace/useCreateMarketplaceItem';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 interface CreateMarketplaceModalProps {
     isOpen: boolean;
@@ -16,6 +17,7 @@ const CreateMarketplaceModal: React.FC<CreateMarketplaceModalProps> = ({
     onClose,
     onSuccess,
 }) => {
+    const { t } = useAppTranslate('marketplace');
     const { decks, loading: deckLoading } = useFlashcardDecks();
     const [isFree, setIsFree] = useState(false);
     const {
@@ -113,8 +115,8 @@ const CreateMarketplaceModal: React.FC<CreateMarketplaceModalProps> = ({
                 {/* Header */}
                 <div className="flex justify-between items-start mb-6">
                     <div>
-                        <h2 className="text-2xl font-bold text-gray-900">Create New Item</h2>
-                        <p className="text-gray-600 mt-1">Share your flashcard decks with the community</p>
+                        <h2 className="text-2xl font-bold text-gray-900">{t('create_new_item')}</h2>
+                        <p className="text-gray-600 mt-1">{t('share_flashcard_decks')}</p>
                     </div>
                     <button
                         onClick={onClose}
@@ -136,14 +138,14 @@ const CreateMarketplaceModal: React.FC<CreateMarketplaceModalProps> = ({
                     {/* Title */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Item Name <span className="text-red-500">*</span>
+                            {t('item_name')} <span className="text-red-500">*</span>
                         </label>
                         <input
                             type="text"
                             name="title"
                             value={formData.title}
                             onChange={handleInputChange}
-                            placeholder="Enter item name"
+                            placeholder={t('enter_item_name')}
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                         />
                     </div>
@@ -151,7 +153,7 @@ const CreateMarketplaceModal: React.FC<CreateMarketplaceModalProps> = ({
                     {/* Description */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Description
+                            {t('description')}
                         </label>
                         <ReactQuill
                             value={formData.description}
@@ -176,7 +178,7 @@ const CreateMarketplaceModal: React.FC<CreateMarketplaceModalProps> = ({
                                 'list', 'link', 'image'
                             ]}
                             theme="snow"
-                            placeholder="Describe your item..."
+                            placeholder={t('describe_item')}
                             className="bg-white"
                             style={{ height: '200px', marginBottom: '40px' }}
                         />
@@ -185,7 +187,7 @@ const CreateMarketplaceModal: React.FC<CreateMarketplaceModalProps> = ({
                     {/* Type Selection */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Item Type <span className="text-red-500">*</span>
+                            {t('item_type')} <span className="text-red-500">*</span>
                         </label>
                         <select
                             name="type"
@@ -193,8 +195,8 @@ const CreateMarketplaceModal: React.FC<CreateMarketplaceModalProps> = ({
                             onChange={handleInputChange}
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                         >
-                            <option value="">-- Select item type --</option>
-                            <option value={MarketplaceItemType.FLASHCARD}>Flashcard</option>
+                            <option value="">-- {t('select_item_type')} --</option>
+                            <option value={MarketplaceItemType.FLASHCARD}>{t('flashcard')}</option>
                         </select>
                     </div>
 
@@ -202,7 +204,7 @@ const CreateMarketplaceModal: React.FC<CreateMarketplaceModalProps> = ({
                     {formData.type === MarketplaceItemType.FLASHCARD && (
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Flashcard Deck <span className="text-red-500">*</span>
+                                {t('flashcard_deck')} <span className="text-red-500">*</span>
                             </label>
                             <select
                                 name="type_id"
@@ -211,7 +213,7 @@ const CreateMarketplaceModal: React.FC<CreateMarketplaceModalProps> = ({
                                 disabled={deckLoading}
                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm disabled:bg-gray-100"
                             >
-                                <option value="">-- Select a deck --</option>
+                                <option value="">-- {t('select_deck')} --</option>
                                 {decks.map(deck => (
                                     <option key={deck._id} value={deck._id}>
                                         {deck.title}
@@ -223,8 +225,13 @@ const CreateMarketplaceModal: React.FC<CreateMarketplaceModalProps> = ({
 
                     {/* Price */}
                     <div>
+<<<<<<< HEAD
                         <label className="block text-sm font-medium text-gray-700 mb-3">
                             Price (OP) <span className="text-red-500">*</span>
+=======
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            {t('price')} (OP) <span className="text-red-500">*</span>
+>>>>>>> 56ea2e3 (OPTV-40: leaderbroard)
                         </label>
 
                         {/* Free Checkbox */}
@@ -254,14 +261,18 @@ const CreateMarketplaceModal: React.FC<CreateMarketplaceModalProps> = ({
                                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                             />
                         </div>
+<<<<<<< HEAD
                         {!isFree && <p className="mt-1 text-xs text-gray-500">Enter amount in OP</p>}
                         {isFree && <p className="mt-1 text-xs text-green-600 font-medium">✓ This item is free</p>}
+=======
+                        <p className="mt-1 text-xs text-gray-500">{t('enter_0_for_free')}</p>
+>>>>>>> 56ea2e3 (OPTV-40: leaderbroard)
                     </div>
 
                     {/* Image Upload */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Images (Max 5)
+                            {t('images')} (Max 5)
                         </label>
                         <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
                             <input
@@ -277,7 +288,7 @@ const CreateMarketplaceModal: React.FC<CreateMarketplaceModalProps> = ({
                                 className="cursor-pointer block"
                             >
                                 <p className="text-sm text-gray-600">
-                                    <span className="text-blue-500 font-medium">Select images</span> or drag
+                                    <span className="text-blue-500 font-medium">{t('select_images')}</span> {t('or_drag')}
                                 </p>
                             </label>
                         </div>
@@ -312,14 +323,14 @@ const CreateMarketplaceModal: React.FC<CreateMarketplaceModalProps> = ({
                             onClick={onClose}
                             className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition text-sm"
                         >
-                            Cancel
+                            {t('cancel')}
                         </button>
                         <button
                             type="submit"
                             disabled={submitting || deckLoading}
                             className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition disabled:bg-gray-400 text-sm"
                         >
-                            {submitting ? 'Creating...' : 'Create'}
+                            {submitting ? t('creating') : t('create')}
                         </button>
                     </div>
                 </form>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 interface PricingInfo {
     original_price: number;
@@ -21,6 +22,7 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = ({
     showBreakdown = false,
     compact = false,
 }) => {
+    const { t } = useAppTranslate('marketplace');
     const formatPrice = (price: number): string => {
         const formatted = new Intl.NumberFormat('vi-VN', {
             minimumFractionDigits: 0,
@@ -60,7 +62,7 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = ({
         return (
             <div className="space-y-3 bg-blue-50 p-4 rounded-lg">
                 <div className="flex justify-between items-center">
-                    <span className="text-gray-700">Original Price:</span>
+                    <span className="text-gray-700">{t('original_price')}:</span>
                     <span className="font-semibold line-through text-gray-500">
                         {formatPrice(pricing.original_price)}
                     </span>
@@ -68,7 +70,7 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = ({
 
                 {pricing.membership_tier && (
                     <div className="flex justify-between items-center">
-                        <span className="text-gray-700">Membership:</span>
+                        <span className="text-gray-700">{t('membership')}:</span>
                         <span className="inline-flex items-center gap-1 text-sm bg-purple-100 text-purple-700 px-3 py-1 rounded-full font-semibold">
                             {pricing.membership_tier}
                         </span>
@@ -76,14 +78,14 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = ({
                 )}
 
                 <div className="flex justify-between items-center">
-                    <span className="text-gray-700">Discount:</span>
+                    <span className="text-gray-700">{t('discount')}:</span>
                     <span className="font-semibold text-red-600">
                         -{pricing.discount_percentage}% ({formatPrice(pricing.discount_amount)})
                     </span>
                 </div>
 
                 <div className="border-t pt-3 flex justify-between items-center">
-                    <span className="font-bold text-gray-900">You will pay:</span>
+                    <span className="font-bold text-gray-900">{t('you_will_pay')}:</span>
                     <span className="text-2xl font-bold text-green-600">
                         {formatPrice(pricing.final_price)}
                     </span>
@@ -108,7 +110,7 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = ({
             </div>
             {pricing.membership_tier && (
                 <div className="text-xs text-gray-600">
-                    {pricing.membership_tier} Member
+                    {pricing.membership_tier} {t('member')}
                 </div>
             )}
         </div>

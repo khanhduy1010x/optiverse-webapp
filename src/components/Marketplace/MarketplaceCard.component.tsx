@@ -128,7 +128,7 @@ const MarketplaceCard: React.FC<MarketplaceCardProps> = ({ product, onClick, onF
                         </p>
                         {product.isPurchased && (
                             <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded ml-2">
-                                {t('status_already_purchased')}
+                                {t('purchased')}
                             </span>
                         )}
                     </div>

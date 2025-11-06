@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { usePurchaseHistory } from '../../hooks/marketplace/usePurchaseHistory';
 import PurchaseHistoryDetailModal from '../../components/Marketplace/PurchaseHistoryDetailModal.component';
+import RichTextDisplay from '../../components/common/RichTextDisplay.component';
 import { MarketplaceItem } from '../../types/marketplace/marketplace.types';
 import { formatPrice } from '../../utils/marketplace.transform';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
+import '../../components/common/RichTextDisplay.style.css';
 
 const PurchaseHistoryPage: React.FC = () => {
   const { t } = useAppTranslate('marketplace');
@@ -114,9 +116,17 @@ const PurchaseHistoryPage: React.FC = () => {
                     </h3>
 
                     {/* Description */}
-                    <p className="text-xs text-gray-600 mb-3 line-clamp-2">
-                      {item.description || 'No description'}
-                    </p>
+                    <div className="text-xs text-gray-600 mb-3 line-clamp-2 min-h-[2.5rem]">
+                      {item.description ? (
+                        <RichTextDisplay 
+                          content={item.description}
+                          maxLength={120}
+                          className="text-xs text-gray-600"
+                        />
+                      ) : (
+                        'No description'
+                      )}
+                    </div>
 
                     {/* Creator Info */}
                     {item.creator_info && (
