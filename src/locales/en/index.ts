@@ -18,12 +18,9 @@ import taskEvent from './task-event.json';
 import workspace from './workspace.json';
 import workspaceTask from './workspace-task.json';
 import focusRoom from './focus-room.json';
-<<<<<<< HEAD
 import membership from './membership.json';
-=======
 import marketplace from './marketplace.json';
 import leaderboard from './leaderboard.json';
->>>>>>> 56ea2e3 (OPTV-40: leaderbroard)
 
 export default {
   common,
