@@ -86,14 +86,11 @@ import PurchaseHistoryPage from './pages/Marketplace/PurchaseHistory.page';
 import FavoritesPage from './pages/Marketplace/Favorites.page';
 import SalesAnalyticsPage from './pages/Marketplace/SalesAnalytics.page';
 import MembershipScreen from './pages/Membership/Membership.screen';
-<<<<<<< HEAD
 import PaymentMethodScreen from './pages/Membership/PaymentMethod.screen';
 import PaymentCallbackScreen from './pages/Membership/PaymenCallBack.screen';
 import PayOSCheckoutScreen from './pages/Membership/PayOSCheckout.screen';
 import MoMoCheckoutScreen from './pages/Membership/MoMoCheckout.screen';
-=======
 import Leaderboard from './components/leaderboard/Leaderboard';
->>>>>>> 56ea2e3 (OPTV-40: leaderbroard)
 
 
 declare global {
@@ -225,33 +222,35 @@ const AppContent: React.FC = () => {
                 </ProtectedRoute>
               }
             />
-            <Route
-<<<<<<< HEAD
+                 <Route
               path="/marketplace/favorites"
               element={
                 <ProtectedRoute>
                   <FavoritesPage />
-=======
-              path="/marketplace/leaderboard"
-              element={
-                <ProtectedRoute>
-                  <Leaderboard />
->>>>>>> 56ea2e3 (OPTV-40: leaderbroard)
                 </ProtectedRoute>
               }
             />
+           <Route
+              path="/marketplace/leaderboard"
+              element={
+                <ProtectedRoute>
+                  <Leaderboard />                
+                  </ProtectedRoute>
+              }
+            />
             <Route
-<<<<<<< HEAD
               path="/marketplace/analytics"
               element={
                 <ProtectedRoute>
                   <SalesAnalyticsPage />
-=======
+                       </ProtectedRoute>
+              }
+            />
+                  <Route
               path="/leaderboard"
               element={
                 <ProtectedRoute>
                   <Leaderboard />
->>>>>>> 56ea2e3 (OPTV-40: leaderbroard)
                 </ProtectedRoute>
               }
             />
