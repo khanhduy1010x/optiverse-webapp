@@ -6,9 +6,11 @@ import { useLikes, useReports } from '../../hooks/blog';
 import { useAuthState } from "../../hooks/useAuthState.hook";
 import { useAuthStatus } from '../../hooks/auth/useAuthStatus.hook';
 import { BlogPostWithAuthor } from '../../types/blog/blog.types';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 const BlogBookmarksPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useAppTranslate('blog');
   const [bookmarkedPosts, setBookmarkedPosts] = useState<BlogPostWithAuthor[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

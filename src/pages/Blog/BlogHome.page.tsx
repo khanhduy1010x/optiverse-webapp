@@ -7,9 +7,11 @@ import { useAuthState } from "../../hooks/useAuthState.hook";
 import { useAuthStatus } from '../../hooks/auth/useAuthStatus.hook';
 import { BlogSortBy, BlogSearchFilters, SearchType } from '../../types/blog/blog.types';
 import { BlogPostWithAuthor } from '../../types/blog';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 const BlogHomePage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useAppTranslate('blog');
   const [searchParams] = useSearchParams();
   const [sortBy, setSortBy] = useState<BlogSortBy>(BlogSortBy.NEWEST);
   const [searchQuery, setSearchQuery] = useState('');
@@ -242,12 +244,12 @@ const BlogHomePage: React.FC = () => {
               <button
                 onClick={() => navigate('/blog/bookmarks')}
                 className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500"
-                title="View bookmarked posts"
+                title={t('saved_posts')}
               >
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                 </svg>
-                Bài đã lưu
+                {t('saved_posts')}
               </button>
 
               {/* Reports Button (Admin only) */}
@@ -255,12 +257,12 @@ const BlogHomePage: React.FC = () => {
                 <button
                   onClick={() => navigate('/blog/reports')}
                   className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-                  title="View reports"
+                  title={t('view_reports')}
                 >
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-1.964-1.333-2.732 0L3.082 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>
-                  Báo cáo
+                  {t('reports')}
                 </button>
               )}
 
@@ -277,7 +279,7 @@ const BlogHomePage: React.FC = () => {
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
-                    Create Post
+                    {t('create_post')}
                   </span>
                 </button>
               )}
@@ -296,7 +298,7 @@ const BlogHomePage: React.FC = () => {
                 </div>
                 <input
                   type="text"
-                  placeholder="Search articles..."
+                  placeholder={t('search_articles')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent bg-white/80 backdrop-blur-sm"
@@ -309,10 +311,10 @@ const BlogHomePage: React.FC = () => {
                 onChange={(e) => setSearchType(e.target.value as SearchType)}
                 className="px-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-white/80 backdrop-blur-sm"
               >
-                <option value="all">All Fields</option>
-                <option value="title">Title Only</option>
-                <option value="tags">Tags</option>
-                <option value="author">Author</option>
+                <option value="all">{t('all_fields')}</option>
+                <option value="title">{t('title_only')}</option>
+                <option value="tags">{t('tags')}</option>
+                <option value="author">{t('author')}</option>
               </select>
             </div>
 
@@ -326,7 +328,7 @@ const BlogHomePage: React.FC = () => {
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                Newest
+                {t('newest')}
               </button>
               <button
                 onClick={() => setSortBy(BlogSortBy.MOST_VIEWED)}
@@ -336,7 +338,7 @@ const BlogHomePage: React.FC = () => {
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                Popular
+                {t('popular')}
               </button>
               <button
                 onClick={() => setSortBy(BlogSortBy.MOST_LIKED)}
@@ -346,7 +348,7 @@ const BlogHomePage: React.FC = () => {
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                Trending
+                {t('trending')}
               </button>
               <button
                 onClick={() => setSortBy(BlogSortBy.OLDEST)}
@@ -356,7 +358,7 @@ const BlogHomePage: React.FC = () => {
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                Oldest
+                {t('oldest')}
               </button>
             </div>
 
@@ -367,10 +369,10 @@ const BlogHomePage: React.FC = () => {
                 onChange={(e) => setSortBy(e.target.value as BlogSortBy)}
                 className="flex-1 px-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-white/80 backdrop-blur-sm"
               >
-                <option value={BlogSortBy.NEWEST}>Newest First</option>
-                <option value={BlogSortBy.MOST_VIEWED}>Popular</option>
-                <option value={BlogSortBy.MOST_LIKED}>Trending</option>
-                <option value={BlogSortBy.OLDEST}>Oldest First</option>
+                <option value={BlogSortBy.NEWEST}>{t('newest')}</option>
+                <option value={BlogSortBy.MOST_VIEWED}>{t('popular')}</option>
+                <option value={BlogSortBy.MOST_LIKED}>{t('trending')}</option>
+                <option value={BlogSortBy.OLDEST}>{t('oldest')}</option>
               </select>
             </div>
           </div>
@@ -387,10 +389,10 @@ const BlogHomePage: React.FC = () => {
               <p className="text-gray-600">
                 {filteredPosts.length > 0 ? (
                   <>
-                    Showing <span className="font-semibold text-gray-900">{filteredPosts.length}</span> article{filteredPosts.length !== 1 ? 's' : ''}
+                    {t('showing')} <span className="font-semibold text-gray-900">{filteredPosts.length}</span> {filteredPosts.length !== 1 ? t('articles') : t('article')}
                   </>
                 ) : (
-                  'No articles found'
+                  t('no_articles_found')
                 )}
               </p>
               
@@ -399,7 +401,7 @@ const BlogHomePage: React.FC = () => {
                   onClick={handleClearSearch}
                   className="text-cyan-600 hover:text-cyan-700 font-medium"
                 >
-                  Clear search
+                  {t('clear_search')}
                 </button>
               )}
             </div>

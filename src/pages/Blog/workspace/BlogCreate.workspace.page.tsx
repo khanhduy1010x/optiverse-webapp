@@ -5,6 +5,7 @@ import { CreateBlogPostRequest } from '../../../types/blog';
 import blogService from '../../../services/blog/blog.service';
 import { BlogService } from '../../../services/blog';
 import { useAuthState } from '../../../hooks/useAuthState.hook';
+import { useAppTranslate } from '../../../hooks/useAppTranslate';
 
 /**
  * Workspace Blog Create Page
@@ -15,6 +16,7 @@ const WorkspaceBlogCreatePage: React.FC = () => {
   const navigate = useNavigate();
   const { workspaceId } = useParams<{ workspaceId: string }>();
   const { user } = useAuthState();
+  const { t } = useAppTranslate('blog');
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -86,7 +88,7 @@ const WorkspaceBlogCreatePage: React.FC = () => {
               onClick={handleCancel}
               className="px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
             >
-              ← Back to Blog
+              ← {t('back_to_blog')}
             </button>
           </div>
         </div>

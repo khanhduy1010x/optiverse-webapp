@@ -160,6 +160,28 @@ export function formatElapsedTime(seconds: number): string {
 }
 
 /**
+ * Format elapsed time for i18n support
+ * Returns an object with value and unit key for translation
+ */
+export function getElapsedTimeForI18n(seconds: number): { value: number; unit: string; key: string } {
+  const days = Math.floor(seconds / (24 * 3600));
+  seconds %= 24 * 3600;
+
+  const hours = Math.floor(seconds / 3600);
+  seconds %= 3600;
+
+  const minutes = Math.floor(seconds / 60);
+  seconds = Math.floor(seconds % 60);
+
+  if (days) return { value: days, unit: days > 1 ? 'days' : 'day', key: 'flashcard:' + (days > 1 ? 'days' : 'day') };
+  if (hours) return { value: hours, unit: hours > 1 ? 'hours' : 'hour', key: 'flashcard:' + (hours > 1 ? 'hours' : 'hour') };
+  if (minutes) return { value: minutes, unit: minutes > 1 ? 'minutes' : 'minute', key: 'flashcard:' + (minutes > 1 ? 'minutes' : 'minute') };
+  
+  return { value: 0, unit: 'just_now', key: 'flashcard:just_now' };
+}
+
+
+/**
  * Tính thời gian còn lại đến deadline và trả về chuỗi hiển thị đếm ngược
  * @param endTimeIso Thời gian kết thúc dưới dạng chuỗi ISO hoặc đối tượng Date
  * @returns Chuỗi hiển thị thời gian còn lại, ví dụ: "2 days left", "5 hours left", "30 minutes left"

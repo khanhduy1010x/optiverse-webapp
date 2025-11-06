@@ -62,5 +62,17 @@
   "failed_to_remove_friend": "Failed to remove friend",
   "failed_to_search_user": "Failed to search user",
   "failed_to_refresh_data": "Failed to refresh data",
-  "other": "Other"
+  "other": "Other",
+  "user": "User",
+  "friend_suggestions": "Friend Suggestions",
+  "no_friend_suggestions": "No Friend Suggestions",
+  "no_friend_suggestions_description": "There are currently no friend suggestions for you. Try again later!",
+  "mutual_friends": "mutual friends",
+  "mutual_friend": "mutual friend",
+  "view_suggestions_description": "Discover new connections based on mutual friends",
+  "failed_to_fetch_suggestions": "Failed to fetch suggestions",
+  "refresh_suggestions": "Refresh",
+  "sending": "Sending...",
+  "add_as_friend": "Add Friend",
+  "friend_suggestion": "Friend suggestion"
 }

@@ -26,6 +26,19 @@ class FlashcardService {
     return [];
   }
 
+  public async getFlashcardDeckListByWorkspace(workspaceId: string): Promise<FlashcardDeckResponse[]> {
+    try {
+      const response = await api.get<ApiResponse<FlashcardDeckResponse[]>>(
+        `${this.flashcardDeckPath}/workspace/${workspaceId}`
+      );
+      const data = response.data.data;
+      return data;
+    } catch (error) {
+      console.error('Lỗi khi fetch API:', error);
+    }
+    return [];
+  }
+
   public async getFlashcardStatistic(): Promise<any> {
     try {
       const response = await api.get<ApiResponse<any>>(
@@ -39,12 +52,26 @@ class FlashcardService {
     return [];
   }
 
-  public async createFlashcardDeck(title: string): Promise<any> {
+  public async getFlashcardStatisticByWorkspace(workspaceId: string): Promise<any> {
+    try {
+      const response = await api.get<ApiResponse<any>>(
+        `${this.flashcardDeckPath}/workspace/${workspaceId}/statistics`
+      );
+      const data = response.data.data;
+      return data;
+    } catch (error) {
+      console.error('Lỗi khi fetch API:', error);
+    }
+    return [];
+  }
+
+  public async createFlashcardDeck(title: string, workspaceId?: string): Promise<any> {
     try {
       const response = await api.post<ApiResponse<any>>(
         `${this.flashcardDeckPath}`,
         {
           title,
+          workspace_id: workspaceId,
         }
       );
       const data = response.data.data;
