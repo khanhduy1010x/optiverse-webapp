@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
-import { useOutsideClick } from '../../hooks/common/useOutsideClick.hook';
+import styles from './CalendarDatePicker.module.css';
 
 interface CalendarDatePickerProps {
   selectedDate?: Date;
@@ -52,11 +53,34 @@ export const CalendarDatePicker: React.FC<CalendarDatePickerProps> = ({
   // Calculate calendar position
   useEffect(() => {
     if (isOpen && triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect();
-      setCalendarPos({
-        top: rect.bottom + 8,
-        left: rect.left
-      });
+      const calculatePosition = () => {
+        const rect = triggerRef.current!.getBoundingClientRect();
+        const calendarWidth = 288; // w-72 = 18rem = 288px
+        const calendarHeight = 360; // approximate height
+
+        let top = rect.bottom + 8;
+        let left = rect.left;
+
+        // Check if calendar goes off screen to the right
+        if (left + calendarWidth > window.innerWidth) {
+          left = window.innerWidth - calendarWidth - 8;
+        }
+
+        // Check if calendar goes off screen at the bottom
+        if (top + calendarHeight > window.innerHeight) {
+          top = rect.top - calendarHeight - 8;
+        }
+
+        setCalendarPos({ top, left });
+        
+        // Set CSS custom properties on document root
+        document.documentElement.style.setProperty('--calendar-top', `${top}px`);
+        document.documentElement.style.setProperty('--calendar-left', `${left}px`);
+      };
+
+      calculatePosition();
+      window.addEventListener('resize', calculatePosition);
+      return () => window.removeEventListener('resize', calculatePosition);
     }
   }, [isOpen]);
 
@@ -117,16 +141,21 @@ export const CalendarDatePicker: React.FC<CalendarDatePickerProps> = ({
     return date.toDateString() === selectedDate.toDateString();
   };
 
+  const isPastDate = (date: Date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const checkDate = new Date(date);
+    checkDate.setHours(0, 0, 0, 0);
+    // Chỉ cấm những ngày TRƯỚC hôm nay (không bao gồm hôm nay)
+    return checkDate.getTime() < today.getTime();
+  };
+
   const days = getDaysInMonth(currentMonth);
 
-  return (
+  return createPortal(
     <div
       ref={calendarRef}
-      className={`fixed bg-white border border-gray-200 rounded-lg shadow-lg p-4 w-72 z-[9999] ${className}`}
-      style={{
-        top: `${calendarPos.top}px`,
-        left: `${calendarPos.left}px`,
-      }}
+      className={styles.calendarPortal}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
@@ -170,31 +199,44 @@ export const CalendarDatePicker: React.FC<CalendarDatePickerProps> = ({
 
       {/* Calendar grid */}
       <div className="grid grid-cols-7 gap-1">
-        {days.map((day, index) => (
-          <button
-            key={index}
-            type="button"
-            onClick={() => onDateSelect(day.date)}
-            className={`
-              h-8 w-8 text-sm rounded-full flex items-center justify-center transition-colors
-              ${day.isCurrentMonth 
-                ? 'text-gray-900 hover:bg-blue-50' 
-                : 'text-gray-400 hover:bg-gray-50'
-              }
-              ${isSelected(day.date) 
-                ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                : ''
-              }
-              ${isToday(day.date) && !isSelected(day.date)
-                ? 'bg-blue-100 text-blue-600 font-medium'
-                : ''
-              }
-            `}
-          >
-            {day.date.getDate()}
-          </button>
-        ))}
+        {days.map((day, index) => {
+          const disabled = isPastDate(day.date);
+          return (
+            <button
+              key={index}
+              type="button"
+              onClick={() => {
+                if (!disabled) {
+                  onDateSelect(day.date);
+                  onClose?.();
+                }
+              }}
+              disabled={disabled}
+              className={`
+                h-8 w-8 text-sm rounded-full flex items-center justify-center transition-colors
+                ${disabled
+                  ? 'text-gray-300 bg-gray-50 cursor-not-allowed'
+                  : day.isCurrentMonth 
+                  ? 'text-gray-900 hover:bg-blue-50 cursor-pointer' 
+                  : 'text-gray-400 hover:bg-gray-50 cursor-pointer'
+                }
+                ${isSelected(day.date) && !disabled
+                  ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                  : ''
+                }
+                ${isToday(day.date) && !isSelected(day.date) && !disabled
+                  ? 'bg-blue-100 text-blue-600 font-medium'
+                  : ''
+                }
+              `}
+              title={disabled ? 'Cannot select past dates' : ''}
+            >
+              {day.date.getDate()}
+            </button>
+          );
+        })}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

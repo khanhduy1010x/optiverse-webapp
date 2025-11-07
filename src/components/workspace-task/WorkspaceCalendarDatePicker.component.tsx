@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
+import styles from './WorkspaceCalendarDatePicker.module.css';
 
 interface CalendarDatePickerProps {
   selectedDate?: Date;
@@ -8,6 +10,7 @@ interface CalendarDatePickerProps {
   className?: string;
   isOpen?: boolean;
   onClose?: () => void;
+  triggerRef?: React.RefObject<HTMLButtonElement | HTMLElement | null>;
 }
 
 export const WorkspaceCalendarDatePicker: React.FC<CalendarDatePickerProps> = ({
@@ -16,10 +19,72 @@ export const WorkspaceCalendarDatePicker: React.FC<CalendarDatePickerProps> = ({
   onClear,
   className = '',
   isOpen = true,
-  onClose
+  onClose,
+  triggerRef: externalTriggerRef
 }) => {
   const { t } = useAppTranslate('datetime-picker');
   const [currentMonth, setCurrentMonth] = useState(selectedDate || new Date());
+  const calendarRef = useRef<HTMLDivElement>(null);
+  const internalTriggerRef = useRef<HTMLElement | null>(null);
+  const triggerRef = externalTriggerRef || internalTriggerRef;
+  const [calendarPos, setCalendarPos] = useState({ top: 0, left: 0 });
+
+  // If not open, don't render
+  if (!isOpen) {
+    return null;
+  }
+
+  // Close when clicking outside
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (calendarRef.current?.contains(target) || triggerRef.current?.contains(target)) {
+        return;
+      }
+      if (onClose) {
+        onClose();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen, onClose, triggerRef]);
+
+  // Calculate calendar position
+  useEffect(() => {
+    if (isOpen && triggerRef.current) {
+      const calculatePosition = () => {
+        const rect = triggerRef.current!.getBoundingClientRect();
+        const calendarWidth = 288; // w-72 = 18rem = 288px
+        const calendarHeight = 300; // approximate height
+
+        let top = rect.bottom + 8;
+        let left = rect.left;
+
+        // Check if calendar goes off screen to the right
+        if (left + calendarWidth > window.innerWidth) {
+          left = window.innerWidth - calendarWidth - 8;
+        }
+
+        // Check if calendar goes off screen at the bottom
+        if (top + calendarHeight > window.innerHeight) {
+          top = rect.top - calendarHeight - 8;
+        }
+
+        setCalendarPos({ top, left });
+        
+        // Set CSS custom properties on document root
+        document.documentElement.style.setProperty('--calendar-top', `${top}px`);
+        document.documentElement.style.setProperty('--calendar-left', `${left}px`);
+      };
+
+      calculatePosition();
+      window.addEventListener('resize', calculatePosition);
+      return () => window.removeEventListener('resize', calculatePosition);
+    }
+  }, [isOpen, triggerRef]);
 
   // If not open, don't render
   if (!isOpen) {
@@ -90,13 +155,24 @@ export const WorkspaceCalendarDatePicker: React.FC<CalendarDatePickerProps> = ({
     return date.toDateString() === today.toDateString();
   };
 
-  const days = getDaysInMonth(currentMonth);
-  const monthYear = currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const isPastDate = (date: Date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const checkDate = new Date(date);
+    checkDate.setHours(0, 0, 0, 0);
+    // Only prevent dates BEFORE today (not including today)
+    return checkDate.getTime() < today.getTime();
+  };
 
-  return (
-    <div className={`bg-white border border-gray-200 rounded-lg shadow-lg p-4 w-80 min-h-[320px] ${className}`}>
+  const days = getDaysInMonth(currentMonth);
+
+  return createPortal(
+    <div
+      ref={calendarRef}
+      className={styles.calendarPortal}
+    >
       {/* Header with month navigation */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-3">
         <button
           type="button"
           onClick={() => navigateMonth('prev')}
@@ -104,11 +180,13 @@ export const WorkspaceCalendarDatePicker: React.FC<CalendarDatePickerProps> = ({
           title={t('previous')}
           aria-label={t('previous')}
         >
-          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <h3 className="text-lg font-semibold text-gray-800">{monthYear}</h3>
+        <h3 className="text-sm font-semibold text-gray-800">
+          {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+        </h3>
         <button
           type="button"
           onClick={() => navigateMonth('next')}
@@ -116,7 +194,7 @@ export const WorkspaceCalendarDatePicker: React.FC<CalendarDatePickerProps> = ({
           title={t('next')}
           aria-label={t('next')}
         >
-          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </button>
@@ -125,57 +203,56 @@ export const WorkspaceCalendarDatePicker: React.FC<CalendarDatePickerProps> = ({
       {/* Day names header */}
       <div className="grid grid-cols-7 gap-1 mb-2">
         {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
-          <div key={index} className="text-center text-sm font-medium text-gray-500 py-2">
+          <div key={index} className="text-center text-xs font-medium text-gray-500 py-1">
             {day}
           </div>
         ))}
       </div>
 
       {/* Calendar grid */}
-      <div className="grid grid-cols-7 gap-1 auto-rows-fr">
+      <div className="grid grid-cols-7 gap-1">
         {days.map((dayObj, index) => {
           const { date, isCurrentMonth } = dayObj;
           const selected = isSelectedDate(date);
           const today = isToday(date);
+          const disabled = isPastDate(date);
 
           return (
             <button
               type="button"
               key={index}
-              onClick={() => onDateSelected(date)}
+              onClick={() => {
+                if (!disabled) {
+                  onDateSelected(date);
+                  onClose?.();
+                }
+              }}
+              disabled={disabled}
               className={`
-                w-10 h-10 text-sm rounded-full transition-all duration-200 hover:bg-blue-50 flex items-center justify-center
-                ${!isCurrentMonth ? 'text-gray-300' : 'text-gray-700'}
-                ${selected ? 'bg-blue-500 text-white hover:bg-blue-600' : ''}
-                ${today && !selected ? 'bg-blue-100 text-blue-600 font-semibold' : ''}
-                ${isCurrentMonth && !selected && !today ? 'hover:bg-gray-100' : ''}
+                h-8 w-8 text-xs rounded-full flex items-center justify-center transition-colors
+                ${disabled
+                  ? 'text-gray-300 bg-gray-50 cursor-not-allowed'
+                  : isCurrentMonth 
+                  ? 'text-gray-900 hover:bg-blue-50 cursor-pointer' 
+                  : 'text-gray-400 hover:bg-gray-50 cursor-pointer'
+                }
+                ${selected && !disabled
+                  ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                  : ''
+                }
+                ${today && !selected && !disabled
+                  ? 'bg-blue-100 text-blue-600 font-medium'
+                  : ''
+                }
               `}
+              title={disabled ? 'Cannot select past dates' : ''}
             >
               {date.getDate()}
             </button>
           );
         })}
       </div>
-
-      {/* Footer with Today and Delete buttons */}
-      <div className="flex justify-between items-center pt-3 border-t border-gray-200">
-        <button
-          type="button"
-          onClick={handleDeleteClick}
-          className="px-3 py-1.5 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors duration-200"
-          aria-label={t('delete')}
-        >
-          {t('delete')}
-        </button>
-        <button
-          type="button"
-          onClick={handleTodayClick}
-          className="px-3 py-1.5 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors duration-200"
-          aria-label={t('today')}
-        >
-          {t('today')}
-        </button>
-      </div>
-    </div>
+    </div>,
+    document.body
   );
 };

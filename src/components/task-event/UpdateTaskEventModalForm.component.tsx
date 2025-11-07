@@ -36,6 +36,7 @@ export const UpdateTaskEventModalForm: React.FC<UpdateTaskEventModalFormProps> =
   const [selectedColor, setSelectedColor] = useState(taskEvent.color || '#3B82F6');
   const [titleError, setTitleError] = useState('');
   const [descError, setDescError] = useState('');
+  const [dateTimeError, setDateTimeError] = useState('');
   const userId = useAppSelector(state => state.auth.user?._id);
 
   const { taskEvents, refreshTaskEvents } = useTaskEventList();
@@ -279,7 +280,26 @@ export const UpdateTaskEventModalForm: React.FC<UpdateTaskEventModalFormProps> =
                     const currentDate = formData.start_time ? new Date(formData.start_time) : new Date();
                     const [hours, minutes] = time.split(':').map(Number);
                     currentDate.setHours(hours, minutes);
-                    handleInputChange('start_time', currentDate);
+                    const newDateTime = new Date(currentDate);
+
+                    // Check if date is today and time must be greater than current time
+                    const now = new Date();
+                    const newDateOnly = new Date(newDateTime);
+                    newDateOnly.setHours(0, 0, 0, 0);
+                    const todayOnly = new Date(now);
+                    todayOnly.setHours(0, 0, 0, 0);
+
+                    if (newDateOnly.getTime() === todayOnly.getTime()) {
+                      if (newDateTime <= now) {
+                        // Keep the date/time but show error
+                        handleInputChange('start_time', newDateTime);
+                        setDateTimeError('Time must be greater than current time for today.');
+                        return;
+                      }
+                    }
+
+                    handleInputChange('start_time', newDateTime);
+                    setDateTimeError('');
                   }}
                   placeholder="HH:mm"
                   format24h={true}
@@ -302,7 +322,26 @@ export const UpdateTaskEventModalForm: React.FC<UpdateTaskEventModalFormProps> =
                     const currentDate = formData.end_time ? new Date(formData.end_time) : new Date();
                     const [hours, minutes] = time.split(':').map(Number);
                     currentDate.setHours(hours, minutes);
-                    handleInputChange('end_time', currentDate);
+                    const newDateTime = new Date(currentDate);
+
+                    // Check if date is today and time must be greater than current time
+                    const now = new Date();
+                    const newDateOnly = new Date(newDateTime);
+                    newDateOnly.setHours(0, 0, 0, 0);
+                    const todayOnly = new Date(now);
+                    todayOnly.setHours(0, 0, 0, 0);
+
+                    if (newDateOnly.getTime() === todayOnly.getTime()) {
+                      if (newDateTime <= now) {
+                        // Keep the date/time but show error
+                        handleInputChange('end_time', newDateTime);
+                        setDateTimeError('Time must be greater than current time for today.');
+                        return;
+                      }
+                    }
+
+                    handleInputChange('end_time', newDateTime);
+                    setDateTimeError('');
                   }}
                   placeholder="HH:mm"
                   format24h={true}
@@ -312,6 +351,10 @@ export const UpdateTaskEventModalForm: React.FC<UpdateTaskEventModalFormProps> =
                 />
               </div>
             </div>
+            
+            {dateTimeError && (
+              <div className="text-red-500 text-xs mt-1">{dateTimeError}</div>
+            )}
           {/* Description */}
           <textarea
             placeholder={t('add_description_placeholder')}

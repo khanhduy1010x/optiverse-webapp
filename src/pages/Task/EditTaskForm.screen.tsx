@@ -286,7 +286,43 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
                 const [hours, minutes] = time.split(':').map(Number);
                 const baseDate = end_time ? new Date(end_time as any) : new Date();
                 baseDate.setHours(hours, minutes, 0, 0);
-                setEndTime(new Date(baseDate));
+                const newDateTime = new Date(baseDate);
+
+                // Check if time is in the past (only for past dates, allow today with future time)
+                const now = new Date();
+                const newDateOnly = new Date(newDateTime);
+                newDateOnly.setHours(0, 0, 0, 0);
+                const todayOnly = new Date(now);
+                todayOnly.setHours(0, 0, 0, 0);
+
+                // If date is past, reject entirely
+                if (newDateOnly.getTime() < todayOnly.getTime()) {
+                  setErrors(prev => ({
+                    ...prev,
+                    time: t('create_end_in_past') || 'Deadline cannot be in the past. Please select a future date and time.'
+                  }));
+                  return;
+                }
+
+                // If date is today, check that time is greater than current time
+                if (newDateOnly.getTime() === todayOnly.getTime()) {
+                  if (newDateTime <= now) {
+                    // Keep the date but show error about time
+                    setEndTime(new Date(newDateTime));
+                    setErrors(prev => ({
+                      ...prev,
+                      time: 'Time must be greater than current time for today.'
+                    }));
+                    return;
+                  }
+                }
+
+                setEndTime(new Date(newDateTime));
+                setErrors(prev => {
+                  const newErrors = { ...prev };
+                  delete newErrors.time;
+                  return newErrors;
+                });
               }}
               onRemove={() => {
                 setEndTime(undefined);
@@ -297,6 +333,7 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
               isOpen={showDeadlinePicker}
               onToggle={setShowDeadlinePicker}
             />
+            {errors.time && <div className="text-red-500 text-xs mt-1">{errors.time}</div>}
             {/* Description */}
             <div className="space-y-2">
               <textarea
