@@ -11,7 +11,6 @@ import {
   getTasksByWorkspace,
 } from '../../store/slices/workspace_task.slice';
 import WorkspaceEditTaskModal from './WorkspaceEditTaskModal.component';
-import WorkspaceAssignMemberModal from './WorkspaceAssignMemberModal.component';
 import WorkspaceConfirmModal from './WorkspaceConfirmModal.component';
 import { GROUP_CLASSNAMES } from '../../styles';
 import { formatConsistentDateTime } from '../../utils/date.utils';
@@ -42,7 +41,6 @@ const WorkspaceTaskDetailModal: React.FC<WorkspaceTaskDetailModalProps> = ({
   const task = allTasks.find((t) => t._id === initialTask._id) || initialTask;
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -69,12 +67,6 @@ const WorkspaceTaskDetailModal: React.FC<WorkspaceTaskDetailModalProps> = ({
       (task.assigned_to_list?.includes(currentUserId) ?? false);
     const isCreator = task.created_by === currentUserId;
     return isAssigned || isCreator;
-  };
-
-  const canAssignTask = (): boolean => {
-    if (!currentUserId) return false;
-    // Only Owner can assign tasks
-    return currentUserRole === 'admin';
   };
 
   // Helper function to get status label
@@ -248,17 +240,6 @@ const WorkspaceTaskDetailModal: React.FC<WorkspaceTaskDetailModalProps> = ({
               {t('close', 'Close')}
             </button>
             <div className="flex space-x-2">
-              {canAssignTask() && (
-                <button
-                  type="button"
-                  onClick={() => setIsAssignModalOpen(true)}
-                  disabled={loading}
-                  className="px-4 py-2 text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  title="Assign task members"
-                >
-                  {t('assign_button', 'Assign')}
-                </button>
-              )}
               <button
                 type="button"
                 onClick={() => setIsEditModalOpen(true)}
@@ -301,15 +282,6 @@ const WorkspaceTaskDetailModal: React.FC<WorkspaceTaskDetailModalProps> = ({
           task={task}
           workspaceId={workspaceId}
           onClose={() => setIsEditModalOpen(false)}
-        />,
-        document.body
-      )}
-      {isAssignModalOpen && createPortal(
-        <WorkspaceAssignMemberModal
-          task={task}
-          workspaceId={workspaceId}
-          members={workspaceMembers}
-          onClose={() => setIsAssignModalOpen(false)}
         />,
         document.body
       )}

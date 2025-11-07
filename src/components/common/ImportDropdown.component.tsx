@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
+import { useCanImport } from '../../hooks/import/useCanImport.hook';
+import ImportRestrictedModal from '../import/ImportRestrictedModal.component';
 
 interface ImportDropdownProps {
   onDownloadTemplate?: () => void;
@@ -15,7 +17,9 @@ export const ImportDropdown: React.FC<ImportDropdownProps> = ({
   className = ''
 }) => {
   const { t } = useAppTranslate('common');
+  const { canImport } = useCanImport();
   const [isOpen, setIsOpen] = useState(false);
+  const [showRestrictedModal, setShowRestrictedModal] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -55,7 +59,14 @@ export const ImportDropdown: React.FC<ImportDropdownProps> = ({
     <div className={`relative ${className}`} ref={dropdownRef}>
       {/* Main Button */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          // Check if user can import first
+          if (!canImport) {
+            setShowRestrictedModal(true);
+            return;
+          }
+          setIsOpen(!isOpen);
+        }}
         className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-md text-sm flex items-center space-x-1 transition-colors duration-200"
         aria-label={t('import_export')}
         title={t('import_export')}
@@ -121,6 +132,12 @@ export const ImportDropdown: React.FC<ImportDropdownProps> = ({
           </div>
         </div>
       )}
+
+      {/* Import Restricted Modal */}
+      <ImportRestrictedModal
+        isOpen={showRestrictedModal}
+        onClose={() => setShowRestrictedModal(false)}
+      />
     </div>
   );
 };

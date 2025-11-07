@@ -255,8 +255,10 @@ export function useTaskForm(
       return true;
     } catch (error) {
       console.error('Error saving task:', error);
-      alert('Failed to save task. Please try again.');
-      return false;
+      
+      // ✅ Re-throw error so CreateTaskForm can catch it
+      // This allows error handling at the form level
+      throw error;
     }
   };
 

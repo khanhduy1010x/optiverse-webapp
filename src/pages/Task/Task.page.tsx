@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 
 // Components
 import TaskHeader from './TaskHeader.screen';
@@ -18,6 +18,7 @@ import { GROUP_CLASSNAMES } from '../../styles/group-class-name.style';
 import TaskExcelImportModal from '../../components/task/TaskExcelImportModal.component';
 import FloatingAddTaskButton from '../../components/task/FloatingAddTaskButton.component';
 import { CreateTaskEventModalForm } from '../../components/task-event/CreateTaskEventModal.component';
+import TaskLimitExceededModal from '../../components/task/TaskLimitExceededModal.component';
 
 // Hooks
 import { useTaskState } from '../../hooks/task/useTaskState.hook';
@@ -28,6 +29,7 @@ import { useSearchFilter } from '../../hooks/task/useSearchFilter.hook';
 import useTaskReminder from '../../hooks/task/useTaskReminder.hook';
 import { Tag } from '../../types/task/response/tag.response';
 import type { Task } from '../../types/task/response/task.response';
+import { extractTaskLimitError } from '../../types/task/error/task-limit.error.types';
 import taskService from '../../services/task.service';
 import { useTaskStreak } from '../../hooks/streak/useTaskStreak.hook';
 
@@ -107,10 +109,15 @@ const TaskPage: React.FC = () => {
   const [showCreateTaskForm, setShowCreateTaskForm] = useState(false);
   const [showEditTaskForm, setShowEditTaskForm] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
+  
+  // State for task limit error
+  const [taskLimitError, setTaskLimitError] = useState<any>(null);
+  const [showTaskLimitModal, setShowTaskLimitModal] = useState(false);
 
   // Import modal state for Task
   const [isTaskImportOpen, setIsTaskImportOpen] = useState(false);
   // State cho sidebar
+  const navigate = useNavigate();
   const [selectedMenu, setSelectedMenu] = useState<'task' | 'task-event' | 'task-settings'>('task');
   // Sync selectedMenu with query param when coming from other pages
   useEffect(() => {
@@ -741,6 +748,7 @@ const TaskPage: React.FC = () => {
             onClose={closeAllModals}
             onSave={async (taskData) => {
               try {
+                console.log('[Task.page onSave] Creating task with data:', taskData);
 
                 const response = await taskService.createTask({
                   title: taskData.title || '',
@@ -752,7 +760,7 @@ const TaskPage: React.FC = () => {
                 });
 
                 if (response && response._id) {
-                  console.log('Task created successfully:', response);
+                  console.log('[Task.page onSave] Task created successfully:', response);
 
                   // Update task streak when task is created
                   await updateTaskStreak();
@@ -769,9 +777,42 @@ const TaskPage: React.FC = () => {
                   fetchTasksAndCheckOverdue();
                   return true;
                 }
+                console.warn('[Task.page onSave] No response or response._id');
                 return false;
-              } catch (error) {
-                console.error('Error creating task:', error);
+              } catch (error: any) {
+                console.error('[Task.page onSave] Error creating task:', error);
+                console.log('[Task.page onSave] Full error object:', error);
+                console.log('[Task.page onSave] Error details:', {
+                  error_message: error?.message,
+                  response_status: error?.response?.status,
+                  response_data: error?.response?.data,
+                  error_code: error?.code,
+                });
+                
+                // ✅ Check if it's a task limit error
+                console.log('[Task.page onSave] Checking for task limit error...');
+                const taskLimitErr = extractTaskLimitError(error);
+                console.log('[Task.page onSave] extractTaskLimitError result:', taskLimitErr);
+                
+                if (taskLimitErr) {
+                  console.log('[Task.page onSave] ✅ Task limit exceeded, showing upgrade modal');
+                  setTaskLimitError(taskLimitErr);
+                  setShowTaskLimitModal(true);
+                  // ✅ Return false to keep form open, don't close it
+                  return false;
+                } else {
+                  console.log('[Task.page onSave] ❌ Not a task limit error');
+                  
+                  // Show appropriate error message
+                  if (error?.response?.status === 502) {
+                    alert('Backend service is not responding (502 Bad Gateway). Please make sure the productivity-service is running.');
+                  } else if (error?.response?.status === 400) {
+                    alert(error?.response?.data?.message || t('create_failed'));
+                  } else {
+                    alert(t('create_failed'));
+                  }
+                }
+                
                 return false;
               }
             }}
@@ -951,6 +992,13 @@ const TaskPage: React.FC = () => {
           onConfirm={() => handleDeleteTask(taskToDelete)}
         />
       )}
+
+      {/* Task Limit Exceeded Modal */}
+      <TaskLimitExceededModal
+        isOpen={showTaskLimitModal}
+        onClose={() => setShowTaskLimitModal(false)}
+        error={taskLimitError}
+      />
 
       {/* Add the TaskOverdueNotifier component here */}
       <TaskOverdueNotifier tasks={tasks} taskEvents={[]} />

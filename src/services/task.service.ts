@@ -239,6 +239,22 @@ class TaskService {
       throw error;
     }
   }
+
+  // Get number of tasks created today
+  async getTasksCreatedToday(): Promise<number> {
+    try {
+      const response = await api.get<ApiResponse<{ tasksCreatedToday: number }>>(
+        '/productivity/task/quota/today'
+      );
+      if (response.data && response.data.data && typeof response.data.data.tasksCreatedToday === 'number') {
+        return response.data.data.tasksCreatedToday;
+      }
+      return 0;
+    } catch (error) {
+      console.error('Error fetching tasks created today:', error);
+      throw error;
+    }
+  }
 }
 
 export default new TaskService();

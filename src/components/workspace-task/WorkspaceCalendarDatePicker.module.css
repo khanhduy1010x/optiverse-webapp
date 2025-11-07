@@ -1,0 +1,12 @@
+.calendarPortal {
+  position: fixed;
+  z-index: 9999;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+  width: 18rem;
+  top: var(--calendar-top, 0);
+  left: var(--calendar-left, 0);
+}
