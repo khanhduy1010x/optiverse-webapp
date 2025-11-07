@@ -95,6 +95,8 @@
   "repeat_monthly": "Monthly",
   "repeat_yearly": "Yearly",
   "repeat_custom": "Custom",
+  "cannot_select_past_date": "Cannot select past dates. Please choose today or a future date.",
+  "repeat_end_date_must_be_after_start": "To Date must be after Start Date.",
   "color_blue": "Blue",
   "color_red": "Red",
   "color_yellow": "Yellow",
@@ -225,5 +227,26 @@
   "updating": "Updating...",
   "show_more": "Show more",
   "show_less": "Show less",
-  "loading_events": "Loading events..."
+  "loading_events": "Loading events...",
+  "task_limit_exceeded_title": "Task Limit Reached",
+  "task_limit_exceeded_subtitle": "You have reached your daily limit",
+  "current_plan": "Current Plan",
+  "daily_limit": "Daily Task Limit",
+  "limit_resets": "Limit Resets",
+  "tasks": "tasks",
+  "upgrade_suggestion": "Upgrade Your Plan",
+  "tasks_per_day": "tasks per day",
+  "task_limit_info": "Task limits reset every day at midnight. Create tasks again tomorrow, or upgrade now for unlimited tasks.",
+  "upgrade_to_text": "Upgrade to",
+  "to_get": "to get",
+  "upgrade_now": "Upgrade Now",
+  "import_restricted_title": "Import Feature Unavailable",
+  "import_restricted_desc": "You need to upgrade to a paid plan to use the import feature",
+  "import_restriction_info": "The import feature is only available for Basic plan and above. Upgrade now to import tasks and events from Excel files.",
+  "import_available_basic": "Available on Basic plan and above",
+  "upgrade_to_import": "Upgrade to",
+  "basic_plan": "Basic",
+  "import_feature": "to use the import feature"
 }
+
+

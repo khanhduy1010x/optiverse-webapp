@@ -37,10 +37,25 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
   const [repeatDropdownPos, setRepeatDropdownPos] = useState({ top: 0, left: 0, width: 0 });
   const repeatDropdownRef = React.useRef<HTMLDivElement>(null);
 
-  // Validate To Date > Start Date
+  // Validate Start Date is not in the past and To Date > Start Date
   React.useEffect(() => {
     let error = '';
+    
+    // Check if start_time is in the past
+    if (formData.start_time) {
+      const startDate = new Date(formData.start_time);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      startDate.setHours(0, 0, 0, 0);
+      
+      if (startDate < today) {
+        error = t('cannot_select_past_date');
+      }
+    }
+
+    // Check if repeat_to is after start_time (only if start_time is valid)
     if (
+      !error &&
       (formData.repeat_type === 'daily' || formData.repeat_type === 'weekly' || formData.repeat_type === 'monthly' || formData.repeat_type === 'yearly') &&
       formData.start_time && formData.repeat_to
     ) {
@@ -82,11 +97,11 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
         end = new Date(formData.repeat_to);
       }
       if (end && start >= end) {
-        error = 'To Date must be after Start Date.';
+        error = t('repeat_end_date_must_be_after_start');
       }
     }
     setDateError(error);
-  }, [formData.start_time, formData.repeat_to, formData.repeat_type]);
+  }, [formData.start_time, formData.repeat_to, formData.repeat_type, t]);
 
   // Calculate repeat dropdown position
   React.useEffect(() => {
@@ -377,7 +392,7 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                   <span className="text-gray-700">
-                    {formData.start_time ? formatDate(formData.start_time.toISOString()) : t('select_date')}
+                    {formData.start_time ? formatDate(typeof formData.start_time === 'string' ? formData.start_time : formData.start_time.toISOString()) : t('select_date')}
                   </span>
                 </button>
                 
@@ -412,7 +427,26 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
                       const currentDate = formData.start_time ? new Date(formData.start_time) : new Date();
                       const [hours, minutes] = time.split(':').map(Number);
                       currentDate.setHours(hours, minutes);
-                      handleInputChange('start_time', currentDate.toISOString());
+                      const newDateTime = new Date(currentDate);
+
+                      // Check if date is today and time must be greater than current time
+                      const now = new Date();
+                      const newDateOnly = new Date(newDateTime);
+                      newDateOnly.setHours(0, 0, 0, 0);
+                      const todayOnly = new Date(now);
+                      todayOnly.setHours(0, 0, 0, 0);
+
+                      if (newDateOnly.getTime() === todayOnly.getTime()) {
+                        if (newDateTime <= now) {
+                          // Keep the date/time but show error
+                          handleInputChange('start_time', newDateTime.toISOString());
+                          setDateError('Time must be greater than current time for today.');
+                          return;
+                        }
+                      }
+
+                      handleInputChange('start_time', newDateTime.toISOString());
+                      setDateError('');
                     }}
                     placeholder="HH:mm"
                     format24h={true}
@@ -435,7 +469,26 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
                       const currentDate = formData.end_time ? new Date(formData.end_time) : new Date(formData.start_time || new Date());
                       const [hours, minutes] = time.split(':').map(Number);
                       currentDate.setHours(hours, minutes);
-                      handleInputChange('end_time', currentDate.toISOString());
+                      const newDateTime = new Date(currentDate);
+
+                      // Check if date is today and time must be greater than current time
+                      const now = new Date();
+                      const newDateOnly = new Date(newDateTime);
+                      newDateOnly.setHours(0, 0, 0, 0);
+                      const todayOnly = new Date(now);
+                      todayOnly.setHours(0, 0, 0, 0);
+
+                      if (newDateOnly.getTime() === todayOnly.getTime()) {
+                        if (newDateTime <= now) {
+                          // Keep the date/time but show error
+                          handleInputChange('end_time', newDateTime.toISOString());
+                          setDateError('Time must be greater than current time for today.');
+                          return;
+                        }
+                      }
+
+                      handleInputChange('end_time', newDateTime.toISOString());
+                      setDateError('');
                     }}
                     placeholder="HH:mm"
                     format24h={true}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, X as CloseIcon } from 'lucide-react';
@@ -30,6 +30,7 @@ const WorkspaceCreateTaskModal: React.FC<WorkspaceCreateTaskModalProps> = ({ wor
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
   const [showAssigneeDropdown, setShowAssigneeDropdown] = useState(false);
+  const dateButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -83,12 +84,24 @@ const WorkspaceCreateTaskModal: React.FC<WorkspaceCreateTaskModalProps> = ({ wor
     return { hours: hour24, minutes };
   };
 
+  // Check if date/time is in the past
+  const isDateTimePast = (date: Date): boolean => {
+    const now = new Date();
+    return date < now;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
     if (!title.trim()) {
       setError(t('task_title_required') || 'Task title is required');
+      return;
+    }
+
+    // Check if deadline is in the past
+    if (endTime && isDateTimePast(endTime)) {
+      setError('Deadline cannot be in the past. Please select a future date and time.');
       return;
     }
 
@@ -188,7 +201,7 @@ const WorkspaceCreateTaskModal: React.FC<WorkspaceCreateTaskModalProps> = ({ wor
               <button
                 type="button"
                 onClick={() => setShowAssigneeDropdown(!showAssigneeDropdown)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white flex items-center justify-between hover:bg-gray-50 transition-colors"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white flex items-center justify-between hover:border-gray-300 transition-all"
               >
                 <div className="flex items-center gap-2 flex-1 min-w-0 flex-wrap">
                   {assignedToList.length > 0 ? (
@@ -196,20 +209,20 @@ const WorkspaceCreateTaskModal: React.FC<WorkspaceCreateTaskModalProps> = ({ wor
                       {assignedToList.slice(0, 2).map((memberId) => {
                         const member = members.find(m => m.user_id === memberId);
                         return (
-                          <div key={memberId} className="flex items-center gap-1 px-2 py-1 bg-blue-50 rounded-full">
-                            <div className="w-5 h-5 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
+                          <div key={memberId} className="flex items-center gap-1.5 px-2.5 py-1.5 bg-blue-50 rounded-full border border-blue-200">
+                            <div className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-semibold shrink-0 overflow-hidden">
                               {member?.avatar_url ? (
                                 <img src={member.avatar_url} alt={member.full_name} className="w-full h-full object-cover rounded-full" />
                               ) : (
                                 <span>{member?.full_name?.[0]?.toUpperCase() || '?'}</span>
                               )}
                             </div>
-                            <span className="text-xs font-medium text-gray-700 truncate">{member?.full_name}</span>
+                            <span className="text-xs font-medium text-blue-700 truncate">{member?.full_name}</span>
                           </div>
                         );
                       })}
                       {assignedToList.length > 2 && (
-                        <span className="text-xs font-medium text-gray-600 px-2 py-1 bg-gray-100 rounded-full">
+                        <span className="text-xs font-medium text-blue-700 px-2.5 py-1.5 bg-blue-50 rounded-full border border-blue-200">
                           +{assignedToList.length - 2} more
                         </span>
                       )}
@@ -218,23 +231,22 @@ const WorkspaceCreateTaskModal: React.FC<WorkspaceCreateTaskModalProps> = ({ wor
                     <span className="text-sm text-gray-500">No one assigned</span>
                   )}
                 </div>
-                <ChevronDown className={`w-4 h-4 text-gray-400 flex-shrink-0 transition-transform ${showAssigneeDropdown ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-5 h-5 text-gray-400 shrink-0 transition-transform duration-200 ${showAssigneeDropdown ? 'rotate-180' : ''}`} />
               </button>
 
               {/* Dropdown Menu */}
               {showAssigneeDropdown && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 overflow-hidden">
-                  {/* No one option */}
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white border-2 border-gray-200 rounded-lg shadow-xl z-50 overflow-hidden">
                   {/* Members list */}
-                  <div className="max-h-64 overflow-y-auto">
+                  <div className="max-h-72 overflow-y-auto">
                     {members && members.length > 0 ? (
                       members.map((member) => {
                         const isSelected = assignedToList.includes(member.user_id);
                         return (
                           <label
                             key={member.user_id}
-                            className={`w-full text-left px-4 py-2.5 text-sm flex items-center gap-3 hover:bg-gray-50 transition-colors cursor-pointer ${
-                              isSelected ? 'bg-blue-50' : ''
+                            className={`w-full text-left px-4 py-3 text-sm flex items-center gap-3 cursor-pointer transition-all duration-150 ${
+                              isSelected ? 'bg-blue-50 border-l-4 border-l-blue-500' : 'hover:bg-gray-50 border-l-4 border-l-transparent'
                             }`}
                           >
                             {/* Checkbox */}
@@ -253,7 +265,7 @@ const WorkspaceCreateTaskModal: React.FC<WorkspaceCreateTaskModalProps> = ({ wor
                             />
 
                             {/* Avatar */}
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
+                            <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-semibold shrink-0 overflow-hidden">
                               {member.avatar_url ? (
                                 <img src={member.avatar_url} alt={member.full_name} className="w-full h-full object-cover rounded-full" />
                               ) : (
@@ -272,7 +284,7 @@ const WorkspaceCreateTaskModal: React.FC<WorkspaceCreateTaskModalProps> = ({ wor
                         );
                       })
                     ) : (
-                      <div className="px-4 py-2.5 text-sm text-gray-500 text-center">
+                      <div className="px-4 py-3 text-sm text-gray-500 text-center">
                         No members available
                       </div>
                     )}
@@ -280,14 +292,14 @@ const WorkspaceCreateTaskModal: React.FC<WorkspaceCreateTaskModalProps> = ({ wor
 
                   {/* Selected Members Display */}
                   {assignedToList.length > 0 && (
-                    <div className="border-t border-gray-100 px-4 py-3">
-                      <p className="text-xs font-medium text-gray-600 mb-2">Selected ({assignedToList.length}):</p>
-                      <div className="flex flex-wrap gap-1">
+                    <div className="border-t-2 border-gray-100 px-4 py-3 bg-gray-50">
+                      <p className="text-xs font-semibold text-gray-700 mb-2.5 uppercase tracking-wide">Selected ({assignedToList.length})</p>
+                      <div className="flex flex-wrap gap-2">
                         {assignedToList.map(memberId => {
                           const member = members.find(m => m.user_id === memberId);
                           return (
-                            <div key={memberId} className="flex items-center gap-1 px-2 py-1 bg-blue-50 rounded-full text-xs">
-                              <div className="w-4 h-4 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 text-white text-xs flex items-center justify-center">
+                            <div key={memberId} className="flex items-center gap-1.5 px-2.5 py-1.5 bg-blue-100 rounded-full text-xs border border-blue-300">
+                              <div className="w-4 h-4 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center">
                                 {member?.full_name?.[0]?.toUpperCase() || '?'}
                               </div>
                               <span className="text-blue-700 font-medium">{member?.full_name}</span>
@@ -295,7 +307,7 @@ const WorkspaceCreateTaskModal: React.FC<WorkspaceCreateTaskModalProps> = ({ wor
                                 type="button"
                                 onClick={() => setAssignedToList(prev => prev.filter(id => id !== memberId))}
                                 aria-label={`Remove ${member?.full_name}`}
-                                className="ml-1 text-gray-400 hover:text-red-500 font-bold"
+                                className="ml-0.5 text-blue-400 hover:text-blue-600 font-bold hover:bg-blue-200 rounded-full px-1"
                               >
                                 ×
                               </button>
@@ -344,6 +356,7 @@ const WorkspaceCreateTaskModal: React.FC<WorkspaceCreateTaskModalProps> = ({ wor
                 {/* End Date */}
                 <div className="relative">
                   <button
+                    ref={dateButtonRef}
                     type="button"
                     onClick={() => setShowEndDatePicker(!showEndDatePicker)}
                     className="flex items-center gap-2 w-full p-2 text-left border border-gray-200 rounded-md hover:bg-gray-50 transition-colors text-sm"
@@ -357,19 +370,28 @@ const WorkspaceCreateTaskModal: React.FC<WorkspaceCreateTaskModalProps> = ({ wor
                     </span>
                   </button>
                   {showEndDatePicker && (
-                    <div className="absolute top-full left-0 mt-1 z-50">
-                      <WorkspaceCalendarDatePicker
-                        selectedDate={endTime || new Date()}
-                        onDateSelected={(date) => {
-                          const currentTime = endTime || new Date();
-                          date.setHours(currentTime.getHours(), currentTime.getMinutes(), 0, 0);
-                          setEndTime(new Date(date));
+                    <WorkspaceCalendarDatePicker
+                      triggerRef={dateButtonRef}
+                      selectedDate={endTime || new Date()}
+                      onDateSelected={(date) => {
+                        const currentTime = endTime || new Date();
+                        date.setHours(currentTime.getHours(), currentTime.getMinutes(), 0, 0);
+                        const newDateTime = new Date(date);
+                        
+                        // Show error if date is in the past
+                        if (isDateTimePast(newDateTime)) {
+                          setError('Deadline cannot be in the past. Please select a future date and time.');
                           setShowEndDatePicker(false);
-                        }}
-                        isOpen={showEndDatePicker}
-                        onClose={() => setShowEndDatePicker(false)}
-                      />
-                    </div>
+                          return;
+                        }
+                        
+                        setEndTime(newDateTime);
+                        setShowEndDatePicker(false);
+                        setError(null);
+                      }}
+                      isOpen={showEndDatePicker}
+                      onClose={() => setShowEndDatePicker(false)}
+                    />
                   )}
                 </div>
 
@@ -396,8 +418,34 @@ const WorkspaceCreateTaskModal: React.FC<WorkspaceCreateTaskModalProps> = ({ wor
                           const { hours, minutes } = parseTimeString(time);
                           const baseDate = endTime || new Date();
                           baseDate.setHours(hours, minutes, 0, 0);
-                          setEndTime(new Date(baseDate));
+                          const newDateTime = new Date(baseDate);
+                          
+                          // Show error if time is in the past
+                          if (isDateTimePast(newDateTime)) {
+                            setError('Deadline cannot be in the past. Please select a future date and time.');
+                            setShowEndTimePicker(false);
+                            return;
+                          }
+
+                          // If selected date is today, check that time is greater than current time
+                          const today = new Date();
+                          const selectedDateOnly = new Date(newDateTime);
+                          selectedDateOnly.setHours(0, 0, 0, 0);
+                          const todayOnly = new Date(today);
+                          todayOnly.setHours(0, 0, 0, 0);
+
+                          if (selectedDateOnly.getTime() === todayOnly.getTime()) {
+                            // Same day - time must be greater than current time
+                            if (newDateTime <= today) {
+                              setError('Time must be greater than current time for today.');
+                              setShowEndTimePicker(false);
+                              return;
+                            }
+                          }
+                          
+                          setEndTime(newDateTime);
                           setShowEndTimePicker(false);
+                          setError(null);
                         }}
                         isOpen={showEndTimePicker}
                         onClose={() => setShowEndTimePicker(false)}

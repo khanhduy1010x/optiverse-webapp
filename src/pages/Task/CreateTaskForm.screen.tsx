@@ -6,6 +6,7 @@ import { isoToLocalDateTime, localDateTimeToISO } from '../../utils/date.utils';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
 import { X } from 'lucide-react';
 import { TaskDatePicker } from '../../components/task/TaskDatePicker.component';
+import { TaskLimitExceededError } from '../../types/task/error/task-limit.error.types';
 
 const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
     title,
@@ -29,7 +30,8 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
     setNewTagName,
     newTagColor,
     setNewTagColor,
-    handleCreateNewTag
+    handleCreateNewTag,
+    onTaskLimitError
 }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showDeadlinePicker, setShowDeadlinePicker] = useState(false);
@@ -74,6 +76,9 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
         description?: string;
         time?: string;
     }>({});
+    
+    // State for task limit error
+    const [taskLimitError, setTaskLimitError] = useState<TaskLimitExceededError | null>(null);
 
     const validateForm = (): boolean => {
         const newErrors: {
@@ -105,13 +110,15 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                     return false;
                 }
                 
-                // Get current date without time
+                // Check if deadline is in the past (only compare dates, not time)
                 const now = new Date();
-                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                const endDateOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+                const endDateOnly = new Date(endDate);
+                endDateOnly.setHours(0, 0, 0, 0);
+                const todayOnly = new Date(now);
+                todayOnly.setHours(0, 0, 0, 0);
                 
-                if (endDateOnly < today) {
-                    newErrors.time = t('create_end_in_past');
+                if (endDateOnly.getTime() < todayOnly.getTime()) {
+                    newErrors.time = t('create_end_in_past') || 'Deadline cannot be in the past. Please select a future date and time.';
                     setErrors(newErrors);
                     return false;
                 }
@@ -143,7 +150,7 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
         try {
             setIsSubmitting(true);
             
-            
+            console.log('[CreateTaskForm.handleCreateTask] Calling onSave...');
             // Gọi hàm onSave và đợi kết quả
             const success = await onSave({
                 title,
@@ -153,12 +160,18 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                 end_time
             });
             
+            console.log('[CreateTaskForm.handleCreateTask] onSave returned:', success);
+            
             if (success) {
+                console.log('[CreateTaskForm.handleCreateTask] Success, closing form');
                 // Đóng form sau khi lưu thành công
                 onClose();
+            } else {
+                console.log('[CreateTaskForm.handleCreateTask] onSave returned false, keeping form open');
+                // Stay open if save failed (e.g., task limit)
             }
-        } catch (error) {
-            console.error('Error creating task:', error);
+        } catch (error: any) {
+            console.error('[CreateTaskForm.handleCreateTask] Unexpected error:', error);
             alert(t('create_failed'));
         } finally {
             setIsSubmitting(false);
@@ -243,7 +256,29 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                   onDateSelect={(date) => {
                     const currentTime = end_time ? new Date(end_time as any) : new Date();
                     date.setHours(currentTime.getHours(), currentTime.getMinutes(), 0, 0);
-                    setEndTime(new Date(date));
+                    const newDateTime = new Date(date);
+                    
+                    // Check if date is in the past (only compare dates, not time)
+                    const now = new Date();
+                    const newDateOnly = new Date(newDateTime);
+                    newDateOnly.setHours(0, 0, 0, 0);
+                    const todayOnly = new Date(now);
+                    todayOnly.setHours(0, 0, 0, 0);
+                    
+                    if (newDateOnly.getTime() < todayOnly.getTime()) {
+                      setErrors(prev => ({
+                        ...prev,
+                        time: t('create_end_in_past') || 'Deadline cannot be in the past. Please select a future date and time.'
+                      }));
+                      return;
+                    }
+                    
+                    setEndTime(newDateTime);
+                    setErrors(prev => {
+                      const newErrors = { ...prev };
+                      delete newErrors.time;
+                      return newErrors;
+                    });
                   }}
                   onTimeSelect={(time: string) => {
                     if (!time) {
@@ -254,13 +289,50 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                     const [hours, minutes] = time.split(':').map(Number);
                     const baseDate = end_time ? new Date(end_time as any) : new Date();
                     baseDate.setHours(hours, minutes, 0, 0);
-                    setEndTime(new Date(baseDate));
+                    const newDateTime = new Date(baseDate);
+                    
+                    // Check if time is in the past (only for past dates, allow today with future time)
+                    const now = new Date();
+                    const newDateOnly = new Date(newDateTime);
+                    newDateOnly.setHours(0, 0, 0, 0);
+                    const todayOnly = new Date(now);
+                    todayOnly.setHours(0, 0, 0, 0);
+                    
+                    // If date is past, reject entirely
+                    if (newDateOnly.getTime() < todayOnly.getTime()) {
+                      setErrors(prev => ({
+                        ...prev,
+                        time: t('create_end_in_past') || 'Deadline cannot be in the past. Please select a future date and time.'
+                      }));
+                      return;
+                    }
+                    
+                    // If date is today, check that time is greater than current time
+                    if (newDateOnly.getTime() === todayOnly.getTime()) {
+                      if (newDateTime <= now) {
+                        // Keep the date but show error about time
+                        setEndTime(newDateTime);
+                        setErrors(prev => ({
+                          ...prev,
+                          time: 'Time must be greater than current time for today.'
+                        }));
+                        return;
+                      }
+                    }
+                    
+                    setEndTime(newDateTime);
+                    setErrors(prev => {
+                      const newErrors = { ...prev };
+                      delete newErrors.time;
+                      return newErrors;
+                    });
                   }}
                   onRemove={() => setEndTime(undefined)}
                   label={t('set_deadline')}
                   isOpen={showDeadlinePicker}
                   onToggle={setShowDeadlinePicker}
                 />
+                {errors.time && <div className="text-red-500 text-xs mt-1">{errors.time}</div>}
 
                 {/* Description */}
                 <div className="space-y-2">

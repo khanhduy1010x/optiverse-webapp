@@ -2,6 +2,8 @@ import React, { useMemo, useRef, useState } from 'react';
 import * as XLSX from 'xlsx';
 import { toast } from 'react-toastify';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
+import { useCanImport } from '../../hooks/import/useCanImport.hook';
+import ImportRestrictedModal from '../import/ImportRestrictedModal.component';
 import { taskEventService } from '../../services/task-event.service';
 import { useAppSelector } from '../../store/hooks';
 import type { CreateTaskEventRequest } from '../../types/task-events/request/create-task-event.request';
@@ -317,6 +319,8 @@ const normalizeKeys = (row: Record<string, any>): Record<string, any> => {
 
 export const EventExcelImportModal: React.FC<EventExcelImportModalProps> = ({ isOpen, onClose, onImported }) => {
   const { t } = useAppTranslate('task');
+  const { canImport } = useCanImport();
+  const [showRestrictedModal, setShowRestrictedModal] = useState(false);
   const userId = useAppSelector((state: RootState) => state.auth.user?._id);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [fileName, setFileName] = useState<string>('');
@@ -343,7 +347,13 @@ export const EventExcelImportModal: React.FC<EventExcelImportModalProps> = ({ is
 
   // Template download moved to Task header; modal handles import only
 
-  const handleChooseFile = () => fileInputRef.current?.click();
+  const handleChooseFile = () => {
+    if (!canImport) {
+      setShowRestrictedModal(true);
+      return;
+    }
+    fileInputRef.current?.click();
+  };
 
   const onFileChange: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
     const file = e.target.files?.[0];
@@ -506,6 +516,31 @@ export const EventExcelImportModal: React.FC<EventExcelImportModalProps> = ({ is
         console.log('startDate:', startDate.toISOString(), 'endDate:', endDate.toISOString());
         rowErrors.push({ rowIndex: eventIndex, message: errorMsg });
         continue;
+      }
+
+      // Validate start time is not in the past - check today's time requirement
+      const now = new Date();
+      const startDateOnly = new Date(startDate);
+      startDateOnly.setHours(0, 0, 0, 0);
+      const todayOnly = new Date(now);
+      todayOnly.setHours(0, 0, 0, 0);
+
+      // If date is past, reject
+      if (startDateOnly.getTime() < todayOnly.getTime()) {
+        const errorMsg = `Event ${eventIndex}: Start date cannot be in the past`;
+        console.error('❌ Validation Error:', errorMsg);
+        rowErrors.push({ rowIndex: eventIndex, message: errorMsg });
+        continue;
+      }
+
+      // If date is today, check that start time is greater than current time
+      if (startDateOnly.getTime() === todayOnly.getTime()) {
+        if (startDate <= now) {
+          const errorMsg = `Event ${eventIndex}: Start time must be greater than current time for today`;
+          console.error('❌ Validation Error:', errorMsg);
+          rowErrors.push({ rowIndex: eventIndex, message: errorMsg });
+          continue;
+        }
       }
 
       // Validate repeat fields
@@ -727,85 +762,92 @@ export const EventExcelImportModal: React.FC<EventExcelImportModalProps> = ({ is
   // This allows user to see and understand what went wrong
 };
 
-if (!isOpen) return null;
+  if (!isOpen) return null;
 
-return (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-    <div className="w-full max-w-2xl bg-white rounded-lg shadow-lg p-6 max-h-[90vh] overflow-y-auto">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold">{t('import_excel')}</h2>
-        <button 
-          aria-label={t('close')} 
-          onClick={onClose}
-          className="text-gray-500 hover:text-gray-700 transition-colors"
-          title="Close"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"/></svg>
-        </button>
-      </div>
+  return (
+    <>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+        <div className="w-full max-w-2xl bg-white rounded-lg shadow-lg p-6 max-h-[90vh] overflow-y-auto relative">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold">{t('import_excel')}</h2>
+            <button 
+              aria-label={t('close')} 
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700 transition-colors z-10"
+              title="Close"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"/></svg>
+            </button>
+          </div>
 
-      <div className="space-y-4">
-        <div className="flex items-center space-x-2">
-          <button onClick={handleChooseFile} className="px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm border">
-            {t('choose_file')}
-          </button>
-          {fileName && (
-            <span className="text-sm text-gray-600 truncate">{fileName}</span>
-          )}
-          <input 
-            ref={fileInputRef} 
-            type="file" 
-            accept=".xlsx" 
-            className="hidden" 
-            onChange={onFileChange} 
-            title={t('choose_excel_file')}
-            placeholder={t('choose_excel_file')}
-          />
-        </div>
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <button onClick={handleChooseFile} className="px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm border">
+                {t('choose_file')}
+              </button>
+              {fileName && (
+                <span className="text-sm text-gray-600 truncate">{fileName}</span>
+              )}
+              <input 
+                ref={fileInputRef} 
+                type="file" 
+                accept=".xlsx" 
+                className="hidden" 
+                onChange={onFileChange} 
+                title={t('choose_excel_file')}
+                placeholder={t('choose_excel_file')}
+              />
+            </div>
 
-        <p className="text-xs text-gray-500">{t('template_columns')}</p>
+            <p className="text-xs text-gray-500">{t('template_columns')}</p>
 
-        <div className="rounded-md border border-gray-200 bg-gray-50 p-3">
-          <div className="text-xs font-medium text-gray-700 mb-3">{t('template_sheet_name')}</div>
-          <div className="flex flex-wrap gap-2">
-            {eventTemplateHeaders.map((key) => (
-              <span key={key} className="inline-flex items-center rounded-md bg-white px-3 py-2 text-xs font-medium text-gray-700 shadow ring-1 ring-gray-200 flex-shrink-0 whitespace-nowrap">
-                {t(`column_${key}` as any)}
-              </span>
-            ))}
+            <div className="rounded-md border border-gray-200 bg-gray-50 p-3">
+              <div className="text-xs font-medium text-gray-700 mb-3">{t('template_sheet_name')}</div>
+              <div className="flex flex-wrap gap-2">
+                {eventTemplateHeaders.map((key) => (
+                  <span key={key} className="inline-flex items-center rounded-md bg-white px-3 py-2 text-xs font-medium text-gray-700 shadow ring-1 ring-gray-200 flex-shrink-0 whitespace-nowrap">
+                    {t(`column_${key}` as any)}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {(parsing || processing) && (
+              <div className="text-sm text-gray-700">{parsing ? t('parsing_file') : t('processing')}</div>
+            )}
+
+            <div className="flex items-center justify-end space-x-2">
+              <button 
+                onClick={onClose}
+                className="px-3 py-2 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm transition-colors"
+                title="Close modal"
+              >
+                {t('cancel')}
+              </button>
+              <button disabled={parsing || processing || !rows.length} onClick={processImport} className={`px-3 py-2 rounded-md text-white text-sm ${parsing || processing || !rows.length ? 'bg-green-300' : 'bg-green-500 hover:bg-green-600'}`}>
+                {t('start_import')}
+              </button>
+            </div>
+
+            {errors.length > 0 && (
+                <div className="mt-2 p-3 border rounded-md bg-red-50 border-red-200">
+                  <ul className="list-disc ml-4 text-sm text-red-700 space-y-1 max-h-40 overflow-y-auto">
+                    {errors.map(er => (
+                      <li key={er.rowIndex}>{er.message}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
           </div>
         </div>
-
-        {(parsing || processing) && (
-          <div className="text-sm text-gray-700">{parsing ? t('parsing_file') : t('processing')}</div>
-        )}
-
-        <div className="flex items-center justify-end space-x-2">
-          <button 
-            onClick={onClose}
-            className="px-3 py-2 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm transition-colors"
-            title="Close modal"
-          >
-            {t('cancel')}
-          </button>
-          <button disabled={parsing || processing || !rows.length} onClick={processImport} className={`px-3 py-2 rounded-md text-white text-sm ${parsing || processing || !rows.length ? 'bg-green-300' : 'bg-green-500 hover:bg-green-600'}`}>
-            {t('start_import')}
-          </button>
-        </div>
-
-        {errors.length > 0 && (
-            <div className="mt-2 p-3 border rounded-md bg-red-50 border-red-200">
-              <ul className="list-disc ml-4 text-sm text-red-700 space-y-1 max-h-40 overflow-y-auto">
-                {errors.map(er => (
-                  <li key={er.rowIndex}>{er.message}</li>
-                ))}
-              </ul>
-            </div>
-          )}
       </div>
-    </div>
-  </div>
-);
+
+      <ImportRestrictedModal
+        isOpen={showRestrictedModal}
+        onClose={() => setShowRestrictedModal(false)}
+      />
+    </>
+  );
 };
 
 export default EventExcelImportModal;

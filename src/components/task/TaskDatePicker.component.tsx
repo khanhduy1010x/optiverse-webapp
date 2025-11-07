@@ -161,6 +161,15 @@ export const TaskDatePicker: React.FC<TaskDatePickerProps> = ({
     return date.toDateString() === selectedDate.toDateString();
   };
 
+  const isPastDate = (date: Date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const checkDate = new Date(date);
+    checkDate.setHours(0, 0, 0, 0);
+    // Chỉ cấm những ngày TRƯỚC hôm nay (không bao gồm hôm nay)
+    return checkDate.getTime() < today.getTime();
+  };
+
   const days = getDaysInMonth(currentMonth);
 
   if (!isOpen && !selectedDate) {
@@ -294,47 +303,55 @@ export const TaskDatePicker: React.FC<TaskDatePickerProps> = ({
 
               {/* Calendar grid */}
               <div className="grid grid-cols-7 gap-1">
-                {days.map((day, index) => (
-                  <button
-                    key={index}
-                    type="button"
-                    onClick={() => {
-                      if (onDateSelect) {
-                        // Preserve time when changing date
-                        if (selectedTime instanceof Date) {
-                          day.date.setHours(
-                            selectedTime.getHours(),
-                            selectedTime.getMinutes(),
-                            0,
-                            0
-                          );
+                {days.map((day, index) => {
+                  const disabled = isPastDate(day.date);
+                  return (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => {
+                        if (disabled) return;
+                        if (onDateSelect) {
+                          // Preserve time when changing date
+                          if (selectedTime instanceof Date) {
+                            day.date.setHours(
+                              selectedTime.getHours(),
+                              selectedTime.getMinutes(),
+                              0,
+                              0
+                            );
+                          }
+                          onDateSelect(day.date);
                         }
-                        onDateSelect(day.date);
-                      }
-                      setShowDatePicker(false);
-                    }}
-                    className={`
-                      h-8 w-8 text-sm rounded-full flex items-center justify-center transition-colors
-                      ${
-                        day.isCurrentMonth
-                          ? 'text-gray-900 hover:bg-blue-50'
-                          : 'text-gray-400 hover:bg-gray-50'
-                      }
-                      ${
-                        isSelected(day.date)
-                          ? 'bg-blue-600 text-white hover:bg-blue-700'
-                          : ''
-                      }
-                      ${
-                        isToday(day.date) && !isSelected(day.date)
-                          ? 'bg-blue-100 text-blue-600 font-medium'
-                          : ''
-                      }
-                    `}
-                  >
-                    {day.date.getDate()}
-                  </button>
-                ))}
+                        setShowDatePicker(false);
+                      }}
+                      disabled={disabled}
+                      className={`
+                        h-8 w-8 text-sm rounded-full flex items-center justify-center transition-colors
+                        ${
+                          disabled
+                            ? 'text-gray-300 bg-gray-50 cursor-not-allowed'
+                            : day.isCurrentMonth
+                            ? 'text-gray-900 hover:bg-blue-50 cursor-pointer'
+                            : 'text-gray-400 hover:bg-gray-50 cursor-pointer'
+                        }
+                        ${
+                          isSelected(day.date) && !disabled
+                            ? 'bg-blue-600 text-white hover:bg-blue-700'
+                            : ''
+                        }
+                        ${
+                          isToday(day.date) && !isSelected(day.date) && !disabled
+                            ? 'bg-blue-100 text-blue-600 font-medium'
+                            : ''
+                        }
+                      `}
+                      title={disabled ? 'Cannot select past dates' : ''}
+                    >
+                      {day.date.getDate()}
+                    </button>
+                  );
+                })}
               </div>
               </div>,
               document.body

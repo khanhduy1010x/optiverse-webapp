@@ -1,6 +1,7 @@
 import React from 'react';
 import { Tag } from '../response/tag.response';
 import { Task } from '../response/task.response';
+import { TaskLimitExceededError } from '../error/task-limit.error.types';
 
 // These interfaces are no longer being used, keep the ones at the bottom of the file
 interface TaskItemProps {
@@ -99,6 +100,7 @@ export interface CreateTaskFormProps {
     newTagColor: string,
     resetForm: () => void
   ) => Promise<Tag | null>;
+  onTaskLimitError?: (error: TaskLimitExceededError) => void;
 }
 
 export interface EditTaskFormProps {
