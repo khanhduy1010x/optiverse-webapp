@@ -110,15 +110,6 @@ export const TaskStatisticScreen: React.FC = () => {
 
             {!loading && (
               <div className="flex flex-col gap-4">
-                {/* Overall Stats */}
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-4 bg-white rounded-2xl shadow">
-                  <StatItem label={t('all')} value={tasks.length} />
-                  <StatItem label={t('completed')} value={completedCount} />
-                  <StatItem label={t('pending')} value={pendingCount} />
-                  <StatItem label={t('overdue')} value={overdueCount} />
-                  <StatItem label={t('completion_rate')} value={`${percentCompleted}%`} />
-                </div>
-
                 {/* Period Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl shadow border border-blue-200">
                   <div className="text-center">

@@ -592,11 +592,18 @@ export const TaskExcelImportModal: React.FC<TaskExcelImportModalProps> = ({ isOp
             <div className="rounded-md border border-gray-200 bg-gray-50 p-3">
               <div className="text-xs font-medium text-gray-700 mb-2">{t('template_sheet_name')}</div>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                {taskTemplateHeaders.map((key) => (
-                  <span key={key} className="inline-flex items-center rounded-md bg-white px-2 py-1 text-xs font-medium text-gray-700 shadow ring-1 ring-gray-200">
-                    {t(`column_${key}` as any)}
-                  </span>
-                ))}
+                {taskTemplateHeaders.map((key) => {
+                  let displayText = t(`column_${key}` as any);
+                  // Override specific column names
+                  if (key === 'priority') displayText = 'Column Priority';
+                  if (key === 'end_date') displayText = 'Column End Date';
+                  
+                  return (
+                    <span key={key} className="inline-flex items-center rounded-md bg-white px-2 py-1 text-xs font-medium text-gray-700 shadow ring-1 ring-gray-200">
+                      {displayText}
+                    </span>
+                  );
+                })}
               </div>
             </div>
 

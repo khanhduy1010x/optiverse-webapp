@@ -220,34 +220,26 @@ const WorkspaceEditTaskModal: React.FC<WorkspaceEditTaskModalProps> = ({ task, w
               {/* Dropdown Menu */}
               {showAssigneeDropdown && (
                 <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 overflow-hidden">
-                  {/* No one option */}
                   {/* Members list */}
                   <div className="max-h-64 overflow-y-auto">
                     {members && members.length > 0 ? (
                       members.map((member) => {
                         const isSelected = assignedToList.includes(member.user_id);
                         return (
-                          <label
+                          <button
                             key={member.user_id}
-                            className={`w-full text-left px-4 py-2.5 text-sm flex items-center gap-3 hover:bg-gray-50 transition-colors cursor-pointer ${
-                              isSelected ? 'bg-blue-50' : ''
+                            type="button"
+                            onClick={() => {
+                              setAssignedToList(prev =>
+                                prev.includes(member.user_id)
+                                  ? prev.filter(id => id !== member.user_id)
+                                  : [...prev, member.user_id]
+                              );
+                            }}
+                            className={`w-full text-left px-4 py-2.5 text-sm flex items-center gap-3 cursor-pointer transition-colors ${
+                              isSelected ? 'bg-blue-50 border-l-4 border-l-blue-500' : 'hover:bg-gray-50 border-l-4 border-l-transparent'
                             }`}
                           >
-                            {/* Checkbox */}
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              onChange={() => {
-                                setAssignedToList(prev =>
-                                  prev.includes(member.user_id)
-                                    ? prev.filter(id => id !== member.user_id)
-                                    : [...prev, member.user_id]
-                                );
-                              }}
-                              aria-label={`Assign to ${member.full_name}`}
-                              className="w-4 h-4 rounded border-gray-300 cursor-pointer accent-blue-600"
-                            />
-
                             {/* Avatar */}
                             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
                               {member.avatar_url ? (
@@ -264,7 +256,14 @@ const WorkspaceEditTaskModal: React.FC<WorkspaceEditTaskModalProps> = ({ task, w
                               </p>
                               <p className="text-xs text-gray-500 truncate">{member.email}</p>
                             </div>
-                          </label>
+
+                            {/* Selected indicator */}
+                            {isSelected && (
+                              <svg className="w-5 h-5 text-blue-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            )}
+                          </button>
                         );
                       })
                     ) : (
@@ -273,34 +272,6 @@ const WorkspaceEditTaskModal: React.FC<WorkspaceEditTaskModalProps> = ({ task, w
                       </div>
                     )}
                   </div>
-
-                  {/* Selected Members Display */}
-                  {assignedToList.length > 0 && (
-                    <div className="border-t border-gray-100 px-4 py-3">
-                      <p className="text-xs font-medium text-gray-600 mb-2">Selected ({assignedToList.length}):</p>
-                      <div className="flex flex-wrap gap-1">
-                        {assignedToList.map(memberId => {
-                          const member = members.find(m => m.user_id === memberId);
-                          return (
-                            <div key={memberId} className="flex items-center gap-1 px-2 py-1 bg-blue-50 rounded-full text-xs">
-                              <div className="w-4 h-4 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 text-white text-xs flex items-center justify-center">
-                                {member?.full_name?.[0]?.toUpperCase() || '?'}
-                              </div>
-                              <span className="text-blue-700 font-medium">{member?.full_name}</span>
-                              <button
-                                type="button"
-                                onClick={() => setAssignedToList(prev => prev.filter(id => id !== memberId))}
-                                aria-label={`Remove ${member?.full_name}`}
-                                className="ml-1 text-gray-400 hover:text-red-500 font-bold"
-                              >
-                                ×
-                              </button>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
                 </div>
               )}
 
