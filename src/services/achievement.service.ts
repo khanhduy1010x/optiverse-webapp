@@ -88,7 +88,7 @@ class AchievementService {
           title: data.title,
           description: data.description,
           icon_url: data.icon_url || '',
-          rules: data.rules,
+          rules: Array.isArray(data.rules) ? data.rules : [],
           logic_operator: data.logic_operator,
           reward: data.reward,
         };
@@ -130,7 +130,7 @@ class AchievementService {
           title: data.title,
           description: data.description,
           icon_url: data.icon_url,
-          rules: data.rules,
+          rules: Array.isArray(data.rules) ? data.rules : [],
           logic_operator: data.logic_operator,
           reward: data.reward,
         };
