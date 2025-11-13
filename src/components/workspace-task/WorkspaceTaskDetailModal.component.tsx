@@ -281,7 +281,10 @@ const WorkspaceTaskDetailModal: React.FC<WorkspaceTaskDetailModalProps> = ({
         <WorkspaceEditTaskModal
           task={task}
           workspaceId={workspaceId}
-          onClose={() => setIsEditModalOpen(false)}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            onClose(); // Close the detail modal as well
+          }}
         />,
         document.body
       )}

@@ -996,7 +996,10 @@ const TaskPage: React.FC = () => {
       {/* Task Limit Exceeded Modal */}
       <TaskLimitExceededModal
         isOpen={showTaskLimitModal}
-        onClose={() => setShowTaskLimitModal(false)}
+        onClose={() => {
+          setShowTaskLimitModal(false);
+          setShowCreateTaskForm(false);
+        }}
         error={taskLimitError}
       />
 

@@ -9,6 +9,8 @@ import { WorkspaceDetailDto, UserDetailDto } from '../../types/workspace/respons
 import workspaceService from '../../services/workspace.service';
 import { WorkspaceCalendarDatePicker } from './WorkspaceCalendarDatePicker.component';
 import { WorkspaceTimePickerDropdown } from './WorkspaceTimePickerDropdown.component';
+import WorkspaceTaskLimitExceededModal from './WorkspaceTaskLimitExceededModal.component';
+import WorkspaceTaskLimitMemberModal from './WorkspaceTaskLimitMemberModal.component';
 
 interface WorkspaceCreateTaskModalProps {
   workspaceId: string;
@@ -18,6 +20,7 @@ interface WorkspaceCreateTaskModalProps {
 const WorkspaceCreateTaskModal: React.FC<WorkspaceCreateTaskModalProps> = ({ workspaceId, onClose }) => {
   const { t } = useTranslation('workspace-task');
   const dispatch = useDispatch<AppDispatch>();
+  const currentUser = useSelector((state: RootState) => state.auth.user);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [assignedTo, setAssignedTo] = useState<string>('');
@@ -31,6 +34,18 @@ const WorkspaceCreateTaskModal: React.FC<WorkspaceCreateTaskModalProps> = ({ wor
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
   const [showAssigneeDropdown, setShowAssigneeDropdown] = useState(false);
   const dateButtonRef = useRef<HTMLButtonElement>(null);
+  
+  // State for upgrade modals
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showMemberModal, setShowMemberModal] = useState(false);
+  const [upgradeModalData, setUpgradeModalData] = useState<{
+    workspaceName?: string;
+    ownerName?: string;
+    ownerEmail?: string;
+    isOwner?: boolean;
+    errorDetails?: any;
+    upgradeInfo?: any;
+  }>({});
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -144,17 +159,109 @@ const WorkspaceCreateTaskModal: React.FC<WorkspaceCreateTaskModalProps> = ({ wor
       setError(null);
       onClose();
     } catch (err: any) {
-      console.error('[Modal] Failed to create task - Error:', err);
-      console.error('[Modal] Error response:', err?.response?.data);
-      const errorMessage = err?.response?.data?.message || err?.message || 'Failed to create task. Please try again.';
-      setError(errorMessage);
+      console.error('[Modal] Failed to create task - Full Error:', err);
+      console.error('[Modal] Error message:', err?.message);
+      
+      // Redux thunk rejectWithValue returns error in err directly (not in err.response.data)
+      const errorData = err || {};
+      const errorMessage = errorData?.message || 'Failed to create task. Please try again.';
+      const errorCode = errorData?.error;
+      
+      // Check if error code indicates workspace task limit
+      const isLimitError = errorCode === 'WORKSPACE_TASK_LIMIT_EXCEEDED';
+      
+      console.log('[Modal] 🔍 Parsed error data:', {
+        errorData: JSON.stringify(errorData, null, 2),
+        errorMessage,
+        errorCode,
+        isLimitError
+      });
+      
+      if (isLimitError) {
+        // Show upgrade modal instead of error message
+        console.log('[Modal] ✅ Workspace task limit exceeded, showing upgrade modal');
+        console.log('[Modal] 📦 Error details:', errorData?.details);
+        console.log('[Modal] 🎯 Upgrade info:', errorData?.upgrade);
+        
+        // Clear any previous error messages
+        setError(null);
+        
+        // Get workspace info and check if current user is owner
+        let workspaceName = '';
+        let ownerName = '';
+        let ownerEmail = '';
+        let isOwner = false;
+        
+        try {
+          const workspaceDetail = await workspaceService.getWorkspaceById(workspaceId);
+          workspaceName = workspaceDetail?.name || '';
+          const ownerId = workspaceDetail?.owner_id;
+          
+          // Check if current user is the owner
+          isOwner = currentUser?._id === ownerId;
+          
+          // Get owner info from members
+          if (ownerId && workspaceDetail?.members?.active) {
+            const ownerMember = workspaceDetail.members.active.find(m => m.user_id === ownerId);
+            if (ownerMember) {
+              ownerName = ownerMember.full_name || ownerMember.email || '';
+              ownerEmail = ownerMember.email || '';
+            }
+          }
+        } catch (wsErr) {
+          console.warn('[Modal] Failed to fetch workspace details:', wsErr);
+        }
+        
+        const modalData = {
+          workspaceName,
+          ownerName,
+          ownerEmail,
+          isOwner,
+          errorDetails: errorData?.details || {
+            membershipLevel: 'BASIC',
+            currentLimit: 20,
+            tasksCreatedToday: 20,
+          },
+          upgradeInfo: errorData?.upgrade || {
+            suggestion: 'Upgrade to PLUS to increase your daily workspace task limit from 20 to 50 tasks.',
+            currentLevel: 'BASIC',
+            suggestedLevel: 'PLUS',
+            suggestedLimit: 50,
+            limitIncrease: 30,
+          },
+        };
+        
+        console.log('[Modal] 📤 Setting modal data:', JSON.stringify(modalData, null, 2));
+        console.log('[Modal] 🔑 Is owner:', isOwner);
+        setUpgradeModalData(modalData);
+        console.log('[Modal] 🚀 Opening upgrade modal - showUpgradeModal will be true');
+        
+        // Show appropriate modal based on whether user is owner
+        if (isOwner) {
+          setShowUpgradeModal(true);
+        } else {
+          setShowMemberModal(true);
+        }
+        
+        console.log('[Modal] ✅ Modal state updated');
+      } else {
+        // Show regular error message for other errors
+        console.log('[Modal] ⚠️ Regular error, showing error message');
+        setError(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
   };
 
+  // Debug log for render
+  console.log('[Modal Render] showUpgradeModal:', showUpgradeModal);
+  console.log('[Modal Render] showMemberModal:', showMemberModal);
+  console.log('[Modal Render] upgradeModalData:', upgradeModalData);
+  console.log('[Modal Render] currentUser:', currentUser);
+
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 overflow-y-auto">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-[500px] my-auto">
         {/* Header */}
         <div className="relative p-6 border-b border-gray-100 flex items-start justify-between">
@@ -185,8 +292,8 @@ const WorkspaceCreateTaskModal: React.FC<WorkspaceCreateTaskModalProps> = ({ wor
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {/* Error Message */}
-          {error && (
+          {/* Error Message - Only show if not showing upgrade modal */}
+          {error && !showUpgradeModal && (
             <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex gap-2">
               <span className="text-red-600 font-medium text-sm">⚠️</span>
               <span className="text-red-600 text-sm">{error}</span>
@@ -243,27 +350,20 @@ const WorkspaceCreateTaskModal: React.FC<WorkspaceCreateTaskModalProps> = ({ wor
                       members.map((member) => {
                         const isSelected = assignedToList.includes(member.user_id);
                         return (
-                          <label
+                          <button
                             key={member.user_id}
+                            type="button"
+                            onClick={() => {
+                              setAssignedToList(prev =>
+                                prev.includes(member.user_id)
+                                  ? prev.filter(id => id !== member.user_id)
+                                  : [...prev, member.user_id]
+                              );
+                            }}
                             className={`w-full text-left px-4 py-3 text-sm flex items-center gap-3 cursor-pointer transition-all duration-150 ${
                               isSelected ? 'bg-blue-50 border-l-4 border-l-blue-500' : 'hover:bg-gray-50 border-l-4 border-l-transparent'
                             }`}
                           >
-                            {/* Checkbox */}
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              onChange={() => {
-                                setAssignedToList(prev =>
-                                  prev.includes(member.user_id)
-                                    ? prev.filter(id => id !== member.user_id)
-                                    : [...prev, member.user_id]
-                                );
-                              }}
-                              aria-label={`Assign to ${member.full_name}`}
-                              className="w-4 h-4 rounded border-gray-300 cursor-pointer accent-blue-600"
-                            />
-
                             {/* Avatar */}
                             <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-semibold shrink-0 overflow-hidden">
                               {member.avatar_url ? (
@@ -280,7 +380,14 @@ const WorkspaceCreateTaskModal: React.FC<WorkspaceCreateTaskModalProps> = ({ wor
                               </p>
                               <p className="text-xs text-gray-500 truncate">{member.email}</p>
                             </div>
-                          </label>
+
+                            {/* Selected indicator */}
+                            {isSelected && (
+                              <svg className="w-5 h-5 text-blue-600 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            )}
+                          </button>
                         );
                       })
                     ) : (
@@ -289,34 +396,6 @@ const WorkspaceCreateTaskModal: React.FC<WorkspaceCreateTaskModalProps> = ({ wor
                       </div>
                     )}
                   </div>
-
-                  {/* Selected Members Display */}
-                  {assignedToList.length > 0 && (
-                    <div className="border-t-2 border-gray-100 px-4 py-3 bg-gray-50">
-                      <p className="text-xs font-semibold text-gray-700 mb-2.5 uppercase tracking-wide">Selected ({assignedToList.length})</p>
-                      <div className="flex flex-wrap gap-2">
-                        {assignedToList.map(memberId => {
-                          const member = members.find(m => m.user_id === memberId);
-                          return (
-                            <div key={memberId} className="flex items-center gap-1.5 px-2.5 py-1.5 bg-blue-100 rounded-full text-xs border border-blue-300">
-                              <div className="w-4 h-4 rounded-full bg-blue-500 text-white text-xs flex items-center justify-center">
-                                {member?.full_name?.[0]?.toUpperCase() || '?'}
-                              </div>
-                              <span className="text-blue-700 font-medium">{member?.full_name}</span>
-                              <button
-                                type="button"
-                                onClick={() => setAssignedToList(prev => prev.filter(id => id !== memberId))}
-                                aria-label={`Remove ${member?.full_name}`}
-                                className="ml-0.5 text-blue-400 hover:text-blue-600 font-bold hover:bg-blue-200 rounded-full px-1"
-                              >
-                                ×
-                              </button>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
                 </div>
               )}
 
@@ -509,6 +588,58 @@ const WorkspaceCreateTaskModal: React.FC<WorkspaceCreateTaskModalProps> = ({ wor
           </div>
         </form>
       </div>
+      
+      {/* Workspace Task Limit Exceeded - Owner Modal */}
+      {showUpgradeModal && (
+        <>
+          {console.log('[Modal Render] 🎭 Rendering WorkspaceTaskLimitExceededModal (Owner) with data:', {
+            workspaceName: upgradeModalData.workspaceName,
+            ownerName: upgradeModalData.ownerName,
+            errorDetails: upgradeModalData.errorDetails,
+            upgradeInfo: upgradeModalData.upgradeInfo,
+          })}
+          <WorkspaceTaskLimitExceededModal
+            isOpen={showUpgradeModal}
+            onClose={() => {
+              console.log('[Modal] Closing upgrade modal and create modal');
+              setShowUpgradeModal(false);
+              setUpgradeModalData({});
+              onClose(); // Close the create modal as well
+            }}
+            workspaceName={upgradeModalData.workspaceName}
+            ownerName={upgradeModalData.ownerName}
+            errorDetails={upgradeModalData.errorDetails}
+            upgradeInfo={upgradeModalData.upgradeInfo}
+          />
+        </>
+      )}
+      
+      {/* Workspace Task Limit Exceeded - Member Modal */}
+      {showMemberModal && (
+        <>
+          {console.log('[Modal Render] 🎭 Rendering WorkspaceTaskLimitMemberModal (Member) with data:', {
+            workspaceName: upgradeModalData.workspaceName,
+            ownerName: upgradeModalData.ownerName,
+            ownerEmail: upgradeModalData.ownerEmail,
+            errorDetails: upgradeModalData.errorDetails,
+            upgradeInfo: upgradeModalData.upgradeInfo,
+          })}
+          <WorkspaceTaskLimitMemberModal
+            isOpen={showMemberModal}
+            onClose={() => {
+              console.log('[Modal] Closing member modal and create modal');
+              setShowMemberModal(false);
+              setUpgradeModalData({});
+              onClose(); // Close the create modal as well
+            }}
+            workspaceName={upgradeModalData.workspaceName}
+            ownerName={upgradeModalData.ownerName}
+            ownerEmail={upgradeModalData.ownerEmail}
+            errorDetails={upgradeModalData.errorDetails}
+            upgradeInfo={upgradeModalData.upgradeInfo}
+          />
+        </>
+      )}
     </div>
   );
 };

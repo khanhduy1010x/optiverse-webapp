@@ -146,6 +146,24 @@
         "assign_task": "Có thể gán công việc",
         "transfer_ownership": "Có thể chuyển quyền sở hữu"
       }
-    }
+    },
+    "workspaceTaskLimitReached": "Đã đạt giới hạn công việc workspace",
+    "workspaceTaskLimitExceededDesc": "Workspace này đã đạt giới hạn tạo công việc hàng ngày",
+    "currentPlan": "Gói hiện tại",
+    "dailyLimit": "Giới hạn công việc hàng ngày",
+    "tasksCreatedToday": "Công việc đã tạo hôm nay",
+    "tasks": "công việc",
+    "resetsAt": "Đặt lại vào lúc",
+    "note": "Lưu ý",
+    "workspaceOwnerNeedsUpgrade": "Chủ sở hữu workspace cần nâng cấp gói thành viên để tăng giới hạn công việc cho workspace này",
+    "workspaceTaskLimitInfo": "Giới hạn công việc được dựa trên gói thành viên của chủ sở hữu workspace",
+    "upgradeTo": "Nâng cấp lên",
+    "newLimit": "Giới hạn mới",
+    "tasksPerDay": "công việc mỗi ngày",
+    "unlimited": "Không giới hạn",
+    "moreTasksPerDay": "công việc mỗi ngày nữa",
+    "unlimitedTasks": "Không giới hạn công việc",
+    "viewMembershipPlans": "Xem các gói thành viên",
+    "close": "Đóng"
   }
 }

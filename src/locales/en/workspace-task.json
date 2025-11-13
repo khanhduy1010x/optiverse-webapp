@@ -146,6 +146,24 @@
         "assign_task": "Can assign tasks",
         "transfer_ownership": "Can transfer ownership"
       }
-    }
+    },
+    "workspaceTaskLimitReached": "Workspace Task Limit Reached",
+    "workspaceTaskLimitExceededDesc": "This workspace has reached its daily task creation limit",
+    "currentPlan": "Current Plan",
+    "dailyLimit": "Daily Task Limit",
+    "tasksCreatedToday": "Tasks Created Today",
+    "tasks": "tasks",
+    "resetsAt": "Resets at",
+    "note": "Note",
+    "workspaceOwnerNeedsUpgrade": "The workspace owner needs to upgrade their membership to increase the task limit for this workspace",
+    "workspaceTaskLimitInfo": "The task limit is based on the workspace owner's membership plan",
+    "upgradeTo": "Upgrade to",
+    "newLimit": "New Limit",
+    "tasksPerDay": "tasks per day",
+    "unlimited": "Unlimited",
+    "moreTasksPerDay": "more tasks per day",
+    "unlimitedTasks": "Unlimited tasks",
+    "viewMembershipPlans": "View Membership Plans",
+    "close": "Close"
   }
 }

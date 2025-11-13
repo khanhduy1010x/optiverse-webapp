@@ -64,9 +64,21 @@ export const createTask = createAsyncThunk(
       const response = await workspaceTaskService.createTask(workspaceId, data);
       return response;
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to create task';
+      // Return full error data including details and upgrade info
+      const errorData = error?.response?.data || {};
+      const errorMessage = errorData?.message || error?.message || 'Failed to create task';
+      
       console.error('[createTask] Error:', errorMessage, error);
-      return rejectWithValue(errorMessage);
+      console.error('[createTask] Full error data:', errorData);
+      
+      // Return the complete error object so modal can access details
+      return rejectWithValue({
+        message: errorMessage,
+        error: errorData?.error,
+        details: errorData?.details,
+        upgrade: errorData?.upgrade,
+        originalError: error,
+      });
     }
   },
 );
