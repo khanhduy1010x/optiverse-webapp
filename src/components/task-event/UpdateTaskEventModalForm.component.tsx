@@ -37,6 +37,8 @@ export const UpdateTaskEventModalForm: React.FC<UpdateTaskEventModalFormProps> =
   const [titleError, setTitleError] = useState('');
   const [descError, setDescError] = useState('');
   const [dateTimeError, setDateTimeError] = useState('');
+  const [tempStartTimeCleared, setTempStartTimeCleared] = useState(false);
+  const [tempEndTimeCleared, setTempEndTimeCleared] = useState(false);
   const userId = useAppSelector(state => state.auth.user?._id);
 
   const { taskEvents, refreshTaskEvents } = useTaskEventList();
@@ -257,6 +259,8 @@ export const UpdateTaskEventModalForm: React.FC<UpdateTaskEventModalFormProps> =
                     const currentTime = formData.start_time ? new Date(formData.start_time) : new Date();
                     date.setHours(currentTime.getHours(), currentTime.getMinutes());
                     handleInputChange('start_time', date);
+                    setTempStartTimeCleared(false); // Reset flag when date is selected
+                    setTempEndTimeCleared(false); // Also reset end time flag
                     setShowDatePicker(false);
                   }}
                   isOpen={showDatePicker}
@@ -270,13 +274,17 @@ export const UpdateTaskEventModalForm: React.FC<UpdateTaskEventModalFormProps> =
               {/* Start Time */}
               <div className="flex-1">
                 <TimePickerInput
-                  selectedTime={formData.start_time ? formatTimeToHHmm(formData.start_time) : ''}
+                  selectedTime={tempStartTimeCleared ? '' : (formData.start_time ? formatTimeToHHmm(formData.start_time) : '')}
                   onTimeSelect={(time: string) => {
                     if (!time) {
-                      // Allow clearing the time
-                      handleInputChange('start_time', '');
+                      // When time is cleared, set flag to hide time display
+                      setTempStartTimeCleared(true);
                       return;
                     }
+                    
+                    // Reset the flag when user enters new time
+                    setTempStartTimeCleared(false);
+                    
                     const currentDate = formData.start_time ? new Date(formData.start_time) : new Date();
                     const [hours, minutes] = time.split(':').map(Number);
                     currentDate.setHours(hours, minutes);
@@ -312,13 +320,17 @@ export const UpdateTaskEventModalForm: React.FC<UpdateTaskEventModalFormProps> =
               {/* End Time */}
               <div className="flex-1">
                 <TimePickerInput
-                  selectedTime={formData.end_time ? formatTimeToHHmm(formData.end_time) : ''}
+                  selectedTime={tempEndTimeCleared ? '' : (formData.end_time ? formatTimeToHHmm(formData.end_time) : '')}
                   onTimeSelect={(time: string) => {
                     if (!time) {
-                      // Allow clearing the time
-                      handleInputChange('end_time', '');
+                      // When time is cleared, set flag to hide time display
+                      setTempEndTimeCleared(true);
                       return;
                     }
+                    
+                    // Reset the flag when user enters new time
+                    setTempEndTimeCleared(false);
+                    
                     const currentDate = formData.end_time ? new Date(formData.end_time) : new Date();
                     const [hours, minutes] = time.split(':').map(Number);
                     currentDate.setHours(hours, minutes);

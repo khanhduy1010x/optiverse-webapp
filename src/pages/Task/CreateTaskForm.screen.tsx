@@ -36,6 +36,7 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showDeadlinePicker, setShowDeadlinePicker] = useState(false);
     const [showAllTags, setShowAllTags] = useState(false);
+    const [tempTimeCleared, setTempTimeCleared] = useState(false);
 
     const { t } = useAppTranslate('task');
     
@@ -110,14 +111,11 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                     return false;
                 }
                 
-                // Check if deadline is in the past (only compare dates, not time)
+                // Check if deadline is in the past
                 const now = new Date();
-                const endDateOnly = new Date(endDate);
-                endDateOnly.setHours(0, 0, 0, 0);
-                const todayOnly = new Date(now);
-                todayOnly.setHours(0, 0, 0, 0);
                 
-                if (endDateOnly.getTime() < todayOnly.getTime()) {
+                // First check if the date-time is completely in the past
+                if (endDate < now) {
                     newErrors.time = t('create_end_in_past') || 'Deadline cannot be in the past. Please select a future date and time.';
                     setErrors(newErrors);
                     return false;
@@ -252,20 +250,16 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                 {/* Set Deadline Toggle Button */}
                 <TaskDatePicker
                   selectedDate={end_time instanceof Date ? end_time : undefined}
-                  selectedTime={end_time instanceof Date ? end_time : undefined}
+                  selectedTime={tempTimeCleared ? undefined : (end_time instanceof Date ? end_time : undefined)}
                   onDateSelect={(date) => {
                     const currentTime = end_time ? new Date(end_time as any) : new Date();
                     date.setHours(currentTime.getHours(), currentTime.getMinutes(), 0, 0);
                     const newDateTime = new Date(date);
                     
-                    // Check if date is in the past (only compare dates, not time)
+                    // Check if the complete date-time is in the past
                     const now = new Date();
-                    const newDateOnly = new Date(newDateTime);
-                    newDateOnly.setHours(0, 0, 0, 0);
-                    const todayOnly = new Date(now);
-                    todayOnly.setHours(0, 0, 0, 0);
                     
-                    if (newDateOnly.getTime() < todayOnly.getTime()) {
+                    if (newDateTime < now) {
                       setErrors(prev => ({
                         ...prev,
                         time: t('create_end_in_past') || 'Deadline cannot be in the past. Please select a future date and time.'
@@ -274,6 +268,7 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                     }
                     
                     setEndTime(newDateTime);
+                    setTempTimeCleared(false); // Reset flag when date is selected
                     setErrors(prev => {
                       const newErrors = { ...prev };
                       delete newErrors.time;
@@ -282,42 +277,28 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                   }}
                   onTimeSelect={(time: string) => {
                     if (!time) {
-                      // Allow clearing the time
-                      setEndTime(undefined);
+                      // When time is cleared, set flag to hide time display
+                      setTempTimeCleared(true);
                       return;
                     }
+                    
+                    // Reset the flag when user enters new time
+                    setTempTimeCleared(false);
+                    
                     const [hours, minutes] = time.split(':').map(Number);
                     const baseDate = end_time ? new Date(end_time as any) : new Date();
                     baseDate.setHours(hours, minutes, 0, 0);
                     const newDateTime = new Date(baseDate);
                     
-                    // Check if time is in the past (only for past dates, allow today with future time)
+                    // Check if the complete date-time is in the past
                     const now = new Date();
-                    const newDateOnly = new Date(newDateTime);
-                    newDateOnly.setHours(0, 0, 0, 0);
-                    const todayOnly = new Date(now);
-                    todayOnly.setHours(0, 0, 0, 0);
                     
-                    // If date is past, reject entirely
-                    if (newDateOnly.getTime() < todayOnly.getTime()) {
+                    if (newDateTime < now) {
                       setErrors(prev => ({
                         ...prev,
                         time: t('create_end_in_past') || 'Deadline cannot be in the past. Please select a future date and time.'
                       }));
                       return;
-                    }
-                    
-                    // If date is today, check that time is greater than current time
-                    if (newDateOnly.getTime() === todayOnly.getTime()) {
-                      if (newDateTime <= now) {
-                        // Keep the date but show error about time
-                        setEndTime(newDateTime);
-                        setErrors(prev => ({
-                          ...prev,
-                          time: 'Time must be greater than current time for today.'
-                        }));
-                        return;
-                      }
                     }
                     
                     setEndTime(newDateTime);
@@ -330,7 +311,14 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({
                   onRemove={() => setEndTime(undefined)}
                   label={t('set_deadline')}
                   isOpen={showDeadlinePicker}
-                  onToggle={setShowDeadlinePicker}
+                  onToggle={(isOpen) => {
+                    setShowDeadlinePicker(isOpen);
+                    // When opening the deadline picker, set current date/time if not already set
+                    if (isOpen && !end_time) {
+                      setEndTime(new Date());
+                      setTempTimeCleared(false); // Reset flag when opening
+                    }
+                  }}
                 />
                 {errors.time && <div className="text-red-500 text-xs mt-1">{errors.time}</div>}
 

@@ -75,6 +75,7 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
     return !!task.end_time;
   });
   const [showAllTags, setShowAllTags] = useState(false);
+  const [tempTimeCleared, setTempTimeCleared] = useState(false);
   
   const { t } = useAppTranslate('task');
   
@@ -270,19 +271,23 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
             {/* Set Deadline Toggle Button */}
             <DeadlinePicker
               selectedDate={end_time}
-              selectedTime={end_time}
+              selectedTime={tempTimeCleared ? undefined : end_time}
               onDateSelect={(date) => {
                 const currentTime = end_time ? new Date(end_time as any) : new Date();
                 date.setHours(currentTime.getHours(), currentTime.getMinutes(), 0, 0);
                 setEndTime(new Date(date));
+                setTempTimeCleared(false); // Reset flag when date is selected
               }}
               onTimeSelect={(time: string) => {
                 if (!time) {
-                  // Allow clearing the time
-                  setEndTime(undefined);
-                  setStatus('pending');
+                  // When time is cleared, set flag to hide time display
+                  setTempTimeCleared(true);
                   return;
                 }
+                
+                // Reset the flag when user enters new time
+                setTempTimeCleared(false);
+                
                 const [hours, minutes] = time.split(':').map(Number);
                 const baseDate = end_time ? new Date(end_time as any) : new Date();
                 baseDate.setHours(hours, minutes, 0, 0);
@@ -326,12 +331,20 @@ const EditTaskForm: React.FC<EditTaskFormProps> = ({
               }}
               onRemove={() => {
                 setEndTime(undefined);
+                setTempTimeCleared(false); // Reset flag when removed
                 // Change status back to pending when deadline is removed
                 setStatus('pending');
               }}
               label={t('set_deadline')}
               isOpen={showDeadlinePicker}
-              onToggle={setShowDeadlinePicker}
+              onToggle={(isOpen) => {
+                setShowDeadlinePicker(isOpen);
+                // When opening the deadline picker, set current date/time if not already set
+                if (isOpen && !end_time) {
+                  setEndTime(new Date());
+                  setTempTimeCleared(false); // Reset flag when opening
+                }
+              }}
             />
             {errors.time && <div className="text-red-500 text-xs mt-1">{errors.time}</div>}
             {/* Description */}

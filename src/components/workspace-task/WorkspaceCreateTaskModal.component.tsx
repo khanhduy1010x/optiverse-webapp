@@ -28,11 +28,14 @@ const WorkspaceCreateTaskModal: React.FC<WorkspaceCreateTaskModalProps> = ({ wor
   const [endTime, setEndTime] = useState<Date | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [timeError, setTimeError] = useState<string | null>(null);
   const [members, setMembers] = useState<UserDetailDto[]>([]);
   const [showDeadlineFields, setShowDeadlineFields] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
   const [showAssigneeDropdown, setShowAssigneeDropdown] = useState(false);
+  const [tempTimeCleared, setTempTimeCleared] = useState(false);
+  const [inputTimeValue, setInputTimeValue] = useState('');
   const dateButtonRef = useRef<HTMLButtonElement>(null);
   
   // State for upgrade modals
@@ -84,19 +87,16 @@ const WorkspaceCreateTaskModal: React.FC<WorkspaceCreateTaskModalProps> = ({ wor
     });
   };
 
-  // Parse time string to update date
+  // Parse time string (HH:mm) to get hours and minutes
   const parseTimeString = (timeString: string) => {
-    const [time, period] = timeString.split(' ');
-    const [hours, minutes] = time.split(':').map(Number);
-    let hour24 = hours;
+    const [hours, minutes] = timeString.split(':').map(Number);
+    return { hours, minutes };
+  };
 
-    if (period === 'PM' && hours !== 12) {
-      hour24 += 12;
-    } else if (period === 'AM' && hours === 12) {
-      hour24 = 0;
-    }
-
-    return { hours: hour24, minutes };
+  // Validate time format
+  const validateTimeInput = (value: string): boolean => {
+    const regex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    return regex.test(value);
   };
 
   // Check if date/time is in the past
@@ -409,7 +409,15 @@ const WorkspaceCreateTaskModal: React.FC<WorkspaceCreateTaskModalProps> = ({ wor
           <div>
             <button
               type="button"
-              onClick={() => setShowDeadlineFields(!showDeadlineFields)}
+              onClick={() => {
+                const newState = !showDeadlineFields;
+                setShowDeadlineFields(newState);
+                // When opening deadline fields, set current date/time if not already set
+                if (newState && !endTime) {
+                  setEndTime(new Date());
+                  setTempTimeCleared(false);
+                }
+              }}
               className="flex items-center gap-2 px-0 py-0 text-sm text-blue-600 hover:text-blue-700 transition-colors font-medium"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -465,6 +473,7 @@ const WorkspaceCreateTaskModal: React.FC<WorkspaceCreateTaskModalProps> = ({ wor
                         }
                         
                         setEndTime(newDateTime);
+                        setTempTimeCleared(false); // Reset flag when date is selected
                         setShowEndDatePicker(false);
                         setError(null);
                       }}
@@ -476,58 +485,127 @@ const WorkspaceCreateTaskModal: React.FC<WorkspaceCreateTaskModalProps> = ({ wor
 
                 {/* End Time */}
                 <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setShowEndTimePicker(!showEndTimePicker)}
-                    className="flex items-center gap-2 w-full p-2 text-left border border-gray-200 rounded-md hover:bg-gray-50 transition-colors text-sm"
-                    aria-label="Select deadline time"
-                  >
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <input
+                    type="text"
+                    value={inputTimeValue || (tempTimeCleared ? '' : (endTime ? formatTime(endTime) : ''))}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setInputTimeValue(value);
+                      setTimeError(null); // Clear error when typing
+                      
+                      // Allow clearing
+                      if (!value) {
+                        setTempTimeCleared(true);
+                        setShowEndTimePicker(false);
+                        setTimeError(null);
+                        return;
+                      }
+                      
+                      // Validate and update if valid format
+                      if (validateTimeInput(value)) {
+                        setTempTimeCleared(false);
+                        const { hours, minutes } = parseTimeString(value);
+                        const baseDate = endTime || new Date();
+                        baseDate.setHours(hours, minutes, 0, 0);
+                        const newDateTime = new Date(baseDate);
+                        
+                        // Check if datetime is in the past
+                        if (isDateTimePast(newDateTime)) {
+                          setTimeError('Deadline cannot be in the past. Please select a future date and time.');
+                          return;
+                        }
+                        
+                        setEndTime(newDateTime);
+                        setTimeError(null);
+                      }
+                    }}
+                    onFocus={() => {
+                      setShowEndTimePicker(true);
+                      // Only clear if showing formatted time (not currently typing)
+                      if (!inputTimeValue) {
+                        setInputTimeValue('');
+                      }
+                    }}
+                    onBlur={() => {
+                      // Clear input value on blur to show formatted time
+                      setTimeout(() => {
+                        setInputTimeValue('');
+                        setShowEndTimePicker(false);
+                        setTimeError(null); // Clear error when blur
+                      }, 200);
+                    }}
+                    placeholder="HH:mm"
+                    className={`w-full px-3 py-2 pr-9 text-sm border rounded-md font-mono placeholder-gray-400 focus:outline-none focus:ring-2 transition-all ${
+                      timeError
+                        ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                        : 'border-gray-200 focus:ring-blue-500 focus:border-blue-500'
+                    }`}
+                    maxLength={5}
+                    aria-label="Enter deadline time"
+                  />
+                  {/* Clock Icon */}
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span className="text-gray-700">
-                      {endTime ? formatTime(endTime) : 'Select time'}
-                    </span>
-                  </button>
+                  </div>
+                  
+                  {/* Time Error Message */}
+                  {timeError && (
+                    <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+                      <svg className="w-3 h-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      </svg>
+                      {timeError}
+                    </p>
+                  )}
+                  
+                  {/* Dropdown Time Picker */}
                   {showEndTimePicker && (
                     <div className="absolute top-full left-0 mt-1 z-50">
                       <WorkspaceTimePickerDropdown
-                        selectedTime={endTime ? formatTime(endTime) : ''}
+                        selectedTime={tempTimeCleared ? '' : (endTime ? formatTime(endTime) : '')}
+                        searchQuery={inputTimeValue}
                         onTimeSelected={(time: string) => {
-                          const { hours, minutes } = parseTimeString(time);
-                          const baseDate = endTime || new Date();
-                          baseDate.setHours(hours, minutes, 0, 0);
-                          const newDateTime = new Date(baseDate);
-                          
-                          // Show error if time is in the past
-                          if (isDateTimePast(newDateTime)) {
-                            setError('Deadline cannot be in the past. Please select a future date and time.');
+                          if (!time) {
+                            setTempTimeCleared(true);
                             setShowEndTimePicker(false);
+                            setInputTimeValue('');
                             return;
                           }
-
-                          // If selected date is today, check that time is greater than current time
-                          const today = new Date();
-                          const selectedDateOnly = new Date(newDateTime);
-                          selectedDateOnly.setHours(0, 0, 0, 0);
-                          const todayOnly = new Date(today);
-                          todayOnly.setHours(0, 0, 0, 0);
-
-                          if (selectedDateOnly.getTime() === todayOnly.getTime()) {
-                            // Same day - time must be greater than current time
-                            if (newDateTime <= today) {
-                              setError('Time must be greater than current time for today.');
-                              setShowEndTimePicker(false);
-                              return;
-                            }
+                          
+                          setTempTimeCleared(false);
+                          const [timePart] = time.split(' ');
+                          const [hours, minutes] = timePart.split(':').map(Number);
+                          const baseDate = endTime || new Date();
+                          
+                          // Handle AM/PM
+                          let hour24 = hours;
+                          if (time.includes('PM') && hours !== 12) {
+                            hour24 += 12;
+                          } else if (time.includes('AM') && hours === 12) {
+                            hour24 = 0;
+                          }
+                          
+                          baseDate.setHours(hour24, minutes, 0, 0);
+                          const newDateTime = new Date(baseDate);
+                          
+                          if (isDateTimePast(newDateTime)) {
+                            setTimeError('Deadline cannot be in the past. Please select a future date and time.');
+                            setShowEndTimePicker(false);
+                            return;
                           }
                           
                           setEndTime(newDateTime);
                           setShowEndTimePicker(false);
-                          setError(null);
+                          setInputTimeValue('');
+                          setTimeError(null);
                         }}
                         isOpen={showEndTimePicker}
-                        onClose={() => setShowEndTimePicker(false)}
+                        onClose={() => {
+                          setShowEndTimePicker(false);
+                          setInputTimeValue('');
+                        }}
                       />
                     </div>
                   )}
