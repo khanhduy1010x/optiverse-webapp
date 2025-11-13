@@ -12,6 +12,7 @@ export interface MembershipPackage {
   subscriber_count?: number;
   createdAt?: string;
   updatedAt?: string;
+  disabled?: boolean;
 }
 const CONTROLLER_PATH = 'core/membership-packages';
 

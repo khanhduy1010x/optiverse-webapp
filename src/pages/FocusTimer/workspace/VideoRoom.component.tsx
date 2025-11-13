@@ -10,6 +10,9 @@ import SpeechPanel from './SpeechPanel';
 import PendingRequestsPanel from './PendingRequestsPanel.component';
 import Icon from '../../../components/common/Icon/Icon.component';
 import ChatPanel from './ChatPanel.component';
+import { usePrompt, useBeforeUnload } from '../../../hooks/usePrompt.hook';
+import { ConfirmationModal } from '../../../components/common/ConfirmationModal.component';
+import { useAppTranslate } from '../../../hooks/useAppTranslate';
 
 interface VideoRoomProps {
     token: string;
@@ -50,9 +53,15 @@ const VideoRoom: React.FC<VideoRoomProps> = ({
     const rafRef = React.useRef<number | null>(null);
     const [livekitRoom, setLivekitRoom] = React.useState(null);
     const [micTrack, setMicTrack] = React.useState<MediaStreamTrack | null>(null);
+    const [isInVideoCall, setIsInVideoCall] = React.useState(true); // Track if user is in video call
+    const { t } = useAppTranslate();
+    
+    // Block navigation when in video call
+    const promptModalState = usePrompt(isInVideoCall, t('leave_video_call_message'));
+    useBeforeUnload(isInVideoCall, t('leave_video_call_message'));
+
     useEffect(() => {
         document.title = roomName ? `${roomName} | OptiVerse` : 'OptiVerse';
-
     }, [])
     // Handle mouse down on divider
     const handleMouseDown = React.useCallback(() => {
@@ -148,7 +157,10 @@ const VideoRoom: React.FC<VideoRoomProps> = ({
                             overflow: 'hidden',
 
                         }}
-                        onDisconnected={leaveRoom}
+                        onDisconnected={() => {
+                            setIsInVideoCall(false); // Disable prompt when call ends
+                            leaveRoom?.();
+                        }}
                     >
                         <CustomVideoConference
                             onMicrophoneStateChange={setIsMicrophoneEnabled}
@@ -239,6 +251,17 @@ const VideoRoom: React.FC<VideoRoomProps> = ({
                     />
                 </RoomContext.Provider>
             )}
+
+            {/* Custom Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={promptModalState.isOpen}
+                title={t('leave_video_call')}
+                message={promptModalState.message}
+                confirmText={t('leave_call')}
+                cancelText={t('stay')}
+                onConfirm={promptModalState.onConfirm}
+                onCancel={promptModalState.onCancel}
+            />
         </div>
     );
 };

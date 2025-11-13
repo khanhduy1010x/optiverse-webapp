@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import { RootState } from '../../../store';
@@ -6,6 +6,8 @@ import PasswordModal from '../../../components/workspace/PasswordModal';
 import MemberCard from '../../../components/workspace/MemberCard';
 import MemberPermissionModal from './MemberPermissionModal';
 import InviteMembersModal from '../../../components/workspace/InviteMembersModal';
+import TransferOwnerModal from '../../../components/workspace/TransferOwnerModal';
+import ConfirmModal from '../../../components/common/ConfirmModal';
 import ToastContainer from '../../../components/common/Toast/ToastContainer';
 import useWorkspaceManagement from '../../../hooks/workspace/useDashboard.workspace.hook';
 import { useAppTranslate } from '../../../hooks/useAppTranslate';
@@ -17,6 +19,7 @@ const DashboardWorkspacePage: React.FC = () => {
     const { workspaceId } = useParams<{ workspaceId: string }>();
 
     const currentUser = useSelector((state: RootState) => state.auth.user);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
     const {
 
@@ -50,6 +53,7 @@ const DashboardWorkspacePage: React.FC = () => {
 
 
         workspace,
+        workspaceDetail,
         loading,
         error,
         currentUserRole,
@@ -91,7 +95,12 @@ const DashboardWorkspacePage: React.FC = () => {
         handleOpenInviteMembersModal,
         handleCloseInviteMembersModal,
         handleInviteMembers,
-        loadWorkspaceData
+        loadWorkspaceData,
+        handleLeaveWorkspace,
+        handleDeleteWorkspace,
+        isTransferOwnerModalOpen,
+        setIsTransferOwnerModalOpen,
+        confirmLeaveWithNewOwner,
     } = useWorkspaceManagement();
 
 
@@ -209,6 +218,38 @@ const DashboardWorkspacePage: React.FC = () => {
                             </>
                         )}
                     </div>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={handleLeaveWorkspace}
+                            className="px-3 py-1 rounded-lg transition-colors text-sm bg-yellow-50 border border-yellow-200 hover:bg-yellow-100"
+                        >
+                            {t('dashboardWorkspace.leaveWorkspace')}
+                        </button>
+                        {ownerId === currentUser?._id && (
+                            <>
+                                <button
+                                    onClick={() => setIsDeleteModalOpen(true)}
+                                    className="px-3 py-1 rounded-lg transition-colors text-sm bg-red-50 border border-red-200 text-red-600 hover:bg-red-100"
+                                >
+                                    {t('dashboardWorkspace.deleteWorkspace')}
+                                </button>
+
+                                <ConfirmModal
+                                    isOpen={isDeleteModalOpen}
+                                    title={t('dashboardWorkspace.deleteWorkspace')}
+                                    message={t('dashboardWorkspace.prompts.confirmDelete')}
+                                    confirmText={t('dashboardWorkspace.deleteWorkspace')}
+                                    cancelText={t('dashboardWorkspace.cancel')}
+                                    onConfirm={async () => {
+                                        setIsDeleteModalOpen(false);
+                                        await handleDeleteWorkspace();
+                                    }}
+                                    onCancel={() => setIsDeleteModalOpen(false)}
+                                    type="danger"
+                                />
+                            </>
+                        )}
+                    </div>
 
                     {/* Workspace Description - Editable */}
                     <div className="flex items-start gap-3 mb-4">
@@ -315,6 +356,8 @@ const DashboardWorkspacePage: React.FC = () => {
                                                 </button>
                                             </>
                                         )}
+                                        {/* Leave / Delete workspace buttons */}
+
                                     </div>
                                 ) : (
                                     <div className="flex items-center gap-2">
@@ -702,7 +745,7 @@ const DashboardWorkspacePage: React.FC = () => {
                     isOpen={isPermissionModalOpen}
                     onClose={handleClosePermissionModal}
                     member={{
-                        user_id: selectedMember.id,
+                        user_id: selectedMember.user_id,
                         full_name: selectedMember.name,
                         email: selectedMember.email,
                         avatar_url: selectedMember.avatar,
@@ -725,6 +768,15 @@ const DashboardWorkspacePage: React.FC = () => {
                 isOpen={isInviteMembersModalOpen}
                 onClose={handleCloseInviteMembersModal}
                 onInvite={handleInviteMembers}
+            />
+
+            {/* Transfer Owner Modal - shown when owner wants to leave */}
+            <TransferOwnerModal
+                isOpen={isTransferOwnerModalOpen}
+                members={workspaceDetail?.members?.active || []}
+                currentUserId={currentUser?._id}
+                onCancel={() => setIsTransferOwnerModalOpen(false)}
+                onConfirm={(newOwnerId: string) => confirmLeaveWithNewOwner(newOwnerId)}
             />
 
             {/* Toast Container */}

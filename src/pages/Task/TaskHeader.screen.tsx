@@ -89,7 +89,7 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
 
   return (
     <>
-      <div className="mb-6">
+      <div className="mb-6 sticky top-0 bg-white z-10 pt-6 pb-4 px-6 border-b border-gray-200">
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-xl font-semibold text-gray-900">
             {t('my_tasks')}
@@ -139,7 +139,7 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
               value={searchQuery}
               onChange={e => handleSearchChange(e.target.value)}
             />
-            <button 
+            <button
               type="button"
               className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400"
               title={t('search')}
@@ -199,11 +199,10 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                       <button
                         key={tag._id}
                         onClick={() => handleFilterTagClick(tag._id)}
-                        className={`block w-full text-left px-4 py-2 text-sm rounded-md ${
-                          filterTags.includes(tag._id)
-                            ? 'bg-blue-100 text-blue-800'
-                            : 'text-gray-700 hover:bg-gray-100'
-                        }`}
+                        className={`block w-full text-left px-4 py-2 text-sm rounded-md ${filterTags.includes(tag._id)
+                          ? 'bg-blue-100 text-blue-800'
+                          : 'text-gray-700 hover:bg-gray-100'
+                          }`}
                       >
                         <span className="flex items-center">
                           <span
@@ -270,33 +269,30 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
                 <div className="space-y-2">
                   <button
                     onClick={() => handleSortChange('newest')}
-                    className={`block w-full text-left px-4 py-2 text-sm rounded-md ${
-                      sortOrder === 'newest'
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
+                    className={`block w-full text-left px-4 py-2 text-sm rounded-md ${sortOrder === 'newest'
+                      ? 'bg-blue-100 text-blue-800'
+                      : 'text-gray-700 hover:bg-gray-100'
+                      }`}
                   >
                     {t('newest_first')}
                     {sortOrder === 'newest' && <span className="ml-2">✓</span>}
                   </button>
                   <button
                     onClick={() => handleSortChange('oldest')}
-                    className={`block w-full text-left px-4 py-2 text-sm rounded-md ${
-                      sortOrder === 'oldest'
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
+                    className={`block w-full text-left px-4 py-2 text-sm rounded-md ${sortOrder === 'oldest'
+                      ? 'bg-blue-100 text-blue-800'
+                      : 'text-gray-700 hover:bg-gray-100'
+                      }`}
                   >
                     {t('oldest_first')}
                     {sortOrder === 'oldest' && <span className="ml-2">✓</span>}
                   </button>
                   <button
                     onClick={() => handleSortChange('deadline')}
-                    className={`block w-full text-left px-4 py-2 text-sm rounded-md ${
-                      sortOrder === 'deadline'
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
+                    className={`block w-full text-left px-4 py-2 text-sm rounded-md ${sortOrder === 'deadline'
+                      ? 'bg-blue-100 text-blue-800'
+                      : 'text-gray-700 hover:bg-gray-100'
+                      }`}
                   >
                     {t('deadline_soonest_first')}
                     {sortOrder === 'deadline' && (
@@ -312,11 +308,10 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
         {/* Tab Navigation - Di chuyển xuống dưới thanh tìm kiếm */}
         <div className="flex mb-4 border-b border-gray-200">
           <button
-            className={`px-4 py-2 font-medium text-sm mr-2 ${
-              activeTab === 'pending'
-                ? 'text-blue-600 border-b-2 border-blue-500'
-                : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
+            className={`px-4 py-2 font-medium text-sm mr-2 ${activeTab === 'pending'
+              ? 'text-blue-600 border-b-2 border-blue-500'
+              : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
             onClick={() => handleTabChange('pending')}
           >
             {t('pending')}
@@ -325,11 +320,10 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
             </span>
           </button>
           <button
-            className={`px-4 py-2 font-medium text-sm mr-2 ${
-              activeTab === 'completed'
-                ? 'text-blue-600 border-b-2 border-blue-500'
-                : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
+            className={`px-4 py-2 font-medium text-sm mr-2 ${activeTab === 'completed'
+              ? 'text-blue-600 border-b-2 border-blue-500'
+              : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
             onClick={() => handleTabChange('completed')}
           >
             {t('completed')}
@@ -338,11 +332,10 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
             </span>
           </button>
           <button
-            className={`px-4 py-2 font-medium text-sm mr-2 ${
-              activeTab === 'overdue'
-                ? 'text-blue-600 border-b-2 border-blue-500'
-                : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
+            className={`px-4 py-2 font-medium text-sm mr-2 ${activeTab === 'overdue'
+              ? 'text-blue-600 border-b-2 border-blue-500'
+              : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
             onClick={() => handleTabChange('overdue')}
           >
             {t('overdue')}
@@ -351,11 +344,10 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
             </span>
           </button>
           <button
-            className={`px-4 py-2 font-medium text-sm ${
-              activeTab === 'all'
-                ? 'text-blue-600 border-b-2 border-blue-500'
-                : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
+            className={`px-4 py-2 font-medium text-sm ${activeTab === 'all'
+              ? 'text-blue-600 border-b-2 border-blue-500'
+              : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
             onClick={() => handleTabChange('all')}
           >
             {t('all')}

@@ -183,22 +183,22 @@ export const MARKETPLACE_SECTIONS: NavSection[] = [
     path: '/marketplace/my-items',
     icon: 'add_market',
   },
-  
+
   // { label: 'Purchase History', path: '/marketplace/purchase-history', icon: 'calendar' },
-  { 
-    label: 'Favorites', 
-    path: '/marketplace/favorites', 
-    icon: 'heart' 
+  {
+    label: 'Favorites',
+    path: '/marketplace/favorites',
+    icon: 'heart',
   },
-  { 
-    label: 'Purchase History', 
-    path: '/marketplace/purchase-history', 
-    icon: 'calendar' 
+  {
+    label: 'Purchase History',
+    path: '/marketplace/purchase-history',
+    icon: 'calendar',
   },
-  { 
-    label: 'Analytics', 
-    path: '/marketplace/analytics', 
-    icon: 'analytics' 
+  {
+    label: 'Analytics',
+    path: '/marketplace/analytics',
+    icon: 'analytics',
   },
   { label: 'Leaderboard', path: '/marketplace/leaderboard', icon: 'trophy' },
 ];
@@ -227,11 +227,12 @@ const PATH_MAPPING: Record<string, string> = {
   '/admin/settings': '/admin/dashboard',
   '/admin/achievements': '/admin/dashboard',
   '/marketplace': '/marketplace',
+  // Marketplace sections: map each sub-route to itself for correct active highlighting
   '/marketplace/favorites': '/marketplace/favorites',
   '/marketplace/analytics': '/marketplace/analytics',
-  '/marketplace/my-items': '/marketplace',
-  '/marketplace/purchase-history': '/marketplace',
-  '/marketplace/leaderboard': '/marketplace',
+  '/marketplace/my-items': '/marketplace/my-items',
+  '/marketplace/purchase-history': '/marketplace/purchase-history',
+  '/marketplace/leaderboard': '/marketplace/leaderboard',
   '/leaderboard': '/leaderboard',
 };
 

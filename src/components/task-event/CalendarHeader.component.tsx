@@ -71,7 +71,7 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
   };
 
   return (
-    <div className="flex flex-col md:flex-row items-center justify-between px-6 md:px-8 py-4 bg-gradient-to-r from-slate-600 via-slate-700 to-indigo-600 shadow-lg gap-4 md:gap-0 w-full max-w-full">
+    <div className="flex flex-col md:flex-row items-center justify-between px-6 md:px-8 py-4 bg-gradient-to-r from-slate-600 via-slate-700 to-indigo-600 shadow-lg gap-4 md:gap-0 w-full max-w-full ">
       <div className="flex items-center gap-3 relative w-full md:w-auto">
         {/* Today Button */}
         <button

@@ -16,5 +16,12 @@
   "op_faq_how": "How to earn OP?",
   "op_faq_how_answer": "Complete tasks • Maintain focus sessions • Build daily streaks • Achieve milestones • Complete achievements • Participate in challenges",
   "op_faq_cashout": "Can I withdraw OP to real money?",
-  "op_faq_cashout_answer": "OP is used exclusively within Optiverse for premium features, marketplace items, and exclusive content. Currently, direct cashout is not available, but OP can unlock valuable digital rewards and benefits."
+  "op_faq_cashout_answer": "OP is used exclusively within Optiverse for premium features, marketplace items, and exclusive content. Currently, direct cashout is not available, but OP can unlock valuable digital rewards and benefits.",
+  "confirm": "Confirm",
+  "cancel": "Cancel",
+  "confirmation": "Confirmation",
+  "leave_video_call": "Leave video call",
+  "leave_video_call_message": "Are you sure you want to leave the video call? The call will be disconnected.",
+  "leave_call": "Leave call",
+  "stay": "Stay"
 }

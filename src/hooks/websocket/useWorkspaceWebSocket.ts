@@ -30,6 +30,10 @@ export const useWorkspaceWebSocket = ({
   const noteUpdateListenersRef = useRef<{
     [key: string]: (data: NoteUpdatePayload) => void;
   }>({});
+  const noteUpdateDebounceRef = useRef<{
+    [key: string]: NodeJS.Timeout;
+  }>({});
+  const updateDelayMs = 300; // Match SocketService debounce
 
   const currentUser = useSelector((state: RootState) => state.auth.user);
 
@@ -97,6 +101,12 @@ export const useWorkspaceWebSocket = ({
     return () => {
       console.log('🧹 Cleaning up WebSocket connection');
 
+      // Clear all pending debounce timeouts
+      Object.values(noteUpdateDebounceRef.current).forEach(timeout => {
+        clearTimeout(timeout);
+      });
+      noteUpdateDebounceRef.current = {};
+
       if (newSocket.connected) {
         // Leave rooms before disconnecting
         newSocket.emit('leave-workspace', { workspaceId });
@@ -148,7 +158,7 @@ export const useWorkspaceWebSocket = ({
   }, [selectedNoteId, socket, canEditNote]);
 
   /**
-   * Emit note update to all users in the room
+   * Emit note update to all users in the room (with debounce)
    */
   const emitNoteUpdate = useCallback(
     (noteId: string, content: string) => {
@@ -157,18 +167,29 @@ export const useWorkspaceWebSocket = ({
         return;
       }
 
-      socket.emit('note-update', {
-        noteId,
-        workspaceId,
-        userId: currentUser?._id,
-        content,
-        updatedAt: new Date(),
-      });
+      // Clear existing debounce timeout for this note
+      if (noteUpdateDebounceRef.current[noteId]) {
+        clearTimeout(noteUpdateDebounceRef.current[noteId]);
+      }
 
-      console.log('📤 Emitted note update:', {
-        noteId,
-        userId: currentUser?._id,
-      });
+      // Set new debounce timeout (300ms like SocketService)
+      noteUpdateDebounceRef.current[noteId] = setTimeout(() => {
+        socket.emit('note-update', {
+          noteId,
+          workspaceId,
+          userId: currentUser?._id,
+          content,
+          updatedAt: new Date(),
+        });
+
+        console.log('📤 Emitted note update (debounced):', {
+          noteId,
+          userId: currentUser?._id,
+        });
+
+        // Clean up timeout reference
+        delete noteUpdateDebounceRef.current[noteId];
+      }, updateDelayMs);
     },
     [socket, workspaceId, currentUser]
   );

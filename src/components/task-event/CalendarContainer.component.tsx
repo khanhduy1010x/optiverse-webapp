@@ -28,7 +28,7 @@ export const CalendarContainer: React.FC<CalendarContainerProps> = ({
 }) => {
   return (
     <div className="flex flex-col h-full w-full bg-white">
-      <div className="flex-1 flex flex-col w-full h-full overflow-hidden">
+      <div className="flex-1 flex flex-col w-full h-full overflow-auto">
         <Calendar
           taskEvents={taskEvents}
           loading={loading}

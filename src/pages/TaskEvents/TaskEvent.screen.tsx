@@ -52,7 +52,7 @@ const TaskEvent: React.FC<TaskEventProps> = ({ onAddEvent }) => {
   }
 
   return (
-    <div className="flex flex-col h-full w-full">
+    <div className="flex flex-col h-[calc(100vh-57px)] w-full relative">
       <CalendarContainer
         taskEvents={taskEvents}
         loading={loading}

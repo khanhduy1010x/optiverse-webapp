@@ -25,7 +25,98 @@ interface WorkspaceNote {
   updatedAt: string;
 }
 
+export type WorkspaceNoteDetail = WorkspaceNote & {
+  permission?: 'view' | 'edit';
+};
+
 class WorkspaceNoteService {
+  /**
+   * Extract meaningful error message from API error response
+   */
+  // Helper method to extract error message from API response
+  extractErrorMessage(
+    error: any,
+    defaultMessage: string = 'An error occurred'
+  ): string {
+    // Try to get error message from various possible locations
+    let message = '';
+
+    if (error.response?.data?.message) {
+      message = error.response.data.message;
+    } else if (error.response?.data?.error) {
+      message = error.response.data.error;
+    } else if (error.message) {
+      message = error.message;
+    } else {
+      message = defaultMessage;
+    }
+
+    // Improve some common error messages for better UX
+    return this.improveErrorMessage(message);
+  }
+
+  /**
+   * Improve error messages to be more user-friendly
+   */
+  improveErrorMessage(message: string): string {
+    // Common error patterns and their improvements
+    const errorMappings: { [key: string]: string } = {
+      ValidationError: 'Please check your input and try again',
+      Unauthorized: 'You do not have permission to perform this action',
+      Forbidden: 'Access denied. Please check your permissions',
+      'Network Error':
+        'Connection error. Please check your internet connection',
+      timeout: 'Request timed out. Please try again',
+    };
+
+    // Check for exact matches first
+    if (errorMappings[message]) {
+      return errorMappings[message];
+    }
+
+    // Check for partial matches and improve specific validation errors
+    if (message.includes('already exists in this location')) {
+      return message; // Keep validation errors as is - they're already user-friendly
+    }
+
+    if (message.includes('cannot contain the following characters')) {
+      return message; // Keep validation errors as is
+    }
+
+    if (message.includes('must be 30 characters or less')) {
+      return message; // Keep validation errors as is
+    }
+
+    if (message.includes('cannot be a reserved Windows name')) {
+      return message; // Keep validation errors as is
+    }
+
+    if (message.includes('cannot start or end with a space or dot')) {
+      return message; // Keep validation errors as is
+    }
+
+    // For other messages, return as is
+    return message;
+  }
+  /**
+   * Check NOTE permission (NOTE_ADMIN) for current user in workspace
+   */
+  async getNoteAdminPermission(
+    workspaceId: string
+  ): Promise<{ isNoteAdmin: boolean }> {
+    try {
+      const response = await api.get<ApiResponse<{ isNoteAdmin: boolean }>>(
+        `${URLBASE}/workspace/${workspaceId}/notes/permission`
+      );
+      return response.data.data || { isNoteAdmin: false };
+    } catch (error: any) {
+      console.error('Failed to fetch note permission:', {
+        error: error.message,
+        response: error.response?.data,
+      });
+      return { isNoteAdmin: false };
+    }
+  }
   /**
    * Get all folders in workspace
    */
@@ -198,7 +289,13 @@ class WorkspaceNoteService {
         error: error.message,
         response: error.response?.data,
       });
-      throw new Error(`Could not create folder: ${error.message}`);
+
+      // Extract detailed error message from backend
+      const errorMessage = this.extractErrorMessage(
+        error,
+        'Could not create folder'
+      );
+      throw new Error(errorMessage);
     }
   }
 
@@ -224,7 +321,13 @@ class WorkspaceNoteService {
         error: error.message,
         response: error.response?.data,
       });
-      throw new Error(`Could not create note: ${error.message}`);
+
+      // Extract detailed error message from backend
+      const errorMessage = this.extractErrorMessage(
+        error,
+        'Could not create note'
+      );
+      throw new Error(errorMessage);
     }
   }
 
@@ -256,6 +359,13 @@ class WorkspaceNoteService {
         error: error.message,
         response: error.response?.data,
       });
+
+      // If note not found, it might have been deleted by another user
+      const responseMessage = error.response?.data?.message || '';
+      if (responseMessage.includes('Note not found')) {
+        throw new Error('Note not found in this workspace');
+      }
+
       throw new Error(`Could not delete note: ${error.message}`);
     }
   }
@@ -277,7 +387,13 @@ class WorkspaceNoteService {
         error: error.message,
         response: error.response?.data,
       });
-      throw new Error(`Could not rename folder: ${error.message}`);
+
+      // Extract detailed error message from backend
+      const errorMessage = this.extractErrorMessage(
+        error,
+        'Could not rename folder'
+      );
+      throw new Error(errorMessage);
     }
   }
 
@@ -298,7 +414,13 @@ class WorkspaceNoteService {
         error: error.message,
         response: error.response?.data,
       });
-      throw new Error(`Could not rename note: ${error.message}`);
+
+      // Extract detailed error message from backend
+      const errorMessage = this.extractErrorMessage(
+        error,
+        'Could not rename note'
+      );
+      throw new Error(errorMessage);
     }
   }
 
@@ -308,9 +430,9 @@ class WorkspaceNoteService {
   async getNoteDetail(
     workspaceId: string,
     noteId: string
-  ): Promise<WorkspaceNote> {
+  ): Promise<WorkspaceNoteDetail> {
     try {
-      const response = await api.get<ApiResponse<WorkspaceNote>>(
+      const response = await api.get<ApiResponse<WorkspaceNoteDetail>>(
         `${URLBASE}/workspace/${workspaceId}/notes/${noteId}`
       );
       return response.data.data;

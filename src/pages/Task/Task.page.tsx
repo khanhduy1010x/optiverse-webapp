@@ -432,15 +432,15 @@ const TaskPage: React.FC = () => {
 
       // Tính toán status tự động dựa trên deadline mới
       let finalStatus = updatedTask.status as 'pending' | 'completed' | 'overdue';
-      
+
       // Nếu status là 'overdue' hoặc 'pending', kiểm tra lại dựa trên deadline mới
       if (updatedTask.end_time && (finalStatus === 'overdue' || finalStatus === 'pending')) {
-        const endTimeDate = typeof updatedTask.end_time === 'string' 
-          ? new Date(updatedTask.end_time) 
+        const endTimeDate = typeof updatedTask.end_time === 'string'
+          ? new Date(updatedTask.end_time)
           : new Date(updatedTask.end_time);
-        
+
         const now = new Date();
-        
+
         // Nếu deadline mới chưa đến, chuyển về pending
         if (endTimeDate > now) {
           finalStatus = 'pending';
@@ -616,7 +616,7 @@ const TaskPage: React.FC = () => {
 
         {/* Main Content */}
         <View className={GROUP_CLASSNAMES.profileMainContent}>
-          <div className={selectedMenu === 'task-event' ? '' : 'p-8'}>
+          <div className={selectedMenu === 'task-event' ? '' : 'px-8 pb-8'}>
 
 
             {selectedMenu === 'task' ? (
@@ -899,14 +899,14 @@ const TaskPage: React.FC = () => {
             setShowEditTaskForm(false);
           }}
           onSave={async (updatedTask) => {
-            const result = await handleUpdateTask({ 
+            const result = await handleUpdateTask({
               title: updatedTask.title,
               description: updatedTask.description,
               status: updatedTask.status,
               priority: updatedTask.priority,
               tags: updatedTask.tags,
               start_time: undefined,
-              end_time: formatDateToISOString(updatedTask.end_time) 
+              end_time: formatDateToISOString(updatedTask.end_time)
             });
             if (result) {
               // Reset form state after successful save

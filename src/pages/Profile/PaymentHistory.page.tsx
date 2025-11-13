@@ -5,6 +5,8 @@ import paymentService from '../../services/payment.service';
 import Icon from '../../components/common/Icon/Icon.component';
 import ProfileSidebar from './ProfileSidebar.component';
 import { useNavigate } from 'react-router-dom';
+import View from '../../components/common/View.component';
+import { GROUP_CLASSNAMES } from '../../styles';
 
 interface PayagePackage {
     _id: string;
@@ -163,14 +165,14 @@ export default function PaymentHistoryPage() {
     };
 
     return (
-        <div className="w-full dark:border-gray-700 rounded-lg h-full overflow-hidden">
-            <div className='flex flex-1 overflow-hidden h-full'>
+    <View className="w-full dark:border-gray-700 rounded-lg h-full overflow-hidden">
+      <View className="flex flex-1 overflow-hidden h-full">
                 <ProfileSidebar
                     selectedMenu={selectedMenu}
                     handleNavigate={handleNavigate}
                 />
 
-                <div className="h-full w-full bg-gray-50/50 overflow-auto">
+        <View className={GROUP_CLASSNAMES.profileMainContent}>
                     <div className="w-full p-6 space-y-6">
                         {/* Header */}
                         <div>
@@ -481,8 +483,8 @@ export default function PaymentHistoryPage() {
 
 
                     </div>
-                </div>
-            </div>
-        </div>
+                </View>
+            </View>
+        </View>
     );
 }

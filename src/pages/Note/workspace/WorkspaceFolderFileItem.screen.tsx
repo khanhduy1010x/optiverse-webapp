@@ -8,6 +8,7 @@ interface WorkspaceFolderFileItemProps {
     noteCount?: number;
     isActive: boolean;
     onContextMenu: (e: React.MouseEvent) => void;
+    showContextButton?: boolean;
 }
 
 const WorkspaceFolderFileItem: React.FC<WorkspaceFolderFileItemProps> = ({
@@ -17,6 +18,7 @@ const WorkspaceFolderFileItem: React.FC<WorkspaceFolderFileItemProps> = ({
     noteCount,
     isActive,
     onContextMenu,
+    showContextButton = true,
 }) => {
     return (
         <div
@@ -51,18 +53,20 @@ const WorkspaceFolderFileItem: React.FC<WorkspaceFolderFileItemProps> = ({
                     <div className="truncate">{updatedAt}</div>
                 </div>
             </div>
-            <div className="flex items-center flex-col relative">
-                <div
-                    onClick={onContextMenu}
-                    className="px-2 py-1 hover:bg-gray-200 rounded cursor-pointer ml-2 flex-shrink-0 transition-colors duration-150"
-                >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                        <circle cx="5" cy="12" r="2" />
-                        <circle cx="12" cy="12" r="2" />
-                        <circle cx="19" cy="12" r="2" />
-                    </svg>
+            {showContextButton && (
+                <div className="flex items-center flex-col relative">
+                    <div
+                        onClick={onContextMenu}
+                        className="px-2 py-1 hover:bg-gray-200 rounded cursor-pointer ml-2 flex-shrink-0 transition-colors duration-150"
+                    >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <circle cx="5" cy="12" r="2" />
+                            <circle cx="12" cy="12" r="2" />
+                            <circle cx="19" cy="12" r="2" />
+                        </svg>
+                    </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 };

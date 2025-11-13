@@ -122,6 +122,12 @@
     "disablePassword": "Tắt mật khẩu",
     "enablePassword": "Bật mật khẩu",
     "disabled": "Tắt",
+    "leaveWorkspace": "Rời Workspace",
+    "deleteWorkspace": "Xóa Workspace",
+    "prompts": {
+      "enterNewOwnerId": "Vui lòng nhập ID người dùng của chủ sở hữu mới để chuyển quyền:",
+      "confirmDelete": "Bạn có chắc chắn muốn xóa workspace này? Hành động này không thể hoàn tác."
+    },
     "members": "Thành viên",
     "joinRequests": "Yêu cầu tham gia",
     "invitations": "Lời mời",
@@ -196,6 +202,11 @@
       "unbanAndRestoreFailed": "Không thể bỏ cấm người dùng",
       "workspaceLoadFailed": "Không thể tải thông tin workspace",
       "passwordRemoveFailed": "Không thể gỡ bỏ mật khẩu",
+      "ownerLeaveRequiresNewOwner": "Chủ workspace phải chỉ định chủ mới trước khi rời đi",
+      "leftWorkspace": "Bạn đã rời workspace",
+      "leaveWorkspaceFailed": "Rời workspace thất bại",
+      "workspaceDeleted": "Đã xóa workspace",
+      "deleteWorkspaceFailed": "Xóa workspace thất bại",
       "permissionsUpdated": "Đã cập nhật quyền hạn thành công",
       "permissionsUpdateFailed": "Không thể cập nhật quyền hạn"
     },
@@ -213,6 +224,8 @@
       "permissionsDescription": "Cấu hình những gì thành viên này có thể làm trong workspace",
       "roomAccess": "Quyền truy cập phòng",
       "roomAccessDescription": "Quản lý quyền truy cập phòng của thành viên này",
+      "noteAccess": "Quyền truy cập ghi chú",
+      "noteAccessDescription": "Quản lý quyền truy cập ghi chú của thành viên này",
       "dangerZone": "Vùng nguy hiểm",
       "removeFromWorkspace": "Xóa khỏi Workspace",
       "banUser": "Cấm người dùng",
@@ -245,7 +258,11 @@
       "roomPermission": "Quyền truy cập phòng",
       "roomPermissionDesc": "Chuyển đổi giữa quản trị viên phòng và người dùng phòng",
       "roomAdminStatus": "Hiện tại: Quản trị viên phòng",
-      "roomUserStatus": "Hiện tại: Người dùng phòng"
+      "roomUserStatus": "Hiện tại: Người dùng phòng",
+      "notePermission": "Quyền truy cập ghi chú",
+      "notePermissionDesc": "Chuyển đổi giữa quản trị viên ghi chú và người dùng ghi chú",
+      "noteAdminStatus": "Hiện tại: Quản trị viên ghi chú",
+      "noteUserStatus": "Hiện tại: Người dùng ghi chú"
     },
     "workspaceGuard": {
       "invalidWorkspaceOrUser": "Workspace không hợp lệ hoặc người dùng chưa xác thực",

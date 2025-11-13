@@ -161,6 +161,25 @@ class WorkspaceServiceClass {
     }
   }
 
+  async leaveWorkspace(
+    workspaceId: string,
+    newOwnerId?: string
+  ): Promise<void> {
+    try {
+      const body: { newOwnerId?: string } = {};
+      if (newOwnerId) body.newOwnerId = newOwnerId;
+
+      await api.post(`${URLBASE}/${workspaceId}/leave`, body);
+      console.log('Left workspace:', workspaceId, { newOwnerId });
+    } catch (error: any) {
+      console.error(`Failed to leave workspace ${workspaceId}:`, {
+        error: error.message,
+        response: error.response?.data,
+      });
+      throw new Error('Could not leave workspace');
+    }
+  }
+
   async getWorkspaceMembers(workspaceId: string): Promise<WorkspaceMember[]> {
     try {
       const response = await api.get<ApiResponse<WorkspaceMember[]>>(

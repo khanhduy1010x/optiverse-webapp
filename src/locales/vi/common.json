@@ -16,5 +16,12 @@
   "op_faq_how": "Làm sao để có được OP?",
   "op_faq_how_answer": "Hoàn thành task • Duy trì phiên tập trung • Xây dựng streak hàng ngày • Đạt được mục tiêu • Hoàn thành achievements • Tham gia challenges",
   "op_faq_cashout": "Tôi có thể rút OP thành tiền mặt không?",
-  "op_faq_cashout_answer": "OP chỉ sử dụng trong Optiverse cho các tính năng cao cấp, marketplace items và nội dung độc quyền. Hiện tại, rút tiền trực tiếp không khả dụng, nhưng OP có thể mở khóa các phần thưởng số giá trị và lợi ích."
+  "op_faq_cashout_answer": "OP chỉ sử dụng trong Optiverse cho các tính năng cao cấp, marketplace items và nội dung độc quyền. Hiện tại, rút tiền trực tiếp không khả dụng, nhưng OP có thể mở khóa các phần thưởng số giá trị và lợi ích.",
+  "confirm": "Xác nhận",
+  "cancel": "Hủy",
+  "confirmation": "Xác nhận",
+  "leave_video_call": "Rời cuộc gọi video",
+  "leave_video_call_message": "Bạn có chắc muốn rời cuộc gọi video không? Cuộc gọi sẽ bị ngắt kết nối.",
+  "leave_call": "Rời cuộc gọi",
+  "stay": "Ở lại"
 }
