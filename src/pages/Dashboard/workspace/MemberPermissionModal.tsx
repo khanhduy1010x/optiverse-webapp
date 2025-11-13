@@ -29,7 +29,7 @@ export interface MemberPermissionModalProps {
     onDemoteAdmin: (userId: string) => void;
     onRemoveUser: (userId: string) => void;
     onBanUser: (userId: string) => void;
-    onUpdatePermissions: (userId: string, permissions: string[]) => void;
+    onUpdatePermissions: (userId: string, permissions: string[], action?: 'grant' | 'revoke' | 'set') => void;
 }
 
 const MemberPermissionModal: React.FC<MemberPermissionModalProps> = ({
@@ -48,7 +48,7 @@ const MemberPermissionModal: React.FC<MemberPermissionModalProps> = ({
     // Get current user from Redux store
     const currentUser = useSelector((state: RootState) => state.auth.user);
 
-    console.log('Current user permissions:', currentUserPermissions);
+    console.log('Current user permissions:', member);
 
     // Check if this modal is for the current user
     const isCurrentUserModal = currentUser && member.user_id === currentUser._id;
@@ -103,7 +103,8 @@ const MemberPermissionModal: React.FC<MemberPermissionModalProps> = ({
     useEffect(() => {
         if (isOpen) {
             console.log('🔍 Modal opened with member data:', {
-                member
+                member,
+                memberPermissions: member.permissions || []
             });
 
             const permissions = member.permissions || [];
@@ -112,23 +113,11 @@ const MemberPermissionModal: React.FC<MemberPermissionModalProps> = ({
         }
     }, [isOpen, member.permissions, member.role]);
 
-    // Check if current user can manage this member
-    const canManageMember = () => {
-        if (member.isOwner) return false; // Can't manage owner
-        if (currentUserRole === 'owner') return true; // Owner can manage anyone
+    useEffect(() => {
+        console.log('📊 Member permissions state updated:', memberPermissions);
+    }, [memberPermissions]);
 
-        // Admin with MANAGE_MEMBERS can do basic member management
-        if (currentUserRole === 'admin' && currentUserPermissions.includes('MANAGE_MEMBERS')) {
-            return true;
-        }
 
-        // Admin with MANAGE_PERMISSIONS can do permission management
-        if (currentUserRole === 'admin' && currentUserPermissions.includes('MANAGE_PERMISSIONS')) {
-            return true;
-        }
-
-        return false;
-    };
 
     // Check if current user can manage member roles and basic actions (demote/promote, remove, ban)
     const canManageMemberRoles = () => {
@@ -150,6 +139,11 @@ const MemberPermissionModal: React.FC<MemberPermissionModalProps> = ({
 
         // Only owner can grant MANAGE_PERMISSIONS
         if (permissionKey === 'MANAGE_PERMISSIONS' && currentUserRole !== 'owner') {
+            return false;
+        }
+
+        // Only owner can grant MANAGE_NOTES
+        if (permissionKey === 'MANAGE_NOTES' && currentUserRole !== 'owner') {
             return false;
         }
 
@@ -180,6 +174,27 @@ const MemberPermissionModal: React.FC<MemberPermissionModalProps> = ({
                 }
                 setMemberPermissions(newPermissions);
                 onUpdatePermissions(member.user_id, newPermissions);
+            }
+        } else if (permissionKey === 'note_permission') {
+            // Special handling for note permission toggle
+            const hasNoteAdmin = memberPermissions.includes('note_admin');
+
+            if (hasNoteAdmin) {
+                // Currently admin, revoke MANAGE_NOTES permission
+                const newPermissions = memberPermissions.filter(p => p !== 'note_admin');
+                if (!newPermissions.includes('note_user')) {
+                    newPermissions.push('note_user');
+                }
+                setMemberPermissions(newPermissions);
+                onUpdatePermissions(member.user_id, ['MANAGE_NOTES'], 'revoke');
+            } else {
+                // Currently user or no note permission, grant MANAGE_NOTES
+                const newPermissions = memberPermissions.filter(p => p !== 'note_user');
+                if (!newPermissions.includes('note_admin')) {
+                    newPermissions.push('note_admin');
+                }
+                setMemberPermissions(newPermissions);
+                onUpdatePermissions(member.user_id, ['MANAGE_NOTES'], 'grant');
             }
         } else {
             // Regular permission toggle
@@ -399,6 +414,48 @@ const MemberPermissionModal: React.FC<MemberPermissionModalProps> = ({
                                                     className="inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform"
                                                     style={{
                                                         transform: hasRoomAdmin ? 'translateX(20px)' : 'translateX(2px)',
+                                                    }}
+                                                />
+                                            </button>
+                                        </div>
+                                    );
+                                })()}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Note Access Management */}
+                    {canManagePermissions() && !member.isOwner && (
+                        <div className="space-y-3">
+                            <h3 className="text-base font-semibold text-gray-800">{t('dashboardWorkspace.memberModal.noteAccess')}</h3>
+                            <p className="text-xs text-gray-600">{t('dashboardWorkspace.memberModal.noteAccessDescription')}</p>
+
+                            <div className="space-y-2">
+                                {(() => {
+                                    const hasNoteAdmin = memberPermissions.includes('note_admin');
+
+                                    return (
+                                        <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                                            <div className="flex-1">
+                                                <div className="font-medium text-gray-800 text-sm">{t('dashboardWorkspace.permissions.notePermission')}</div>
+                                                <div className="text-xs text-gray-600">{t('dashboardWorkspace.permissions.notePermissionDesc')}</div>
+                                                <div className="text-[11px] text-green-600 mt-1">
+                                                    {hasNoteAdmin
+                                                        ? t('dashboardWorkspace.permissions.noteAdminStatus')
+                                                        : t('dashboardWorkspace.permissions.noteUserStatus')
+                                                    }
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => handlePermissionToggle('note_permission')}
+                                                disabled={!canGrantPermission('MANAGE_NOTES')}
+                                                className={`relative inline-flex h-5 w-10 items-center rounded-full transition-all duration-200 ${hasNoteAdmin ? 'bg-cyan-500' : 'bg-gray-200'
+                                                    } ${!canGrantPermission('MANAGE_NOTES') ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                            >
+                                                <span
+                                                    className="inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform"
+                                                    style={{
+                                                        transform: hasNoteAdmin ? 'translateX(20px)' : 'translateX(2px)',
                                                     }}
                                                 />
                                             </button>

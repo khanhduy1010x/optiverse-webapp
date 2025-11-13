@@ -51,7 +51,7 @@ export interface UserDetailDto {
   role?: string;
   status: string;
   time: Date;
-  permissions?: string[]; // User's permissions in the workspace
+  permissions?: string[]; // User's combined workspace and note permissions
 }
 
 export interface WorkspaceDetailDto {

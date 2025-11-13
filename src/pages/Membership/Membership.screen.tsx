@@ -208,77 +208,93 @@ const MembershipScreen: React.FC = () => {
 
                                     {/* Level Packages Grid */}
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-                                        {levelPackages.map((pkg) => (
-                                            <div key={pkg._id} className="group relative h-full">
-                                                <div className={`absolute inset-0 bg-gradient-to-r ${getLevelGlowColor(pkg.level)} rounded-2xl blur-xl group-hover:blur-2xl transition-all opacity-0 group-hover:opacity-100`} />
-                                                <div className={`relative backdrop-blur border rounded-2xl p-8 hover:transition-all ${getLevelColor(pkg.level)} h-full flex flex-col`}>
-                                                    {/* Header */}
-                                                    <div className="flex items-center gap-3 mb-6">
-                                                        <Icon name={getLevelIcon(pkg.level)} size={32} className={getLevelIconColor(pkg.level)} />
-                                                        <div>
-                                                            <h3 className="text-xl font-bold text-white">{pkg.name}</h3>
-                                                            <p className={`text-sm font-medium ${getLevelTextColor(pkg.level)}`}>
-                                                                {t('level')} {pkg.level}
+                                        {levelPackages.map((pkg) => {
+                                            const isDisabled = !!pkg.disabled;
+                                            return (
+                                                <div key={pkg._id} className="group relative h-full">
+                                                    <div className={`absolute inset-0 bg-gradient-to-r ${getLevelGlowColor(pkg.level)} rounded-2xl blur-xl transition-all ${isDisabled ? 'opacity-0' : 'opacity-0 group-hover:opacity-100'}`} />
+                                                    <div className={`relative backdrop-blur border rounded-2xl p-8 transition-all ${getLevelColor(pkg.level)} h-full flex flex-col ${isDisabled ? 'opacity-60 border-gray-600/50' : ''}`}>
+                                                        {/* Header */}
+                                                        <div className="flex items-center gap-3 mb-6">
+                                                            <Icon name={getLevelIcon(pkg.level)} size={32} className={getLevelIconColor(pkg.level)} />
+                                                            <div>
+                                                                <h3 className="text-xl font-bold text-white">{pkg.name}</h3>
+                                                                <p className={`text-sm font-medium ${getLevelTextColor(pkg.level)}`}>
+                                                                    {t('level')} {pkg.level}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Price */}
+                                                        <div className="mb-6">
+                                                            <div className="flex items-baseline gap-1 mb-2">
+                                                                <span className="text-4xl font-bold text-white">
+                                                                    {pkg.price === 0 ? t('free') : formatVND(pkg.price, false)}
+                                                                </span>
+                                                                {pkg.price > 0 && (
+                                                                    <span className="text-gray-400 text-sm">/{pkg.duration_days} {t('price_suffix')}</span>
+                                                                )}
+                                                            </div>
+                                                            <p className="text-gray-400 text-sm">
+                                                                {pkg.description || t('package_description')}
                                                             </p>
                                                         </div>
-                                                    </div>
 
-                                                    {/* Price */}
-                                                    <div className="mb-6">
-                                                        <div className="flex items-baseline gap-1 mb-2">
-                                                            <span className="text-4xl font-bold text-white">
-                                                                {pkg.price === 0 ? t('free') : formatVND(pkg.price, false)}
-                                                            </span>
-                                                            {pkg.price > 0 && (
-                                                                <span className="text-gray-400 text-sm">/{pkg.duration_days} {t('price_suffix')}</span>
-                                                            )}
+                                                        {/* Features */}
+                                                        <div className="space-y-4 mb-8">
+                                                            <div className="flex items-center gap-3">
+                                                                <Icon name="check" size={18} className={getLevelTextColor(pkg.level)} />
+                                                                <span className="text-gray-300">{formatVND(pkg.opBonusCredits || 0, false)} {t('op_bonus')}</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-3">
+                                                                <Icon name="check" size={18} className={getLevelTextColor(pkg.level)} />
+                                                                <span className="text-gray-300">{formatDuration(pkg.duration_days)} {t('access')}</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-3">
+                                                                <Icon name="check" size={18} className={getLevelTextColor(pkg.level)} />
+                                                                <span className="text-gray-300">{t('premium_features')}</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-3">
+                                                                <Icon name="check" size={18} className={getLevelTextColor(pkg.level)} />
+                                                                <span className="text-gray-300">{t('priority_support')}</span>
+                                                            </div>
                                                         </div>
-                                                        <p className="text-gray-400 text-sm">
-                                                            {pkg.description || t('package_description')}
-                                                        </p>
-                                                    </div>
 
-                                                    {/* Features */}
-                                                    <div className="space-y-4 mb-8">
-                                                        <div className="flex items-center gap-3">
-                                                            <Icon name="check" size={18} className={getLevelTextColor(pkg.level)} />
-                                                            <span className="text-gray-300">{formatVND(pkg.opBonusCredits || 0, false)} {t('op_bonus')}</span>
-                                                        </div>
-                                                        <div className="flex items-center gap-3">
-                                                            <Icon name="check" size={18} className={getLevelTextColor(pkg.level)} />
-                                                            <span className="text-gray-300">{formatDuration(pkg.duration_days)} {t('access')}</span>
-                                                        </div>
-                                                        <div className="flex items-center gap-3">
-                                                            <Icon name="check" size={18} className={getLevelTextColor(pkg.level)} />
-                                                            <span className="text-gray-300">{t('premium_features')}</span>
-                                                        </div>
-                                                        <div className="flex items-center gap-3">
-                                                            <Icon name="check" size={18} className={getLevelTextColor(pkg.level)} />
-                                                            <span className="text-gray-300">{t('priority_support')}</span>
-                                                        </div>
-                                                    </div>
+                                                        {/* Subscriber Count */}
+                                                        {pkg.subscriber_count !== undefined && (
+                                                            <div className="mb-6 p-3 bg-gray-700/30 rounded-lg text-center">
+                                                                <p className="text-gray-400 text-xs">{t('active_subscribers')}</p>
+                                                                <p className="text-white font-semibold text-lg">{pkg.subscriber_count.toLocaleString()}</p>
+                                                            </div>
+                                                        )}
 
-                                                    {/* Subscriber Count */}
-                                                    {pkg.subscriber_count !== undefined && (
-                                                        <div className="mb-6 p-3 bg-gray-700/30 rounded-lg text-center">
-                                                            <p className="text-gray-400 text-xs">{t('active_subscribers')}</p>
-                                                            <p className="text-white font-semibold text-lg">{pkg.subscriber_count.toLocaleString()}</p>
+                                                        {/* Action Button */}
+                                                        <Button
+                                                            disabled={isDisabled}
+                                                            onClick={() => {
+                                                                if (isDisabled) return;
+                                                                navigate(`/membership/payment?packageId=${pkg._id}`);
+                                                            }}
+                                                            className={`w-full py-2 px-4 rounded-lg transition-all font-medium mt-auto ${isDisabled
+                                                                ? 'bg-gray-600 text-gray-300 cursor-not-allowed'
+                                                                : (pkg.price === 0
+                                                                    ? `${getLevelBadgeColor(pkg.level)} hover:opacity-80`
+                                                                    : 'bg-white text-black hover:bg-gray-200')
+                                                                }`}
+                                                        >
+                                                            {pkg.price === 0 ? t('start_free') : t('upgrade_now')}
+                                                        </Button>
+                                                    </div>
+                                                    {/* Optional lock indicator when disabled */}
+                                                    {isDisabled && (
+                                                        <div className="absolute top-3 right-3 px-2 py-1 text-xs rounded bg-gray-700/70 text-gray-200 border border-gray-600 flex items-center gap-1">
+                                                            <Icon name="lock" size={14} className="text-gray-300" />
+                                                            <span>{t('unavailable', { ns: 'membership', defaultValue: 'Unavailable' })}</span>
                                                         </div>
                                                     )}
-
-                                                    {/* Action Button */}
-                                                    <Button
-                                                        onClick={() => navigate(`/membership/payment?packageId=${pkg._id}`)}
-                                                        className={`w-full py-2 px-4 rounded-lg transition-all font-medium mt-auto ${pkg.price === 0
-                                                            ? `${getLevelBadgeColor(pkg.level)} hover:opacity-80`
-                                                            : `bg-white text-black hover:bg-gray-200`
-                                                            }`}
-                                                    >
-                                                        {pkg.price === 0 ? t('start_free') : t('upgrade_now')}
-                                                    </Button>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             );

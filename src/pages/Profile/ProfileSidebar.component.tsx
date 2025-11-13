@@ -43,7 +43,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
     },
     {
       id: 'payment-history',
-      label: t('notifications'),
+      label: t('payment_history'),
       path: '/payment-history',
       icon: 'payment' as IconName,
     },
@@ -76,11 +76,14 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
                 }
               `}
             >
-              <Icon
+              <div className='w-10'>
+    <Icon
                 name={menu.icon}
-                size={18}
-                className={`mr-3 ${selectedMenu === menu.id ? 'text-[#21b4ca]' : 'text-gray-500'}`}
+                size={menu.icon ==="trophy" ?  24 : 18}
+                className={`  ${selectedMenu === menu.id ? 'text-[#21b4ca]' : 'text-gray-500'}`}
               />
+              </div>
+          
               <span className="font-medium text-sm">{menu.label}</span>
             </button>
           ))}

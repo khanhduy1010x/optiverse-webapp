@@ -22,13 +22,13 @@ const HomePage: React.FC = () => {
 
   return (
     <div
-      className="bg-cover bg-center"
+      className="bg-cover bg-center min-h-screen flex flex-col !overflow-auto"
     >
 
-      <div className=""
+      <div className="h-full w-full !overflow-auto "
         style={{ backgroundImage: "url('/Background.png')" }}
       >
-        <div className="mx-auto min-h-screen flex h-full flex-col px-6 py-2 ">
+        <div className="mx-auto min-h-screen flex h-full flex-col px-6 py-2 !overflow-auto ">
           <header className="mb-10 flex items-center justify-between rounded-full bg-white/50 px-6 py-3 backdrop-blur relative z-50">
             <div className="flex items-center gap-3">
               <span className="flex h-9 w-9 items-center justify-center rounded-full bg-black text-white text-lg font-semibold">
@@ -65,7 +65,7 @@ const HomePage: React.FC = () => {
           </header>
 
           {/* Main Content */}
-          <div className="flex-1 px-6 pb-12 pt-8 ">
+          <div className="flex-1 px-6 pb-12 pt-8 overflow-auto">
             <div className="h-full">
               {/* 3D Carousel Section */}
               <div className="w-full h-full flex items-center backdrop-blur-md bg-black/10 rounded-3xl shadow-lg p-6 mb-16">

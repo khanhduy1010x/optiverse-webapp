@@ -76,7 +76,7 @@ const MarketplaceFilterBar: React.FC<MarketplaceFilterBarProps> = ({
     };
 
     return (
-        <div className="bg-white border-b border-gray-200 p-6 sticky top-14 z-20">
+        <div className="bg-white border-b border-gray-200 p-6  z-20">
             {/* Search Bar */}
             <div className="flex gap-3 mb-4">
                 <div className="flex-1 relative">
@@ -121,8 +121,8 @@ const MarketplaceFilterBar: React.FC<MarketplaceFilterBarProps> = ({
                                         setExpandedDropdown(null);
                                     }}
                                     className={`w-full text-left px-4 py-2 text-sm hover:bg-blue-50 transition ${priceRange.min === range.min && priceRange.max === range.max
-                                            ? 'bg-blue-100 text-blue-700 font-medium'
-                                            : 'text-gray-700'
+                                        ? 'bg-blue-100 text-blue-700 font-medium'
+                                        : 'text-gray-700'
                                         }`}
                                 >
                                     {range.label}
@@ -156,8 +156,8 @@ const MarketplaceFilterBar: React.FC<MarketplaceFilterBarProps> = ({
                                         setExpandedDropdown(null);
                                     }}
                                     className={`w-full text-left px-4 py-2 text-sm hover:bg-blue-50 transition ${popularity === option.value
-                                            ? 'bg-blue-100 text-blue-700 font-medium'
-                                            : 'text-gray-700'
+                                        ? 'bg-blue-100 text-blue-700 font-medium'
+                                        : 'text-gray-700'
                                         }`}
                                 >
                                     {option.label}
@@ -191,8 +191,8 @@ const MarketplaceFilterBar: React.FC<MarketplaceFilterBarProps> = ({
                                         setExpandedDropdown(null);
                                     }}
                                     className={`w-full text-left px-4 py-2 text-sm hover:bg-blue-50 transition ${category === option.value
-                                            ? 'bg-blue-100 text-blue-700 font-medium'
-                                            : 'text-gray-700'
+                                        ? 'bg-blue-100 text-blue-700 font-medium'
+                                        : 'text-gray-700'
                                         }`}
                                 >
                                     {option.label}
@@ -226,8 +226,8 @@ const MarketplaceFilterBar: React.FC<MarketplaceFilterBarProps> = ({
                                         setExpandedDropdown(null);
                                     }}
                                     className={`w-full text-left px-4 py-2 text-sm hover:bg-blue-50 transition ${sortBy === option.value
-                                            ? 'bg-blue-100 text-blue-700 font-medium'
-                                            : 'text-gray-700'
+                                        ? 'bg-blue-100 text-blue-700 font-medium'
+                                        : 'text-gray-700'
                                         }`}
                                 >
                                     {option.label}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import WorkspaceService from '../../services/workspace.service';
@@ -29,6 +29,10 @@ const useWorkspaceManagement = () => {
   const [selectedMember, setSelectedMember] = useState<any>(null);
   const [isInviteMembersModalOpen, setIsInviteMembersModalOpen] =
     useState(false);
+  const [isTransferOwnerModalOpen, setIsTransferOwnerModalOpen] =
+    useState(false);
+  const [transferSelectedUserId, setTransferSelectedUserId] =
+    useState<string>('');
 
   const [memberRoleFilter, setMemberRoleFilter] = useState<
     'All' | 'Admin' | 'Member'
@@ -53,7 +57,7 @@ const useWorkspaceManagement = () => {
       const data = await WorkspaceService.getWorkspaceById(workspaceId);
       setWorkspaceDetail(data);
       setHasPassword(data.hasPassword || false);
-      
+
       // Auto-create workspace chat if not exists
       await ensureWorkspaceChat(data);
     } catch (err) {
@@ -67,26 +71,27 @@ const useWorkspaceManagement = () => {
   // Ensure workspace chat exists and sync members
   const ensureWorkspaceChat = async (workspace: WorkspaceDetailDto) => {
     if (!workspaceId) return;
-    
+
     try {
       console.log('🔍 Checking workspace chat...');
-      
+
       // Check if workspace chat exists
       const existingChat = await groupService.getWorkspaceChat(workspaceId);
-      
+
       if (!existingChat) {
         console.log('🆕 Creating workspace chat...');
-        
+
         // Get all active member IDs
-        const activeMemberIds = workspace.members?.active?.map(m => m.user_id) || [];
-        
+        const activeMemberIds =
+          workspace.members?.active?.map(m => m.user_id) || [];
+
         // Create workspace chat
         const chatId = await groupService.createWorkspaceChat(
           workspaceId,
           workspace.name,
           activeMemberIds
         );
-        
+
         if (chatId) {
           console.log('✅ Workspace chat created:', chatId);
         } else {
@@ -94,9 +99,10 @@ const useWorkspaceManagement = () => {
         }
       } else {
         console.log('✅ Workspace chat already exists:', existingChat.id);
-        
+
         // Sync members to make sure they're up to date
-        const activeMemberIds = workspace.members?.active?.map(m => m.user_id) || [];
+        const activeMemberIds =
+          workspace.members?.active?.map(m => m.user_id) || [];
         await groupService.syncWorkspaceMembers(workspaceId, activeMemberIds);
       }
     } catch (error) {
@@ -107,6 +113,8 @@ const useWorkspaceManagement = () => {
   useEffect(() => {
     loadWorkspaceData();
   }, [workspaceId]);
+
+  const navigate = useNavigate();
 
   const members = workspaceDetail?.members.active || [];
   const requests = workspaceDetail?.members.request || [];
@@ -131,21 +139,21 @@ const useWorkspaceManagement = () => {
   // Sync workspace chat members
   const syncWorkspaceChat = async () => {
     if (!workspaceId || !workspaceDetail) return;
-    
+
     try {
       console.log('🔄 Syncing workspace chat members...');
-      
+
       // Get all active member IDs
       const activeMemberIds = members.map(m => m.user_id);
-      
+
       console.log('Active members to sync:', activeMemberIds);
-      
+
       // Sync members to workspace chat
       const synced = await groupService.syncWorkspaceMembers(
         workspaceId,
         activeMemberIds
       );
-      
+
       if (synced) {
         console.log('✅ Workspace chat members synced successfully');
       } else {
@@ -191,7 +199,7 @@ const useWorkspaceManagement = () => {
       });
 
       // Update selectedMember if it's the same user
-      if (selectedMember && selectedMember.id === userId) {
+      if (selectedMember && selectedMember.user_id === userId) {
         setSelectedMember((prevSelected: any) => ({
           ...prevSelected,
           role: newRole === 'admin' ? 'Admin' : 'Member',
@@ -219,7 +227,7 @@ const useWorkspaceManagement = () => {
         userId.toString()
       );
       await reloadWorkspaceData();
-      
+
       // Sync workspace chat after removing member
       await syncWorkspaceChat();
     } catch (err) {
@@ -248,10 +256,10 @@ const useWorkspaceManagement = () => {
       console.log('Accepting request for userId:', userId);
       await WorkspaceService.approveJoinRequest(workspaceId, userId.toString());
       await reloadWorkspaceData();
-      
+
       // Sync workspace chat members after accepting
       await syncWorkspaceChat();
-      
+
       showSuccess(t('dashboardWorkspace.toasts.requestAccepted'));
     } catch (err) {
       console.error('Failed to accept request:', err);
@@ -277,7 +285,7 @@ const useWorkspaceManagement = () => {
     try {
       await WorkspaceService.banMember(workspaceId, userId.toString());
       await reloadWorkspaceData();
-      
+
       // Sync workspace chat after banning
       await syncWorkspaceChat();
     } catch (err) {
@@ -337,10 +345,10 @@ const useWorkspaceManagement = () => {
     try {
       await WorkspaceService.unbanUser(workspaceId, userId, 'unban');
       await reloadWorkspaceData();
-      
+
       // Sync workspace chat after unbanning
       await syncWorkspaceChat();
-      
+
       showSuccess(t('dashboardWorkspace.toasts.unbanAndRestoreSuccess'));
     } catch (err) {
       console.error('Failed to unban user:', err);
@@ -410,7 +418,65 @@ const useWorkspaceManagement = () => {
     }
   };
 
+  const handleLeaveWorkspace = async () => {
+    if (!workspaceId) return;
+
+    try {
+      // If current user is owner, prompt for new owner id
+      if (currentUserRole === 'owner') {
+        // Open modal to let owner pick a new owner instead of using prompt
+        setIsTransferOwnerModalOpen(true);
+        return;
+      }
+
+      await WorkspaceService.leaveWorkspace(workspaceId);
+
+      showSuccess(t('dashboardWorkspace.toasts.leftWorkspace'));
+
+      // After leaving, navigate to workspace list/home (SPA navigation so socket/hooks can cleanup)
+      navigate('/', { replace: true });
+    } catch (err) {
+      console.error('Failed to leave workspace:', err);
+      showError(t('dashboardWorkspace.toasts.leaveWorkspaceFailed'));
+    }
+  };
+
+  const confirmLeaveWithNewOwner = async (newOwnerId: string) => {
+    if (!workspaceId) return;
+    try {
+      if (!newOwnerId) {
+        showError(t('dashboardWorkspace.toasts.ownerLeaveRequiresNewOwner'));
+        return;
+      }
+
+      setIsTransferOwnerModalOpen(false);
+
+      await WorkspaceService.leaveWorkspace(workspaceId, newOwnerId);
+
+      showSuccess(t('dashboardWorkspace.toasts.leftWorkspace'));
+
+      navigate('/', { replace: true });
+    } catch (err) {
+      console.error('Failed to leave workspace with transfer:', err);
+      showError(t('dashboardWorkspace.toasts.leaveWorkspaceFailed'));
+    }
+  };
+
+  const handleDeleteWorkspace = async () => {
+    if (!workspaceId) return;
+
+    try {
+      await WorkspaceService.deleteWorkspace(workspaceId);
+      showSuccess(t('dashboardWorkspace.toasts.workspaceDeleted'));
+      navigate('/', { replace: true });
+    } catch (err) {
+      console.error('Failed to delete workspace:', err);
+      showError(t('dashboardWorkspace.toasts.deleteWorkspaceFailed'));
+    }
+  };
+
   const handleOpenPermissionModal = (member: any) => {
+    console.log('Opening permission modal for member:', member);
     if (
       currentUser &&
       (member.user_id === currentUser._id || member.id === currentUser._id)
@@ -462,7 +528,8 @@ const useWorkspaceManagement = () => {
 
   const handleUpdatePermissions = async (
     userId: string,
-    permissions: string[]
+    permissions: string[],
+    action: 'grant' | 'revoke' | 'set' = 'set'
   ) => {
     if (!workspaceId) return;
 
@@ -471,15 +538,44 @@ const useWorkspaceManagement = () => {
         workspaceId,
         userId,
         permissions,
-        'set'
+        action
       );
 
-      // Update local state instead of reloading
+      // Calculate new permissions based on action
+      let newPermissions: string[] = [];
+
+      // Find current member
+      const currentMember = members.find(m => m.user_id === userId);
+      const currentPermissions = [...(currentMember?.permissions || [])];
+
+      // Handle note permission actions
+      if (permissions.includes('MANAGE_NOTES')) {
+        if (action === 'grant' || action === 'set') {
+          // Add note_admin, remove note_user
+          newPermissions = currentPermissions.filter(p => p !== 'note_user');
+          if (!newPermissions.includes('note_admin')) {
+            newPermissions.push('note_admin');
+          }
+        } else if (action === 'revoke') {
+          // Remove note_admin, add note_user
+          newPermissions = currentPermissions.filter(p => p !== 'note_admin');
+          if (!newPermissions.includes('note_user')) {
+            newPermissions.push('note_user');
+          }
+        }
+      } else if (action === 'set') {
+        // For regular permission updates
+        newPermissions = permissions;
+      }
+
+      // Update workspace detail state
       setWorkspaceDetail(prevDetail => {
         if (!prevDetail) return prevDetail;
 
         const updatedMembers = prevDetail.members.active.map(member =>
-          member.user_id === userId ? { ...member, permissions } : member
+          member.user_id === userId
+            ? { ...member, permissions: newPermissions }
+            : member
         );
 
         return {
@@ -492,10 +588,10 @@ const useWorkspaceManagement = () => {
       });
 
       // Update selectedMember if it's the same user
-      if (selectedMember && selectedMember.id === userId) {
+      if (selectedMember && selectedMember.user_id === userId) {
         setSelectedMember((prevSelected: any) => ({
           ...prevSelected,
-          permissions: permissions,
+          permissions: newPermissions,
         }));
       }
 
@@ -647,6 +743,11 @@ const useWorkspaceManagement = () => {
     handleOpenInviteMembersModal,
     handleCloseInviteMembersModal,
     handleInviteMembers,
+    handleLeaveWorkspace,
+    handleDeleteWorkspace,
+    isTransferOwnerModalOpen,
+    setIsTransferOwnerModalOpen,
+    confirmLeaveWithNewOwner,
   };
 };
 

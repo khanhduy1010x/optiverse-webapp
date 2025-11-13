@@ -5,8 +5,10 @@ class SocketService {
   private socket: Socket | null = null;
   private currentNoteId: string | null = null;
   private currentUserId: string | null = null;
+  private activeNoteIds: Set<string> = new Set(); // Track multiple active notes
   private listeners: Map<string, Array<(data: any) => void>> = new Map();
   private updateTimeout: NodeJS.Timeout | null = null;
+  private updateDelays: Map<string, NodeJS.Timeout> = new Map(); // Per-note debounce
   private updateDelay = 300;
   private typingTimeout: NodeJS.Timeout | null = null;
   private typingDelay = 1000;
@@ -31,7 +33,11 @@ class SocketService {
     this.socket.on('disconnect', () => {});
 
     this.socket.on('note_update', data => {
-      if (data.noteId === this.currentNoteId) {
+      // Notify ALL active notes, not just currentNoteId (for workspace multi-note)
+      if (
+        this.activeNoteIds.has(data.noteId) ||
+        data.noteId === this.currentNoteId
+      ) {
         this.notifyListeners('note_update', data);
       }
     });
@@ -42,13 +48,19 @@ class SocketService {
     });
 
     this.socket.on('typing', data => {
-      if (data.noteId === this.currentNoteId) {
+      if (
+        this.activeNoteIds.has(data.noteId) ||
+        data.noteId === this.currentNoteId
+      ) {
         this.notifyListeners('typing', data);
       }
     });
 
     this.socket.on('stop_typing', data => {
-      if (data.noteId === this.currentNoteId) {
+      if (
+        this.activeNoteIds.has(data.noteId) ||
+        data.noteId === this.currentNoteId
+      ) {
         this.notifyListeners('stop_typing', data);
       }
     });
@@ -130,6 +142,33 @@ class SocketService {
     this.socket.emit('leave_user_room', { userId });
   }
 
+  public joinWorkspaceRoom(workspaceId: string, userId: string): void {
+    if (!this.socket) {
+      this.connect();
+    }
+
+    // Join workspace room in format expected by backend: `workspace:${workspaceId}`
+    const roomName = `workspace:${workspaceId}`;
+
+    // Listen for join confirmation
+    this.socket?.once('join_room', response => {
+      console.log(`✅ Room join confirmed:`, response);
+    });
+
+    this.socket?.emit('join_room', { room: roomName });
+    console.log(`🏢 Attempting to join workspace room: ${roomName}`);
+  }
+
+  public leaveWorkspaceRoom(workspaceId: string): void {
+    if (!this.socket) return;
+
+    // Leave workspace room in format expected by backend
+    const roomName = `workspace:${workspaceId}`;
+    this.socket.emit('leave_room', { room: roomName });
+
+    console.log(`👋 Left workspace room: ${roomName}`);
+  }
+
   public disconnect(): void {
     const userId = this.getCurrentUserId();
     if (userId) {
@@ -141,15 +180,21 @@ class SocketService {
       this.socket = null;
     }
 
+    // Cleanup all pending debounce timeouts
     if (this.updateTimeout) {
       clearTimeout(this.updateTimeout);
       this.updateTimeout = null;
     }
 
+    this.updateDelays.forEach(timeout => clearTimeout(timeout));
+    this.updateDelays.clear();
+
     if (this.typingTimeout) {
       clearTimeout(this.typingTimeout);
       this.typingTimeout = null;
     }
+
+    this.activeNoteIds.clear();
   }
 
   public joinNote(noteId: string): void {
@@ -162,17 +207,29 @@ class SocketService {
     }
 
     this.currentNoteId = noteId;
+    this.activeNoteIds.add(noteId); // Track as active
     this.socket?.emit('join_note', { noteId });
+
+    console.log('📌 Joined note:', {
+      noteId,
+      activeNotes: Array.from(this.activeNoteIds),
+    });
   }
 
   public leaveNote(noteId: string): void {
     if (!this.socket) return;
 
     this.socket.emit('leave_note', { noteId });
+    this.activeNoteIds.delete(noteId); // Remove from active
 
     if (this.currentNoteId === noteId) {
       this.currentNoteId = null;
     }
+
+    console.log('👋 Left note:', {
+      noteId,
+      activeNotes: Array.from(this.activeNoteIds),
+    });
   }
 
   public updateNote(content: string): void {
@@ -180,36 +237,52 @@ class SocketService {
 
     this.sendTypingStatus();
 
-    if (this.updateTimeout) {
-      clearTimeout(this.updateTimeout);
+    const noteId = this.currentNoteId;
+
+    // Per-note debounce: clear existing timeout for this note
+    if (this.updateDelays.has(noteId)) {
+      clearTimeout(this.updateDelays.get(noteId)!);
     }
 
-    this.updateTimeout = setTimeout(() => {
+    // Set new debounced update for this note
+    const timeout = setTimeout(() => {
       this.socket?.emit('note_update', {
-        noteId: this.currentNoteId,
+        noteId,
         content,
       });
-      this.updateTimeout = null;
+      this.updateDelays.delete(noteId);
     }, this.updateDelay);
+
+    this.updateDelays.set(noteId, timeout);
+
+    console.log('⏱️ Note update debounced:', {
+      noteId,
+      delay: this.updateDelay,
+    });
   }
 
   public updateNoteImmediate(content: string): void {
     if (!this.socket || !this.currentNoteId) return;
 
-    if (this.updateTimeout) {
-      clearTimeout(this.updateTimeout);
-      this.updateTimeout = null;
+    const noteId = this.currentNoteId;
+
+    // Clear pending debounce for this note
+    if (this.updateDelays.has(noteId)) {
+      clearTimeout(this.updateDelays.get(noteId)!);
+      this.updateDelays.delete(noteId);
     }
 
     this.sendTypingStatus();
 
     this.socket.emit('note_update', {
-      noteId: this.currentNoteId,
+      noteId,
       content,
     });
+
+    console.log('⚡ Note update immediate:', { noteId });
   }
 
-  public emitNoteDeleted(noteId: string): void {
+  public emitNoteDeleted(noteId: string, workspaceId?: string): void {
     if (!this.socket) return;
 
     const userId = this.getCurrentUserId();
@@ -221,10 +294,15 @@ class SocketService {
     this.socket.emit('note_deleted', {
       noteId,
       userId,
+      workspaceId,
     });
   }
 
-  public emitNoteRenamed(noteId: string, newTitle: string): void {
+  public emitNoteRenamed(
+    noteId: string,
+    newTitle: string,
+    workspaceId?: string
+  ): void {
     if (!this.socket) return;
 
     const userId = this.getCurrentUserId();
@@ -237,6 +315,7 @@ class SocketService {
       noteId,
       newTitle,
       userId,
+      workspaceId,
     });
   }
 

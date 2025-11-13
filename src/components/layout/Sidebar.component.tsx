@@ -26,7 +26,8 @@ const SliderBar: React.FC<SliderBarProps> = ({ activeSection, onNavClick }) => {
   });
 
   if (workspacePrefix) {
-    baseSections = baseSections.filter(s => s.path !== '/friends' && s.path !== '/settings' && s.path !== '/user-profile');
+    // When inside a workspace, remove some global sections and also hide admin-only sections
+    baseSections = baseSections.filter(s => s.path !== '/friends' && s.path !== '/settings' && s.path !== '/user-profile' && !s.adminOnly);
     baseSections = [
       ...baseSections,
       ...WORKSPACE_ONLY_SECTIONS,
