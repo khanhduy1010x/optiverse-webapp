@@ -5,6 +5,7 @@ import CreateMarketplaceModal from '../../components/Marketplace/CreateMarketpla
 import UpdateMarketplaceModal from '../../components/Marketplace/UpdateMarketplaceModal.component';
 import ConfirmDialog from '../../components/Marketplace/ConfirmDialog.component';
 import { RatingList } from '../../components/Marketplace/RatingList.component';
+import PaginationControl from '../../components/Marketplace/PaginationControl.component';
 import Modal from 'react-modal';
 import { MarketplaceItem } from '../../types/marketplace/marketplace.types';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
@@ -22,7 +23,7 @@ const scrollbarHideStyle = `
 
 const MyItemsPage: React.FC = () => {
   const { t } = useAppTranslate('marketplace');
-  const { items, loading, error, page, setPage, refetch } = useMyItems();
+  const { items, loading, error, page, total, setPage, refetch } = useMyItems();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showRatingsModal, setShowRatingsModal] = useState(false);
@@ -51,19 +52,19 @@ const MyItemsPage: React.FC = () => {
     return (
         <>
             <style>{scrollbarHideStyle}</style>
-            <div className="myitems-page min-h-screen bg-gray-50">
+            <div className="myitems-page min-h-screen bg-white">
             {/* Header */}
-            <div className="bg-white border-b border-gray-200 p-6">
+            <div className="border-b border-gray-200 px-6 sm:px-8 lg:px-12 xl:px-16 2xl:px-24 py-8">
                 <div className="flex justify-between items-center">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900">{t('my_items')}</h1>
-                        <p className="text-gray-600 mt-1">
+                        <h1 className="text-5xl font-bold tracking-tight text-gray-900">{t('my_items')}</h1>
+                        <p className="text-gray-500 mt-2 text-base">
                             {t('manage_marketplace_items')}
                         </p>
                     </div>
                     <button
                         onClick={() => setShowCreateModal(true)}
-                        className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition"
+                        className="px-8 py-3.5 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors duration-200 text-base"
                     >
                         {t('create_new_item')}
                     </button>
@@ -71,130 +72,121 @@ const MyItemsPage: React.FC = () => {
             </div>
 
             {/* Content */}
-            <div className="p-6">
-                {error && (
-                    <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                        <p className="text-red-700">{error}</p>
-                    </div>
-                )}
+            <div className="px-6 sm:px-8 lg:px-12 xl:px-16 2xl:px-24 py-8">
+                <div>
+                    {error && (
+                        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                            <p className="text-red-700">{error}</p>
+                        </div>
+                    )}
 
-                {deleteError && (
-                    <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                        <p className="text-red-700">{deleteError}</p>
-                    </div>
-                )}
-
-                {items.length === 0 ? (
-                    <div className="bg-white rounded-lg shadow p-12 text-center">
-                        <p className="text-gray-500 mb-4">{t('no_items_yet')}</p>
-                        <button
-                            onClick={() => setShowCreateModal(true)}
-                            className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition"
-                        >
-                            {t('create_new_item')}
-                        </button>
-                    </div>
-                ) : (
-                    <>
-                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                            {items.map(item => (
-                                <div
-                                    key={item._id}
-                                    className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all overflow-hidden border border-gray-100"
-                                >
-                                    {/* Image */}
-                                    <div className="relative h-48 bg-gray-100 overflow-hidden">
-                                        <img
-                                            src={item.images?.[0] || 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400&h=300&fit=crop'}
-                                            alt={item.title}
-                                            className="w-full h-full object-cover"
-                                        />
-                                        {item.price === 0 && (
-                                            <div className="absolute top-3 right-3 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
-                                                {t('free')}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Content */}
-                                    <div className="p-5">
-                                        <h3 className="text-base font-semibold text-gray-900 mb-1 line-clamp-2">
-                                            {item.title}
-                                        </h3>
-                                        <div className="text-gray-600 text-xs mb-4 line-clamp-2 prose prose-sm max-w-none">
-                                            {item.description ? (
-                                                <div dangerouslySetInnerHTML={{ __html: item.description }} />
-                                            ) : (
-                                                <p>No description</p>
-                                            )}
-                                        </div>
-
-                                        {/* Price */}
-                                        <div className="mb-5 pb-5 border-b border-gray-100">
-                                            {item.price > 0 ? (
-                                                <p className="text-2xl font-bold text-blue-600">
-                                                    {item.price} <span className="text-sm font-normal text-gray-600">OP</span>
-                                                </p>
-                                            ) : (
-                                                <p className="text-xl font-bold text-gray-900">
+                    {loading ? (
+                        <div className="flex items-center justify-center py-12">
+                            <p className="text-gray-500">{t('loading')}</p>
+                        </div>
+                    ) : items.length === 0 ? (
+                        <div className="bg-gray-50 rounded-2xl border border-gray-200 p-12 text-center">
+                            <p className="text-gray-500 mb-4 text-lg">{t('no_items_yet')}</p>
+                            <button
+                                onClick={() => setShowCreateModal(true)}
+                                className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                            >
+                                {t('create_new_item')}
+                            </button>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 sm:gap-5 lg:gap-6">
+                                {items.map((item, idx) => (
+                                    <div
+                                        key={item._id}
+                                        className="bg-white rounded-2xl border border-gray-200/50 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden animate-fade-in"
+                                        style={{ animationDelay: `${idx * 50}ms` }}
+                                    >
+                                        {/* Image */}
+                                        <div className="relative h-56 bg-gray-100 overflow-hidden">
+                                            <img
+                                                src={item.images?.[0] || 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400&h=300&fit=crop'}
+                                                alt={item.title}
+                                                className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
+                                            />
+                                            {item.price === 0 && (
+                                                <div className="absolute top-3 right-3 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
                                                     {t('free')}
-                                                </p>
+                                                </div>
                                             )}
                                         </div>
 
-                                        {/* Actions */}
-                                        <div className="grid grid-cols-3 gap-2">
-                                            <button
-                                                onClick={() => {
-                                                    setSelectedItem(item);
-                                                    setShowUpdateModal(true);
-                                                }}
-                                                className="px-3 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-medium text-sm hover:bg-gray-50 transition-colors"
-                                            >
-                                                {t('edit')}
-                                            </button>
-                                            <button
-                                                onClick={() => {
-                                                    setSelectedItem(item);
-                                                    setShowRatingsModal(true);
-                                                }}
-                                                className="px-3 py-2.5 border border-yellow-400 text-yellow-600 rounded-lg font-medium text-sm hover:bg-yellow-50 transition-colors"
-                                            >
-                                                ★
-                                            </button>
-                                            <button
-                                                onClick={() => handleDeleteClick(item)}
-                                                disabled={isDeleting}
-                                                className="px-3 py-2.5 border border-red-300 text-red-600 rounded-lg font-medium text-sm hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                            >
-                                                {t('delete')}
-                                            </button>
+                                        {/* Content */}
+                                        <div className="p-4">
+                                            <h3 className="text-sm font-semibold text-gray-900 mb-2 line-clamp-2">
+                                                {item.title}
+                                            </h3>
+                                            <div className="text-gray-600 text-xs mb-3 line-clamp-2 prose prose-sm max-w-none">
+                                                {item.description ? (
+                                                    <div dangerouslySetInnerHTML={{ __html: item.description }} />
+                                                ) : (
+                                                    <p className="text-gray-400">No description</p>
+                                                )}
+                                            </div>
+
+                                            {/* Price */}
+                                            <div className="mb-4 pb-4 border-b border-gray-100">
+                                                {item.price > 0 ? (
+                                                    <p className="text-xl font-bold text-blue-600">
+                                                        {item.price} <span className="text-xs font-normal text-gray-600">OP</span>
+                                                    </p>
+                                                ) : (
+                                                    <p className="text-lg font-bold text-gray-900">
+                                                        {t('free')}
+                                                    </p>
+                                                )}
+                                            </div>
+
+                                            {/* Actions */}
+                                            <div className="grid grid-cols-3 gap-2">
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedItem(item);
+                                                        setShowUpdateModal(true);
+                                                    }}
+                                                    className="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium text-xs hover:bg-gray-50 transition-colors"
+                                                >
+                                                    {t('edit')}
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedItem(item);
+                                                        setShowRatingsModal(true);
+                                                    }}
+                                                    className="px-3 py-2 border border-yellow-300 text-yellow-600 rounded-lg font-medium text-xs hover:bg-yellow-50 transition-colors"
+                                                >
+                                                    ★
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeleteClick(item)}
+                                                    disabled={isDeleting}
+                                                    className="px-3 py-2 border border-red-300 text-red-600 rounded-lg font-medium text-xs hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                >
+                                                    {t('delete')}
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            ))}
-                        </div>
+                                ))}
+                            </div>
 
-                        {/* Pagination */}
-                        <div className="mt-8 flex justify-center gap-2">
-                            <button
-                                onClick={() => setPage(Math.max(1, page - 1))}
-                                disabled={page === 1}
-                                className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300"
-                            >
-                                {t('previous')}
-                            </button>
-                            <span className="px-4 py-2">{page}</span>
-                            <button
-                                onClick={() => setPage(page + 1)}
-                                disabled={items.length < 10}
-                                className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300"
-                            >
-                                {t('next')}
-                            </button>
-                        </div>
-                    </>
-                )}
+                            {/* Pagination */}
+                            <div className="mt-12 flex justify-center">
+                                <PaginationControl
+                                    currentPage={page}
+                                    totalPages={Math.ceil(total / 12)}
+                                    onPageChange={setPage}
+                                />
+                            </div>
+                        </>
+                    )}
+                </div>
             </div>
 
             {/* Create Modal */}

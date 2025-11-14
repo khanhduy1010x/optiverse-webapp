@@ -16,7 +16,7 @@ interface UsePurchaseHistoryResult {
   refetch: () => Promise<void>;
 }
 
-const LIMIT = 10;
+const LIMIT = 12;
 
 export const usePurchaseHistory = (): UsePurchaseHistoryResult => {
   const [items, setItems] = useState<PurchaseHistoryItem[]>([]);

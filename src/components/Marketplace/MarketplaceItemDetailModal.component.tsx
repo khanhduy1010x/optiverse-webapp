@@ -63,7 +63,7 @@ const MarketplaceItemDetailModal: React.FC<MarketplaceItemDetailModalProps> = ({
         handlePurchaseClick,
         pricingInfo,
     } = useMarketplaceItemDetailModal({
-        item: displayItem,
+        item: displayItem || item,
         isOpen,
         onPurchaseSuccess: async () => {
             // Fetch fresh item data to update is_purchased

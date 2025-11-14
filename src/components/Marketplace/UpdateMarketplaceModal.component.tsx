@@ -136,15 +136,16 @@ const UpdateMarketplaceModal: React.FC<UpdateMarketplaceModalProps> = ({
             payload.append('description', formData.description);
             payload.append('price', formData.price.toString());
             payload.append('type', formData.type);
+            payload.append('type_id', formData.type_id);
+            
+            // Send retained image URLs as JSON string
+            if (existingImages.length > 0) {
+                payload.append('retained_images', JSON.stringify(existingImages));
+            }
 
-            // Add new images
-            formData.images.forEach(file => {
+            // Add new images only
+            formData.images.forEach((file) => {
                 payload.append('images', file);
-            });
-
-            // Add existing images to keep
-            existingImages.forEach(url => {
-                payload.append('existing_images', url);
             });
 
             await marketplaceService.update(item._id, payload as any);

@@ -23,9 +23,9 @@ export const useMarketplaceItems = (currentUserId?: string | null): UseMarketpla
     const fetchItems = async () => {
         try {
             setLoading(true);
-            const response = await marketplaceService.getAll(page, 10);
+            const response = await marketplaceService.getAll(page, 12);
             // Filter out items created by the current user
-            const filteredItems = filterOutUserItems(response.items || [], currentUserId);
+            const filteredItems = filterOutUserItems(response.items || []);
             setItems(filteredItems);
             setTotal(response.total || 0);
             setError(null);
