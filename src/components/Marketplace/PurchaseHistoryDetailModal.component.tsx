@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Modal from 'react-modal';
 import { MarketplaceItem } from '../../types/marketplace/marketplace.types';
 import RichTextDisplay from '../common/RichTextDisplay.component';
@@ -19,9 +19,15 @@ const PurchaseHistoryDetailModal: React.FC<PurchaseHistoryDetailModalProps> = ({
     isOpen,
     onClose,
 }) => {
+    const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+
     if (!isOpen || !item) {
         return null;
     }
+
+    const mainImage = item.images && item.images.length > 0 
+        ? item.images[selectedImageIndex] 
+        : 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400&h=300&fit=crop';
 
     const formattedDate = purchaseDate 
         ? new Date(purchaseDate).toLocaleDateString('en-US', {
@@ -61,26 +67,34 @@ const PurchaseHistoryDetailModal: React.FC<PurchaseHistoryDetailModalProps> = ({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {/* Left: Image */}
                     <div>
-                        <div className="rounded-xl overflow-hidden bg-gray-100 mb-4">
-                            {item.images?.[0] ? (
-                                <img
-                                    src={item.images[0]}
-                                    alt={item.title}
-                                    className="w-full h-80 object-cover"
-                                />
-                            ) : (
-                                <div className="w-full h-80 flex items-center justify-center bg-gradient-to-br from-sky-100 to-sky-50">
-                                    <span className="text-6xl">📚</span>
-                                </div>
-                            )}
+                        <div className="rounded-xl overflow-hidden bg-gray-100 mb-4 h-96">
+                            <img
+                                src={mainImage}
+                                alt={item.title}
+                                className="w-full h-full object-cover"
+                            />
                         </div>
-                        <div className="flex gap-2">
-                            {item.images?.slice(0, 3).map((img, idx) => (
-                                <div key={idx} className="w-20 h-20 rounded-lg overflow-hidden bg-gray-100 cursor-pointer hover:opacity-80">
-                                    <img src={img} alt={`${item.title}-${idx}`} className="w-full h-full object-cover" />
-                                </div>
-                            ))}
-                        </div>
+                        {item.images && item.images.length > 1 && (
+                            <div className="flex gap-2 overflow-x-auto pb-2">
+                                {item.images.map((image, index) => (
+                                    <button
+                                        key={index}
+                                        onClick={() => setSelectedImageIndex(index)}
+                                        className={`w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all ${
+                                            selectedImageIndex === index
+                                                ? 'border-sky-500 ring-2 ring-sky-200'
+                                                : 'border-gray-200 hover:border-sky-300'
+                                        }`}
+                                    >
+                                        <img
+                                            src={image}
+                                            alt={`Preview ${index}`}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    </button>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     {/* Right: Details */}

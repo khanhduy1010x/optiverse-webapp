@@ -9,8 +9,6 @@ interface MarketplaceFilterBarProps {
     onPriceChange: (range: { min: number; max: number }) => void;
     popularity: string;
     onPopularityChange: (value: string) => void;
-    category: string;
-    onCategoryChange: (value: string) => void;
     sortBy: string;
     onSortChange: (value: string) => void;
 }
@@ -22,8 +20,6 @@ const MarketplaceFilterBar: React.FC<MarketplaceFilterBarProps> = ({
     onPriceChange,
     popularity,
     onPopularityChange,
-    category,
-    onCategoryChange,
     sortBy,
     onSortChange,
 }) => {
@@ -47,14 +43,6 @@ const MarketplaceFilterBar: React.FC<MarketplaceFilterBarProps> = ({
         { label: t('top_100'), value: 'top-100' },
         { label: t('1000_purchases'), value: 'top-1000' },
         { label: t('500_purchases'), value: 'top-500' },
-    ];
-
-    const categoryOptions = [
-        { label: t('all_categories'), value: 'all' },
-        { label: t('template'), value: 'template' },
-        { label: t('plugin'), value: 'plugin' },
-        { label: t('icon_pack'), value: 'icons' },
-        { label: t('component'), value: 'component' },
     ];
 
     const sortOptions = [
@@ -156,41 +144,6 @@ const MarketplaceFilterBar: React.FC<MarketplaceFilterBarProps> = ({
                                         setExpandedDropdown(null);
                                     }}
                                     className={`w-full text-left px-4 py-2 text-sm hover:bg-blue-50 transition ${popularity === option.value
-                                        ? 'bg-blue-100 text-blue-700 font-medium'
-                                        : 'text-gray-700'
-                                        }`}
-                                >
-                                    {option.label}
-                                </button>
-                            ))}
-                        </div>
-                    )}
-                </div>
-
-                {/* Category Filter */}
-                <div className="relative">
-                    <button
-                        onClick={() => toggleDropdown('category')}
-                        className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition bg-white"
-                    >
-                        <span className="text-sm font-medium text-gray-700">{t('category')}: {getDisplayLabel(category, categoryOptions)}</span>
-                        <Icon
-                            name="chevron"
-                            size={16}
-                            className={`text-gray-400 transition-transform ${expandedDropdown === 'category' ? 'rotate-180' : ''
-                                }`}
-                        />
-                    </button>
-                    {expandedDropdown === 'category' && (
-                        <div className="absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-lg z-30 min-w-48">
-                            {categoryOptions.map((option) => (
-                                <button
-                                    key={option.value}
-                                    onClick={() => {
-                                        onCategoryChange(option.value);
-                                        setExpandedDropdown(null);
-                                    }}
-                                    className={`w-full text-left px-4 py-2 text-sm hover:bg-blue-50 transition ${category === option.value
                                         ? 'bg-blue-100 text-blue-700 font-medium'
                                         : 'text-gray-700'
                                         }`}

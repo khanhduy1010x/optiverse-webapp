@@ -11,6 +11,10 @@ interface UseAchievementManagementReturn {
   showForm: boolean;
   editingAchievement: Achievement | null;
   deleteConfirm: string | null;
+  currentPage: number;
+  itemsPerPage: number;
+  totalItems: number;
+  totalPages: number;
   
   // Actions
   loadAchievements: () => Promise<void>;
@@ -21,6 +25,7 @@ interface UseAchievementManagementReturn {
   handleFormCancel: () => void;
   setDeleteConfirm: (id: string | null) => void;
   clearError: () => void;
+  setCurrentPage: (page: number) => void;
 }
 
 export const useAchievementManagement = (): UseAchievementManagementReturn => {
@@ -31,6 +36,10 @@ export const useAchievementManagement = (): UseAchievementManagementReturn => {
   const [showForm, setShowForm] = useState(false);
   const [editingAchievement, setEditingAchievement] = useState<Achievement | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12;
+  const totalItems = achievements.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
 
   // Load achievements on mount
   useEffect(() => {
@@ -133,6 +142,11 @@ export const useAchievementManagement = (): UseAchievementManagementReturn => {
     setError(null);
   }, []);
 
+  // Handle page change
+  const handleSetCurrentPage = useCallback((page: number) => {
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+  }, [totalPages]);
+
   return {
     // State
     achievements,
@@ -141,6 +155,10 @@ export const useAchievementManagement = (): UseAchievementManagementReturn => {
     showForm,
     editingAchievement,
     deleteConfirm,
+    currentPage,
+    itemsPerPage,
+    totalItems,
+    totalPages,
     
     // Actions
     loadAchievements,
@@ -150,6 +168,7 @@ export const useAchievementManagement = (): UseAchievementManagementReturn => {
     handleFormSubmit,
     handleFormCancel,
     setDeleteConfirm,
-    clearError
+    clearError,
+    setCurrentPage: handleSetCurrentPage
   };
 };

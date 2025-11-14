@@ -63,6 +63,11 @@ export const useMarketplaceItemDetailModal = ({
     const { flashcards, totalFlashcards, previewCount, loading: previewLoading, fetchPreviewFlashcards } = usePreviewFlashcards();
     const { stats: ratingStats, refreshStats: refreshRatingStats } = useRatingStats(item?._id || '');
 
+    // Reset image index when item changes
+    useEffect(() => {
+        setSelectedImageIndex(0);
+    }, [item?._id]);
+
     // Lock scroll when modal is open
     useEffect(() => {
         if (isOpen) {
@@ -83,8 +88,10 @@ export const useMarketplaceItemDetailModal = ({
         }
     }, [error]);
 
-    // Get main image
-    const mainImage = item?.images?.[selectedImageIndex] || 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=600&h=400&fit=crop';
+    // Get main image - ensure it's based on current item and selectedImageIndex
+    const mainImage = item?.images && item.images.length > selectedImageIndex
+        ? item.images[selectedImageIndex]
+        : item?.images?.[0] || '';
 
     // Get pricing info from item
     const pricingInfo: PricingInfo | null = item?.pricing ? {
@@ -137,3 +144,4 @@ export const useMarketplaceItemDetailModal = ({
         pricingInfo,
     };
 };
+

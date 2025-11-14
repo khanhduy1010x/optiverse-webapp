@@ -56,7 +56,7 @@ const LeaderboardList: React.FC<LeaderboardListProps> = ({
             <div className="bg-gray-50 border-b-2 border-gray-200 px-6 lg:px-10 rounded-t-2xl">
               <div className={`grid gap-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-widest min-w-full ${
                 metric === RankingMetric.TOTAL_SPENDING 
-                  ? 'grid-cols-8' 
+                  ? 'grid-cols-7' 
                   : 'grid-cols-8'
               }`}>
                 <div className="col-span-1">{t('rank')}</div>
@@ -67,7 +67,9 @@ const LeaderboardList: React.FC<LeaderboardListProps> = ({
                 {metric === RankingMetric.TOTAL_SPENDING && (
                   <div className="col-span-2 text-right">{t('spending')}</div>
                 )}
-                <div className="col-span-1 text-right">{t('op_points')}</div>
+                {metric === RankingMetric.TOTAL_PRODUCTS && (
+                  <div className="col-span-1 text-right">{t('op_points')}</div>
+                )}
               </div>
             </div>
 
@@ -86,7 +88,7 @@ const LeaderboardList: React.FC<LeaderboardListProps> = ({
                     key={`${entry.userId}-${index}`}
                     className={`grid gap-6 px-6 lg:px-10 py-4 transition-colors ${bgColor} ${!isTop3 ? 'hover:bg-gray-50' : ''} min-w-full ${
                       metric === RankingMetric.TOTAL_SPENDING 
-                        ? 'grid-cols-8' 
+                        ? 'grid-cols-7' 
                         : 'grid-cols-8'
                     }`}
                   >
@@ -123,44 +125,19 @@ const LeaderboardList: React.FC<LeaderboardListProps> = ({
                       </div>
                     )}
 
-                    {/* OP Points */}
-                    <div className="col-span-1 flex items-center justify-end">
-                      <p className="font-bold text-gray-900 text-sm">
-                        {metric === RankingMetric.TOTAL_SPENDING
-                          ? formatCurrency(entry.score)
-                          : entry.score}
-                      </p>
-                    </div>
+                    {/* OP Points - Show only if Products metric */}
+                    {metric === RankingMetric.TOTAL_PRODUCTS && (
+                      <div className="col-span-1 flex items-center justify-end">
+                        <p className="font-bold text-gray-900 text-sm">{formatCurrency(entry.totalSpending)}</p>
+                      </div>
+                    )}
                   </div>
                 );
               })}
             </div>
           </div>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between pt-6 px-6 border-t border-gray-200/50">
-              <p className="text-sm text-gray-600 font-medium">
-                {t('page')} <span className="text-gray-900 font-semibold">{page}</span> / <span className="text-gray-900 font-semibold">{totalPages}</span>
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => onPageChange(Math.max(1, page - 1))}
-                  disabled={page === 1}
-                  className="px-4 py-2 rounded-lg bg-gray-100 text-gray-900 font-medium text-sm disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-200 transition-colors"
-                >
-                  {t('previous')}
-                </button>
-                <button
-                  onClick={() => onPageChange(Math.min(totalPages, page + 1))}
-                  disabled={page === totalPages}
-                  className="px-4 py-2 rounded-lg bg-blue-500 text-white font-medium text-sm disabled:opacity-40 disabled:cursor-not-allowed hover:bg-blue-600 transition-colors"
-                >
-                  {t('next')}
-                </button>
-              </div>
-            </div>
-          )}
+
         </>
       )}
     </div>

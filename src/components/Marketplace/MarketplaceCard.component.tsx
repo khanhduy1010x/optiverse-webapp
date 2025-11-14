@@ -13,6 +13,7 @@ export interface MarketplaceProduct {
     discount?: number;
     sellerName: string;
     sellerInfo?: CreatorInfo;
+    creatorId?: string;
     purchaseCount: number;
     rating: number;
     ratingCount?: number;
@@ -24,10 +25,12 @@ interface MarketplaceCardProps {
     product: MarketplaceProduct;
     onClick?: () => void;
     onFavoriteChange?: () => void;
+    currentUserId?: string | null;
 }
 
-const MarketplaceCard: React.FC<MarketplaceCardProps> = ({ product, onClick, onFavoriteChange }) => {
+const MarketplaceCard: React.FC<MarketplaceCardProps> = ({ product, onClick, onFavoriteChange, currentUserId }) => {
         const { t } = useAppTranslate('marketplace');
+        const isCreator = currentUserId && product.creatorId === currentUserId;
 
     const discountedPrice = product.discount
         ? Math.round(product.price * (1 - product.discount / 100))
@@ -51,13 +54,13 @@ const MarketplaceCard: React.FC<MarketplaceCardProps> = ({ product, onClick, onF
     return (
         <div
             onClick={onClick}
-            className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer border border-gray-100 overflow-hidden"
+            className="group bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-200/50 overflow-hidden hover:border-gray-300/80 h-full flex flex-col"
         >
             {/* Favorite Button */}
             <button
                 onClick={handleFavoriteClick}
                 disabled={isToggling}
-                className="absolute top-3 left-3 z-10 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-md hover:bg-white transition-all disabled:opacity-50"
+                className="absolute top-4 right-4 z-10 bg-white/95 backdrop-blur-sm rounded-full p-2.5 shadow-lg hover:bg-white transition-all duration-200 disabled:opacity-50 hover:scale-110"
                 title={isFavorited ? 'Xóa khỏi yêu thích' : 'Thêm vào yêu thích'}
             >
                 {isToggling ? (
@@ -65,8 +68,8 @@ const MarketplaceCard: React.FC<MarketplaceCardProps> = ({ product, onClick, onF
                 ) : (
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        className={`w-5 h-5 transition-colors ${
-                            isFavorited ? 'fill-red-500 text-red-500' : 'fill-none text-gray-600'
+                        className={`w-5 h-5 transition-all duration-200 ${
+                            isFavorited ? 'fill-red-500 text-red-500 scale-110' : 'fill-none text-gray-500 hover:text-red-500'
                         }`}
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -82,74 +85,94 @@ const MarketplaceCard: React.FC<MarketplaceCardProps> = ({ product, onClick, onF
             </button>
 
             {/* Image Container */}
-            <div className="relative w-full h-48 bg-gray-100 overflow-hidden">
+            <div className="relative w-full h-56 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
                 <img
                     src={product.image}
                     alt={product.name}
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-out"
                 />
                 {/* Discount Badge */}
                 {product.discount && (
-                    <div className="absolute top-3 right-3 bg-red-500 text-white px-3 py-1 rounded-full font-semibold text-xs">
-                        -{product.discount}%
+                    <div className="absolute top-4 left-4 bg-red-500 text-white px-3.5 py-1.5 rounded-full font-bold text-sm shadow-lg">
+                        Save {product.discount}%
                     </div>
                 )}
             </div>
 
             {/* Content Container */}
-            <div className="p-5 flex flex-col gap-3.5">
-                {/* Product Name & Price Row */}
-                <div className="flex justify-between items-center gap-3">
-                    <h3 className="font-semibold text-sm line-clamp-2 text-gray-900 flex-1 min-w-0">
+            <div className="p-6 flex flex-col gap-4 flex-1">
+                {/* Product Name */}
+                <div>
+                    <h3 className="font-semibold text-base line-clamp-2 text-gray-900 group-hover:text-blue-600 transition-colors">
                         {product.name}
                     </h3>
-                    <div className="text-right flex-shrink-0">
-                        <span className="text-lg font-bold text-blue-600">
-                            {discountedPrice === 0 ? t('free') : `${discountedPrice.toLocaleString()} OP`}
+                </div>
+
+                {/* Seller Info */}
+                <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
+                    <img
+                        src={product.sellerInfo?.avatar_url || `https://ui-avatars.com/api/?name=${product.sellerInfo?.full_name || 'Unknown'}&background=random&size=40`}
+                        alt={product.sellerInfo?.full_name || 'Seller'}
+                        className="w-10 h-10 rounded-full object-cover border border-gray-200"
+                    />
+                    <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                            {product.sellerInfo?.full_name || product.sellerName}
+                        </p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                            {isCreator && (
+                                <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+                                    ★ You
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Stats Row */}
+                <div className="flex items-center justify-between text-xs text-gray-600 pb-4 border-b border-gray-100">
+                    {/* Purchase Count */}
+                    <div className="flex items-center gap-1.5">
+                        <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                        <span className="font-medium text-gray-700">{product.purchaseCount}</span>
+                        <span>purchased</span>
+                    </div>
+
+                    {/* Rating */}
+                    <div className="flex items-center gap-1.5">
+                        <span className="text-yellow-400 text-sm">★</span>
+                        <span className="font-semibold text-gray-900">
+                            {product.rating.toFixed(1)}
                         </span>
+                        {product.ratingCount && (
+                            <span className="text-gray-400">({product.ratingCount})</span>
+                        )}
+                    </div>
+                </div>
+
+                {/* Price & CTA */}
+                <div className="flex items-end justify-between gap-3 pt-2">
+                    <div>
+                        <div className="text-2xl font-bold text-gray-900">
+                            {discountedPrice === 0 ? (
+                                <span className="text-green-600">{t('free')}</span>
+                            ) : (
+                                <span>{discountedPrice.toLocaleString()} <span className="text-base font-semibold text-gray-500">OP</span></span>
+                            )}
+                        </div>
                         {product.discount && (
-                            <div className="text-xs text-gray-400 line-through">
+                            <div className="text-xs text-gray-400 line-through mt-1">
                                 {product.price.toLocaleString()} OP
                             </div>
                         )}
                     </div>
-                </div>
-
-                {/* Seller Info */}
-                <div className="flex items-center gap-2.5 py-3 border-t border-b border-gray-100">
-                    <img
-                        src={product.sellerInfo?.avatar_url || `https://ui-avatars.com/api/?name=${product.sellerInfo?.full_name || 'Unknown'}&background=random&size=32`}
-                        alt={product.sellerInfo?.full_name || 'Seller'}
-                        className="w-8 h-8 rounded-full object-cover"
-                    />
-                    <div className="flex-1 flex items-center justify-between">
-                        <p className="text-xs text-gray-600 flex-1">
-                            <span className="font-medium text-gray-900">{product.sellerInfo?.full_name || product.sellerName}</span>
-                        </p>
-                        {product.isPurchased && (
-                            <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded ml-2">
-                                {t('purchased')}
-                            </span>
-                        )}
-                    </div>
-                </div>
-
-                {/* Bottom Stats Row */}
-                <div className="flex items-center justify-between text-xs">
-                    {/* Purchase Count */}
-                    <div className="flex items-center gap-1 text-gray-600">
-                        <span>✓</span>
-                        <span>{product.purchaseCount} {t('purchased')}</span>
-                    </div>
-
-                    {/* Rating */}
-                    <div className="flex items-center gap-1">
-                        <span className="text-yellow-400">★</span>
-                        <span className="text-gray-900 font-medium">
-                            {product.rating.toFixed(1)}
-                            {product.ratingCount && ` (${product.ratingCount})`}
+                    {product.isPurchased && (
+                        <span className="text-xs font-semibold text-green-600 bg-green-50 px-3 py-1.5 rounded-lg">
+                            ✓ Owned
                         </span>
-                    </div>
+                    )}
                 </div>
             </div>
         </div>
