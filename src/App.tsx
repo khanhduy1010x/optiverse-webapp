@@ -352,7 +352,7 @@ const AppContent: React.FC = () => {
               element={
                 <ProtectedRoute>
                   <WorkspaceGuard>
-                    <FocusTimerWorkspacePage />
+                    <WorkspaceMembersPage />
                   </WorkspaceGuard>
                 </ProtectedRoute>
               }
@@ -496,10 +496,7 @@ const AppContent: React.FC = () => {
                 path="statistics"
                 element={<FocusTimerStatistic />}
               />
-              <Route
-                path="rooms"
-                element={<FocusRoomsPage />}
-              />
+          
             </Route>
 
             <Route
@@ -546,11 +543,11 @@ const AppContent: React.FC = () => {
               }
             />
             <Route
-              path="/workspace/:workspaceId/members"
+              path="/workspace/:workspaceId/focus-rooms"
               element={
                 <ProtectedRoute>
                   <WorkspaceGuard>
-                    <WorkspaceMembersPage />
+                    <FocusRoomsPage />
                   </WorkspaceGuard>
                 </ProtectedRoute>
               }

@@ -178,7 +178,7 @@ export const NAV_SECTIONS: NavSection[] = [
 
 // Optional dynamic extension for workspace context (used by Sidebar)
 export const WORKSPACE_ONLY_SECTIONS: NavSection[] = [
-  { label: 'Members', path: '/workspace-members', icon: 'group' },
+  { label: 'Members', path: '/workspace-focus-rooms', icon: 'group' },
 ];
 
 // Dedicated minimal navigation for Marketplace context
