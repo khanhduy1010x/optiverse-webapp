@@ -8,6 +8,7 @@ import { AchievementFormData } from '../../types/achievement/request/achievement
 interface UseAchievementFormProps {
   initialAchievement: Achievement | null;
   onSubmit: (achievement: AchievementFormData) => void;
+  externalFieldErrors?: { [key: string]: string } | null;
 }
 
 interface UseAchievementFormReturn {
@@ -28,7 +29,9 @@ interface UseAchievementFormReturn {
   // Validation
   hasError: (field: string) => boolean;
   getError: (field: string) => string | null;
-
+  hasExternalError: (field: string) => boolean;
+  getExternalError: (field: string) => string | null;
+  
   // Event handlers
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
   handleBlur: (fieldName: string) => void;
@@ -48,7 +51,8 @@ interface UseAchievementFormReturn {
 
 export const useAchievementForm = ({ 
   initialAchievement, 
-  onSubmit 
+  onSubmit,
+  externalFieldErrors
 }: UseAchievementFormProps): UseAchievementFormReturn => {
   // Form state
   const DEFAULT_FORM_DATA: AchievementFormData = {
@@ -97,6 +101,15 @@ export const useAchievementForm = ({
   };
 
   const { validateForm, validateSingleField, setFieldTouched, hasError, getError } = useFormValidation(validationRules);
+
+  // Helper functions for external field errors
+  const hasExternalError = useCallback((field: string): boolean => {
+    return !!(externalFieldErrors && externalFieldErrors[field]);
+  }, [externalFieldErrors]);
+
+  const getExternalError = useCallback((field: string): string | null => {
+    return externalFieldErrors?.[field] || null;
+  }, [externalFieldErrors]);
 
   // Initialize form data
   useEffect(() => {
@@ -327,6 +340,8 @@ export const useAchievementForm = ({
     // Validation
     hasError,
     getError,
+    hasExternalError,
+    getExternalError,
 
     // Event handlers
     handleInputChange,

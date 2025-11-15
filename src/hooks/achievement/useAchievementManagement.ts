@@ -8,6 +8,7 @@ interface UseAchievementManagementReturn {
   achievements: Achievement[];
   loading: boolean;
   error: string | null;
+  fieldErrors: { [key: string]: string } | null;
   showForm: boolean;
   editingAchievement: Achievement | null;
   deleteConfirm: string | null;
@@ -33,6 +34,7 @@ export const useAchievementManagement = (): UseAchievementManagementReturn => {
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string } | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingAchievement, setEditingAchievement] = useState<Achievement | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
@@ -116,6 +118,7 @@ export const useAchievementManagement = (): UseAchievementManagementReturn => {
   const handleFormSubmit = useCallback(async (data: AchievementFormData) => {
     try {
       setError(null);
+      setFieldErrors(null);
       if (editingAchievement && editingAchievement._id) {
         await AchievementService.updateAchievement(editingAchievement._id, data);
       } else {
@@ -124,9 +127,25 @@ export const useAchievementManagement = (): UseAchievementManagementReturn => {
       setShowForm(false);
       setEditingAchievement(null);
       await loadAchievements();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Submit achievement form error:', err);
-      setError('Unable to save achievement');
+      
+      // Parse error response
+      const errorResponse = err.response?.data;
+      const errorCode = errorResponse?.code;
+      const errorMessage = errorResponse?.message;
+      
+      // Handle duplicate title error (code 1113)
+      if (errorCode === 1113 || errorMessage?.includes('already exists')) {
+        setFieldErrors({
+          title: 'Achievement title already exists'
+        });
+        setError(null);
+      } else {
+        // Generic error
+        setError(errorMessage || 'Unable to save achievement');
+        setFieldErrors(null);
+      }
     }
   }, [editingAchievement, loadAchievements]);
 
@@ -135,6 +154,7 @@ export const useAchievementManagement = (): UseAchievementManagementReturn => {
     setShowForm(false);
     setEditingAchievement(null);
     setError(null);
+    setFieldErrors(null);
   }, []);
 
   // Clear error
@@ -152,6 +172,7 @@ export const useAchievementManagement = (): UseAchievementManagementReturn => {
     achievements,
     loading,
     error,
+    fieldErrors,
     showForm,
     editingAchievement,
     deleteConfirm,

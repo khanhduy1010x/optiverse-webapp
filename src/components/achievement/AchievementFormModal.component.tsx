@@ -12,13 +12,15 @@ interface AchievementFormModalProps {
   achievement: Achievement | null;
   onSubmit: (data: AchievementFormData) => void;
   onCancel: () => void;
+  externalFieldErrors?: { [key: string]: string } | null;
 }
 
 const AchievementFormModal: React.FC<AchievementFormModalProps> = ({
   isOpen,
   achievement,
   onSubmit,
-  onCancel
+  onCancel,
+  externalFieldErrors
 }) => {
   const { t } = useAppTranslate('achievement');
   const {
@@ -37,6 +39,8 @@ const AchievementFormModal: React.FC<AchievementFormModalProps> = ({
     // Validation
     hasError,
     getError,
+    hasExternalError,
+    getExternalError,
 
     // Event handlers
     handleInputChange,
@@ -53,7 +57,8 @@ const AchievementFormModal: React.FC<AchievementFormModalProps> = ({
     removeFile
   } = useAchievementForm({
     initialAchievement: achievement,
-    onSubmit
+    onSubmit,
+    externalFieldErrors
   });
 
   if (!isOpen) return null;
@@ -94,12 +99,12 @@ const AchievementFormModal: React.FC<AchievementFormModalProps> = ({
                   value={formData.title}
                   onChange={handleInputChange}
                   onBlur={() => handleBlur('title')}
-                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 ${hasError('title') ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 ${(hasError('title') || hasExternalError('title')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
                     }`}
                   placeholder={t('enter_title')}
                 />
-                {hasError('title') && (
-                  <p className="mt-1 text-sm text-red-600">{getError('title')}</p>
+                {(hasError('title') || hasExternalError('title')) && (
+                  <p className="mt-1 text-sm text-red-600">{getExternalError('title') || getError('title')}</p>
                 )}
               </div>
 
@@ -109,7 +114,7 @@ const AchievementFormModal: React.FC<AchievementFormModalProps> = ({
                   {t('description')} *
                 </label>
                 <AchievementEditor
-                  value={formData.description}
+                  value={formData.description || ''}
                   onChange={(value) => handleInputChange({ target: { name: 'description', value } } as any)}
                   onBlur={() => handleBlur('description')}
                   hasError={hasError('description')}

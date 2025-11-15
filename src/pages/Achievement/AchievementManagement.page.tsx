@@ -15,6 +15,7 @@ const AchievementManagement: React.FC = () => {
     achievements,
     loading,
     error,
+    fieldErrors,
     showForm,
     editingAchievement,
     deleteConfirm,
@@ -109,6 +110,7 @@ const AchievementManagement: React.FC = () => {
         achievement={editingAchievement}
         onSubmit={(data: AchievementFormData) => handleFormSubmit(data)}
         onCancel={handleFormCancel}
+        externalFieldErrors={fieldErrors}
       />
 
       {/* Delete Confirmation Modal */}
