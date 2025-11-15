@@ -44,7 +44,7 @@ export const useRuleForm = ({
     category: RuleCategory.TASK,
     field: '',
     value_type: ValueType.STRING,
-    operator: Operator.EQ,
+    operator: Operator.GTE,
     value: '',
     threshold: undefined
   };
@@ -132,7 +132,7 @@ export const useRuleForm = ({
         ...prev,
         [name]: processedValue,
         field: '', // Reset field when category changes
-        operator: Operator.GTE, // Reset to default operator
+        operator: Operator.GTE, // Always use GTE operator
         value: '', // Reset value
         threshold: undefined // Reset threshold
       }));
@@ -145,7 +145,7 @@ export const useRuleForm = ({
         ...prev,
         [name]: processedValue,
         value_type: newSelectedField?.value_type || ValueType.STRING,
-        operator: newAvailableOperators[0] || Operator.GTE, // Set first available operator
+        operator: Operator.GTE, // Always use GTE operator
         value: '', // Reset value
         threshold: undefined // Reset threshold
       }));
