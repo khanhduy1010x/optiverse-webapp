@@ -13,8 +13,7 @@ import {
   setCurrentPost,
   appendPosts,
   setCurrentPage,
-  setHasMore,
-  setTrendingPosts
+  setHasMore
 } from '../../store/slices/blog.slice';
 import { BlogService, SearchService } from '../../services/blog';
 import blogService from '../../services/blog/blog.service';
@@ -35,8 +34,7 @@ export function useBlog() {
     currentPage,
     hasMore,
     sortBy,
-    selectedTags,
-    trendingPosts
+    selectedTags
   } = useSelector((state: RootState) => state.blog);
 
   // Track if real-time listener is active
@@ -197,19 +195,7 @@ export function useBlog() {
   }, [dispatch]);
 
   /**
-   * Lấy trending posts
-   */
-  const fetchTrendingPosts = useCallback(async (days: number = 7, limit: number = 10) => {
-    try {
-      const trending = await SearchService.getTrendingPosts(days, limit);
-      dispatch(setTrendingPosts(trending));
-    } catch (error) {
-      console.error('Error fetching trending posts:', error);
-    }
-  }, [dispatch]);
-
-  /**
-   * Lấy bài viết phổ biến theo công thức Views (1x) + Likes (3x) + Comments (5x)
+   * Lấy bài viết phổ biến theo công thức Views (1x) + Likes (2x) + Comments (3x)
    */
   const fetchPopularPosts = useCallback(async (limit: number = 5) => {
     try {
@@ -349,25 +335,6 @@ export function useBlog() {
       : plainText;
   }, []);
 
-  /**
-   * Tính read time
-   */
-  const calculateReadTime = useCallback((content: string) => {
-    const wordsPerMinute = 200;
-    const plainText = content.replace(/<[^>]*>/g, '');
-    const words = plainText.trim().split(/\s+/).length;
-    const minutes = Math.ceil(words / wordsPerMinute);
-    return minutes;
-  }, []);
-
-  // Note: Real-time listener handles auto-fetch, no need for manual fetch on mount
-  // Auto-fetch trending posts
-  useEffect(() => {
-    if (trendingPosts.length === 0) {
-      fetchTrendingPosts();
-    }
-  }, [fetchTrendingPosts, trendingPosts.length]);
-
   return {
     // State
     posts,
@@ -378,12 +345,10 @@ export function useBlog() {
       currentPage,
       hasMore
     },
-    trendingPosts,
     
     // Actions
     fetchPosts,
     fetchPostsByAuthor,
-    fetchTrendingPosts,
     fetchPopularPosts,
     fetchPostById,
     createPost,
@@ -395,7 +360,6 @@ export function useBlog() {
     // Utilities
     uploadImage,
     generateExcerpt,
-    calculateReadTime,
     
     // Clear current post
     clearCurrentPost: () => dispatch(setCurrentPost(null))

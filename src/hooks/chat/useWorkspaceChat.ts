@@ -60,25 +60,37 @@ export function useWorkspaceChat(workspaceId: string | null) {
             console.log('✅ useWorkspaceChat: Found workspace chat:', chat.name);
             setWorkspaceChat(chat);
 
-            // ✅ Fetch user info CHỈ cho members MỚI (chưa fetch)
-            const memberIds = Object.keys(chat.groupMembers || {});
-            const newMemberIds = memberIds.filter(id => !fetchedUsersRef.current.has(id));
+            // ✅ Fetch user info cho TẤT CẢ members hiện tại
+            const memberIds = Object.keys(chat.groupMembers || {}).filter(id => 
+              chat.groupMembers[id]?.status === 'active'
+            );
             
-            if (newMemberIds.length > 0) {
-              console.log('👥 Fetching new users:', newMemberIds);
-              chatService.getUsersByIds(newMemberIds).then(usersList => {
+            // Kiểm tra xem có members mới chưa được fetch không
+            const newMemberIds = memberIds.filter(id => !fetchedUsersRef.current.has(id));
+            const shouldRefetch = newMemberIds.length > 0 || memberIds.length !== fetchedUsersRef.current.size;
+            
+            if (shouldRefetch) {
+              console.log('👥 Fetching users for members:', memberIds);
+              
+              chatService.getUsersByIds(memberIds).then(usersList => {
                 const userMap: Record<string, UserResponse> = {};
+                
+                // Clear old references và set mới
+                fetchedUsersRef.current.clear();
+                
                 usersList.forEach(user => {
                   userMap[user.user_id] = user;
                   fetchedUsersRef.current.add(user.user_id);
                 });
                 
-                // Merge với users hiện tại
-                setUsers(prev => ({ ...prev, ...userMap }));
-                console.log('✅ Users fetched and merged');
+                // Replace users thay vì merge để tránh giữ users cũ đã bị remove
+                setUsers(userMap);
+                console.log('✅ Users fetched:', Object.keys(userMap).length);
               }).catch(err => {
                 console.error('❌ Error fetching users:', err);
               });
+            } else {
+              console.log('⏭️ All users already fetched, skip');
             }
           } else {
             console.log('⚠️ useWorkspaceChat: No workspace chat found');
@@ -138,12 +150,40 @@ export function useWorkspaceChat(workspaceId: string | null) {
     return await groupService.syncWorkspaceMembers(workspaceId, memberIds);
   };
 
+  // ✅ NEW: Method để fetch users info cho danh sách memberIds (từ workspace API)
+  const fetchUsersForMembers = async (memberIds: string[]) => {
+    if (memberIds.length === 0) {
+      setUsers({});
+      fetchedUsersRef.current.clear();
+      return;
+    }
+
+    try {
+      console.log('👥 Fetching users for workspace members:', memberIds);
+      const usersList = await chatService.getUsersByIds(memberIds);
+      
+      const userMap: Record<string, UserResponse> = {};
+      fetchedUsersRef.current.clear();
+      
+      usersList.forEach(user => {
+        userMap[user.user_id] = user;
+        fetchedUsersRef.current.add(user.user_id);
+      });
+      
+      setUsers(userMap);
+      console.log('✅ Workspace members users fetched:', Object.keys(userMap).length);
+    } catch (err) {
+      console.error('❌ Error fetching workspace members users:', err);
+    }
+  };
+
   return {
     workspaceChat,
     users,
     loading,
     error,
     createWorkspaceChatIfNotExists,
-    syncMembers
+    syncMembers,
+    fetchUsersForMembers, // ✅ Export method mới
   };
 }

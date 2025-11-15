@@ -53,7 +53,7 @@ const BlogBookmarksPage: React.FC = () => {
       setBookmarkedPosts(posts);
     } catch (err) {
       console.error('Error loading bookmarked posts:', err);
-      setError('Không thể tải danh sách bài đã lưu');
+      setError(t('error_loading_saved_posts'));
     } finally {
       setIsLoading(false);
     }
@@ -75,7 +75,7 @@ const BlogBookmarksPage: React.FC = () => {
 
   const handleBookmarkPost = (postId: string) => {
     if (!user) {
-      alert('Please login to bookmark posts');
+      alert(t('please_login_to_bookmark'));
       return;
     }
 
@@ -125,11 +125,11 @@ const BlogBookmarksPage: React.FC = () => {
                   </svg>
                 </button>
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
-                  Bài đã lưu
+                  {t('savedPostsTitle')}
                 </h1>
               </div>
               <p className="text-sm text-gray-600 ml-7">
-                Danh sách các bài viết bạn đã bookmark
+                {t('savedPostsDescription')}
               </p>
             </div>
           </div>
@@ -143,10 +143,10 @@ const BlogBookmarksPage: React.FC = () => {
           <p className="text-gray-600">
             {bookmarkedPosts.length > 0 ? (
               <>
-                Showing <span className="font-semibold text-gray-900">{bookmarkedPosts.length}</span> saved article{bookmarkedPosts.length !== 1 ? 's' : ''}
+                {t('showing_saved_articles')} <span className="font-semibold text-gray-900">{bookmarkedPosts.length}</span> {bookmarkedPosts.length !== 1 ? t('saved_articles') : t('saved_article')}
               </>
             ) : (
-              'No saved articles'
+              t('no_saved_articles')
             )}
           </p>
         </div>
@@ -161,7 +161,7 @@ const BlogBookmarksPage: React.FC = () => {
                 </svg>
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                Có lỗi xảy ra
+                {t('error_occurred')}
               </h3>
               <p className="text-gray-600 mb-6">
                 {error}
@@ -173,7 +173,7 @@ const BlogBookmarksPage: React.FC = () => {
                   background: 'linear-gradient(135deg, #21b4ca 0%, #1e90ff 100%)',
                 }}
               >
-                Thử lại
+                {t('retry')}
               </button>
             </div>
           ) : bookmarkedPosts.length === 0 && !isLoading ? (
@@ -184,10 +184,10 @@ const BlogBookmarksPage: React.FC = () => {
                 </svg>
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                Chưa có bài viết nào được lưu
+                {t('no_saved_posts_yet')}
               </h3>
               <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                Hãy bookmark những bài viết yêu thích để xem lại sau
+                {t('bookmark_favorite_posts')}
               </p>
               <button
                 onClick={() => navigate('/blog')}
@@ -196,7 +196,7 @@ const BlogBookmarksPage: React.FC = () => {
                   background: 'linear-gradient(135deg, #21b4ca 0%, #1e90ff 100%)',
                 }}
               >
-                Khám phá bài viết
+                {t('explore_posts')}
               </button>
             </div>
           ) : isLoading ? (
@@ -247,7 +247,7 @@ const BlogBookmarksPage: React.FC = () => {
         onClose={() => setReportModalOpen(false)}
         onReportSuccess={() => {
           setReportModalOpen(false);
-          alert('Report submitted successfully');
+          alert(t('report_submitted_success'));
         }}
       />
     </div>

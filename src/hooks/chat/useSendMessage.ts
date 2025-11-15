@@ -100,6 +100,11 @@ export function useSendMessage(conversationId: string) {
           console.log('Successfully removed deletedBy field for user:', currentUserId);
         }
         
+        // KHÔNG xóa messagesDeletedAt - giữ timestamp để tiếp tục filter tin nhắn cũ
+        // Điều này đảm bảo rằng sau khi user xóa conversation và gửi tin mới,
+        // chỉ có tin nhắn mới (sau timestamp xóa) mới hiển thị
+        console.log('Keeping messagesDeletedAt timestamp to filter old messages');
+        
         console.log('Conversation updated successfully');
 
         // Cập nhật lastRead marker cho người gửi (đánh dấu đã đọc tin nhắn vừa gửi)

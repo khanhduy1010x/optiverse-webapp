@@ -81,7 +81,7 @@ const BlogCreatePage: React.FC = () => {
                     <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd"></path>
                   </svg>
                   <span className="ml-1 text-sm font-medium text-gray-500 dark:text-gray-400 md:ml-2">
-                    Tạo bài viết mới
+                    {t('createPageTitle')}
                   </span>
                 </div>
               </li>
@@ -91,10 +91,10 @@ const BlogCreatePage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                Tạo bài viết mới
+                {t('createPageTitle')}
               </h1>
               <p className="mt-2 text-gray-600 dark:text-gray-400">
-                Chia sẻ kiến thức và kinh nghiệm của bạn với cộng đồng
+                {t('createPageSubtitle')}
               </p>
             </div>
           </div>
@@ -132,39 +132,39 @@ const BlogCreatePage: React.FC = () => {
         {/* Tips Section */}
         <div className="mt-8 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
           <h3 className="text-lg font-medium text-blue-900 dark:text-blue-200 mb-4">
-            💡 Mẹo viết bài hiệu quả
+            {t('writingTipsTitle')}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-800 dark:text-blue-300">
             <div>
-              <h4 className="font-medium mb-2">Tiêu đề:</h4>
+              <h4 className="font-medium mb-2">{t('titleTipsCategory')}</h4>
               <ul className="space-y-1 list-disc list-inside">
-                <li>Sử dụng tiêu đề hấp dẫn và mô tả chính xác nội dung</li>
-                <li>Độ dài lý tưởng: 50-60 ký tự</li>
-                <li>Tránh sử dụng từ ngữ clickbait</li>
+                <li>{t('titleTip1')}</li>
+                <li>{t('titleTip2')}</li>
+                <li>{t('titleTip3')}</li>
               </ul>
             </div>
             <div>
-              <h4 className="font-medium mb-2">Nội dung:</h4>
+              <h4 className="font-medium mb-2">{t('contentTipsCategory')}</h4>
               <ul className="space-y-1 list-disc list-inside">
-                <li>Sử dụng Markdown để định dạng văn bản</li>
-                <li>Chia nhỏ nội dung thành các đoạn ngắn</li>
-                <li>Sử dụng hình ảnh để minh họa</li>
+                <li>{t('contentTip1')}</li>
+                <li>{t('contentTip2')}</li>
+                <li>{t('contentTip3')}</li>
               </ul>
             </div>
             <div>
-              <h4 className="font-medium mb-2">SEO:</h4>
+              <h4 className="font-medium mb-2">{t('seoTipsCategory')}</h4>
               <ul className="space-y-1 list-disc list-inside">
-                <li>Viết meta description hấp dẫn (150-160 ký tự)</li>
-                <li>Sử dụng từ khóa phù hợp trong tiêu đề và nội dung</li>
-                <li>Chọn danh mục và tags phù hợp</li>
+                <li>{t('seoTip1')}</li>
+                <li>{t('seoTip2')}</li>
+                <li>{t('seoTip3')}</li>
               </ul>
             </div>
             <div>
-              <h4 className="font-medium mb-2">Tương tác:</h4>
+              <h4 className="font-medium mb-2">{t('engagementTipsCategory')}</h4>
               <ul className="space-y-1 list-disc list-inside">
-                <li>Kết thúc bài viết bằng câu hỏi để khuyến khích bình luận</li>
-                <li>Trả lời bình luận của độc giả</li>
-                <li>Chia sẻ bài viết trên mạng xã hội</li>
+                <li>{t('engagementTip1')}</li>
+                <li>{t('engagementTip2')}</li>
+                <li>{t('engagementTip3')}</li>
               </ul>
             </div>
           </div>

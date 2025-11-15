@@ -189,6 +189,24 @@ const ChatPage: React.FC = () => {
       setTimeout(() => {
         handleSendGroupMessage();
       }, 100);
+    } else if (chatMode === 'regular' && activeConversationId) {
+      // Handle 1-1 chat drawing
+      const file = new File([imageBlob], 'drawing.png', { type: 'image/png' });
+
+      // Create a fake file input event
+      const fakeEvent = {
+        target: {
+          files: [file]
+        }
+      } as any;
+
+      // Add the image to selected images
+      handleFileChange(fakeEvent);
+
+      // Send the message with image
+      setTimeout(() => {
+        handleSendMessage();
+      }, 100);
     }
 
     // Close drawing board after sending
@@ -959,6 +977,7 @@ const ChatPage: React.FC = () => {
                     registerInputRef={registerInputRef}
                     renderReplyPreview={renderReplyPreview}
                     emojiPickerRef={emojiPickerRef}
+                    onOpenDrawingBoard={handleOpenDrawingBoard}
                     t={t}
                   />
                 </div>

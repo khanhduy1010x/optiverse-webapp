@@ -66,8 +66,9 @@ export function useMessages(
       
       if (snapshot.exists()) {
         const conversation = snapshot.val();
-        const deletedByTimestamp = conversation.deletedBy?.[currentUserId];
-        return deletedByTimestamp || null;
+        // Sử dụng messagesDeletedAt thay vì deletedBy để filter tin nhắn
+        const deletedMessagesTimestamp = conversation.messagesDeletedAt?.[currentUserId];
+        return deletedMessagesTimestamp || null;
       }
     } catch (error) {
       console.error('Error checking deletion timestamp:', error);

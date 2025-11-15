@@ -88,14 +88,6 @@ const BlogCard: React.FC<BlogCardProps> = ({
     return format(new Date(timestamp), 'MMM dd, yyyy');
   };
 
-  // Calculate read time
-  const calculateReadTime = () => {
-    const wordsPerMinute = 200;
-    const words = post.content.split(' ').length;
-    const readTime = Math.ceil(words / wordsPerMinute);
-    return `${readTime} min read`;
-  };
-
   return (
     <article 
       onClick={() => onPostClick(post.id)}
@@ -182,8 +174,6 @@ const BlogCard: React.FC<BlogCardProps> = ({
               </p>
               <div className="flex items-center gap-2 text-xs text-gray-500">
                 <span>{formatDate(post.createdAt)}</span>
-                <span>•</span>
-                <span>{calculateReadTime()}</span>
               </div>
             </div>
           </div>
@@ -249,8 +239,13 @@ const BlogCard: React.FC<BlogCardProps> = ({
               {/* Dropdown Menu */}
               {showDropdown && (
                 <div className="absolute right-0 bottom-full mb-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-1 z-50">
-                  {/* Delete Option for Workspace Creator */}
-                  {isWorkspace && onDeletePost && workspaceCreatorId === currentUserId && (
+                  {/* Delete Option - Show for: admin, post author, or workspace creator */}
+                  {onDeletePost && (
+                    isAdmin || 
+                    currentUserId === post.authorId || 
+                    currentUserId === post.author?.userId ||
+                    (isWorkspace && workspaceCreatorId === currentUserId)
+                  ) && (
                     <button
                       className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-3 transition-colors"
                       onClick={(e) => {

@@ -106,7 +106,6 @@ class BlogService {
       const updatedPost: Partial<BlogPost> = {
         ...postData,
         updatedAt: Date.now(),
-        readTime: postData.content ? this.calculateReadTime(postData.content) : existingPost.readTime,
         publishedAt: postData.status === 'published' && existingPost.status !== 'published' 
           ? Date.now() 
           : existingPost.publishedAt
@@ -130,6 +129,8 @@ class BlogService {
       const userId = localStorage.getItem('user_id');
       if (!userId) throw new Error('User not logged in');
 
+      console.log('🗑️ Delete Post - User ID:', userId);
+
       const postRef = ref(db, `${this.POSTS_PATH}/${postId}`);
       const snapshot = await get(postRef);
       
@@ -138,9 +139,46 @@ class BlogService {
       }
 
       const post = snapshot.val() as BlogPost;
+      console.log('📝 Delete Post - Post Author ID:', post.authorId);
       
-      // Kiểm tra quyền sở hữu
-      if (post.authorId !== userId) {
+      // Kiểm tra quyền: Admin hoặc tác giả có thể xóa
+      // Lấy role từ user object trong localStorage
+      let isAdmin = false;
+      try {
+        const userStr = localStorage.getItem('user');
+        console.log('👤 Delete Post - User string from localStorage:', userStr);
+        
+        if (userStr) {
+          const user = JSON.parse(userStr);
+          console.log('👤 Delete Post - Parsed user:', user);
+          console.log('👤 Delete Post - User role:', user.role);
+          isAdmin = user.role === 'admin';
+        }
+        
+        // Fallback: check Redux store format
+        if (!isAdmin) {
+          const persistRoot = localStorage.getItem('persist:root');
+          if (persistRoot) {
+            const root = JSON.parse(persistRoot);
+            if (root.auth) {
+              const auth = JSON.parse(root.auth);
+              console.log('👤 Delete Post - Auth from persist:root:', auth);
+              if (auth.user && auth.user.role === 'admin') {
+                isAdmin = true;
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Error parsing user from localStorage:', e);
+      }
+      
+      console.log('🔐 Delete Post - isAdmin:', isAdmin);
+      
+      const isAuthor = post.authorId === userId;
+      console.log('✍️ Delete Post - isAuthor:', isAuthor);
+      
+      if (!isAdmin && !isAuthor) {
         throw new Error('You do not have permission to delete this post');
       }
 
@@ -242,12 +280,10 @@ class BlogService {
           case 'likes':
             return (b.likeCount || 0) - (a.likeCount || 0);
           case 'popular':
-            // Tính điểm phổ biến: Views (1x) + Likes (3x) + Comments (5x)
-            const scoreA = (a.viewCount || 0) * 1 + (a.likeCount || 0) * 3 + (a.commentCount || 0) * 5;
-            const scoreB = (b.viewCount || 0) * 1 + (b.likeCount || 0) * 3 + (b.commentCount || 0) * 5;
+            // Tính điểm phổ biến: Views (1x) + Likes (2x) + Comments (3x)
+            const scoreA = (a.viewCount || 0) * 1 + (a.likeCount || 0) * 2 + (a.commentCount || 0) * 3;
+            const scoreB = (b.viewCount || 0) * 1 + (b.likeCount || 0) * 2 + (b.commentCount || 0) * 3;
             return scoreB - scoreA;
-          case 'oldest':
-            return (a.publishedAt || a.createdAt) - (b.publishedAt || b.createdAt);
           default: // 'newest'
             return (b.publishedAt || b.createdAt) - (a.publishedAt || a.createdAt);
         }
@@ -428,15 +464,6 @@ class BlogService {
 
 
   /**
-   * Tính toán thời gian đọc
-   */
-  private calculateReadTime(content: string): number {
-    const wordsPerMinute = 200;
-    const words = content.split(/\s+/).length;
-    return Math.ceil(words / wordsPerMinute);
-  }
-
-  /**
    * Lấy thông tin author (public method for hooks)
    */
   async getAuthorInfo(authorId: string): Promise<BlogAuthor | null> {
@@ -476,32 +503,40 @@ class BlogService {
   }
 
   /**
-   * Lấy bài viết phổ biến theo công thức: Views (1x) + Likes (3x) + Comments (5x)
+   * Lấy bài viết phổ biến theo công thức: Views (1x) + Likes (2x) + Comments (3x)
    */
   async getPopularPosts(limit: number = 5): Promise<BlogPostWithAuthor[]> {
     try {
+      console.log('🔍 Fetching popular posts from Firebase...');
       const postsRef = ref(db, this.POSTS_PATH);
       const snapshot = await get(postsRef);
       
       if (!snapshot.exists()) {
+        console.log('⚠️ No posts found in Firebase');
         return [];
       }
+
+      const allPosts = snapshot.val();
+      console.log(`📚 Total posts in Firebase: ${Object.keys(allPosts).length}`);
 
       const posts: BlogPostWithAuthor[] = [];
       
       // Lấy tất cả posts và tính điểm phổ biến
-      for (const [postId, postData] of Object.entries(snapshot.val())) {
-        const post = postData as BlogPost;
+      for (const [postId, postData] of Object.entries(allPosts)) {
+        const post = { ...postData, id: postId } as BlogPost;
         
-        // Chỉ lấy posts đã published và public
-        if (post.status !== 'published' || post.visibility !== 'public') {
+        // Chỉ lấy blog chính (không lấy workspace blog)
+        if (post.workspaceId) {
+          console.log(`  ⏭️  Skip workspace post: "${post.title}"`);
           continue;
         }
 
-        // Tính điểm phổ biến: Views (1x) + Likes (3x) + Comments (5x)
+        // Tính điểm phổ biến: Views (1x) + Likes (2x) + Comments (3x)
         const popularityScore = (post.viewCount || 0) * 1 + 
-                               (post.likeCount || 0) * 3 + 
-                               (post.commentCount || 0) * 5;
+                               (post.likeCount || 0) * 2 + 
+                               (post.commentCount || 0) * 3;
+
+        console.log(`  📝 "${post.title}" - Score: ${popularityScore} (V:${post.viewCount || 0}, L:${post.likeCount || 0}, C:${post.commentCount || 0})`);
 
         // Lấy thông tin author
         const authorInfo = await this.getAuthorInfo(post.authorId);
@@ -513,11 +548,19 @@ class BlogService {
         } as BlogPostWithAuthor & { popularityScore: number });
       }
 
+      console.log(`📊 Total posts with interactions: ${posts.length}`);
+
       // Sắp xếp theo điểm phổ biến giảm dần và lấy top posts
-      return posts
+      const topPosts = posts
         .sort((a: any, b: any) => b.popularityScore - a.popularityScore)
         .slice(0, limit)
-        .map(({ popularityScore, ...post }) => post); // Loại bỏ popularityScore khỏi kết quả cuối
+        .map(({ popularityScore, ...post }) => {
+          console.log(`  #${posts.indexOf({ ...post, popularityScore } as any) + 1}: "${post.title}" - Score: ${popularityScore} (Views: ${post.viewCount}, Likes: ${post.likeCount}, Comments: ${post.commentCount})`);
+          return post;
+        });
+      
+      console.log(`✅ Returning top ${topPosts.length} popular posts`);
+      return topPosts;
         
     } catch (error) {
       console.error('Error getting popular posts:', error);

@@ -128,12 +128,6 @@ const BlogWorkspacePage: React.FC = () => {
       case BlogSortBy.NEWEST:
         filtered.sort((a, b) => b.createdAt - a.createdAt);
         break;
-      case BlogSortBy.OLDEST:
-        filtered.sort((a, b) => a.createdAt - b.createdAt);
-        break;
-      case BlogSortBy.MOST_VIEWED:
-        filtered.sort((a, b) => b.viewCount - a.viewCount);
-        break;
       case BlogSortBy.MOST_LIKED:
         filtered.sort((a, b) => b.likeCount - a.likeCount);
         break;
@@ -372,16 +366,6 @@ const BlogWorkspacePage: React.FC = () => {
                 {t('newest')}
               </button>
               <button
-                onClick={() => setSortBy(BlogSortBy.MOST_VIEWED)}
-                className={`px-4 py-2 text-sm font-medium transition-all ${
-                  sortBy === BlogSortBy.MOST_VIEWED
-                    ? 'text-cyan-600 border-b-2 border-cyan-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                {t('popular')}
-              </button>
-              <button
                 onClick={() => setSortBy(BlogSortBy.MOST_LIKED)}
                 className={`px-4 py-2 text-sm font-medium transition-all ${
                   sortBy === BlogSortBy.MOST_LIKED
@@ -389,17 +373,7 @@ const BlogWorkspacePage: React.FC = () => {
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                {t('trending')}
-              </button>
-              <button
-                onClick={() => setSortBy(BlogSortBy.OLDEST)}
-                className={`px-4 py-2 text-sm font-medium transition-all ${
-                  sortBy === BlogSortBy.OLDEST
-                    ? 'text-cyan-600 border-b-2 border-cyan-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                {t('oldest')}
+                {t('most_liked')}
               </button>
             </div>
 
@@ -411,9 +385,7 @@ const BlogWorkspacePage: React.FC = () => {
                 className="flex-1 px-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-white/80 backdrop-blur-sm"
               >
                 <option value={BlogSortBy.NEWEST}>{t('newest')}</option>
-                <option value={BlogSortBy.MOST_VIEWED}>{t('popular')}</option>
-                <option value={BlogSortBy.MOST_LIKED}>{t('trending')}</option>
-                <option value={BlogSortBy.OLDEST}>{t('oldest')}</option>
+                <option value={BlogSortBy.MOST_LIKED}>{t('most_liked')}</option>
               </select>
             </div>
           </div>
