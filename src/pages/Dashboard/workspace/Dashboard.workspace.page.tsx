@@ -218,7 +218,62 @@ const DashboardWorkspacePage: React.FC = () => {
                             </>
                         )}
                     </div>
-                    <div className="flex items-center gap-2">
+                  
+
+                    {/* Workspace Description - Editable */}
+                    <div className="border border-dashed border-gray-300 rounded-lg p-4 mb-4 bg-gray-50/30 hover:border-gray-400 transition-colors group">
+                        <div className="flex items-start gap-3">
+                            {isEditingDescription ? (
+                                <div className="flex items-start gap-2 flex-1">
+                                    <textarea
+                                        defaultValue={workspace.description}
+                                        className="text-gray-600 bg-white rounded-lg px-3 py-2 border-2 focus:outline-none flex-1 resize-none min-h-[80px]"
+                                        style={{
+                                            borderColor: '#21b4ca'
+                                        }}
+                                        onFocus={(e) => e.target.style.borderColor = '#21b4ca'}
+                                        onKeyPress={(e) => {
+                                            if (e.key === 'Enter' && !e.shiftKey) {
+                                                e.preventDefault();
+                                                handleSaveDescription((e.target as HTMLTextAreaElement).value);
+                                            }
+                                        }}
+                                        onBlur={(e) => handleSaveDescription(e.target.value)}
+                                        autoFocus
+                                    />
+                                    <button
+                                        onClick={() => setIsEditingDescription(false)}
+                                        className="px-3 py-2 text-gray-600 border border-gray-300 hover:border-gray-500 rounded-lg transition-colors"
+                                    >
+                                        {t('dashboardWorkspace.cancel')}
+                                    </button>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="flex-1">
+                                        <div className="mb-2">
+                                            <span className="text-sm font-medium text-gray-500">Description:</span>
+                                        </div>
+                                        <p className="text-gray-700 leading-relaxed">
+                                            {workspace.description || 'No description provided'}
+                                        </p>
+                                    </div>
+                                    {canEditDescription && (
+                                        <button
+                                            onClick={() => setIsEditingDescription(true)}
+                                            className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-2 rounded-lg hover:bg-gray-100 flex-shrink-0"
+                                            title="Edit description"
+                                        >
+                                            <svg className="w-4 h-4 text-gray-500 hover:text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                        </button>
+                                    )}
+                                </>
+                            )}
+                        </div>
+                    </div>
+  <div className="flex items-center gap-2 pb-4">
                         <button
                             onClick={handleLeaveWorkspace}
                             className="px-3 py-1 rounded-lg transition-colors text-sm bg-yellow-50 border border-yellow-200 hover:bg-yellow-100"
@@ -250,54 +305,6 @@ const DashboardWorkspacePage: React.FC = () => {
                             </>
                         )}
                     </div>
-
-                    {/* Workspace Description - Editable */}
-                    <div className="flex items-start gap-3 mb-4">
-                        {isEditingDescription ? (
-                            <div className="flex items-start gap-2 flex-1">
-                                <input
-                                    defaultValue={workspace.description}
-                                    className="text-gray-600 bg-gray-50 rounded-lg px-3 py-2 border-2 focus:outline-none flex-1 resize-none"
-                                    style={{
-                                        borderColor: '#21b4ca'
-                                    }}
-                                    onFocus={(e) => e.target.style.borderColor = '#21b4ca'}
-                                    onKeyPress={(e) => {
-                                        if (e.key === 'Enter' && !e.shiftKey) {
-                                            e.preventDefault();
-                                            handleSaveDescription((e.target as HTMLTextAreaElement).value);
-                                        }
-                                    }}
-                                    onBlur={(e) => handleSaveDescription(e.target.value)}
-                                    autoFocus
-                                />
-                                <button
-                                    onClick={() => setIsEditingDescription(false)}
-                                    className="px-3 py-2 text-gray-600 border border-gray-300 hover:border-gray-500 rounded-lg transition-colors"
-                                >
-                                    {t('dashboardWorkspace.cancel')}
-                                </button>
-                            </div>
-                        ) : (
-                            <>
-                                <p className="text-gray-600 flex-1">{workspace.description}</p>
-                                {canEditDescription && (
-                                    <button
-                                        onClick={() => setIsEditingDescription(true)}
-                                        className="px-3 py-2 rounded-lg transition-colors hover:opacity-80"
-                                        style={{
-                                            color: '#21b4ca',
-                                            borderColor: '#21b4ca',
-                                            border: '1px solid #21b4ca'
-                                        }}
-                                    >
-                                        {t('dashboardWorkspace.edit')}
-                                    </button>
-                                )}
-                            </>
-                        )}
-                    </div>
-
                     {/* Workspace Code and Settings */}
                     <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                         <div className="flex items-center gap-6">
@@ -768,6 +775,12 @@ const DashboardWorkspacePage: React.FC = () => {
                 isOpen={isInviteMembersModalOpen}
                 onClose={handleCloseInviteMembersModal}
                 onInvite={handleInviteMembers}
+                workspaceData={{
+                    members: workspaceDetail?.members?.active || [],
+                    requests: requests || [],
+                    invites: invites || [],
+                    banned: workspaceDetail?.members?.banned || []
+                }}
             />
 
             {/* Transfer Owner Modal - shown when owner wants to leave */}

@@ -114,8 +114,16 @@ const AppContent: React.FC = () => {
     !location.pathname.startsWith('/register') &&
     !location.pathname.startsWith('/forgot') &&
     !location.pathname.startsWith('/forgot-password') &&
-    location.pathname !== '/login'
+    location.pathname !== '/login' && 
+    !location.pathname.startsWith('/membership');
 
+  const showHeader =     location.pathname !== '/' &&
+    !location.pathname.startsWith('/template') &&
+    !location.pathname.startsWith('/auth/google') &&
+    !location.pathname.startsWith('/register') &&
+    !location.pathname.startsWith('/forgot') &&
+    !location.pathname.startsWith('/forgot-password') &&
+    location.pathname !== '/login';
 
   const activeSection = getMainSidebarActiveSection(location.pathname);
 
@@ -125,7 +133,7 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      {showSidebar && <Header />}
+      {showHeader && <Header />}
 
       <div className="flex flex-1 min-h-0">
         {showSidebar && (
