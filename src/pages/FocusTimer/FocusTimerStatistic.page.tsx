@@ -82,7 +82,7 @@ export default function FocusTimerStatisticPage() {
       dayStats.map(d => [d.date, d.totalSeconds])
     );
     return (
-      <div className="grid grid-cols-7 gap-2 mb-6">
+      <div className="grid grid-cols-7 gap-2 mb-6 ">
         {Array.from({ length: daysInMonth }).map((_, idx) => {
           const date = new Date(year, month, idx + 1);
           const iso = format(date, 'yyyy-MM-dd');
@@ -110,6 +110,7 @@ export default function FocusTimerStatisticPage() {
   };
 
   return (
+              <div className="h-full overflow-y-auto bg-gray-50 p-8">
     <div className="max-w-3xl md:max-w-4xl mx-auto py-6 px-4 md:px-8">
       <h1 className="text-3xl font-bold mb-6">{t('focus_timer_statistics')}</h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -236,6 +237,7 @@ export default function FocusTimerStatisticPage() {
         )}
         date={selectedDate}
       />
+    </div>
     </div>
   );
 }

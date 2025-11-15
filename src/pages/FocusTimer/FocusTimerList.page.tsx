@@ -103,6 +103,8 @@ const FocusTimerList: React.FC = () => {
   }
 
   return (
+                  <div className="h-full overflow-y-auto bg-gray-50 p-8">
+
     <div className="bg-white rounded-lg shadow p-8 w-full max-w-3xl md:max-w-4xl mx-auto mt-8 px-4 md:px-8">
       <h1 className="text-3xl font-bold mb-6">{t('focus_timers_title')}</h1>
       {loading ? (
@@ -156,6 +158,7 @@ const FocusTimerList: React.FC = () => {
           onSessionDeleted={fetchSessions}
         />
       )}
+    </div>
     </div>
   );
 };

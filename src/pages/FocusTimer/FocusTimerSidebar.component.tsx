@@ -35,12 +35,7 @@ const FocusTimerSidebar: React.FC<FocusTimerSidebarProps> = ({
       path: '/focus-timer/statistics',
       icon: 'trophy' as IconName,
     },
-    {
-      id: 'rooms',
-      label: t('sidebar.statistics'),
-      path: '/focus-timer/rooms',
-      icon: 'trophy' as IconName,
-    },
+
   ];
 
   return (

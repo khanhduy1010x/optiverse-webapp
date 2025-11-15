@@ -39,7 +39,7 @@ export default function PaymentHistoryPage() {
     const [error, setError] = useState<string | null>(null);
     const [viewType, setViewType] = useState<'card' | 'table'>('card');
     const navigate = useNavigate();
-    const selectedMenu = 'payment_history';
+    const selectedMenu = 'payment-history';
     const handleNavigate = (menu: string, path: string) => {
         navigate(path);
     };

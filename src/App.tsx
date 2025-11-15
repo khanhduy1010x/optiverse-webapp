@@ -114,8 +114,16 @@ const AppContent: React.FC = () => {
     !location.pathname.startsWith('/register') &&
     !location.pathname.startsWith('/forgot') &&
     !location.pathname.startsWith('/forgot-password') &&
-    location.pathname !== '/login'
+    location.pathname !== '/login' && 
+    !location.pathname.startsWith('/membership');
 
+  const showHeader =     location.pathname !== '/' &&
+    !location.pathname.startsWith('/template') &&
+    !location.pathname.startsWith('/auth/google') &&
+    !location.pathname.startsWith('/register') &&
+    !location.pathname.startsWith('/forgot') &&
+    !location.pathname.startsWith('/forgot-password') &&
+    location.pathname !== '/login';
 
   const activeSection = getMainSidebarActiveSection(location.pathname);
 
@@ -125,7 +133,7 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      {showSidebar && <Header />}
+      {showHeader && <Header />}
 
       <div className="flex flex-1 min-h-0">
         {showSidebar && (
@@ -344,7 +352,7 @@ const AppContent: React.FC = () => {
               element={
                 <ProtectedRoute>
                   <WorkspaceGuard>
-                    <FocusTimerWorkspacePage />
+                    <WorkspaceMembersPage />
                   </WorkspaceGuard>
                 </ProtectedRoute>
               }
@@ -488,10 +496,7 @@ const AppContent: React.FC = () => {
                 path="statistics"
                 element={<FocusTimerStatistic />}
               />
-              <Route
-                path="rooms"
-                element={<FocusRoomsPage />}
-              />
+          
             </Route>
 
             <Route
@@ -538,11 +543,11 @@ const AppContent: React.FC = () => {
               }
             />
             <Route
-              path="/workspace/:workspaceId/members"
+              path="/workspace/:workspaceId/focus-rooms"
               element={
                 <ProtectedRoute>
                   <WorkspaceGuard>
-                    <WorkspaceMembersPage />
+                    <FocusRoomsPage />
                   </WorkspaceGuard>
                 </ProtectedRoute>
               }

@@ -368,12 +368,13 @@ export default function UserProfile() {
                 >
                 </Text>
 
-                <div className="p-6 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm">
+                <div className="p-6 border border-cyan-200/60 bg-[#e7f6f7] dark:border-slate-700 rounded-2xl shadow-sm backdrop-blur-sm" 
+                >
 
                   {/* Header */}
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
-                      <div className={`w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold ${getMembershipBadgeStyle(profileData.membership.package_id.name)?.includes('text-gray') ? 'bg-gray-600' : getMembershipBadgeStyle(profileData.membership.package_id.name)?.includes('text-amber') ? 'bg-amber-600' : getMembershipBadgeStyle(profileData.membership.package_id.name)?.includes('text-emerald') ? 'bg-emerald-600' : 'bg-sky-600'}`}>
+                      <div className={`w-12 h-12 rounded-lg flex items-center justify-center text-slate-60 font-bold shadow-md ${getMembershipBadgeStyle(profileData.membership.package_id.name)?.includes('text-gray') ? 'bg-gray-600' : getMembershipBadgeStyle(profileData.membership.package_id.name)?.includes('text-amber') ? 'bg-amber-600' : getMembershipBadgeStyle(profileData.membership.package_id.name)?.includes('text-emerald') ? 'bg-emerald-600' : 'bg-cyan-600'}`}>
                         <Icon
                           name={getMembershipIconName(profileData.membership.package_id.name) as any}
                           size={24}
@@ -382,45 +383,45 @@ export default function UserProfile() {
                       </div>
 
                       <div>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">Active Plan</p>
-                        <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                        <p className="text-sm text-cyan-600/70 dark:text-slate-400 font-medium">Active Plan</p>
+                        <h3 className="text-lg font-bold text-slate-600 ">
                           {profileData.membership.package_id.name}
                         </h3>
                       </div>
                     </div>
 
-                    <span className={`px-3 py-1.5 text-xs font-semibold rounded-md border ${getMembershipBadgeStyle(profileData.membership.package_id.name)}`}>
+                    <span className={`px-3 py-1.5 text-xs font-semibold rounded-md border text-slate-600 ${getMembershipBadgeStyle(profileData.membership.package_id.name)}`}>
                       {profileData.membership.status.toUpperCase()}
                     </span>
                   </div>
 
                   {/* Grid Info */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div className="p-4 bg-white border border-slate-200 dark:bg-slate-700/50 dark:border-slate-600 rounded-xl">
-                      <p className="text-xs text-slate-500 font-semibold mb-1">OP BONUS</p>
-                      <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                    <div className="p-4 bg-gradient-to-br from-white/95 to-cyan-50/90 border border-cyan-300/50 dark:bg-slate-700/50 dark:border-slate-600 rounded-xl shadow-sm backdrop-blur-sm hover:shadow-md transition-all duration-200">
+                      <p className="text-xs text-slate-600 font-bold mb-1 tracking-wide">OP BONUS</p>
+                      <p className="text-2xl font-black text-slate-60">
                         +{profileData.membership.package_id.opBonusCredits.toLocaleString()}
                       </p>
                     </div>
 
-                    <div className="p-4 bg-white border border-slate-200 dark:bg-slate-700/50 dark:border-slate-600 rounded-xl">
-                      <p className="text-xs text-slate-500 font-semibold mb-1">DURATION</p>
-                      <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                    <div className="p-4 bg-gradient-to-br from-white/95 to-cyan-50/90 border border-cyan-300/50 dark:bg-slate-700/50 dark:border-slate-600 rounded-xl shadow-sm backdrop-blur-sm hover:shadow-md transition-all duration-200">
+                      <p className="text-xs text-slate-600 font-bold mb-1 tracking-wide">DURATION</p>
+                      <p className="text-2xl font-black text-slate-60">
                         {profileData.membership.package_id.duration_days}
                       </p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">days</p>
+                      <p className="text-xs text-slate-500 font-medium dark:text-slate-400">days</p>
                     </div>
 
-                    <div className="p-4 bg-white border border-slate-200 dark:bg-slate-700/50 dark:border-slate-600 rounded-xl">
-                      <p className="text-xs text-slate-500 font-semibold mb-1">STARTED</p>
-                      <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                    <div className="p-4 bg-gradient-to-br from-white/95 to-cyan-50/90 border border-cyan-300/50 dark:bg-slate-700/50 dark:border-slate-600 rounded-xl shadow-sm backdrop-blur-sm hover:shadow-md transition-all duration-200">
+                      <p className="text-xs text-slate-600 font-bold mb-1 tracking-wide">STARTED</p>
+                      <p className="text-sm font-bold text-slate-60">
                         {new Date(profileData.membership.start_date).toLocaleDateString()}
                       </p>
                     </div>
 
-                    <div className="p-4 bg-white border border-slate-200 dark:bg-slate-700/50 dark:border-slate-600 rounded-xl">
-                      <p className="text-xs text-slate-500 font-semibold mb-1">EXPIRES</p>
-                      <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                    <div className="p-4 bg-gradient-to-br from-white/95 to-cyan-50/90 border border-cyan-300/50 dark:bg-slate-700/50 dark:border-slate-600 rounded-xl shadow-sm backdrop-blur-sm hover:shadow-md transition-all duration-200">
+                      <p className="text-xs text-slate-600 font-bold mb-1 tracking-wide">EXPIRES</p>
+                      <p className="text-sm font-bold text-slate-60">
                         {new Date(profileData.membership.end_date).toLocaleDateString()}
                       </p>
                     </div>
@@ -435,13 +436,13 @@ export default function UserProfile() {
 
                     return (
                       <div className="mb-6">
-                        <div className="flex justify-between text-sm text-slate-600 mb-1">
+                        <div className="flex justify-between text-sm text-slate-60 mb-2 font-medium">
                           <span>Membership Usage</span>
                           <span>{Math.round(percentage)}%</span>
                         </div>
-                        <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+                        <div className="h-2.5 bg-cyan-100/80 rounded-full overflow-hidden shadow-inner">
                           <div
-                            className="h-full bg-slate-800 rounded-full transition-all"
+                            className="h-full bg-gradient-to-r from-cyan-500 to-cyan-600 rounded-full transition-all duration-500 ease-out"
                             style={{ width: `${percentage}%` }}
                           />
                         </div>
@@ -452,7 +453,7 @@ export default function UserProfile() {
                   {/* Button */}
                   <button
                     onClick={() => handleNavigate('membership', '/membership')}
-                    className="w-full py-3 px-4 !bg-white hover:bg-slate-800 text-black text-sm font-medium rounded-lg transition-all active:scale-[0.98]"
+                    className="w-full py-3 px-4 bg-white/90 hover:bg-cyan-600 border border-cyan-200 hover:border-cyan-600 text-cyan-700 hover:text-white text-sm font-semibold rounded-lg transition-all duration-300 active:scale-[0.98] shadow-sm hover:shadow-md"
                   >
                     Upgrade or Renew Plan
                   </button>

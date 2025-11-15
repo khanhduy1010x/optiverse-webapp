@@ -13,13 +13,20 @@ interface InviteMembersModalProps {
     summary: { total: number; successful: number; failed: number };
   }>;
   isLoading?: boolean;
+  workspaceData?: {
+    members?: any[];
+    requests?: any[];
+    invites?: any[];
+    banned?: any[];
+  };
 }
 
 const InviteMembersModal: React.FC<InviteMembersModalProps> = ({
   isOpen,
   onClose,
   onInvite,
-  isLoading = false
+  isLoading = false,
+  workspaceData
 }) => {
   const { t } = useAppTranslate('workspace');
 
@@ -32,7 +39,7 @@ const InviteMembersModal: React.FC<InviteMembersModalProps> = ({
   const [loadingFriends, setLoadingFriends] = useState(false);
   const [inviting, setInviting] = useState(false);
 
-  // Load friends when modal opens
+  // Load friends when modal opens or workspace data changes
   useEffect(() => {
     if (isOpen) {
       loadFriends();
@@ -41,7 +48,7 @@ const InviteMembersModal: React.FC<InviteMembersModalProps> = ({
       setSelectedFriends([]);
       setMessage('');
     }
-  }, [isOpen]);
+  }, [isOpen, workspaceData]);
 
   // Filter friends based on search query
   useEffect(() => {
@@ -61,13 +68,49 @@ const InviteMembersModal: React.FC<InviteMembersModalProps> = ({
     }
   }, [searchQuery, allFriends]);
 
+  // Helper function to check if a friend is eligible for invitation
+  const isEligibleForInvitation = (friend: Friend) => {
+    const friendUserId = friend.friend_id;
+    
+    if (!friendUserId || !workspaceData) {
+      return true; // If no workspace data, show all friends
+    }
+
+    // Check if user is already a member
+    const isExistingMember = workspaceData.members?.some(
+      (member: any) => member.user_id === friendUserId || member.id === friendUserId
+    );
+
+    // Check if user has pending join request
+    const hasPendingRequest = workspaceData.requests?.some(
+      (request: any) => request.user_id === friendUserId || request.id === friendUserId
+    );
+
+    // Check if user already has pending invitation
+    const hasPendingInvite = workspaceData.invites?.some(
+      (invite: any) => invite.user_id === friendUserId || invite.id === friendUserId
+    );
+
+    // Check if user is banned
+    const isBanned = workspaceData.banned?.some(
+      (banned: any) => banned.user_id === friendUserId || banned.id === friendUserId
+    );
+
+    // User is eligible if they are NOT in any of these categories
+    return !isExistingMember && !hasPendingRequest && !hasPendingInvite && !isBanned;
+  };
+
   const loadFriends = async () => {
     try {
       setLoadingFriends(true);
       const friends = await FriendService.viewAllFriends();
       console.log('Loaded friends for invite:', friends);
-      setAllFriends(friends);
-      setFilteredFriends(friends);
+      
+      // Filter out ineligible friends
+      const eligibleFriends = friends.filter(isEligibleForInvitation);
+      
+      setAllFriends(eligibleFriends);
+      setFilteredFriends(eligibleFriends);
     } catch (error) {
       console.error('Error loading friends:', error);
     } finally {
@@ -189,7 +232,10 @@ const InviteMembersModal: React.FC<InviteMembersModalProps> = ({
                   </div>
                 ) : filteredFriends.length === 0 ? (
                   <div className="px-3 py-4 text-center text-sm text-gray-500">
-                    {searchQuery ? 'No friends found' : 'No friends available'}
+                    {searchQuery ? 'No friends found' : 'No friends available to invite'}
+                    <div className="text-xs text-gray-400 mt-1">
+                      Friends who are already members, have pending requests, invitations, or are banned are not shown
+                    </div>
                   </div>
                 ) : (
                   filteredFriends.map((friend) => {

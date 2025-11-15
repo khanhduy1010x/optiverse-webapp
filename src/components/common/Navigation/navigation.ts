@@ -134,6 +134,12 @@ export const NAV_SECTIONS: NavSection[] = [
         icon: 'trophy',
         parentPath: '/user-profile',
       },
+      {
+        label: 'Payment History',
+        path: '/payment-history',
+        icon: 'calendar',
+        parentPath: '/user-profile',
+      },
     ],
   },
   {
@@ -172,7 +178,7 @@ export const NAV_SECTIONS: NavSection[] = [
 
 // Optional dynamic extension for workspace context (used by Sidebar)
 export const WORKSPACE_ONLY_SECTIONS: NavSection[] = [
-  { label: 'Members', path: '/workspace-members', icon: 'group' },
+  { label: 'Members', path: '/workspace-focus-rooms', icon: 'group' },
 ];
 
 // Dedicated minimal navigation for Marketplace context
@@ -215,6 +221,7 @@ const PATH_MAPPING: Record<string, string> = {
   '/flashcard-deck': '/flashcard-deck',
   '/task-statistic': '/task',
   '/user-achievements': '/user-profile',
+  '/payment-history': '/user-profile',
   '/blog': '/blog',
   '/blog/create': '/blog',
   '/blog/edit': '/blog',

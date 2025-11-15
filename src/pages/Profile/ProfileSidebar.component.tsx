@@ -50,7 +50,7 @@ const ProfileSidebar: React.FC<ProfileSidebarProps> = ({
   ];
 
   return (
-    <View className="w-64 border-r border-gray-200">
+    <View className="w-72 border-r border-gray-200">
       <div className="h-full flex flex-col">
         {/* Header section */}
         <div className="p-6 border-b border-gray-200">
