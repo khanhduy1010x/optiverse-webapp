@@ -314,7 +314,7 @@ console.log("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
               onCategoryClick={handleCategoryClick}
               onTagClick={handleTagClick}
               isAdmin={isAdmin}
-              currentUserId={user?.user_id}
+              currentUserId={user?._id || user?.user_id}
             />
 
             {/* Comments Section */}

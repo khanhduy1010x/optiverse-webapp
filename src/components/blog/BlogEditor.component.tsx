@@ -1,62 +1,7 @@
-import React, { useState, useRef, useMemo, useEffect } from 'react';
-import ReactQuill from 'react-quill-new';
-import 'react-quill-new/dist/quill.snow.css';
+import React, { useState, useRef, useEffect } from 'react';
 import { BlogEditorProps } from '../../types/blog/props/component.props';
 import { BlogFormData } from '../../types/blog/blog.types';
-
-// CSS tùy chỉnh cho ReactQuill
-const customQuillStyles = `
-  .ql-editor strong {
-    color: #60a5fa !important;
-  }
-  .ql-editor em {
-    color: #60a5fa !important;
-  }
-  .ql-editor u {
-    color: #60a5fa !important;
-  }
-  .ql-editor.ql-blank::before {
-    color: #60a5fa !important;
-    font-style: italic;
-    opacity: 1 !important;
-  }
-  .ql-editor:focus.ql-blank::before {
-    display: none !important;
-  }
-  .ql-editor p {
-    color: #f1f5f9 !important;
-  }
-  .ql-editor {
-    color: #f1f5f9 !important;
-  }
-  .ql-toolbar .ql-formats button {
-    color: #60a5fa !important;
-  }
-  .ql-toolbar .ql-formats button:hover {
-    color: #3b82f6 !important;
-  }
-  .ql-toolbar .ql-formats button.ql-active {
-    color: #60a5fa !important;
-    background-color: rgba(96, 165, 250, 0.1) !important;
-  }
-  .ql-toolbar .ql-formats .ql-picker-label {
-    color: #60a5fa !important;
-  }
-  .ql-toolbar .ql-formats .ql-picker-label:hover {
-    color: #3b82f6 !important;
-  }
-  .ql-toolbar .ql-formats .ql-picker.ql-expanded .ql-picker-label {
-    color: #60a5fa !important;
-  }
-  .ql-toolbar .ql-formats .ql-picker-options {
-    background-color: white !important;
-    border: 1px solid #d1d5db !important;
-  }
-  .ql-toolbar .ql-formats .ql-picker-item:hover {
-    background-color: rgba(59, 130, 246, 0.1) !important;
-    color: #3b82f6 !important;
-  }
-`;
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 const BlogEditor: React.FC<BlogEditorProps> = ({
   initialData,
@@ -83,30 +28,9 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
   const [newTag, setNewTag] = useState('');
   const [showTagInput, setShowTagInput] = useState(false);
   const multiImageInputRef = useRef<HTMLInputElement>(null);
+  const { t } = useAppTranslate('blog');
 
-  // Quill editor configuration
-  const quillModules = useMemo(() => ({
-    toolbar: [
-      [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-      [{ 'script': 'sub'}, { 'script': 'super' }],
-      [{ 'indent': '-1'}, { 'indent': '+1' }],
-      [{ 'direction': 'rtl' }],
-      [{ 'color': [] }, { 'background': [] }],
-      [{ 'align': [] }],
-      ['link', 'image', 'video'],
-      ['blockquote', 'code-block'],
-      ['clean']
-    ],
-  }), []);
-
-  const quillFormats = [
-    'header', 'bold', 'italic', 'underline', 'strike',
-    'list', 'bullet', 'script', 'indent', 'direction',
-    'color', 'background', 'align', 'link', 'image', 'video',
-    'blockquote', 'code-block'
-  ];
+  // Không cần Quill editor configuration nữa - đã bỏ
 
   useEffect(() => {
     if (initialData) {
@@ -115,24 +39,20 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
     }
   }, [initialData]);
 
-
-
-
-
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
     if (!formData.title.trim()) {
-      newErrors.title = 'Tiêu đề là bắt buộc';
+      newErrors.title = t('titleRequired');
     }
 
     if (!formData.content.trim()) {
-      newErrors.content = 'Nội dung là bắt buộc';
+      newErrors.content = t('contentRequired');
     }
 
     // Kiểm tra xem có tag đang nhập nhưng chưa được thêm vào không
     if (newTag.trim()) {
-      newErrors.tags = 'Bạn có tag đang nhập nhưng chưa bấm "Thêm". Vui lòng thêm tag hoặc xóa nội dung tag.';
+      newErrors.tags = t('tagNotAdded');
     }
 
     setErrors(newErrors);
@@ -202,7 +122,9 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
     if (!validateForm()) return;
 
     try {
-      await onSave(dataToSave);
+      if (onSave) {
+        await onSave(dataToSave);
+      }
     } catch (error) {
       console.error('Failed to save blog post:', error);
     }
@@ -210,7 +132,6 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
 
   return (
     <>
-      <style dangerouslySetInnerHTML={{ __html: customQuillStyles }} />
       <div className={`max-w-5xl mx-auto bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 ${className}`}>
       <div className="p-8">
         <div className="flex items-center justify-between mb-8">
@@ -221,7 +142,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
               </svg>
             </div>
             <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
-              {initialData ? 'Chỉnh sửa bài viết' : 'Tạo bài viết mới'}
+              {initialData ? t('editPost') : t('createNewPost')}
             </h2>
           </div>
           <div className="flex space-x-3">
@@ -232,7 +153,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
-              <span>Hủy</span>
+              <span>{t('cancel')}</span>
             </button>
             <button
               onClick={() => handleSubmit('published')}
@@ -242,7 +163,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
               </svg>
-              <span>{isLoading ? 'Đang xuất bản...' : 'Xuất bản'}</span>
+              <span>{isLoading ? t('publishing') : t('publish')}</span>
             </button>
           </div>
         </div>
@@ -254,7 +175,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
               <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a.997.997 0 01-1.414 0l-7-7A1.997 1.997 0 013 12V7a4 4 0 014-4z" />
               </svg>
-              <span>Tiêu đề *</span>
+              <span>{t('title')} *</span>
             </label>
             <input
               type="text"
@@ -262,7 +183,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
               value={formData.title}
               onChange={(e) => handleInputChange('title', e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm placeholder-gray-400 dark:placeholder-gray-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 group-hover:border-gray-400 dark:group-hover:border-gray-500"
-              placeholder="Nhập tiêu đề bài viết..."
+              placeholder={t('enterTitle')}
             />
             {errors.title && <p className="mt-2 text-sm text-red-600 dark:text-red-400 flex items-center space-x-1">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -278,7 +199,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
               <svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              <span>Ảnh bài viết</span>
+              <span>{t('images')}</span>
             </label>
             
             {/* Display uploaded images */}
@@ -323,7 +244,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
-                <span>{isUploading ? 'Đang tải lên...' : 'Thêm ảnh'}</span>
+                <span>{isUploading ? t('uploading') : t('addImage')}</span>
               </button>
             </div>
           </div>
@@ -334,11 +255,11 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
               <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
               </svg>
-              <span>Tags</span>
+              <span>{t('tags')}</span>
             </label>
             <div className="flex flex-wrap gap-2 mb-3 min-h-[2rem] p-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800">
               {selectedTags.length === 0 ? (
-                <span className="text-gray-400 dark:text-gray-500 text-sm italic">Chưa có tag nào được chọn</span>
+                <span className="text-gray-400 dark:text-gray-500 text-sm italic">{t('noTagsSelected')}</span>
               ) : (
                 selectedTags.map((tag) => (
                   <span
@@ -371,7 +292,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                     onChange={(e) => setNewTag(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && e.preventDefault()}
                     className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-md text-sm bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                    placeholder="Nhập tag mới..."
+                    placeholder={t('enterNewTag')}
                   />
                 </div>
                 <button
@@ -382,7 +303,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
-                  <span>Thêm</span>
+                  <span>{t('add')}</span>
                 </button>
                 <button
                   type="button"
@@ -399,7 +320,7 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
-                  <span>Hủy</span>
+                  <span>{t('cancel')}</span>
                 </button>
               </div>
             ) : (
@@ -411,34 +332,36 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
-                <span>Thêm tag</span>
+                <span>{t('addTag')}</span>
               </button>
             )}
             {errors.tags && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.tags}</p>}
           </div>
 
-          {/* Content Editor - Chỉ Rich Text */}
+          {/* Content Editor - Plain Textarea */}
           <div className="group">
             <label htmlFor="content" className="flex items-center space-x-2 text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">
               <svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              <span>Nội dung *</span>
+              <span>{t('content')} *</span>
             </label>
             
-            <div className="quill-editor-wrapper rounded-lg overflow-hidden shadow-sm border border-gray-200 dark:border-gray-600">
-              <ReactQuill
-                value={formData.content}
-                onChange={(value) => handleInputChange('content', value)}
-                modules={quillModules}
-                formats={quillFormats}
-                className="bg-white dark:bg-gray-800 [&_.ql-editor]:!text-slate-50 dark:[&_.ql-editor]:!text-slate-50 [&_.ql-editor]:!font-normal [&_.ql-editor.ql-blank::before]:!text-blue-500 dark:[&_.ql-editor.ql-blank::before]:!text-blue-400 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:border-gray-200 dark:[&_.ql-toolbar]:border-gray-600 [&_.ql-toolbar]:bg-gray-50 dark:[&_.ql-toolbar]:bg-gray-700 [&_.ql-toolbar_.ql-formats_button]:!text-blue-500 dark:[&_.ql-toolbar_.ql-formats_button]:!text-blue-400 [&_.ql-editor_strong]:!text-blue-500 dark:[&_.ql-editor_strong]:!text-blue-400 [&_.ql-editor_em]:!text-blue-500 dark:[&_.ql-editor_em]:!text-blue-400 [&_.ql-editor_u]:!text-blue-500 dark:[&_.ql-editor_u]:!text-blue-400 [&_.ql-editor]:min-h-[400px]"
-                theme="snow"
-                placeholder="Viết nội dung bài viết..."
-              />
-            </div>
+            <textarea
+              id="content"
+              value={formData.content}
+              onChange={(e) => handleInputChange('content', e.target.value)}
+              rows={15}
+              className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl shadow-sm placeholder-gray-400 dark:placeholder-gray-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 resize-y min-h-[400px]"
+              placeholder={t('writeContent')}
+            />
 
-            {errors.content && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.content}</p>}
+            {errors.content && <p className="mt-2 text-sm text-red-600 dark:text-red-400 flex items-center space-x-1">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>{errors.content}</span>
+            </p>}
           </div>
 
           {/* Action Buttons */}
@@ -448,10 +371,11 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
               onClick={onCancel}
               className="px-6 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 shadow-sm"
             >
-              Hủy
+              {t('cancel')}
             </button>
             <button
-              type="submit"
+              type="button"
+              onClick={() => handleSubmit('published')}
               disabled={isLoading}
               className="px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
             >
@@ -461,10 +385,10 @@ const BlogEditor: React.FC<BlogEditorProps> = ({
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  <span>Đang xuất bản...</span>
+                  <span>{t('publishing')}</span>
                 </span>
               ) : (
-                'Xuất bản'
+                t('publish')
               )}
             </button>
           </div>

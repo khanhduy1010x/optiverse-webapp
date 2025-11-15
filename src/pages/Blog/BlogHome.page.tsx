@@ -26,7 +26,6 @@ const BlogHomePage: React.FC = () => {
 
   const {
     posts,
-    trendingPosts,
     postsLoading,
     postsError,
     pagination,
@@ -110,12 +109,6 @@ const BlogHomePage: React.FC = () => {
       case BlogSortBy.NEWEST:
         filtered.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
         break;
-      case BlogSortBy.OLDEST:
-        filtered.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
-        break;
-      case BlogSortBy.MOST_VIEWED:
-        filtered.sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
-        break;
       case BlogSortBy.MOST_LIKED:
         filtered.sort((a, b) => (b.likeCount || 0) - (a.likeCount || 0));
         break;
@@ -128,10 +121,12 @@ const BlogHomePage: React.FC = () => {
   useEffect(() => {
     const loadPopularPosts = async () => {
       try {
+        console.log('🔥 Fetching popular posts...');
         const popular = await fetchPopularPosts(5);
+        console.log('✅ Popular posts loaded:', popular);
         setPopularPosts(popular);
       } catch (error) {
-        console.error('Error fetching popular posts:', error);
+        console.error('❌ Error fetching popular posts:', error);
       }
     };
 
@@ -204,6 +199,21 @@ const BlogHomePage: React.FC = () => {
     setReportPostId(postId);
     setReportPostTitle(postTitle);
     setReportModalOpen(true);
+  };
+
+  const handleDeletePost = async (postId: string) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa bài viết này?')) {
+      return;
+    }
+
+    try {
+      await deletePost(postId);
+      // Refresh the posts list
+      fetchPosts({ sortBy });
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      alert('Có lỗi xảy ra khi xóa bài viết');
+    }
   };
 
   if (postsError) {
@@ -331,16 +341,6 @@ const BlogHomePage: React.FC = () => {
                 {t('newest')}
               </button>
               <button
-                onClick={() => setSortBy(BlogSortBy.MOST_VIEWED)}
-                className={`px-4 py-2 text-sm font-medium transition-all ${
-                  sortBy === BlogSortBy.MOST_VIEWED
-                    ? 'text-cyan-600 border-b-2 border-cyan-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                {t('popular')}
-              </button>
-              <button
                 onClick={() => setSortBy(BlogSortBy.MOST_LIKED)}
                 className={`px-4 py-2 text-sm font-medium transition-all ${
                   sortBy === BlogSortBy.MOST_LIKED
@@ -348,17 +348,7 @@ const BlogHomePage: React.FC = () => {
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                {t('trending')}
-              </button>
-              <button
-                onClick={() => setSortBy(BlogSortBy.OLDEST)}
-                className={`px-4 py-2 text-sm font-medium transition-all ${
-                  sortBy === BlogSortBy.OLDEST
-                    ? 'text-cyan-600 border-b-2 border-cyan-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                {t('oldest')}
+                {t('most_liked')}
               </button>
             </div>
 
@@ -370,9 +360,7 @@ const BlogHomePage: React.FC = () => {
                 className="flex-1 px-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-white/80 backdrop-blur-sm"
               >
                 <option value={BlogSortBy.NEWEST}>{t('newest')}</option>
-                <option value={BlogSortBy.MOST_VIEWED}>{t('popular')}</option>
-                <option value={BlogSortBy.MOST_LIKED}>{t('trending')}</option>
-                <option value={BlogSortBy.OLDEST}>{t('oldest')}</option>
+                <option value={BlogSortBy.MOST_LIKED}>{t('most_liked')}</option>
               </select>
             </div>
           </div>
@@ -438,7 +426,8 @@ const BlogHomePage: React.FC = () => {
                       onBookmark={handleBookmarkPost}
                       onTagClick={handleTagClick}
                       onReport={handleReportPost}
-                      currentUserId={user?.user_id}
+                      onDeletePost={handleDeletePost}
+                      currentUserId={user?._id || user?.user_id}
                       isAdmin={isAdmin}
                     />
                   );
@@ -514,6 +503,12 @@ const BlogHomePage: React.FC = () => {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                               </svg>
                               {post.likeCount || 0}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                              </svg>
+                              {post.commentCount || 0}
                             </span>
                           </div>
                         </div>

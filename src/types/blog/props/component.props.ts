@@ -53,11 +53,12 @@ export interface BlogPostDetailProps {
 }
 
 export interface BlogEditorProps {
-  post?: BlogPost;
-  onSave?: (post: Partial<BlogPost>) => void;
+  initialData?: Partial<BlogPost>;
+  tags?: string[];
+  onSave?: (post: Partial<BlogPost>) => Promise<void>;
   onCancel?: () => void;
   onImageUpload?: (file: File) => Promise<string>;
-  loading?: boolean;
+  isLoading?: boolean;
   className?: string;
 }
 

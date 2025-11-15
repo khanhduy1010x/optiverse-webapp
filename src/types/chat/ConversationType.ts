@@ -6,7 +6,8 @@ export interface ConversationType {
   lastMessageId?: string;
   hiddenBy?: { [userId: string]: true };
   // Xóa mềm: lưu thông tin user nào đã xóa conversation và thời gian xóa
-  deletedBy?: { [userId: string]: number }; // timestamp khi user xóa conversation
+  deletedBy?: { [userId: string]: number }; // timestamp khi user xóa conversation (ẩn khỏi list)
+  messagesDeletedAt?: { [userId: string]: number }; // timestamp để filter messages (giữ lại khi restore conversation)
   createdAt?: number;
   lastMessage?: {
     text: string;

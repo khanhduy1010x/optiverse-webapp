@@ -123,7 +123,6 @@ export enum BlogPostStatus {
 
 export enum BlogSortBy {
   NEWEST = 'newest',
-  OLDEST = 'oldest',
   MOST_LIKED = 'most_liked',
   MOST_VIEWED = 'most_viewed',
   MOST_COMMENTED = 'most_commented'
@@ -140,7 +139,7 @@ export interface SearchFilters {
   isPublic?: boolean;
 }
 
-export type SortOption = 'newest' | 'oldest' | 'most_liked' | 'most_viewed' | 'most_commented' | 'trending';
+export type SortOption = 'newest' | 'most_liked' | 'most_viewed' | 'most_commented';
 
 export type SearchType = 'all' | 'title' | 'author' | 'content' | 'tags';
 
@@ -232,7 +231,6 @@ export interface BlogAnalytics {
   comments: number;
   bookmarks: number;
   shares: number;
-  readTime: number;
   bounceRate: number;
   engagementRate: number;
   topReferrers: string[];
@@ -284,7 +282,6 @@ export interface BlogState {
     loading: boolean;
     error: string | null;
     filters: SearchFilters;
-    trendingPosts: BlogPostWithAuthor[];
     popularTags: BlogTag[];
     relatedPosts: BlogPostWithAuthor[];
   };

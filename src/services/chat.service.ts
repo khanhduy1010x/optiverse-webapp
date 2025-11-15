@@ -103,9 +103,11 @@ class ChatService {
 
       const conversationRef = ref(db, `conversations/${conversationId}`);
       
-      // Cập nhật field deletedBy với timestamp hiện tại
+      const timestamp = Date.now();
+      // Cập nhật cả deletedBy (ẩn khỏi list) và messagesDeletedAt (filter messages)
       await update(conversationRef, {
-        [`deletedBy/${userId}`]: Date.now()
+        [`deletedBy/${userId}`]: timestamp,
+        [`messagesDeletedAt/${userId}`]: timestamp
       });
 
       return true;

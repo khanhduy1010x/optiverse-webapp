@@ -3,6 +3,7 @@ import Modal from 'react-modal';
 import { GROUP_CLASSNAMES } from '../../../styles';
 import { useGroupOperations } from '../../../hooks/chat/useGroupOperations';
 import { useAuthState } from '../../../hooks/useAuthState.hook';
+import { useAppTranslate } from '../../../hooks/useAppTranslate';
 import { GroupMemberRole } from '../../../types/chat/GroupConversationType';
 import friendService from '../../../services/friend.service';
 import { SelectedFriend, CreateGroupModalProps } from '../../../types/chat/entities/group.entity';
@@ -13,6 +14,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
   onSuccess
 }) => {
   const { user } = useAuthState();
+  const { t } = useAppTranslate('chat');
   const { createGroup, loading } = useGroupOperations();
   
   const [friends, setFriends] = useState<any[]>([]);
@@ -230,7 +232,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
       <div className="flex flex-col h-full max-h-[85vh]">
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b border-gray-200 flex-shrink-0">
-          <h2 className="text-xl font-semibold text-gray-900">Tạo nhóm mới</h2>
+          <h2 className="text-xl font-semibold text-gray-900">{t('create_new_group')}</h2>
           <button
             onClick={handleClose}
             disabled={loading}
@@ -248,13 +250,13 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
             {/* Group Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tên nhóm <span className="text-red-500">*</span>
+                {t('group_name')} <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={groupName}
                 onChange={(e) => setGroupName(e.target.value)}
-                placeholder="Nhập tên nhóm..."
+                placeholder={t('group_name_placeholder')}
                 className={`${GROUP_CLASSNAMES.inputTransparent} border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                   errors.groupName ? 'border-red-500' : ''
                 }`}
@@ -264,18 +266,18 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
               {errors.groupName && (
                 <p className="mt-1 text-sm text-red-600">{errors.groupName}</p>
               )}
-              <p className="mt-1 text-xs text-gray-500">{groupName.length}/50 ký tự</p>
+              <p className="mt-1 text-xs text-gray-500">{groupName.length}/50 {t('group_name_length')}</p>
             </div>
 
             {/* Group Description */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Mô tả nhóm
+                {t('group_description')}
               </label>
               <textarea
                 value={groupDescription}
                 onChange={(e) => setGroupDescription(e.target.value)}
-                placeholder="Nhập mô tả nhóm (tùy chọn)..."
+                placeholder={t('group_description_placeholder')}
                 rows={3}
                 className={`${GROUP_CLASSNAMES.inputTransparent} border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none ${
                   errors.groupDescription ? 'border-red-500' : ''
@@ -286,13 +288,13 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
               {errors.groupDescription && (
                 <p className="mt-1 text-sm text-red-600">{errors.groupDescription}</p>
               )}
-              <p className="mt-1 text-xs text-gray-500">{groupDescription.length}/200 ký tự</p>
+              <p className="mt-1 text-xs text-gray-500">{groupDescription.length}/200 {t('group_name_length')}</p>
             </div>
 
             {/* Add Members */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Thêm thành viên <span className="text-red-500">*</span>
+                {t('add_members_required')} <span className="text-red-500">*</span>
               </label>
               
               {/* Search Friends */}
@@ -301,7 +303,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Tìm kiếm bạn bè..."
+                  placeholder={t('search_friends') + '...'}
                   className={`${GROUP_CLASSNAMES.inputTransparent} border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pl-10`}
                   disabled={loading}
                 />
@@ -347,7 +349,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
                     })
                   ) : (
                     <div className="p-3 text-sm text-gray-500 text-center">
-                      Không tìm thấy bạn bè nào
+                      {t('no_friends_found')}
                     </div>
                   )}
                 </div>
@@ -357,7 +359,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
               <div className="mt-4">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-sm font-medium text-gray-700">
-                    Thành viên đã chọn ({selectedFriends.length + 1})
+                    {t('selected_members')} ({selectedFriends.length + 1})
                   </span>
                   {selectedFriends.length > 0 && (
                     <button
@@ -366,7 +368,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
                       className="text-xs text-red-600 hover:text-red-800 hover:bg-red-50 px-2 py-1 rounded transition-colors"
                       disabled={loading}
                     >
-                      Xóa tất cả
+                      {t('clear_reactions')}
                     </button>
                   )}
                 </div>
@@ -439,8 +441,8 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
                   {/* Empty state when no friends selected */}
                   {selectedFriends.length === 0 && (
                     <div className="text-center py-4 text-gray-500">
-                      <div className="text-sm">Chưa có thành viên nào được chọn</div>
-                      <div className="text-xs mt-1">Tìm kiếm và thêm bạn bè vào nhóm</div>
+                      <div className="text-sm">{t('select_at_least_one_member')}</div>
+                      <div className="text-xs mt-1">{t('search_friends')}</div>
                     </div>
                   )}
                 </div>
@@ -468,7 +470,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
               disabled={loading}
               className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
             >
-              Hủy
+              {t('cancel')}
             </button>
             <button
               type="submit"
@@ -481,7 +483,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
               )}
-              {loading ? 'Đang tạo...' : 'Tạo nhóm'}
+              {loading ? t('creating') : t('create_group_button')}
             </button>
           </div>
         </form>

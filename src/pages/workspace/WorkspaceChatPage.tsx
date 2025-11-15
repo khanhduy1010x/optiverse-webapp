@@ -4,6 +4,7 @@ import { useWorkspaceChat } from '../../hooks/chat/useWorkspaceChat';
 import { useGroupChatPage } from '../../hooks/chat/useGroupChatPage';
 import { useGroupConversationTheme } from '../../hooks/chat/useGroupConversationTheme';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
+import { useWorkspaceWebSocket } from '../../hooks/websocket/useWorkspaceWebSocket';
 import workspaceService from '../../services/workspace.service';
 
 // Reuse 100% group chat components
@@ -75,6 +76,7 @@ const WorkspaceChatPage: React.FC = () => {
     error: chatError,
     createWorkspaceChatIfNotExists,
     syncMembers,
+    fetchUsersForMembers, // ✅ NEW: Method để fetch users cho danh sách memberIds
   } = useWorkspaceChat(workspaceId || null);
 
   // Reuse 100% group chat hook
@@ -94,6 +96,11 @@ const WorkspaceChatPage: React.FC = () => {
         setWorkspace(workspaceDetail);
         workspaceLoadedRef.current = true;
         console.log('✅ Workspace loaded:', workspaceDetail.name);
+        
+        // ✅ Fetch users info từ workspace members (không đợi Firebase)
+        const activeMemberIds = workspaceDetail.members?.active?.map((m: any) => m.user_id) || [];
+        console.log('👥 Workspace active members:', activeMemberIds);
+        await fetchUsersForMembers(activeMemberIds);
       } catch (error) {
         console.error('❌ Failed to load workspace:', error);
       }
@@ -101,6 +108,47 @@ const WorkspaceChatPage: React.FC = () => {
 
     loadWorkspace();
   }, [workspaceId]); // ✅ CHỈ phụ thuộc workspaceId
+
+  // ✅ WebSocket: Listen for workspace changes (members added/removed)
+  const { socket } = useWorkspaceWebSocket({
+    workspaceId: workspaceId || null,
+    isDashboard: false, // Chat page, not dashboard
+  });
+
+  // ✅ Listen for workspace update events
+  useEffect(() => {
+    if (!socket || !workspaceId) return;
+
+    const handleWorkspaceUpdate = async (data: any) => {
+      console.log('🔔 Workspace updated event:', data);
+      
+      // Re-fetch workspace data
+      try {
+        const workspaceDetail = await workspaceService.getWorkspaceById(workspaceId);
+        setWorkspace(workspaceDetail);
+        
+        // Re-fetch users
+        const activeMemberIds = workspaceDetail.members?.active?.map((m: any) => m.user_id) || [];
+        console.log('👥 Re-fetching users after workspace update:', activeMemberIds);
+        await fetchUsersForMembers(activeMemberIds);
+      } catch (error) {
+        console.error('❌ Failed to reload workspace:', error);
+      }
+    };
+
+    // Listen to multiple events that might change members
+    socket.on('workspace:member-added', handleWorkspaceUpdate);
+    socket.on('workspace:member-removed', handleWorkspaceUpdate);
+    socket.on('workspace:member-role-changed', handleWorkspaceUpdate);
+    socket.on('workspace:updated', handleWorkspaceUpdate);
+
+    return () => {
+      socket.off('workspace:member-added', handleWorkspaceUpdate);
+      socket.off('workspace:member-removed', handleWorkspaceUpdate);
+      socket.off('workspace:member-role-changed', handleWorkspaceUpdate);
+      socket.off('workspace:updated', handleWorkspaceUpdate);
+    };
+  }, [socket, workspaceId]);
 
   // ✅ STEP 2: Auto-create chat CHỈ 1 LẦN khi workspace loaded và chat chưa tồn tại
   useEffect(() => {
@@ -136,11 +184,18 @@ const WorkspaceChatPage: React.FC = () => {
   // ✅ STEP 3: Sync members CHỈ KHI có thay đổi thực sự (debounced)
   // 🔧 FIX: useMemo để tránh re-trigger do object reference thay đổi
   const memberIdsString = useMemo(() => {
-    return JSON.stringify(workspace?.members?.active?.map((m: any) => m.user_id).sort() || []);
+    const memberIds = workspace?.members?.active?.map((m: any) => m.user_id).sort() || [];
+    console.log('🔄 Workspace active members:', memberIds);
+    return JSON.stringify(memberIds);
   }, [workspace?.members?.active]);
 
   const chatMemberIdsString = useMemo(() => {
-    return JSON.stringify(Object.keys(workspaceChat?.groupMembers || {}).sort());
+    const activeMembers = Object.entries(workspaceChat?.groupMembers || {})
+      .filter(([_, member]: [string, any]) => member.status === 'active')
+      .map(([userId]) => userId)
+      .sort();
+    console.log('💬 Chat active members:', activeMembers);
+    return JSON.stringify(activeMembers);
   }, [workspaceChat?.groupMembers]);
 
   useEffect(() => {
@@ -157,15 +212,24 @@ const WorkspaceChatPage: React.FC = () => {
 
     const handleMembersSync = async () => {
       const memberIds = workspace.members?.active?.map((m: any) => m.user_id) || [];
-      const currentChatMembers = Object.keys(workspaceChat.groupMembers || {});
+      const currentChatMembers = Object.entries(workspaceChat.groupMembers || {})
+        .filter(([_, member]: [string, any]) => member.status === 'active')
+        .map(([userId]) => userId);
       
       // Chỉ sync nếu có thay đổi thực sự
       const hasChanges = memberIds.length !== currentChatMembers.length || 
-        memberIds.some((id: string) => !currentChatMembers.includes(id));
+        memberIds.some((id: string) => !currentChatMembers.includes(id)) ||
+        currentChatMembers.some((id: string) => !memberIds.includes(id));
       
       if (hasChanges) {
-        console.log('🔄 Syncing workspace members (changes detected):', memberIds);
+        console.log('🔄 Syncing workspace members (changes detected)');
+        console.log('  Expected members:', memberIds);
+        console.log('  Current chat members:', currentChatMembers);
         await syncMembers(memberIds);
+        
+        // ✅ Re-fetch users info sau khi sync
+        console.log('👥 Re-fetching users after sync...');
+        await fetchUsersForMembers(memberIds);
       } else {
         console.log('⏭️ No changes detected, skip syncing');
       }
@@ -176,6 +240,36 @@ const WorkspaceChatPage: React.FC = () => {
     return () => clearTimeout(timeoutId);
   }, [memberIdsString, chatMemberIdsString]); // ✅ Use string comparison instead of object reference
 
+  // ✅ Get workspace members with user info - MUST BE BEFORE EARLY RETURNS
+  const workspaceMembersWithInfo = useMemo(() => {
+    if (!workspace?.members?.active) return [];
+    
+    return workspace.members.active.map((member: any) => {
+      const userInfo = workspaceChatUsers[member.user_id];
+      return {
+        ...member,
+        userInfo,
+      };
+    });
+  }, [workspace?.members?.active, workspaceChatUsers]);
+
+  // Get active members count - ✅ LẤY TỪ WORKSPACE, không phải từ workspaceChat
+  const activeMembersCount = workspace?.members?.active?.length || 0;
+
+  const textColor = groupTheme.theme?.textColor || '#000';
+  const backgroundColor = groupTheme.theme?.backgroundColor || '#fff';
+
+  // Helper function để get initials
+  const getInitials = (name: string): string => {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  // ✅ ALL HOOKS ABOVE, CONDITIONAL RETURNS BELOW
   // Bỏ loading screen để tránh flicker mỗi lần gửi tin
   // Chỉ show error hoặc null state
 
@@ -205,25 +299,8 @@ const WorkspaceChatPage: React.FC = () => {
     );
   }
 
-  // Get active members count
-  const activeMembersCount = Object.values(workspaceChat.groupMembers || {})
-    .filter((member: any) => member.status === 'active').length;
-
-  const textColor = groupTheme.theme?.textColor || '#000';
-  const backgroundColor = groupTheme.theme?.backgroundColor || '#fff';
-
-  // Helper function để get initials
-  const getInitials = (name: string): string => {
-    return name
-      .split(' ')
-      .map(word => word.charAt(0))
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
   return (
-    <div className="flex h-screen max-h-screen overflow-hidden" style={{ backgroundColor }}>
+    <div className="flex h-full max-h-full overflow-hidden" style={{ backgroundColor }}>
       <style>
         {`
           .scroll-to-bottom-btn {
@@ -270,13 +347,12 @@ const WorkspaceChatPage: React.FC = () => {
           <h3 className="text-xs font-semibold text-gray-500 uppercase mb-2">
             Members
           </h3>
-          {Object.values(workspaceChat.groupMembers || {})
-            .filter((member: any) => member.status === 'active')
-            .map((member: any) => {
-              const userInfo = workspaceChatUsers[member.userId];
+          {/* ✅ LẤY MEMBERS TỪ WORKSPACE, không phải từ Firebase chat */}
+          {workspaceMembersWithInfo.map((member: any) => {
+              const userInfo = member.userInfo;
               return (
                 <div
-                  key={member.userId}
+                  key={member.user_id}
                   className="flex items-center space-x-3 p-2 rounded hover:bg-gray-100 cursor-pointer"
                 >
                   {userInfo?.avatar_url ? (
@@ -292,10 +368,10 @@ const WorkspaceChatPage: React.FC = () => {
                   )}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-800 truncate">
-                      {userInfo?.full_name || 'Unknown User'}
+                      {userInfo?.full_name || 'Loading...'}
                     </p>
                     <p className="text-xs text-gray-500">
-                      {member.role === 'admin' ? '👑 Admin' : 'Member'}
+                      {member.role === 'admin' || member.role === 'owner' ? '👑 Admin' : 'Member'}
                     </p>
                   </div>
                 </div>
@@ -314,7 +390,7 @@ const WorkspaceChatPage: React.FC = () => {
       </div>
 
       {/* Main Chat Area - Reuse 100% Group Chat Components - Fixed height */}
-      <div className="flex-1 flex flex-col h-screen max-h-screen overflow-hidden" style={{ color: textColor }}>
+      <div className="flex-1 flex flex-col h-full max-h-full overflow-hidden" style={{ color: textColor }}>
         {/* Group Chat Header - Reuse */}
         <GroupChatHeader
           textColor={textColor}
@@ -414,8 +490,8 @@ const WorkspaceChatPage: React.FC = () => {
               onScroll={groupChatData?.handleScroll}
               style={{ 
                 backgroundColor,
-                maxHeight: 'calc(100vh - 200px)', // Fix: Giới hạn chiều cao
-                minHeight: '300px'
+                flex: '1 1 auto',
+                minHeight: 0
               }}
             >
               {groupChatData?.groupMessages && groupChatData.groupMessages.length > 0 ? (

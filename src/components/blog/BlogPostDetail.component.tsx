@@ -21,6 +21,10 @@ const BlogPostDetail: React.FC<BlogPostDetailProps> = ({
   // Debug: Log post data
   console.log('BlogPostDetail - Post data:', post);
   console.log('BlogPostDetail - Post content:', post.content);
+  console.log('BlogPostDetail - Current User ID:', currentUserId);
+  console.log('BlogPostDetail - Author User ID:', post.author?.userId);
+  console.log('BlogPostDetail - Is Admin:', isAdmin);
+  console.log('BlogPostDetail - Can Delete:', isAdmin || currentUserId === post.author?.userId);
   
   const [isLiked, setIsLiked] = useState(post.isLiked || false);
   const [isBookmarked, setIsBookmarked] = useState(post.isBookmarked || false);
@@ -45,13 +49,6 @@ const BlogPostDetail: React.FC<BlogPostDetailProps> = ({
       addSuffix: true,
       locale: vi
     });
-  };
-
-  const calculateReadTime = (content: string) => {
-    const wordsPerMinute = 200;
-    const words = content.split(' ').length;
-    const readTime = Math.ceil(words / wordsPerMinute);
-    return readTime;
   };
 
 
@@ -162,8 +159,6 @@ const BlogPostDetail: React.FC<BlogPostDetailProps> = ({
                   </div>
                   <div className="flex items-center text-sm text-gray-500 space-x-2">
                     <span>{formatDate(post.publishedAt || post.createdAt)}</span>
-                    <span>•</span>
-                    <span>{calculateReadTime(post.content)} phút đọc</span>
                     <span>•</span>
                     <span>{formatRelativeDate(post.publishedAt || post.createdAt)}</span>
                   </div>

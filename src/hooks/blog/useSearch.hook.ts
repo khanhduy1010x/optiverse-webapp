@@ -8,7 +8,6 @@ import {
   setSearchError,
   setSearchFilters,
   clearSearchResults,
-  setTrendingPosts,
   setPopularTags,
   setRelatedPosts
 } from '../../store/slices/blog.slice';
@@ -24,7 +23,6 @@ export const useSearch = () => {
     searchLoading, 
     searchError, 
     searchFilters,
-    trendingPosts,
     popularTags,
     relatedPosts
   } = useSelector((state: RootState) => state.blog);
@@ -59,16 +57,15 @@ export const useSearch = () => {
       const searchFiltersForService: BlogSearchFilters = {
         query: searchTerm,
         tags: searchFilters.tags,
-        authorId: searchFilters.author,
+        authorId: searchFilters.authorId,
         isPublic: searchFilters.isPublic,
-        dateFrom: searchFilters.dateRange?.start,
-        dateTo: searchFilters.dateRange?.end,
+        dateFrom: searchFilters.dateFrom,
+        dateTo: searchFilters.dateTo,
         sortBy: options?.sortBy === 'newest' ? 'createdAt' : 
-               options?.sortBy === 'oldest' ? 'createdAt' :
                options?.sortBy === 'most_liked' ? 'likeCount' :
                options?.sortBy === 'most_viewed' ? 'viewCount' :
                options?.sortBy === 'most_commented' ? 'commentCount' : 'createdAt',
-        sortOrder: options?.sortBy === 'oldest' ? 'asc' : 'desc'
+        sortOrder: 'desc'
       };
 
       const results = await blogService.searchPosts(searchTerm, searchFiltersForService, searchType);
@@ -115,18 +112,6 @@ export const useSearch = () => {
       dispatch(setSearchLoading(false));
     }
   }, [dispatch, blogService]);
-
-  // Get trending posts
-  const getTrendingPosts = useCallback(async (limit: number = 10, timeframe: 'day' | 'week' | 'month' = 'week') => {
-    try {
-      const results = await SearchService.getTrendingPosts(limit, timeframe);
-      dispatch(setTrendingPosts(results));
-      return results;
-    } catch (error) {
-      console.error('Failed to fetch trending posts:', error);
-      throw error;
-    }
-  }, [dispatch]);
 
   // Get popular tags
   const getPopularTags = useCallback(async (limit: number = 20) => {
@@ -185,7 +170,6 @@ export const useSearch = () => {
     searchLoading,
     searchError,
     searchFilters,
-    trendingPosts,
     popularTags,
     relatedPosts,
 
@@ -193,7 +177,6 @@ export const useSearch = () => {
     searchPosts,
     searchPostsByTag,
     searchPostsByAuthor,
-    getTrendingPosts,
     getPopularTags,
     getRelatedPosts,
     clearSearch,

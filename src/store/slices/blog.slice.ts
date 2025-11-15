@@ -51,7 +51,6 @@ interface BlogState {
   editingPostId: string | null;
   
   // Popular content
-  trendingPosts: BlogPost[];
   popularTags: { tag: string; count: number }[];
   relatedPosts: BlogPost[];
   
@@ -114,7 +113,6 @@ const initialState: BlogState = {
   editingPostId: null,
   
   // Popular content
-  trendingPosts: [],
   popularTags: [],
   relatedPosts: [],
   
@@ -297,9 +295,6 @@ const blogSlice = createSlice({
     },
     
     // Popular content actions
-    setTrendingPosts: (state, action: PayloadAction<BlogPost[]>) => {
-      state.trendingPosts = action.payload;
-    },
     setPopularTags: (state, action: PayloadAction<{ tag: string; count: number }[]>) => {
       state.popularTags = action.payload;
     },
@@ -398,7 +393,6 @@ export const {
   clearEditor,
   
   // Popular content
-  setTrendingPosts,
   setPopularTags,
   setRelatedPosts,
   
