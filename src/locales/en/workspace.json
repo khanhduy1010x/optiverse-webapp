@@ -295,7 +295,7 @@
     "currentSession": "Current Session",
     "availableSessions": "Available Sessions",
     "history": "History",
-    "historyTitle": "📜 Session History",
+    "historyTitle": " Session History",
     "historySubtitle": "Completed focus sessions",
     "noSessions": "No focus sessions yet",
     "noSessionsDescription": "Create the first focus session to work together effectively",

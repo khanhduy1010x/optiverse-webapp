@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useFavorites } from '../../hooks/marketplace/useFavorites';
 import MarketplaceGrid from '../../components/Marketplace/MarketplaceGrid.component';
 import MarketplaceItemDetailModal from '../../components/Marketplace/MarketplaceItemDetailModal.component';
+import PaginationControl from '../../components/Marketplace/PaginationControl.component';
 import { MarketplaceItem } from '../../types/marketplace/marketplace.types';
 import { MarketplaceProduct } from '../../components/Marketplace/MarketplaceCard.component';
 import { transformItemsToProductsWithRatings } from '../../utils/marketplace.transform';
@@ -64,103 +65,107 @@ const FavoritesPage: React.FC = () => {
     return (
         <>
             <style>{scrollbarHideStyle}</style>
-            <div className="favorites-page min-h-screen bg-gray-50">
-                {/* Header Section */}
-                <div className="bg-white border-b border-gray-200 p-6">
-                    <div className="flex items-center gap-3 mb-2">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="w-8 h-8 fill-red-500 text-red-500"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth={2}
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                            />
-                        </svg>
-                        <h1 className="text-3xl font-bold text-gray-900">Yêu thích của tôi</h1>
+            <div className="favorites-page min-h-screen bg-white">
+                {/* Header */}
+                <div className="border-b border-gray-200 px-6 sm:px-8 lg:px-12 xl:px-16 2xl:px-24 py-8">
+                    <div>
+                        <h1 className="text-5xl font-bold tracking-tight text-gray-900">Yêu thích của tôi</h1>
+                        <p className="text-gray-500 mt-2 text-base">
+                            Danh sách các sản phẩm bạn đã lưu vào yêu thích
+                        </p>
                     </div>
-                    <p className="text-gray-600 mt-1">
-                        Danh sách các sản phẩm bạn đã lưu vào yêu thích
-                    </p>
                 </div>
 
                 {/* Content */}
-                <div className="p-6">
-                    {error && (
-                        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                            <p className="text-red-700">{error}</p>
-                        </div>
-                    )}
+                <div className="px-6 sm:px-8 lg:px-12 xl:px-16 2xl:px-24 py-8">
+                    <div>
+                        {error && (
+                            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                                <p className="text-red-700">{error}</p>
+                            </div>
+                        )}
 
-                    {products.length === 0 ? (
-                        <div className="bg-white rounded-lg shadow p-12 text-center">
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="w-24 h-24 mx-auto text-gray-300 mb-4"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                                strokeWidth={1.5}
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                                />
-                            </svg>
-                            <p className="text-gray-600 text-lg mb-4">
-                                Bạn chưa có sản phẩm yêu thích nào
-                            </p>
-                            <p className="text-gray-500 mb-6">
-                                Khám phá marketplace và thêm sản phẩm vào yêu thích để xem sau
-                            </p>
-                            <a
-                                href="/marketplace"
-                                className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition"
-                            >
-                                Khám phá Marketplace
-                            </a>
-                        </div>
-                    ) : (
-                        <>
-                            <MarketplaceGrid
-                                products={products}
-                                onProductClick={(product) => {
-                                    const item = items.find(i => i._id === product.id);
-                                    if (item) {
-                                        setSelectedItem(item);
-                                    }
-                                }}
-                            />
+                        {products.length === 0 ? (
+                            <div className="bg-gray-50 rounded-2xl border border-gray-200 p-12 text-center">
+                                <p className="text-gray-500 mb-4 text-lg">Bạn chưa có sản phẩm yêu thích nào</p>
+                                <a
+                                    href="/marketplace"
+                                    className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                                >
+                                    Khám phá Marketplace
+                                </a>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 sm:gap-5 lg:gap-6">
+                                    {products.map((product, idx) => {
+                                        const item = items.find(i => i._id === product.id);
+                                        return (
+                                            <div
+                                                key={product.id}
+                                                className="bg-white rounded-2xl border border-gray-200/50 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden animate-fade-in cursor-pointer"
+                                                style={{ animationDelay: `${idx * 50}ms` }}
+                                                onClick={() => {
+                                                    if (item) setSelectedItem(item);
+                                                }}
+                                            >
+                                                {/* Image */}
+                                                <div className="relative h-56 bg-gray-100 overflow-hidden">
+                                                    <img
+                                                        src={product.image || 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400&h=300&fit=crop'}
+                                                        alt={product.title}
+                                                        className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
+                                                    />
+                                                </div>
 
-                            {/* Pagination */}
-                            {products.length > 0 && (
-                                <div className="mt-8 flex justify-center items-center gap-4">
-                                    <button
-                                        onClick={() => setPage(Math.max(1, page - 1))}
-                                        disabled={page === 1}
-                                        className="px-6 py-2 bg-blue-500 text-white rounded-lg font-medium disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-blue-600 transition"
-                                    >
-                                        Trang trước
-                                    </button>
-                                    <span className="text-gray-700 font-medium">
-                                        Trang {page}
-                                    </span>
-                                    <button
-                                        onClick={() => setPage(page + 1)}
-                                        disabled={products.length < 10}
-                                        className="px-6 py-2 bg-blue-500 text-white rounded-lg font-medium disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-blue-600 transition"
-                                    >
-                                        Trang sau
-                                    </button>
+                                                {/* Content */}
+                                                <div className="p-4">
+                                                    <h3 className="text-sm font-semibold text-gray-900 mb-2 line-clamp-2">
+                                                        {product.title}
+                                                    </h3>
+                                                    <div className="text-gray-600 text-xs mb-3 line-clamp-2">
+                                                        {item?.description ? (
+                                                            <div dangerouslySetInnerHTML={{ __html: item.description }} />
+                                                        ) : (
+                                                            <p className="text-gray-400">Không có mô tả</p>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Price */}
+                                                    <div className="mb-4 pb-4 border-b border-gray-100">
+                                                        {product.price > 0 ? (
+                                                            <p className="text-xl font-bold text-blue-600">
+                                                                {product.price} <span className="text-xs font-normal text-gray-600">OP</span>
+                                                            </p>
+                                                        ) : (
+                                                            <p className="text-lg font-bold text-gray-900">Miễn phí</p>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Rating */}
+                                                    <div className="flex items-center justify-between text-xs text-gray-600">
+                                                        <span>★ {product.rating || '0'}</span>
+                                                        <span>{product.reviews || 0} đánh giá</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
-                            )}
-                        </>
-                    )}
+
+                                {/* Pagination */}
+                                {products.length > 0 && (
+                                    <div className="mt-12 flex justify-center">
+                                        <PaginationControl
+                                            currentPage={page}
+                                            totalPages={Math.ceil(items.length / 12) || 1}
+                                            onPageChange={setPage}
+                                        />
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </div>
                 </div>
 
                 {/* Detail Modal */}

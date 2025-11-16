@@ -266,7 +266,7 @@ const MarketplaceItemDetailModal: React.FC<MarketplaceItemDetailModalProps> = ({
                                     <button
                                         onClick={handleFavoriteClick}
                                         disabled={isToggling}
-                                        className="shrink-0 bg-gray-100 hover:bg-gray-200 rounded-full p-3 transition-all disabled:opacity-50"
+                                        className="shrink-0 bg-gray-100 hover:bg-gray-200 rounded-full p-3 transition-all disabled:opacity-50 mr-8"
                                         title={isFavorited ? 'Xóa khỏi yêu thích' : 'Thêm vào yêu thích'}
                                     >
                                         {isToggling ? (
@@ -366,7 +366,7 @@ const MarketplaceItemDetailModal: React.FC<MarketplaceItemDetailModalProps> = ({
                                     onClick={handlePreviewClick}
                                     className="btn-secondary py-2.5 rounded-lg text-sm font-semibold transition-all"
                                 >
-                                    👁️ Preview
+                                    Preview
                                 </button>
                                 {item.is_purchased ? (
                                     <button

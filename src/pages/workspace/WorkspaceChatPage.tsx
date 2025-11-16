@@ -371,21 +371,12 @@ const WorkspaceChatPage: React.FC = () => {
                       {userInfo?.full_name || 'Loading...'}
                     </p>
                     <p className="text-xs text-gray-500">
-                      {member.role === 'admin' || member.role === 'owner' ? '👑 Admin' : 'Member'}
+                      {member.role === 'admin' || member.role === 'owner' ? 'Admin' : 'Member'}
                     </p>
                   </div>
                 </div>
               );
             })}
-        </div>
-
-        <div className="p-4 border-t border-gray-200">
-          <button
-            onClick={() => navigate(`/workspace/${workspaceId}/dashboard`)}
-            className="w-full px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
-          >
-            ← Back to Workspace
-          </button>
         </div>
       </div>
 

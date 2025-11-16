@@ -53,9 +53,9 @@ export default function FocusTimerPage() {
         {/* Header Section */}
         <div className="text-center space-y-3 mt-8">
           <div className="flex justify-center">
-            <div className="w-20 h-20 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-3xl flex items-center justify-center shadow-lg shadow-blue-500/30">
-              <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11z" />
+            <div className="w-20 h-20 bg-gradient-to-br from-[#21B4CA] to-[#1a8fa3] rounded-3xl flex items-center justify-center shadow-lg shadow-[#21B4CA]/30">
+              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
           </div>
@@ -68,24 +68,30 @@ export default function FocusTimerPage() {
           <button
             disabled={isRunning}
             onClick={() => setMode('countup')}
-            className={`flex-1 py-3 px-4 rounded-xl font-semibold text-sm transition-all duration-300 ${
+            className={`flex-1 py-3 px-4 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center justify-center gap-2 ${
               mode === 'countup'
-                ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/40'
+                ? 'bg-gradient-to-r from-[#21B4CA] to-[#1a8fa3] text-white shadow-lg shadow-[#21B4CA]/40'
                 : 'text-slate-600 hover:text-slate-900'
             } ${isRunning ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
           >
-            ⬆️ {t('mode.countup')}
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+            </svg>
+            {t('mode.countup')}
           </button>
           <button
             disabled={isRunning}
             onClick={() => setMode('countdown')}
-            className={`flex-1 py-3 px-4 rounded-xl font-semibold text-sm transition-all duration-300 ${
+            className={`flex-1 py-3 px-4 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center justify-center gap-2 ${
               mode === 'countdown'
-                ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/40'
+                ? 'bg-gradient-to-r from-[#21B4CA] to-[#1a8fa3] text-white shadow-lg shadow-[#21B4CA]/40'
                 : 'text-slate-600 hover:text-slate-900'
             } ${isRunning ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
           >
-            ⬇️ {t('mode.countdown')}
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+            </svg>
+            {t('mode.countdown')}
           </button>
         </div>
 
@@ -95,7 +101,7 @@ export default function FocusTimerPage() {
             <p className="text-sm font-semibold text-slate-500 uppercase tracking-widest">
               {mode === 'countup' ? t('mode.countup') : t('mode.countdown')}
             </p>
-            <div className="text-7xl font-mono font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent tabular-nums">
+            <div className="text-7xl font-mono font-bold bg-gradient-to-r from-[#21B4CA] to-[#1a8fa3] bg-clip-text text-transparent tabular-nums">
               {formatTime(timeDisplay)}
             </div>
           </div>
@@ -104,9 +110,12 @@ export default function FocusTimerPage() {
           {mode === 'countdown' && !isRunning && (
             <button
               onClick={() => setShowDurationModal(true)}
-              className="w-full mt-6 py-3 px-4 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-xl font-semibold text-sm shadow-lg shadow-indigo-500/40 hover:shadow-lg hover:shadow-indigo-500/60 transition-all duration-300 hover:scale-105 active:scale-95"
+              className="w-full mt-6 py-3 px-4 bg-gradient-to-r from-[#21B4CA] to-[#1a8fa3] text-white rounded-xl font-semibold text-sm shadow-lg shadow-[#21B4CA]/40 hover:shadow-lg hover:shadow-[#21B4CA]/60 transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
             >
-              ⏱️ {t('choose_time')}
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {t('choose_time')}
             </button>
           )}
         </div>
@@ -117,9 +126,13 @@ export default function FocusTimerPage() {
           {!isRunning && (
             <button
               onClick={handleStart}
-              className="w-full py-4 px-6 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl font-bold text-lg shadow-lg shadow-green-500/40 hover:shadow-xl hover:shadow-green-500/60 transition-all duration-300 hover:scale-105 active:scale-95"
+              className="w-full py-4 px-6 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl font-bold text-lg shadow-lg shadow-green-500/40 hover:shadow-xl hover:shadow-green-500/60 transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
             >
-              ▶️ {t('start')}
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {t('start')}
             </button>
           )}
 
@@ -129,24 +142,35 @@ export default function FocusTimerPage() {
               {!isPaused && (
                 <button
                   onClick={pause}
-                  className="flex-1 py-4 px-6 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-2xl font-bold text-base shadow-lg shadow-amber-500/40 hover:shadow-xl hover:shadow-amber-500/60 transition-all duration-300 hover:scale-105 active:scale-95"
+                  className="flex-1 py-4 px-6 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-2xl font-bold text-base shadow-lg shadow-amber-500/40 hover:shadow-xl hover:shadow-amber-500/60 transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
                 >
-                  ⏸️ {t('pause')}
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {t('pause')}
                 </button>
               )}
               {isPaused && (
                 <button
                   onClick={resume}
-                  className="flex-1 py-4 px-6 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl font-bold text-base shadow-lg shadow-blue-500/40 hover:shadow-xl hover:shadow-blue-500/60 transition-all duration-300 hover:scale-105 active:scale-95"
+                  className="flex-1 py-4 px-6 bg-gradient-to-r from-[#21B4CA] to-[#1a8fa3] text-white rounded-2xl font-bold text-base shadow-lg shadow-[#21B4CA]/40 hover:shadow-xl hover:shadow-[#21B4CA]/60 transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
                 >
-                  ▶️ {t('continue')}
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {t('continue')}
                 </button>
               )}
               <button
                 onClick={mode === 'countup' ? stop : reset}
-                className="flex-1 py-4 px-6 bg-gradient-to-r from-red-500 to-rose-600 text-white rounded-2xl font-bold text-base shadow-lg shadow-red-500/40 hover:shadow-xl hover:shadow-red-500/60 transition-all duration-300 hover:scale-105 active:scale-95"
+                className="flex-1 py-4 px-6 bg-gradient-to-r from-red-500 to-rose-600 text-white rounded-2xl font-bold text-base shadow-lg shadow-red-500/40 hover:shadow-xl hover:shadow-red-500/60 transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
               >
-                ⏹️ {mode === 'countup' ? t('stop') : t('reset')}
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+                </svg>
+                {mode === 'countup' ? t('stop') : t('reset')}
               </button>
             </div>
           )}
@@ -163,8 +187,11 @@ export default function FocusTimerPage() {
         </div>
 
         {/* Stats info */}
-        <div className="w-full text-center text-xs text-slate-400">
-          <p>💡 Focus sessions help boost productivity</p>
+        <div className="w-full text-center text-xs text-slate-400 flex items-center justify-center gap-2">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+          </svg>
+          <p>Focus sessions help boost productivity</p>
         </div>
       </div>
 

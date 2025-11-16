@@ -97,71 +97,54 @@ const PurchaseHistoryPage: React.FC = () => {
                     style={{
                       animation: `fadeInUp 0.5s ease-out ${index * 0.05}s both`
                     }}
-                    className="group bg-white rounded-2xl shadow-md hover:shadow-xl transition-all overflow-hidden cursor-pointer border border-gray-200/50 hover:border-gray-300/80 flex flex-col h-full"
+                    className="bg-white rounded-2xl border border-gray-200/50 shadow-sm hover:shadow-md transition-all overflow-hidden cursor-pointer animate-fade-in flex flex-col h-full"
                     onClick={() => handleItemClick(item, purchaseRecord)}
                   >
                   {/* Image - Top */}
-                  <div className="relative w-full h-56 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
+                  <div className="relative w-full h-56 bg-gray-100 overflow-hidden">
                     {item.images?.[0] ? (
                       <img
                         src={item.images[0]}
                         alt={item.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-out"
+                        className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-100 to-blue-50">
-                        <span className="text-5xl">📄</span>
+                      <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                        <span className="text-gray-400">No Image</span>
                       </div>
                     )}
                   </div>
 
-                  {/* Content - Bottom */}
-                  <div className="p-6 flex flex-col flex-1 gap-4">
+                  {/* Content */}
+                  <div className="p-4 flex flex-col flex-1">
                     {/* Title */}
-                    <div>
-                      <h3 className="text-base font-semibold text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors">
-                        {item.title || 'Unknown Item'}
-                      </h3>
-                    </div>
+                    <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 mb-2">
+                      {item.title || 'Unknown Item'}
+                    </h3>
 
-                    {/* Creator Info */}
-                    {item.creator_info && (
-                      <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
-                        <img
-                          src={
-                            item.creator_info.avatar_url ||
-                            `https://ui-avatars.com/api/?name=${item.creator_info.full_name}&background=random&size=40`
-                          }
-                          alt={item.creator_info.full_name}
-                          className="w-10 h-10 rounded-full object-cover border border-gray-200"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">
-                            {item.creator_info.full_name}
-                          </p>
-                          <p className="text-xs text-gray-500">Creator</p>
-                        </div>
-                      </div>
-                    )}          
-                    {/* Date and Price */}
-                    <div className="space-y-3 pb-4 border-b border-gray-100 text-xs">
-                      <div>
-                        <p className="text-gray-500 mb-1">{t('purchased_date')}:</p>
-                        <p className="font-semibold text-gray-900">
-                          {new Date(purchaseRecord.purchased_at).toLocaleDateString('en-US')}
-                        </p>
-                      </div>
+                    {/* Description */}
+                    <div className="text-gray-600 text-xs mb-3 line-clamp-2">
+                      {item.description ? (
+                        <div dangerouslySetInnerHTML={{ __html: item.description }} />
+                      ) : (
+                        <p className="text-gray-400">No description</p>
+                      )}
                     </div>
 
                     {/* Price */}
-                    <div className="pt-2">
-                      <p className="text-2xl font-bold text-gray-900">
+                    <div className="mb-4 pb-4 border-b border-gray-100 mt-auto">
+                      <p className="text-xl font-bold text-blue-600">
                         {purchaseRecord.price === 0 ? (
-                          <span className="text-green-600">{t('free')}</span>
+                          <span className="text-green-600">Miễn phí</span>
                         ) : (
-                          <span>{purchaseRecord.price} <span className="text-base font-semibold text-gray-500">OP</span></span>
+                          <span>{purchaseRecord.price} <span className="text-xs font-normal text-gray-600">OP</span></span>
                         )}
                       </p>
+                    </div>
+
+                    {/* Purchase Date */}
+                    <div className="text-xs text-gray-600 mb-3">
+                      <p className="text-gray-500">{t('purchased_date')}: {new Date(purchaseRecord.purchased_at).toLocaleDateString('en-US')}</p>
                     </div>
 
                     {/* Button */}
@@ -170,7 +153,7 @@ const PurchaseHistoryPage: React.FC = () => {
                         e.stopPropagation();
                         handleItemClick(item, purchaseRecord);
                       }}
-                      className="w-full px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors mt-auto"
+                      className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors text-sm"
                     >
                       {t('view')}
                     </button>
@@ -181,11 +164,11 @@ const PurchaseHistoryPage: React.FC = () => {
             </div>
 
             {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="mt-16">
+            {items.length > 0 && (
+              <div className="mt-12 flex justify-center">
                 <PaginationControl
                   currentPage={page}
-                  totalPages={totalPages}
+                  totalPages={Math.ceil(total / 12) || 1}
                   onPageChange={setPage}
                 />
               </div>

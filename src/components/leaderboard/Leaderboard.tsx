@@ -9,7 +9,7 @@ const Leaderboard: React.FC = () => {
   const [timePeriod, setTimePeriod] = useState<TimePeriod>(TimePeriod.MONTHLY);
   const [metric, setMetric] = useState<RankingMetric>(RankingMetric.TOTAL_SPENDING);
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
+  const [limit] = useState(7);
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<LeaderboardResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
