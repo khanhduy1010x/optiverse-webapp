@@ -110,7 +110,7 @@ const WorkspaceHubModal: React.FC<WorkspaceHubModalProps> = ({
                     </div>
 
                     {/* Body */}
-                    <div className="px-6 py-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+                    <div className="px-6 py-6 overflow-y-auto" style={{ height: '500px', maxHeight: 'calc(90vh - 200px)' }}>
                         {/* Search Tab */}
                         {activeTab === 'search' && (
                             <div className="space-y-6">

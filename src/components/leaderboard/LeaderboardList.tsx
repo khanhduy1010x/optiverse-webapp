@@ -1,6 +1,7 @@
 import React from 'react';
 import { LeaderboardEntry, RankingMetric } from '../../services/leaderboard/leaderboard.service';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
+import PaginationControl from '../Marketplace/PaginationControl.component';
 
 interface LeaderboardListProps {
   entries: LeaderboardEntry[];
@@ -137,7 +138,16 @@ const LeaderboardList: React.FC<LeaderboardListProps> = ({
             </div>
           </div>
 
-
+          {/* Pagination */}
+          {!loading && entries.length > 0 && (
+            <div className="mt-12">
+              <PaginationControl
+                currentPage={page}
+                totalPages={totalPages}
+                onPageChange={onPageChange}
+              />
+            </div>
+          )}
         </>
       )}
     </div>

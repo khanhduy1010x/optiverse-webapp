@@ -22,7 +22,7 @@ export const useMyItems = (): UseMyItemsResult => {
     const fetchMyItems = async () => {
         try {
             setLoading(true);
-            const response = await marketplaceService.getMyItems(page, 10);
+            const response = await marketplaceService.getMyItems(page, 12);
             setItems(response.items || []);
             setTotal(response.total || 0);
             setError(null);

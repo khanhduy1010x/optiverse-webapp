@@ -1,57 +1,49 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import StatsCard from '../../components/admin/StatsCard.component';
 import PackageDistributionChart from '../../components/admin/PackageDistributionChart.component';
 import TrendComparisonChart from '../../components/admin/TrendComparisonChart.component';
 import SubscriptionStatus from '../../components/admin/SubscriptionStatus.component';
 import SubscriptionHistory from '../../components/admin/SubscriptionHistory.component';
-import { mockDashboardStats, DashboardStats } from '../../types/membership-stats.type';
 import { formatVND } from '../../utils/currency.utils';
+import { useMembershipStats } from '../../hooks/admin/useMembershipStats.hook';
 
 const MembershipStatsDashboard: React.FC = () => {
-    const [dashboardData, setDashboardData] = useState<DashboardStats | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [period, setPeriod] = useState<'7d' | '30d' | '90d' | '12m'>('12m');
     const [fromDate, setFromDate] = useState<string>(
         new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     );
     const [toDate, setToDate] = useState<string>(new Date().toISOString().split('T')[0]);
 
-    useEffect(() => {
-        // Simulate API call
-        setLoading(true);
-        setTimeout(() => {
-            setDashboardData(mockDashboardStats);
-            setLoading(false);
-        }, 500);
-    }, [period]);
+    const { stats, loading, error, period, changePeriod } = useMembershipStats('12m');
 
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="text-gray-500">Loading dashboard...</div>
+                <div className="flex flex-col items-center gap-4">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                    <div className="text-gray-500">Loading dashboard...</div>
+                </div>
             </div>
         );
     }
 
-    if (!dashboardData) {
+    if (error) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="text-red-500 mb-2">Failed to load dashboard</div>
+                    <div className="text-gray-500 text-sm">{error}</div>
+                </div>
+            </div>
+        );
+    }
+
+    if (!stats) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                 <div className="text-gray-500">No data available</div>
             </div>
         );
     }
-
-    // Calculate summary stats
-    const totalRevenue = dashboardData.packages.reduce((sum, pkg) => sum + pkg.totalRevenue, 0);
-    const totalActiveUsers = dashboardData.packages.reduce((sum, pkg) => sum + pkg.activeUsers, 0);
-    const totalNewSubscribers = dashboardData.packages.reduce(
-        (sum, pkg) => sum + pkg.newSubscribers,
-        0,
-    );
-    const totalExpiringSubscribers = dashboardData.packages.reduce(
-        (sum, pkg) => sum + pkg.expiringSubscribers,
-        0,
-    );
 
     return (
         <div className="min-h-screen bg-gray-50 p-6">
@@ -69,16 +61,19 @@ const MembershipStatsDashboard: React.FC = () => {
                     {(['7d', '30d', '90d', '12m'] as const).map((p) => (
                         <button
                             key={p}
-                            onClick={() => setPeriod(p)}
-                            className={`px-4 py-2 rounded font-medium transition-colors ${period === p
+                            onClick={() => changePeriod(p)}
+                            className={`px-4 py-2 rounded font-medium transition-colors flex items-center gap-2 ${period === p
                                     ? 'bg-blue-600 text-white'
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                 }`}
                         >
-                            {p === '7d' && '📅 Last 7 Days'}
-                            {p === '30d' && '📅 Last 30 Days'}
-                            {p === '90d' && '📅 Last 90 Days'}
-                            {p === '12m' && '📅 Last 12 Months'}
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            {p === '7d' && 'Last 7 Days'}
+                            {p === '30d' && 'Last 30 Days'}
+                            {p === '90d' && 'Last 90 Days'}
+                            {p === '12m' && 'Last 12 Months'}
                         </button>
                     ))}
                 </div>
@@ -86,34 +81,34 @@ const MembershipStatsDashboard: React.FC = () => {
                 {/* Summary Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                     <StatsCard
-                        icon="💰"
+                        icon="dollar"
                         label="Total Revenue"
-                        value={formatVND(totalRevenue, false)}
+                        value={formatVND(stats.totalRevenue, false)}
                         suffix="VND"
                         color="green"
-                        description={`From ${dashboardData.packages.length} packages`}
+                        description={`From ${stats.packages.length} packages`}
                     />
                     <StatsCard
-                        icon="👥"
+                        icon="users"
                         label="Active Users"
-                        value={String(totalActiveUsers)}
+                        value={String(stats.totalActiveUsers)}
                         suffix="users"
                         color="blue"
                         description={`Currently subscribed`}
                     />
                     <StatsCard
-                        icon="📈"
+                        icon="trending-up"
                         label="New Subscribers"
-                        value={String(totalNewSubscribers)}
-                        suffix={period === '7d' ? '(7d)' : `(${period})`}
+                        value={String(stats.newSubscribers7Days)}
+                        suffix="(7d)"
                         color="amber"
                         description={`Recent signups`}
                     />
                     <StatsCard
-                        icon="⏰"
+                        icon="clock"
                         label="Expiring Soon"
-                        value={String(totalExpiringSubscribers)}
-                        suffix={period === '7d' ? '(7d)' : `(${period})`}
+                        value={String(stats.expiringSubscribers7Days)}
+                        suffix="(7d)"
                         color="red"
                         description={`Need renewal`}
                     />
@@ -123,20 +118,20 @@ const MembershipStatsDashboard: React.FC = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                     {/* Pie Chart - Takes 1 column */}
                     <div className="lg:col-span-1">
-                        <PackageDistributionChart packages={dashboardData.packages} />
+                        <PackageDistributionChart packages={stats.packages} />
                     </div>
 
                     {/* Trend Comparison Chart - Takes 2 columns */}
                     <div className="lg:col-span-2">
                         <TrendComparisonChart
-                            monthlyData={dashboardData.monthlyRevenue}
-                            packages={dashboardData.packages}
+                            monthlyData={stats.monthlyRevenue}
+                            packages={stats.packages}
                         />
                     </div>
                 </div>
 
                 {/* Subscription Status Breakdown */}
-                <SubscriptionStatus packages={dashboardData.packages} />
+                <SubscriptionStatus packages={stats.packages} />
 
                 {/* Subscription History */}
                 <div className="mt-8">
@@ -169,43 +164,49 @@ const MembershipStatsDashboard: React.FC = () => {
                                         Active Users
                                     </th>
                                     <th className="px-6 py-3 text-right text-sm font-semibold text-gray-900">
-                                        Total Revenue
+                                        Revenue
                                     </th>
                                     <th className="px-6 py-3 text-right text-sm font-semibold text-gray-900">
                                         % of Total
                                     </th>
                                     <th className="px-6 py-3 text-right text-sm font-semibold text-gray-900">
-                                        New (7d)
+                                        Avg Duration
                                     </th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
-                                {dashboardData.packages.map((pkg) => (
-                                    <tr key={pkg.packageLevel} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className="font-medium text-gray-900">{pkg.packageName}</span>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right">
-                                            <span className="text-sm text-gray-600">Level {pkg.packageLevel}</span>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right">
-                                            <span className="font-semibold text-gray-900">{pkg.activeUsers}</span>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right">
-                                            <span className="font-semibold text-green-600">
-                                                {formatVND(pkg.totalRevenue, false)}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right">
-                                            <span className="font-semibold text-gray-900">{pkg.percentageOfTotal}%</span>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right">
-                                            <span className="text-sm text-amber-600 font-medium">
-                                                +{pkg.newSubscribers}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                ))}
+                                {stats.packages.map((pkg) => {
+                                    const percentageOfTotal = stats.totalRevenue > 0 
+                                        ? ((pkg.revenue / stats.totalRevenue) * 100).toFixed(1) 
+                                        : '0.0';
+                                    
+                                    return (
+                                        <tr key={pkg.level} className="hover:bg-gray-50">
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className="font-medium text-gray-900">{pkg.packageName}</span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-right">
+                                                <span className="text-sm text-gray-600">Level {pkg.level}</span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-right">
+                                                <span className="font-semibold text-gray-900">{pkg.activeUsers}</span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-right">
+                                                <span className="font-semibold text-green-600">
+                                                    {formatVND(pkg.revenue, false)}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-right">
+                                                <span className="font-semibold text-gray-900">{percentageOfTotal}%</span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-right">
+                                                <span className="text-sm text-gray-600">
+                                                    {pkg.averageDuration} days
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>

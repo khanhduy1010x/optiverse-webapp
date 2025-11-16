@@ -68,13 +68,36 @@ const PaginationControl: React.FC<PaginationControlProps> = ({
     }
   }, [showInput]);
 
+  // Nếu ít hơn 5 trang, hiện trực tiếp các số trang
+  if (totalPages < 5) {
+    return (
+      <div className="flex items-center justify-center gap-2" ref={containerRef}>
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+          <button
+            key={pageNum}
+            onClick={() => onPageChange(pageNum)}
+            className={`min-w-10 h-10 rounded-lg text-sm font-medium transition-all duration-300 ${
+              pageNum === currentPage
+                ? 'text-white shadow-md'
+                : 'border border-gray-200 text-gray-700 hover:border-[#21B4CA] hover:bg-blue-50 hover:text-[#21B4CA] bg-white'
+            }`}
+            style={pageNum === currentPage ? { backgroundColor: '#21B4CA' } : {}}
+          >
+            {pageNum}
+          </button>
+        ))}
+      </div>
+    );
+  }
+
+  // Nếu >= 5 trang, dùng Previous/Next với dấu ...
   return (
     <div className="flex items-center justify-center gap-4" ref={containerRef}>
       {/* Previous Button */}
       <button
         onClick={() => onPageChange(Math.max(1, currentPage - 1))}
         disabled={currentPage === 1}
-        className="px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 border border-gray-200 hover:border-blue-400 hover:bg-blue-50 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-gray-200 disabled:hover:bg-white text-gray-700 hover:text-blue-700 bg-white hover:shadow-sm"
+        className="px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 border border-gray-200 hover:border-[#21B4CA] hover:bg-blue-50 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-gray-200 disabled:hover:bg-white text-gray-700 hover:text-[#21B4CA] bg-white hover:shadow-sm"
       >
         ← Previous
       </button>
