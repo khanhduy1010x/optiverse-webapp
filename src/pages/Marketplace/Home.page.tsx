@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import MarketplaceGrid from '../../components/Marketplace/MarketplaceGrid.component';
 import MarketplaceFilterBar from '../../components/Marketplace/MarketplaceFilterBar.component';
 import MarketplaceItemDetailModal from '../../components/Marketplace/MarketplaceItemDetailModal.component';
 import SuccessNotificationModal from '../../components/Marketplace/SuccessNotificationModal.component';
 import PaginationControl from '../../components/Marketplace/PaginationControl.component';
-import { useMarketplaceItems } from '../../hooks/marketplace/useMarketplaceItems';
 import { useMarketplaceFilter } from '../../hooks/marketplace/useMarketplaceFilter';
+import { useMarketplaceSearch } from '../../hooks/marketplace/useMarketplaceSearch';
 import { usePurchaseMarketplace } from '../../hooks/marketplace/usePurchaseMarketplace';
-import { transformItemsToProductsWithRatings } from '../../utils/marketplace.transform';
 import { MarketplaceItem } from '../../types/marketplace/marketplace.types';
 import { MarketplaceProduct } from '../../components/Marketplace/MarketplaceCard.component';
+import marketplaceService from '../../services/marketplace.service';
 
 // Hide scrollbar style
 const scrollbarHideStyle = `
@@ -23,48 +23,40 @@ const scrollbarHideStyle = `
 `;
 
 const MarketplaceHomePage: React.FC = () => {
+    const [searchInput, setSearchInput] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [sortBy, setSortBy] = useState('newest');
     const [priceRange, setPriceRange] = useState({ min: 0, max: 1000 });
-    const [popularity, setPopularity] = useState('all');
     const [selectedItem, setSelectedItem] = useState<MarketplaceItem | null>(null);
     const [showSuccessNotification, setShowSuccessNotification] = useState(false);
-    const [products, setProducts] = useState<MarketplaceProduct[]>([]);
-    const [isTransforming, setIsTransforming] = useState(false);
     
     // Get current user ID from localStorage
     const currentUserId = localStorage.getItem('user_id');
-    // Fetch items from hook
-    const { items, loading, error, page, setPage, refetch, total } = useMarketplaceItems(currentUserId);
     
-    // Transform items to products with ratings
-    useEffect(() => {
-        const fetchProductsWithRatings = async () => {
-            if (items.length > 0) {
-                setIsTransforming(true);
-                try {
-                    const productsWithRatings = await transformItemsToProductsWithRatings(items);
-                    setProducts(productsWithRatings);
-                } catch (error) {
-                    console.error('Error transforming items:', error);
-                    setProducts([]);
-                } finally {
-                    setIsTransforming(false);
-                }
-            } else {
-                setProducts([]);
-            }
-        };
-
-        fetchProductsWithRatings();
-    }, [items]);
-    
-    // Apply filters and sorting
-    const filteredProducts = useMarketplaceFilter(products, {
+    // Use marketplace search hook
+    const { products, loading, error, total, totalPages, currentPage, setCurrentPage } = useMarketplaceSearch({
         searchQuery,
-        sortBy,
         priceRange,
-        popularity,
+        sortBy,
+    });
+    
+    // Handle search button click
+    const handleSearch = () => {
+        setSearchQuery(searchInput);
+    };
+    
+    // Handle search input enter key
+    const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            handleSearch();
+        }
+    };
+    
+    // Apply client-side sorting only (backend filtering + pagination already applied)
+    const filteredProducts = useMarketplaceFilter(products, {
+        searchQuery: '', // Already filtered on backend
+        sortBy,
+        priceRange: { min: 0, max: 9999999 }, // Already filtered on backend
     });
 
     // Use purchase hook
@@ -73,12 +65,21 @@ const MarketplaceHomePage: React.FC = () => {
             // On success
             setSelectedItem(null);
             setShowSuccessNotification(true);
-            // Refetch marketplace items and user balance
-            refetch();
         }
     );
 
-    const totalPages = Math.ceil(total / 12);
+    // Handle product click - fetch full details
+    const handleProductClick = async (product: MarketplaceProduct) => {
+        try {
+            console.log('Clicking product:', product);
+            const fullItem = await marketplaceService.getById(product.id);
+            console.log('Fetched item:', fullItem);
+            setSelectedItem(fullItem);
+            console.log('Selected item set to:', fullItem);
+        } catch (err) {
+            console.error('Error fetching product details:', err);
+        }
+    };
 
     return (
         <>
@@ -98,12 +99,12 @@ const MarketplaceHomePage: React.FC = () => {
             <div className="border-b border-gray-100">
                 <div className="max-w-[2000px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
                     <MarketplaceFilterBar
-                        searchQuery={searchQuery}
-                        onSearchChange={setSearchQuery}
+                        searchInput={searchInput}
+                        onSearchInputChange={setSearchInput}
+                        onSearchSubmit={handleSearch}
+                        onSearchKeyPress={handleSearchKeyPress}
                         priceRange={priceRange}
                         onPriceChange={setPriceRange}
-                        popularity={popularity}
-                        onPopularityChange={setPopularity}
                         sortBy={sortBy}
                         onSortChange={setSortBy}
                     />
@@ -113,7 +114,7 @@ const MarketplaceHomePage: React.FC = () => {
             {/* Products Grid Section */}
             <div className="px-4 sm:px-6 lg:px-8 py-8 md:py-12">
                 <div className="max-w-[2000px] mx-auto px-0">
-                {loading || isTransforming ? (
+                {loading ? (
                     <div className="flex justify-center items-center h-96">
                         <div className="text-center">
                             <div className="w-10 h-10 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
@@ -130,21 +131,16 @@ const MarketplaceHomePage: React.FC = () => {
                     <>
                         <MarketplaceGrid
                             products={filteredProducts}
-                            onProductClick={(product) => {
-                                const item = items.find(i => i._id === product.id);
-                                if (item) {
-                                    setSelectedItem(item);
-                                }
-                            }}
+                            onProductClick={handleProductClick}
                             currentUserId={currentUserId}
                         />
                         {/* Pagination */}
                         {total > 12 && (
                             <div className="mt-16">
                                 <PaginationControl
-                                    currentPage={page}
+                                    currentPage={currentPage}
                                     totalPages={totalPages}
-                                    onPageChange={setPage}
+                                    onPageChange={setCurrentPage}
                                 />
                             </div>
                         )}
@@ -160,7 +156,6 @@ const MarketplaceHomePage: React.FC = () => {
                 onClose={() => setSelectedItem(null)}
                 onPurchaseSuccess={() => {
                     setShowSuccessNotification(true);
-                    refetch();
                 }}
                 onFavoriteChange={() => {
                     // No need to refetch here as favorite doesn't affect main list

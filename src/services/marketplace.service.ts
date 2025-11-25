@@ -25,26 +25,25 @@ const URLBASE = 'productivity/marketplace';
 
 class MarketplaceServiceClass {
   /**
-   * Lấy danh sách tất cả marketplace items
+   * Lấy danh sách marketplace items với filter và phân trang
    */
-  async getAll(page: number = 1, limit: number = 10, type?: string) {
+  async getPaginated(queryString: string = 'page=1&limit=12') {
     try {
-      const params: any = { page, limit };
-      if (type) params.type = type;
-
       const response = await api.get<
         ApiResponse<{
           items: MarketplaceItem[];
           total: number;
+          totalPages: number;
         }>
-      >(`${URLBASE}`, { params });
+      >(`${URLBASE}/paginated?${queryString}`);
 
       return {
         items: response.data.data.items || [],
         total: response.data.data.total || 0,
+        totalPages: response.data.data.totalPages || 0,
       };
     } catch (error: any) {
-      console.error('Error fetching marketplace items:', {
+      console.error('Error fetching paginated marketplace items:', {
         error: error.message,
         response: error.response?.data,
       });
@@ -57,11 +56,11 @@ class MarketplaceServiceClass {
    */
   async getById(id: string): Promise<MarketplaceItem> {
     try {
-      const response = await api.get<ApiResponse<{ data: MarketplaceItem }>>(
+      const response = await api.get<ApiResponse<MarketplaceItem>>(
         `${URLBASE}/${id}`
       );
 
-      return response.data.data.data;
+      return response.data.data;
     } catch (error: any) {
       console.error(`Error fetching marketplace item ${id}:`, {
         error: error.message,
