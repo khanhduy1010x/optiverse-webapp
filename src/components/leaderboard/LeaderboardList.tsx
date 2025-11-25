@@ -1,26 +1,22 @@
 import React from 'react';
 import { LeaderboardEntry, RankingMetric } from '../../services/leaderboard/leaderboard.service';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
-import PaginationControl from '../Marketplace/PaginationControl.component';
 
 interface LeaderboardListProps {
   entries: LeaderboardEntry[];
   metric: RankingMetric;
   loading: boolean;
-  page: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
 }
 
 const LeaderboardList: React.FC<LeaderboardListProps> = ({
   entries,
   metric,
   loading,
-  page,
-  totalPages,
-  onPageChange,
 }) => {
   const { t } = useAppTranslate('leaderboard');
+  
+  // Show only top 10
+  const topEntries = entries.slice(0, 10);
 
   const getMedalIcon = (rank: number) => {
     if (rank === 1) return '🥇';
@@ -76,7 +72,7 @@ const LeaderboardList: React.FC<LeaderboardListProps> = ({
 
             {/* Table Rows */}
             <div className="divide-y-2 divide-gray-200 rounded-b-2xl">
-              {entries.map((entry, index) => {
+              {topEntries.map((entry, index) => {
                 const isTop3 = entry.rank <= 3;
                 const bgColor = 
                   entry.rank === 1 ? 'bg-yellow-50/60' :
@@ -137,17 +133,6 @@ const LeaderboardList: React.FC<LeaderboardListProps> = ({
               })}
             </div>
           </div>
-
-          {/* Pagination */}
-          {!loading && entries.length > 0 && (
-            <div className="mt-12">
-              <PaginationControl
-                currentPage={page}
-                totalPages={totalPages}
-                onPageChange={onPageChange}
-              />
-            </div>
-          )}
         </>
       )}
     </div>

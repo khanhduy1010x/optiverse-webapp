@@ -23,7 +23,8 @@ export const useMarketplaceItems = (currentUserId?: string | null): UseMarketpla
     const fetchItems = async () => {
         try {
             setLoading(true);
-            const response = await marketplaceService.getAll(page, 12);
+            // Use paginated endpoint with default params
+            const response = await marketplaceService.getPaginated(`page=${page}&limit=12`);
             // Filter out items created by the current user
             const filteredItems = filterOutUserItems(response.items || []);
             setItems(filteredItems);

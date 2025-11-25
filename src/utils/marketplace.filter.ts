@@ -28,31 +28,6 @@ export const applyPriceFilter = (
 };
 
 /**
- * Apply popularity filter to products
- */
-export const applyPopularityFilter = (
-    products: MarketplaceProduct[],
-    popularity: string
-): MarketplaceProduct[] => {
-    if (popularity === 'all') {
-        return products;
-    }
-
-    return products.filter(product => {
-        switch (popularity) {
-            case 'top-100':
-                return product.purchaseCount >= 500;
-            case 'top-1000':
-                return product.purchaseCount >= 1000;
-            case 'top-500':
-                return product.purchaseCount >= 500;
-            default:
-                return true;
-        }
-    });
-};
-
-/**
  * Apply sorting to products
  */
 export const applySorting = (
