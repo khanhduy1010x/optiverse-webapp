@@ -5,6 +5,7 @@ import Text from '../../components/common/Text.component';
 import Icon from '../../components/common/Icon/Icon.component';
 import { useUserProfile } from '../../hooks/profile/useUserProfile.hook';
 import ChangePasswordPopup from './ChangePasswordPopup.screen';
+import DeleteAccountModal from './DeleteAccountModal.screen';
 import { GROUP_CLASSNAMES } from '../../styles/group-class-name.style';
 import ProfileSidebar from './ProfileSidebar.component';
 import StreakDisplay from '../../components/streak/StreakDisplay';
@@ -40,6 +41,11 @@ export default function UserProfile() {
     handleKeyPress,
     streakData,
     fetchProfile,
+    isDeleting,
+    handleDeleteAccount,
+    showDeleteAccountModal,
+    openDeleteAccountModal,
+    closeDeleteAccountModal,
   } = useUserProfile();
 
   const { t } = useAppTranslate('profile');
@@ -422,8 +428,12 @@ export default function UserProfile() {
                             {t('permanently_delete_account_description')}
                           </p>
                         </div>
-                        <button className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white font-black rounded-md transition-all active:scale-95 flex-shrink-0 uppercase tracking-wide text-xs">
-                          {t('delete')}
+                        <button
+                          onClick={openDeleteAccountModal}
+                          disabled={isDeleting}
+                          className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white font-black rounded-md transition-all active:scale-95 flex-shrink-0 uppercase tracking-wide text-xs disabled:opacity-50"
+                        >
+                          {isDeleting ? 'Deleting...' : t('delete')}
                         </button>
                       </div>
                     </div>
@@ -451,6 +461,15 @@ export default function UserProfile() {
           onClose={() => setShowChangePasswordPopup(false)}
           hasPassword={profileData.has_password}
           refreshData={fetchProfile}
+        />
+      )}
+
+      {showDeleteAccountModal && (
+        <DeleteAccountModal
+          isOpen={showDeleteAccountModal}
+          isDeleting={isDeleting}
+          onConfirm={handleDeleteAccount}
+          onCancel={closeDeleteAccountModal}
         />
       )}
     </View>
