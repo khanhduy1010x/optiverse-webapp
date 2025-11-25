@@ -283,6 +283,57 @@ class ProfileService {
       throw new Error('Failed to update avatar. Please try again.');
     }
   }
+
+  /**
+   * Delete user's account (soft delete)
+   */
+  public async deleteAccount(): Promise<void> {
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const payload = decodeToken(token);
+      if (!payload || !payload.sub) {
+        throw new Error('Invalid token format');
+      }
+
+      await api.delete(`/core/users/${payload.sub}/delete-account`);
+
+      // Clear all authentication data
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      sessionStorage.clear();
+
+      // Redirect to home page
+      window.location.href = '/';
+    } catch (error: any) {
+      console.error('Error deleting account:', error);
+
+      // Handle specific error codes from backend
+      if (error.response?.data?.code) {
+        switch (error.response.data.code) {
+          case 1045:
+            throw new Error('User not found');
+          case 1046:
+            throw new Error('User account has already been deleted');
+          default:
+            throw new Error(
+              error.response.data.message || 'Failed to delete account'
+            );
+        }
+      }
+
+      if (error.response?.status === 401) {
+        throw new Error('Authentication failed. Please log in again.');
+      }
+      if (error.response?.status === 403) {
+        throw new Error('You do not have permission to delete this account');
+      }
+      throw new Error('Failed to delete account. Please try again.');
+    }
+  }
 }
 
 export default new ProfileService();

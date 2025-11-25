@@ -15,14 +15,10 @@ interface StreakItem {
 }
 
 const StreakDisplay: React.FC<StreakDisplayProps> = ({ streakData, className = '' }) => {
-  if (!streakData) {
-    return null;
-  }
-
-  // Extract streak values
-  const loginStreak = streakData.loginStreak || 0;
-  const taskStreak = streakData.taskStreak || 0;
-  const flashcardStreak = streakData.flashcardStreak || 0;
+  // Extract streak values, default to 0 if streakData is null
+  const loginStreak = streakData?.loginStreak || 0;
+  const taskStreak = streakData?.taskStreak || 0;
+  const flashcardStreak = streakData?.flashcardStreak || 0;
 
   const streaks: StreakItem[] = [
     {
@@ -81,7 +77,7 @@ const StreakDisplay: React.FC<StreakDisplayProps> = ({ streakData, className = '
               {streak.label}
             </p>
             <p className={`text-xl font-black ${streak.textColor}`}>
-              {streak.value}
+              {streak.value} 
             </p>
           </div>
 

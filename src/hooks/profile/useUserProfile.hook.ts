@@ -29,6 +29,8 @@ export function useUserProfile() {
   const [showAvatarMenu, setShowAvatarMenu] = useState(false);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [streakData, setStreakData] = useState<StreakResponse | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
 
   useEffect(() => {
     fetchProfile();
@@ -157,6 +159,27 @@ export function useUserProfile() {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    try {
+      setIsDeleting(true);
+      setError(null);
+      await profileService.deleteAccount();
+    } catch (error: any) {
+      console.error('Delete account error:', error);
+      setError(error.message || 'Failed to delete account.');
+      setIsDeleting(false);
+      setShowDeleteAccountModal(false);
+    }
+  };
+
+  const openDeleteAccountModal = () => {
+    setShowDeleteAccountModal(true);
+  };
+
+  const closeDeleteAccountModal = () => {
+    setShowDeleteAccountModal(false);
+  };
+
   return {
     avatar,
     setAvatar,
@@ -188,5 +211,11 @@ export function useUserProfile() {
     handleKeyPress,
     streakData,
     fetchProfile,
+    isDeleting,
+    handleDeleteAccount,
+    showDeleteAccountModal,
+    setShowDeleteAccountModal,
+    openDeleteAccountModal,
+    closeDeleteAccountModal,
   };
 }

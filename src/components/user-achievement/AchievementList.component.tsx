@@ -137,19 +137,6 @@ const AchievementList: React.FC<AchievementListProps> = ({
                         )}
                     </div>
                 </div>
-
-                {/* Progress bar for locked achievements */}
-                {!isUnlocked && (
-                    <div className="mt-3 pt-3 border-t border-gray-200">
-                        <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
-                            <span>Progress</span>
-                            <span>0%</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-1">
-                            <div className="bg-gray-400 h-1 rounded-full" style={{ width: '0%' }}></div>
-                        </div>
-                    </div>
-                )}
             </div>
         </div>
     );

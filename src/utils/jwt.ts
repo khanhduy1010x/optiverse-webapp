@@ -1,8 +1,10 @@
 interface JwtPayload {
-  user_id: string;
+  sub?: string;  // User ID
+  user_id?: string;  // Also user ID (fallback)
   email: string;
   full_name: string;
   session_id: string;
+  role?: string;
   iat: number;
   exp: number;
 }
