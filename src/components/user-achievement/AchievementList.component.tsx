@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { UserAchievement } from '../../types/user-achievement/user-achievement.types';
 import View from '../common/View.component';
 import Button from '../common/Button.component';
@@ -23,6 +23,7 @@ const AchievementList: React.FC<AchievementListProps> = ({
     onRefresh,
     onClearError
 }) => {
+    const [selectedAchievement, setSelectedAchievement] = useState<UserAchievement | null>(null);
     if (loading) {
         return (
             <View className="flex justify-center items-center py-12">
@@ -62,9 +63,10 @@ const AchievementList: React.FC<AchievementListProps> = ({
     const renderAchievementCard = (achievement: UserAchievement, isUnlocked: boolean) => (
         <div
             key={achievement.achievement.id}
-            className={`group relative overflow-hidden rounded-lg border transition-all duration-200 hover:shadow-md ${isUnlocked
-                ? 'bg-white border-gray-300 shadow-sm'
-                : 'bg-gray-50 border-gray-200 shadow-sm opacity-60'
+            onClick={() => setSelectedAchievement(achievement)}
+            className={`group relative overflow-hidden rounded-lg border transition-all duration-200 hover:shadow-md cursor-pointer ${isUnlocked
+                ? 'bg-white border-gray-300 shadow-sm hover:bg-gray-50'
+                : 'bg-gray-50 border-gray-200 shadow-sm opacity-60 hover:opacity-70'
                 }`}
         >
             <div className="relative p-4">
@@ -206,6 +208,83 @@ const AchievementList: React.FC<AchievementListProps> = ({
                         🔄 Refresh Achievements
                     </Button>
                 </View>
+            )}
+
+            {/* Achievement Detail Modal */}
+            {selectedAchievement && (
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl shadow-xl max-w-md w-full">
+                        {/* Header */}
+                        <div className="px-6 py-4 flex justify-between items-center border-b border-gray-200">
+                            <h2 className="text-lg font-bold text-gray-800">Achievement Details</h2>
+                            <button
+                                onClick={() => setSelectedAchievement(null)}
+                                className="text-gray-500 hover:text-gray-700 text-2xl font-bold transition"
+                            >
+                                ×
+                            </button>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-6 space-y-4">
+                            {/* Icon and Title */}
+                            <div className="text-center mb-4">
+                                <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                                    {selectedAchievement.achievement.icon_url ? (
+                                        <img
+                                            src={selectedAchievement.achievement.icon_url}
+                                            alt={selectedAchievement.achievement.title}
+                                            className="w-12 h-12 object-contain"
+                                        />
+                                    ) : (
+                                        <svg className="w-8 h-8 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 7V9C15 10.66 13.66 12 12 12C10.34 12 9 10.66 9 9V7H3V9C3 10.66 4.34 12 6 12C7.66 12 9 10.66 9 9V9.5C9 11.43 10.57 13 12.5 13H11.5C13.43 13 15 11.43 15 9.5V9C15 10.66 16.34 12 18 12C19.66 12 21 10.66 21 9ZM12 15C10.9 15 10 15.9 10 17V19C10 20.1 10.9 21 12 21C13.1 21 14 20.1 14 19V17C14 15.9 13.1 15 12 15Z" />
+                                        </svg>
+                                    )}
+                                </div>
+                                <h3 className="text-lg font-bold text-gray-800">{selectedAchievement.achievement.title}</h3>
+                            </div>
+
+                            {/* Description */}
+                            {selectedAchievement.achievement.description && (
+                                <div className="bg-gray-50 rounded-lg p-4">
+                                    <p className="text-sm text-gray-700">
+                                        <RichTextDisplay 
+                                            content={selectedAchievement.achievement.description} 
+                                            className="text-sm"
+                                        />
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Reward */}
+                            {selectedAchievement.achievement.reward && (
+                                <div className="flex items-center justify-center gap-2 py-2 bg-blue-50 rounded-lg">
+                                    <span className="text-sm text-blue-700">Reward:</span>
+                                    <span className="text-lg font-bold text-blue-700">⭐ {selectedAchievement.achievement.reward}</span>
+                                </div>
+                            )}
+
+                            {/* Unlock Status */}
+                            {selectedAchievement.unlocked_at && (
+                                <div className="flex items-center justify-center gap-2 py-2 bg-green-50 rounded-lg">
+                                    <span className="text-sm font-medium text-green-700">Unlocked on:</span>
+                                    <span className="text-sm text-green-700">{new Date(selectedAchievement.unlocked_at).toLocaleDateString()}</span>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Close Button */}
+                        <div className="px-6 py-4 border-t border-gray-200 flex justify-end">
+                            <Button
+                                onClick={() => setSelectedAchievement(null)}
+                                className="px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg font-medium transition"
+                            >
+                                Close
+                            </Button>
+                        </div>
+                    </div>
+                </div>
             )}
         </View>
     );

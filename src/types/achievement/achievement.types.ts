@@ -78,8 +78,7 @@ export const CATEGORY_FIELDS: CategoryFields = {
       { value: 'medium', label: 'Medium' },
       { value: 'high', label: 'High' }
     ]},
-    { name: 'createdAt', label: 'Created At', value_type: ValueType.DATE, requires_threshold: false },
-    { name: 'updatedAt', label: 'Updated At', value_type: ValueType.DATE, requires_threshold: false }
+    { name: 'completedAt', label: 'Completion Time', value_type: ValueType.DATE, requires_threshold: false }
   ],
   [RuleCategory.FRIEND]: [
     { name: 'status', label: 'Status', value_type: ValueType.ENUM, requires_threshold: true, options: [
@@ -87,8 +86,7 @@ export const CATEGORY_FIELDS: CategoryFields = {
       { value: 'accepted', label: 'Accepted' },
       { value: 'blocked', label: 'Blocked' }
     ]},
-    { name: 'createdAt', label: 'Created At', value_type: ValueType.DATE, requires_threshold: false },
-    { name: 'updatedAt', label: 'Updated At', value_type: ValueType.DATE, requires_threshold: false }
+    { name: 'completedAt', label: 'Completion Time', value_type: ValueType.DATE, requires_threshold: false }
   ],
   [RuleCategory.STREAK]: [
     { name: 'loginStreak', label: 'Login Streak', value_type: ValueType.NUMBER, requires_threshold: false },

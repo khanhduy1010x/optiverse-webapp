@@ -150,10 +150,15 @@ export class RuleValidationUtils {
    * Validate rule value based on value type
    */
   static validateValue(value: string, valueType: ValueType): string | null {
-    // Giá trị rỗng: chỉ bắt buộc với DATE và ENUM
+    // Giá trị rỗng: chỉ bắt buộc với ENUM, DATE không bắt buộc
     const isEmpty = !value || value.trim() === '';
-    if (isEmpty && (valueType === ValueType.DATE || valueType === ValueType.ENUM)) {
+    if (isEmpty && valueType === ValueType.ENUM) {
       return 'Value is required';
+    }
+    
+    // Nếu DATE mà rỗng thì cho phép (optional)
+    if (isEmpty) {
+      return null;
     }
 
     switch (valueType) {
@@ -215,12 +220,30 @@ export class RuleValidationUtils {
    * Validate rule threshold
    */
   static validateThreshold(threshold: number | undefined, requiresThreshold: boolean): string | null {
-    if (requiresThreshold && (!threshold || threshold === 0)) {
-      return 'Threshold is required for this field';
+    if (requiresThreshold) {
+      if (threshold === undefined || threshold === null) {
+        return 'Threshold is required for this field';
+      }
+      
+      const numThreshold = Number(threshold);
+      if (isNaN(numThreshold)) {
+        return 'Threshold must be a number';
+      }
+      
+      if (numThreshold < 0) {
+        return 'Threshold must be a positive number';
+      }
     }
 
-    if (threshold !== undefined && threshold !== null && isNaN(Number(threshold))) {
-      return 'Threshold must be a number';
+    if (threshold !== undefined && threshold !== null) {
+      const numThreshold = Number(threshold);
+      if (isNaN(numThreshold)) {
+        return 'Threshold must be a number';
+      }
+      
+      if (numThreshold < 0) {
+        return 'Threshold must be a positive number';
+      }
     }
 
     return null;

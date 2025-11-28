@@ -85,7 +85,8 @@ export const useRuleForm = ({
     threshold: {
       custom: (threshold) => {
         const selectedField = CATEGORY_FIELDS[formData.category]?.find(f => f.name === formData.field);
-        const needsThreshold = selectedField ? (selectedField.value_type !== ValueType.DATE) : false;
+        // STRING, NUMBER, và ENUM cần threshold
+        const needsThreshold = selectedField ? (selectedField.value_type === ValueType.STRING || selectedField.value_type === ValueType.NUMBER || selectedField.value_type === ValueType.ENUM) : false;
         return RuleValidationUtils.validateThreshold(threshold as number, needsThreshold);
       }
     }
@@ -114,8 +115,8 @@ export const useRuleForm = ({
   // Computed values
   const selectedField = CATEGORY_FIELDS[formData.category]?.find(f => f.name === formData.field);
   const availableOperators = selectedField ? VALUE_TYPE_OPERATORS[selectedField.value_type] : [];
-  // Theo yêu cầu: các value_type còn lại thì chỉ chọn Threshold
-  const needsThreshold = selectedField ? (selectedField.value_type !== ValueType.DATE) : false;
+  // STRING, NUMBER, và ENUM cần threshold
+  const needsThreshold = selectedField ? (selectedField.value_type === ValueType.STRING || selectedField.value_type === ValueType.NUMBER || selectedField.value_type === ValueType.ENUM) : false;
 
   // Event handlers
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
