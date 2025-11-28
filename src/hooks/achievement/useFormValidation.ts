@@ -28,13 +28,23 @@ export const useFormValidation = (rules: ValidationRules) => {
     const rule = rules[fieldName];
     if (!rule) return null;
 
+    // Check if value is empty (including 0 is a valid number, NaN is invalid)
+    const isEmpty = value === undefined || value === null || (typeof value === 'string' && value.trim() === '');
+    const isNaN = typeof value === 'number' && Number.isNaN(value);
+
     // Required validation
-    if (rule.required && (!value || (typeof value === 'string' && value.trim() === ''))) {
+    if (rule.required && (isEmpty || isNaN)) {
       return 'This field is required';
     }
 
-    // Skip other validations if field is empty and not required
-    if (!value || (typeof value === 'string' && value.trim() === '')) {
+    // Custom validation (always call custom validation, don't skip for empty)
+    if (rule.custom) {
+      const customError = rule.custom(value);
+      if (customError) return customError;
+    }
+
+    // Skip other validations if field is empty and not required (but custom was already checked)
+    if (isEmpty) {
       return null;
     }
 
@@ -54,12 +64,6 @@ export const useFormValidation = (rules: ValidationRules) => {
       if (rule.pattern && !rule.pattern.test(value)) {
         return 'Invalid format';
       }
-    }
-
-    // Custom validation
-    if (rule.custom) {
-      const customError = rule.custom(value);
-      if (customError) return customError;
     }
 
     return null;
