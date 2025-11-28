@@ -362,28 +362,45 @@ const MarketplaceItemDetailModal: React.FC<MarketplaceItemDetailModalProps> = ({
 
                             {/* Action Buttons */}
                             <div className="grid grid-cols-2 gap-3 mt-auto">
-                                <button
-                                    onClick={handlePreviewClick}
-                                    className="btn-secondary py-2.5 rounded-lg text-sm font-semibold transition-all"
-                                >
-                                    Preview
-                                </button>
-                                {item.is_purchased ? (
-                                    <button
-                                        disabled
-                                        className="btn-secondary py-2.5 rounded-lg text-gray-700 text-sm font-semibold transition-all bg-gray-100 cursor-not-allowed"
-                                    >
-                                        ✓ Already Purchased
-                                    </button>
-                                ) : (
-                                    <button
-                                        onClick={handlePurchaseClick}
-                                        disabled={isPurchasing}
-                                        className="btn-primary py-2.5 rounded-lg text-white text-sm font-semibold transition-all disabled:opacity-50"
-                                    >
-                                        {isPurchasing ? 'Processing...' : item.price === 0 ? 'Get Free' : 'Buy Now'}
-                                    </button>
-                                )}
+                                {(() => {
+                                    const currentItem = displayItem || item;
+                                    const userId = localStorage.getItem('user_id');
+                                    const isOwner = currentItem?.creator_id === userId;
+                                    
+                                    return (
+                                        <>
+                                            <button
+                                                onClick={handlePreviewClick}
+                                                className="btn-secondary py-2.5 rounded-lg text-sm font-semibold transition-all"
+                                            >
+                                                Preview
+                                            </button>
+                                            {currentItem?.is_purchased ? (
+                                                <button
+                                                    disabled
+                                                    className="btn-secondary py-2.5 rounded-lg text-gray-700 text-sm font-semibold transition-all bg-gray-100 cursor-not-allowed"
+                                                >
+                                                    ✓ Already Purchased
+                                                </button>
+                                            ) : isOwner ? (
+                                                <button
+                                                    disabled
+                                                    className="btn-secondary py-2.5 rounded-lg text-gray-700 text-sm font-semibold transition-all bg-gray-100 cursor-not-allowed"
+                                                >
+                                                    Your Item
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    onClick={handlePurchaseClick}
+                                                    disabled={isPurchasing}
+                                                    className="btn-primary py-2.5 rounded-lg text-white text-sm font-semibold transition-all disabled:opacity-50"
+                                                >
+                                                    {isPurchasing ? 'Processing...' : currentItem?.price === 0 ? 'Get Free' : 'Buy Now'}
+                                                </button>
+                                            )}
+                                        </>
+                                    );
+                                })()}
                             </div>
                         </div>
                     </div>

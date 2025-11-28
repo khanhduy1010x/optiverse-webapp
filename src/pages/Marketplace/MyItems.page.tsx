@@ -3,6 +3,7 @@ import { useMyItems } from '../../hooks/marketplace/useMyItems';
 import { useDeleteMarketplaceItem } from '../../hooks/marketplace/useDeleteMarketplaceItem';
 import CreateMarketplaceModal from '../../components/Marketplace/CreateMarketplaceModal.component';
 import UpdateMarketplaceModal from '../../components/Marketplace/UpdateMarketplaceModal.component';
+import MarketplaceItemDetailModal from '../../components/Marketplace/MarketplaceItemDetailModal.component';
 import ConfirmDialog from '../../components/Marketplace/ConfirmDialog.component';
 import { RatingList } from '../../components/Marketplace/RatingList.component';
 import PaginationControl from '../../components/Marketplace/PaginationControl.component';
@@ -27,6 +28,7 @@ const MyItemsPage: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showRatingsModal, setShowRatingsModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState<MarketplaceItem | null>(null);
   
   const {
@@ -100,7 +102,11 @@ const MyItemsPage: React.FC = () => {
                                 {items.map((item, idx) => (
                                     <div
                                         key={item._id}
-                                        className="bg-white rounded-2xl border border-gray-200/50 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden animate-fade-in"
+                                        onClick={() => {
+                                            setSelectedItem(item);
+                                            setShowDetailModal(true);
+                                        }}
+                                        className="bg-white rounded-2xl border border-gray-200/50 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden animate-fade-in cursor-pointer"
                                         style={{ animationDelay: `${idx * 50}ms` }}
                                     >
                                         {/* Image */}
@@ -146,7 +152,8 @@ const MyItemsPage: React.FC = () => {
                                             {/* Actions */}
                                             <div className="grid grid-cols-3 gap-2">
                                                 <button
-                                                    onClick={() => {
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
                                                         setSelectedItem(item);
                                                         setShowUpdateModal(true);
                                                     }}
@@ -155,7 +162,8 @@ const MyItemsPage: React.FC = () => {
                                                     {t('edit')}
                                                 </button>
                                                 <button
-                                                    onClick={() => {
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
                                                         setSelectedItem(item);
                                                         setShowRatingsModal(true);
                                                     }}
@@ -164,7 +172,10 @@ const MyItemsPage: React.FC = () => {
                                                     ★
                                                 </button>
                                                 <button
-                                                    onClick={() => handleDeleteClick(item)}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleDeleteClick(item);
+                                                    }}
                                                     disabled={isDeleting}
                                                     className="px-3 py-2 border border-red-300 text-red-600 rounded-lg font-medium text-xs hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                                 >
@@ -277,6 +288,19 @@ const MyItemsPage: React.FC = () => {
                     </button>
                 </div>
             </Modal>
+
+            {/* Detail Modal */}
+            {selectedItem && (
+                <MarketplaceItemDetailModal
+                    isOpen={showDetailModal}
+                    item={selectedItem}
+                    onClose={() => {
+                        setShowDetailModal(false);
+                        setSelectedItem(null);
+                    }}
+                    onFavoriteChange={refetch}
+                />
+            )}
         </div>
         </>
     );

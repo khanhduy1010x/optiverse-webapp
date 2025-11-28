@@ -212,43 +212,48 @@ const AchievementList: React.FC<AchievementListProps> = ({
 
             {/* Achievement Detail Modal */}
             {selectedAchievement && (
-                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl shadow-xl max-w-md w-full">
-                        {/* Header */}
-                        <div className="px-6 py-4 flex justify-between items-center border-b border-gray-200">
-                            <h2 className="text-lg font-bold text-gray-800">Achievement Details</h2>
+                <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden">
+                        {/* Close Button - Top Right */}
+                        <div className="flex justify-end p-4">
                             <button
                                 onClick={() => setSelectedAchievement(null)}
-                                className="text-gray-500 hover:text-gray-700 text-2xl font-bold transition"
+                                className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors"
                             >
-                                ×
+                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" />
+                                </svg>
                             </button>
                         </div>
 
                         {/* Content */}
-                        <div className="p-6 space-y-4">
-                            {/* Icon and Title */}
-                            <div className="text-center mb-4">
-                                <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                        <div className="px-6 pb-6 space-y-6">
+                            {/* Icon */}
+                            <div className="flex justify-center">
+                                <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-50 rounded-2xl flex items-center justify-center shadow-lg">
                                     {selectedAchievement.achievement.icon_url ? (
                                         <img
                                             src={selectedAchievement.achievement.icon_url}
                                             alt={selectedAchievement.achievement.title}
-                                            className="w-12 h-12 object-contain"
+                                            className="w-14 h-14 object-contain"
                                         />
                                     ) : (
-                                        <svg className="w-8 h-8 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
+                                        <svg className="w-10 h-10 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
                                             <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 7V9C15 10.66 13.66 12 12 12C10.34 12 9 10.66 9 9V7H3V9C3 10.66 4.34 12 6 12C7.66 12 9 10.66 9 9V9.5C9 11.43 10.57 13 12.5 13H11.5C13.43 13 15 11.43 15 9.5V9C15 10.66 16.34 12 18 12C19.66 12 21 10.66 21 9ZM12 15C10.9 15 10 15.9 10 17V19C10 20.1 10.9 21 12 21C13.1 21 14 20.1 14 19V17C14 15.9 13.1 15 12 15Z" />
                                         </svg>
                                     )}
                                 </div>
-                                <h3 className="text-lg font-bold text-gray-800">{selectedAchievement.achievement.title}</h3>
+                            </div>
+
+                            {/* Title */}
+                            <div className="text-center">
+                                <h2 className="text-2xl font-bold text-gray-900 mb-1">{selectedAchievement.achievement.title}</h2>
                             </div>
 
                             {/* Description */}
                             {selectedAchievement.achievement.description && (
-                                <div className="bg-gray-50 rounded-lg p-4">
-                                    <p className="text-sm text-gray-700">
+                                <div className="text-center">
+                                    <p className="text-gray-600 text-sm leading-relaxed">
                                         <RichTextDisplay 
                                             content={selectedAchievement.achievement.description} 
                                             className="text-sm"
@@ -257,31 +262,40 @@ const AchievementList: React.FC<AchievementListProps> = ({
                                 </div>
                             )}
 
+                            {/* Divider */}
+                            <div className="h-px bg-gray-200"></div>
+
                             {/* Reward */}
                             {selectedAchievement.achievement.reward && (
-                                <div className="flex items-center justify-center gap-2 py-2 bg-blue-50 rounded-lg">
-                                    <span className="text-sm text-blue-700">Reward:</span>
-                                    <span className="text-lg font-bold text-blue-700">⭐ {selectedAchievement.achievement.reward}</span>
+                                <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl">
+                                    <span className="text-sm font-medium text-gray-600">Reward</span>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-2xl">⭐</span>
+                                        <span className="text-lg font-semibold text-blue-600">{selectedAchievement.achievement.reward}</span>
+                                    </div>
                                 </div>
                             )}
 
                             {/* Unlock Status */}
-                            {selectedAchievement.unlocked_at && (
-                                <div className="flex items-center justify-center gap-2 py-2 bg-green-50 rounded-lg">
-                                    <span className="text-sm font-medium text-green-700">Unlocked on:</span>
-                                    <span className="text-sm text-green-700">{new Date(selectedAchievement.unlocked_at).toLocaleDateString()}</span>
+                            {selectedAchievement.unlocked_at ? (
+                                <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl">
+                                    <span className="text-sm font-medium text-gray-600">Unlocked</span>
+                                    <span className="text-sm font-semibold text-green-600">{new Date(selectedAchievement.unlocked_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                </div>
+                            ) : (
+                                <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl">
+                                    <span className="text-sm font-medium text-gray-600">Status</span>
+                                    <span className="text-sm font-semibold text-gray-500">Locked</span>
                                 </div>
                             )}
-                        </div>
 
-                        {/* Close Button */}
-                        <div className="px-6 py-4 border-t border-gray-200 flex justify-end">
-                            <Button
+                            {/* Close Button */}
+                            <button
                                 onClick={() => setSelectedAchievement(null)}
-                                className="px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg font-medium transition"
+                                className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-2xl transition-colors duration-200"
                             >
                                 Close
-                            </Button>
+                            </button>
                         </div>
                     </div>
                 </div>
