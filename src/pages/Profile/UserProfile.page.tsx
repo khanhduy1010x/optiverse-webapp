@@ -6,6 +6,7 @@ import Icon from '../../components/common/Icon/Icon.component';
 import { useUserProfile } from '../../hooks/profile/useUserProfile.hook';
 import ChangePasswordPopup from './ChangePasswordPopup.screen';
 import DeleteAccountModal from './DeleteAccountModal.screen';
+import LogoutConfirmModal from './LogoutConfirmModal.screen';
 import { GROUP_CLASSNAMES } from '../../styles/group-class-name.style';
 import ProfileSidebar from './ProfileSidebar.component';
 import StreakDisplay from '../../components/streak/StreakDisplay';
@@ -13,6 +14,7 @@ import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 export default function UserProfile() {
   const { theme, toggleTheme } = useTheme();
+  const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false);
   const {
     avatar,
     showChangePasswordPopup,
@@ -441,7 +443,7 @@ export default function UserProfile() {
                     {/* Logout Button */}
                     <div className="flex justify-end">
                       <button
-                        onClick={handleLogout}
+                        onClick={() => setShowLogoutConfirm(true)}
                         disabled={isLoggingOut}
                         className="px-6 py-2 bg-[#21b4ca] hover:bg-[#1c9eb1] text-white font-black text-xs rounded-md transition-all active:scale-95 disabled:opacity-50 uppercase tracking-wide"
                       >
@@ -470,6 +472,18 @@ export default function UserProfile() {
           isDeleting={isDeleting}
           onConfirm={handleDeleteAccount}
           onCancel={closeDeleteAccountModal}
+        />
+      )}
+
+      {showLogoutConfirm && (
+        <LogoutConfirmModal
+          isOpen={showLogoutConfirm}
+          isLoading={isLoggingOut}
+          onConfirm={() => {
+            handleLogout();
+            setShowLogoutConfirm(false);
+          }}
+          onCancel={() => setShowLogoutConfirm(false)}
         />
       )}
     </View>

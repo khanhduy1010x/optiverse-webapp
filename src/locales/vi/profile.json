@@ -65,5 +65,8 @@
   "delete": "Xóa",
   "logging_out": "Đang đăng xuất...",
   "logout": "Đăng xuất",
-  "language": "Ngôn ngữ"
+  "language": "Ngôn ngữ",
+  "confirm_logout": "Xác nhận đăng xuất",
+  "logout_confirmation_message": "Bạn có chắc chắn muốn đăng xuất không?",
+  "logout_confirmation_description": "Bạn sẽ được đăng xuất khỏi tài khoản của mình và quay lại trang đăng nhập."
 }
