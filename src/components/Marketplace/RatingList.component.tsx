@@ -263,9 +263,9 @@ export const RatingList: React.FC<RatingListProps> = ({
     }
 
     return (
-      <div className="mb-4 p-4 border border-gray-200 rounded-lg hover:shadow-sm transition-shadow">
-        <div className="flex justify-between items-start">
-          <div className="flex-1">
+      <div className="mb-4 p-4 border border-gray-200 rounded-lg hover:shadow-sm transition-shadow overflow-hidden">
+        <div className="flex justify-between items-start gap-4 min-w-0">
+          <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2">
               <div className="flex">{renderStars(rating.rating)}</div>
               <span className="text-xs text-gray-500 ml-2">
@@ -289,23 +289,23 @@ export const RatingList: React.FC<RatingListProps> = ({
             )}
 
             {rating.comment && (
-              <p className="text-gray-600 mt-2 text-sm">{rating.comment}</p>
+              <p className="text-gray-600 mt-2 text-sm break-words whitespace-pre-wrap">{rating.comment}</p>
             )}
           </div>
 
           {/* Action Buttons - Only show for own ratings */}
           {isOwnRating(rating) && (
-            <div className="flex gap-2 ml-4">
+            <div className="flex gap-2 ml-4 flex-shrink-0">
               <button
                 onClick={() => handleEditClick(rating)}
-                className="px-3 py-1 text-sm text-black hover:text-gray-600 transition-colors"
+                className="px-3 py-1 text-sm text-black hover:text-gray-600 transition-colors whitespace-nowrap"
                 title={t('edit')}
               >
                 {t('edit')}
               </button>
               <button
                 onClick={() => handleDeleteClick(rating._id)}
-                className="px-3 py-1 text-sm text-black hover:text-gray-600 transition-colors"
+                className="px-3 py-1 text-sm text-black hover:text-gray-600 transition-colors whitespace-nowrap"
                 title={t('delete')}
               >
                 {t('delete')}
