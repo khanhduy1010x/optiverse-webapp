@@ -65,5 +65,8 @@
   "permanently_delete_account_description": "Permanently delete the account and remove access from all workspaces.",
   "delete": "Delete",
   "logging_out": "Logging out...",
-  "logout": "Logout"
+  "logout": "Logout",
+  "confirm_logout": "Confirm Logout",
+  "logout_confirmation_message": "Are you sure you want to log out?",
+  "logout_confirmation_description": "You will be signed out from your account and returned to the login page."
 }
