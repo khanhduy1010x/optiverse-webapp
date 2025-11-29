@@ -201,12 +201,18 @@ export const MARKETPLACE_SECTIONS: NavSection[] = [
     path: '/marketplace/purchase-history',
     icon: 'calendar',
   },
+
   {
     label: 'Analytics',
     path: '/marketplace/analytics',
     icon: 'analytics',
   },
   { label: 'Leaderboard', path: '/marketplace/leaderboard', icon: 'trophy' },
+    {
+    label: 'Followers',
+    path: '/marketplace/followers',
+    icon: 'follow',
+  },
 ];
 
 // Map các path con tới path cha để dễ dàng tìm kiếm
@@ -236,6 +242,7 @@ const PATH_MAPPING: Record<string, string> = {
   '/marketplace': '/marketplace',
   // Marketplace sections: map each sub-route to itself for correct active highlighting
   '/marketplace/favorites': '/marketplace/favorites',
+  '/marketplace/followers': '/marketplace/followers',
   '/marketplace/analytics': '/marketplace/analytics',
   '/marketplace/my-items': '/marketplace/my-items',
   '/marketplace/purchase-history': '/marketplace/purchase-history',

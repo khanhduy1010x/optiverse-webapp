@@ -1,0 +1,17 @@
+{
+  "creators_i_follow": "Tôi theo dõi",
+  "all_creators_you_follow": "Tất cả các creators mà bạn đang theo dõi",
+  "no_creators_yet": "Bạn chưa theo dõi bất kỳ creator nào",
+  "find_creator": "Tìm creator...",
+  "view_profile": "Xem hồ sơ",
+  "creators": "creators",
+  "follow": "Follow",
+  "following": "Following",
+  "followed_successfully": "Đã theo dõi creator này",
+  "unfollowed_successfully": "Đã bỏ theo dõi creator này",
+  "error_following": "Lỗi khi theo dõi creator",
+  "error_unfollowing": "Lỗi khi bỏ theo dõi creator",
+  "loading_followers": "Đang tải danh sách người theo dõi...",
+  "retry": "Thử lại",
+  "failed_to_load": "Không thể tải danh sách người theo dõi"
+}

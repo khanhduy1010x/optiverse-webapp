@@ -14,6 +14,7 @@ import marketplaceService from '../../services/marketplace.service';
 import { PriceDisplay } from './PriceDisplay.component';
 import { useToggleFavorite } from '../../hooks/marketplace/useToggleFavorite';
 import { useFavoriteStatus } from '../../hooks/marketplace/useFavoriteStatus';
+import { useFollowCreator } from '../../hooks/marketplace/useFollowCreator';
 
 interface MarketplaceItemDetailModalProps {
     item: MarketplaceItem | null;
@@ -134,6 +135,9 @@ const MarketplaceItemDetailModal: React.FC<MarketplaceItemDetailModalProps> = ({
             onFavoriteChange?.();
         }
     );
+
+    // Follow creator functionality
+    const { isFollowing, isLoading: isFollowLoading, toggleFollow } = useFollowCreator(item?.creator_id || null);
 
     const handleFavoriteClick = async () => {
         if (item) {
@@ -332,20 +336,44 @@ const MarketplaceItemDetailModal: React.FC<MarketplaceItemDetailModalProps> = ({
                             {/* Seller Info */}
                             <div className="bg-gray-100 rounded-lg p-4 mb-6">
                                 <div className="text-xs font-medium text-gray-600 mb-3">Seller</div>
-                                <div className="flex items-center gap-3">
-                                    <img
-                                        src={item.creator_info?.avatar_url || `https://ui-avatars.com/api/?name=${item.creator_info?.full_name || 'Unknown'}&background=0ea5e9&color=fff&size=48`}
-                                        alt={item.creator_info?.full_name || 'Seller'}
-                                        className="w-12 h-12 rounded-full object-cover"
-                                    />
-                                    <div>
-                                        <p className="font-semibold text-gray-900">
-                                            {item.creator_info?.full_name || 'Unknown'}
-                                        </p>
-                                        <p className="text-xs text-gray-600">
-                                            {item.creator_info?.email || 'No email'}
-                                        </p>
+                                <div className="flex items-center gap-3 justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <img
+                                            src={item.creator_info?.avatar_url || `https://ui-avatars.com/api/?name=${item.creator_info?.full_name || 'Unknown'}&background=0ea5e9&color=fff&size=48`}
+                                            alt={item.creator_info?.full_name || 'Seller'}
+                                            className="w-12 h-12 rounded-full object-cover"
+                                        />
+                                        <div>
+                                            <p className="font-semibold text-gray-900">
+                                                {item.creator_info?.full_name || 'Unknown'}
+                                            </p>
+                                            <p className="text-xs text-gray-600">
+                                                {item.creator_info?.email || 'No email'}
+                                            </p>
+                                        </div>
                                     </div>
+                                    {(() => {
+                                        const currentUserId = localStorage.getItem('user_id');
+                                        const isOwnItem = item?.creator_id === currentUserId;
+                                        
+                                        if (isOwnItem) {
+                                            return null; // Don't show follow button for own items
+                                        }
+                                        
+                                        return (
+                                            <button
+                                                onClick={toggleFollow}
+                                                disabled={isFollowLoading}
+                                                className={`px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all ${
+                                                    isFollowing
+                                                        ? 'bg-gray-300 text-gray-700 hover:bg-gray-400'
+                                                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                                                } disabled:opacity-50 disabled:cursor-not-allowed`}
+                                            >
+                                                {isFollowLoading ? 'Loading...' : isFollowing ? 'Following' : 'Follow'}
+                                            </button>
+                                        );
+                                    })()}
                                 </div>
                             </div>
 

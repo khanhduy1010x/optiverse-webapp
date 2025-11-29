@@ -1,0 +1,17 @@
+{
+  "creators_i_follow": "Follow",
+  "all_creators_you_follow": "All creators you're following",
+  "no_creators_yet": "You haven't followed any creators yet",
+  "find_creator": "Find creator...",
+  "view_profile": "View profile",
+  "creators": "creators",
+  "follow": "Follow",
+  "following": "Following",
+  "followed_successfully": "Successfully followed this creator",
+  "unfollowed_successfully": "Successfully unfollowed this creator",
+  "error_following": "Error following creator",
+  "error_unfollowing": "Error unfollowing creator",
+  "loading_followers": "Loading following list...",
+  "retry": "Retry",
+  "failed_to_load": "Failed to load following list"
+}
