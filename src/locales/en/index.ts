@@ -22,6 +22,7 @@ import focusRoom from './focus-room.json';
 import membership from './membership.json';
 import marketplace from './marketplace.json';
 import leaderboard from './leaderboard.json';
+import follow from './follow.json';
 
 export default {
   common,
@@ -48,4 +49,5 @@ export default {
   membership,
   marketplace,
   leaderboard,
+  follow,
 };

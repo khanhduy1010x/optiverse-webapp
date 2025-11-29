@@ -215,22 +215,43 @@ class MarketplaceServiceClass {
   }
 
   /**
-   * Lấy danh sách marketplace items của một user khác
+   * Lấy danh sách marketplace items của một creator với filter (12 items max)
    */
-  async getByCreatorId(creatorId: string, page: number = 1, limit: number = 10) {
+  async getByCreatorId(
+    creatorId: string,
+    page: number = 1,
+    limit: number = 12,
+    search?: string,
+    price?: string,
+    sort?: string
+  ) {
     try {
-      const params = { page, limit };
+      const params: any = { page, limit };
+
+      if (search) {
+        params.search = search;
+      }
+
+      if (price) {
+        params.price = price;
+      }
+
+      if (sort) {
+        params.sort = sort;
+      }
 
       const response = await api.get<
         ApiResponse<{
           items: MarketplaceItem[];
           total: number;
+          totalPages: number;
         }>
       >(`${URLBASE}/user/${creatorId}`, { params });
 
       return {
         items: response.data.data.items || [],
         total: response.data.data.total || 0,
+        totalPages: response.data.data.totalPages || 0,
       };
     } catch (error: any) {
       console.error(`Error fetching marketplace items for creator ${creatorId}:`, {

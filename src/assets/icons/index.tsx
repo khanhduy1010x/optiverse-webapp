@@ -97,6 +97,7 @@ import { ReactComponent as level1 } from './level_1.svg';
 import { ReactComponent as level2 } from './level_2.svg';
 import { ReactComponent as mps } from './mps.svg';
 import { ReactComponent as payment } from './payment.svg';
+import { ReactComponent as follow } from './follow.svg';
 
 
 export const ICONS = {
@@ -200,6 +201,7 @@ export const ICONS = {
   level_2: level2,
   mps: mps,
   payment: payment,
+  follow: follow,
 };
 
 export type IconName = keyof typeof ICONS;

@@ -85,6 +85,7 @@ import MarketplaceHomePage from './pages/Marketplace/Home.page';
 import MyItemsPage from './pages/Marketplace/MyItems.page';
 import PurchaseHistoryPage from './pages/Marketplace/PurchaseHistory.page';
 import FavoritesPage from './pages/Marketplace/Favorites.page';
+import FollowersPage from './pages/Marketplace/Followers.page';
 import SalesAnalyticsPage from './pages/Marketplace/SalesAnalytics.page';
 import MembershipScreen from './pages/Membership/Membership.screen';
 import PaymentMethodScreen from './pages/Membership/PaymentMethod.screen';
@@ -239,6 +240,15 @@ const AppContent: React.FC = () => {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/marketplace/followers"
+              element={
+                <ProtectedRoute>
+                  <FollowersPage />
+                </ProtectedRoute>
+              }
+            />
+       
            <Route
               path="/marketplace/leaderboard"
               element={

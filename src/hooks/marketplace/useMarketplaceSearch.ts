@@ -7,6 +7,7 @@ interface UseMarketplaceSearchOptions {
     searchQuery: string;
     priceRange: { min: number; max: number };
     sortBy: string;
+    creatorId?: string;
 }
 
 interface UseMarketplaceSearchReturn {
@@ -33,7 +34,7 @@ export const useMarketplaceSearch = (options: UseMarketplaceSearchOptions): UseM
     // Reset to page 1 when filters change
     useEffect(() => {
         setCurrentPage(1);
-    }, [options.searchQuery, options.priceRange, options.sortBy]);
+    }, [options.searchQuery, options.priceRange, options.sortBy, options.creatorId]);
 
     // Fetch filtered items from backend
     useEffect(() => {
@@ -49,6 +50,11 @@ export const useMarketplaceSearch = (options: UseMarketplaceSearchOptions): UseM
                 
                 if (options.searchQuery) {
                     queryParams.append('search', options.searchQuery);
+                }
+
+                // Add creator filter if provided
+                if (options.creatorId) {
+                    queryParams.append('creatorId', options.creatorId);
                 }
 
                 // Format price range for backend
@@ -86,7 +92,7 @@ export const useMarketplaceSearch = (options: UseMarketplaceSearchOptions): UseM
         };
 
         fetchFilteredItems();
-    }, [currentPage, options.searchQuery, options.priceRange, options.sortBy]);
+    }, [currentPage, options.searchQuery, options.priceRange, options.sortBy, options.creatorId]);
 
     return {
         products,

@@ -117,5 +117,11 @@
   "membership": "Membership",
   "you_will_pay": "Bạn sẽ trả",
   "member": "Thành viên",
-  "share_flashcard_decks": "Chia sẻ flashcard decks của bạn với cộng đồng"
+  "share_flashcard_decks": "Chia sẻ flashcard decks của bạn với cộng đồng",
+  "search_products": "Tìm kiếm sản phẩm...",
+  "low_to_high": "Thấp đến cao",
+  "high_to_low": "Cao đến thấp",
+  "no_products_found": "Không tìm thấy sản phẩm nào",
+  "retry": "Thử lại",
+  "products": "sản phẩm"
 }

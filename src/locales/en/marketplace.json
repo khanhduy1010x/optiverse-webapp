@@ -117,5 +117,11 @@
   "membership": "Membership",
   "you_will_pay": "You will pay",
   "member": "Member",
-  "share_flashcard_decks": "Share your flashcard decks with the community"
+  "share_flashcard_decks": "Share your flashcard decks with the community",
+  "search_products": "Search products...",
+  "low_to_high": "Low to High",
+  "high_to_low": "High to Low",
+  "no_products_found": "No products found",
+  "retry": "Retry",
+  "products": "products"
 }
