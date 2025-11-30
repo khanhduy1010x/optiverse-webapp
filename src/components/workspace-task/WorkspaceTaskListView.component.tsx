@@ -54,7 +54,7 @@ const WorkspaceTaskListView: React.FC<WorkspaceTaskListViewProps> = ({
   const statusConfig = [
     {
       id: 'done',
-      label: 'Done',
+      label: t('workspace_task.columns.done'),
       color: 'bg-green-50',
       badgeColor: 'bg-green-600',
       textColor: 'text-green-700',
@@ -62,7 +62,7 @@ const WorkspaceTaskListView: React.FC<WorkspaceTaskListViewProps> = ({
     },
     {
       id: 'in-progress',
-      label: 'In Progress',
+      label: t('workspace_task.columns.in_progress'),
       color: 'bg-blue-50',
       badgeColor: 'bg-blue-600',
       textColor: 'text-blue-700',
@@ -70,7 +70,7 @@ const WorkspaceTaskListView: React.FC<WorkspaceTaskListViewProps> = ({
     },
     {
       id: 'to-do',
-      label: 'To Do',
+      label: t('workspace_task.columns.to_do'),
       color: 'bg-gray-50',
       badgeColor: 'bg-gray-600',
       textColor: 'text-gray-700',
@@ -164,10 +164,10 @@ const WorkspaceTaskListView: React.FC<WorkspaceTaskListViewProps> = ({
           />
         </svg>
         <h3 className={GROUP_CLASSNAMES.taskEmptyTitle}>
-          {t('No Tasks')}
+          {t('workspace_task.no_tasks')}
         </h3>
         <p className={GROUP_CLASSNAMES.taskEmptyDescription}>
-          {t('No tasks available')}
+          {t('workspace_task.no_tasks_available')}
         </p>
       </div>
     );
@@ -195,7 +195,7 @@ const WorkspaceTaskListView: React.FC<WorkspaceTaskListViewProps> = ({
             <div className="rounded-2xl border border-gray-200 overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
               {statusTasks.length === 0 ? (
                 <div className="p-8 text-center text-gray-400 text-sm font-medium">
-                  No tasks
+                  {t('workspace_task.no_tasks_status')}
                 </div>
               ) : (
                 <>
@@ -222,7 +222,7 @@ const WorkspaceTaskListView: React.FC<WorkspaceTaskListViewProps> = ({
                         onClick={() => handleViewMore(status.id)}
                         className="px-6 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors duration-200"
                       >
-                        View More ({statusTasks.length - (displayedTaskCount[status.id as keyof typeof displayedTaskCount])} remaining)
+                        {t('workspace_task.view_more')} ({statusTasks.length - (displayedTaskCount[status.id as keyof typeof displayedTaskCount])} {t('workspace_task.remaining')})
                       </button>
                     )}
                     
@@ -231,7 +231,7 @@ const WorkspaceTaskListView: React.FC<WorkspaceTaskListViewProps> = ({
                         onClick={() => handleViewLess(status.id)}
                         className="px-6 py-2 text-sm font-medium text-gray-600 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors duration-200"
                       >
-                        Show Less
+                        {t('workspace_task.show_less')}
                       </button>
                     )}
                   </div>
@@ -245,10 +245,10 @@ const WorkspaceTaskListView: React.FC<WorkspaceTaskListViewProps> = ({
       {/* Delete Confirmation Modal */}
       <WorkspaceConfirmModal
         isOpen={showDeleteConfirm}
-        title="Delete Task"
-        message="Are you sure you want to delete this task? This action cannot be undone."
-        confirmText="Delete"
-        cancelText="Cancel"
+        title={t('workspace_task.delete_confirm_title')}
+        message={t('workspace_task.delete_confirm_message')}
+        confirmText={t('workspace_task.delete_confirm_button')}
+        cancelText={t('workspace_task.cancel_button')}
         isDangerous={true}
         onConfirm={handleConfirmDelete}
         onCancel={() => {

@@ -247,7 +247,10 @@
   "import_available_basic": "Available on Basic plan and above",
   "upgrade_to_import": "Upgrade to",
   "basic_plan": "Basic",
-  "import_feature": "to use the import feature"
+  "import_feature": "to use the import feature",
+  "event": "Event",
+  "select_date": "Select date",
+  "select_time": "Select time"
 }
 
 

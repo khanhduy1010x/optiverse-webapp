@@ -9,6 +9,9 @@ import friend from './friend.json';
 import collab from './collab.json';
 import achievement from './achievement.json';
 import notification from './notification.json';
+import dashboard from './dashboard.json';
+import tag from './tag.json';
+import admin from './admin.json';
 import error from './error.json';
 import taskEvent from './task-event.json';
 import chat from './chat.json';
@@ -33,6 +36,9 @@ export default {
   collab,
   achievement,
   notification,
+  dashboard,
+  tag,
+  admin,
   error,
   'task-event': taskEvent,
   chat,

@@ -34,7 +34,7 @@ const WorkspaceTaskBoardView: React.FC<WorkspaceTaskBoardViewProps> = ({
   const columns = [
     { 
       id: 'to-do', 
-      title: 'To Do',
+      title: t('workspace_task.columns.to_do'),
       color: 'bg-gray-50',
       headerColor: 'text-gray-700',
       badge: 'bg-gray-600',
@@ -43,7 +43,7 @@ const WorkspaceTaskBoardView: React.FC<WorkspaceTaskBoardViewProps> = ({
     },
     { 
       id: 'in-progress', 
-      title: 'In Progress',
+      title: t('workspace_task.columns.in_progress'),
       color: 'bg-blue-50',
       headerColor: 'text-blue-700',
       badge: 'bg-blue-600',
@@ -52,7 +52,7 @@ const WorkspaceTaskBoardView: React.FC<WorkspaceTaskBoardViewProps> = ({
     },
     { 
       id: 'done', 
-      title: 'Done',
+      title: t('workspace_task.columns.done'),
       color: 'bg-green-50',
       headerColor: 'text-green-700',
       badge: 'bg-green-600',
@@ -162,8 +162,8 @@ const WorkspaceTaskBoardView: React.FC<WorkspaceTaskBoardViewProps> = ({
                 {columnTasks.length === 0 ? (
                   <div className={`flex items-center justify-center flex-1 rounded-lg border-2 border-dashed ${column.borderColor}`}>
                     <div className="text-center space-y-2">
-                      <p className="text-gray-400 text-sm font-medium">No tasks</p>
-                      <p className="text-gray-300 text-xs">Drag tasks here</p>
+                      <p className="text-gray-400 text-sm font-medium">{t('workspace_task.no_tasks_status')}</p>
+                      <p className="text-gray-300 text-xs">{t('workspace_task.drag_tasks_here')}</p>
                     </div>
                   </div>
                 ) : (

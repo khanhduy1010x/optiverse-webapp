@@ -234,6 +234,9 @@
   "import_available_basic": "Có sẵn từ gói Basic trở lên",
   "upgrade_to_import": "Nâng cấp lên",
   "basic_plan": "Basic",
-  "import_feature": "để sử dụng chức năng import"
+  "import_feature": "để sử dụng chức năng import",
+  "event": "Sự kiện",
+  "select_date": "Chọn ngày",
+  "select_time": "Chọn giờ"
 }
 
