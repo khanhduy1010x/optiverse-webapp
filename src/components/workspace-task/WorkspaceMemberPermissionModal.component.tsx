@@ -34,12 +34,12 @@ const WorkspaceMemberPermissionModal: React.FC<WorkspaceMemberPermissionModalPro
   const [success, setSuccess] = useState(false);
 
   const roleDescriptions = {
-    admin: 'Owner - Can manage members, edit workspace settings, and all permissions',
+    admin: 'Admin - Can manage members, edit workspace settings, and all permissions',
     user: 'Member - Can view and manage tasks assigned to them',
   };
 
   const getRoleDisplayName = (role: 'admin' | 'user'): string => {
-    return role === 'admin' ? 'Owner' : 'Member';
+    return role === 'admin' ? 'Admin' : 'Member';
   };
 
   const handleUpdateRole = async () => {

@@ -22,6 +22,7 @@ interface WorkspaceTaskBoardProps {
   workspaceOwnerId?: string;
   currentUserId?: string;
   currentUserRole?: 'admin' | 'user';
+  onRefreshMembers?: () => void;
 }
 
 const WorkspaceTaskBoard: React.FC<WorkspaceTaskBoardProps> = ({
@@ -35,6 +36,7 @@ const WorkspaceTaskBoard: React.FC<WorkspaceTaskBoardProps> = ({
   workspaceOwnerId,
   currentUserId,
   currentUserRole = 'user',
+  onRefreshMembers,
 }) => {
   const { t } = useTranslation('workspace-task');
   const [viewType, setViewType] = useState<'list' | 'board' | 'calendar'>('list');
@@ -42,9 +44,19 @@ const WorkspaceTaskBoard: React.FC<WorkspaceTaskBoardProps> = ({
   const [showMemberPermissionModal, setShowMemberPermissionModal] = useState(false);
   const [selectedMember, setSelectedMember] = useState<any>(null);
 
-  const isOwner = currentUserId === workspaceOwnerId;
+  // Check if current user is owner - using both ID comparison and role
+  const isOwner = currentUserId === workspaceOwnerId || currentUserRole === 'admin';
+
+  React.useEffect(() => {
+    console.log('[WorkspaceTaskBoard] currentUserId:', currentUserId);
+    console.log('[WorkspaceTaskBoard] workspaceOwnerId:', workspaceOwnerId);
+    console.log('[WorkspaceTaskBoard] isOwner:', isOwner);
+    console.log('[WorkspaceTaskBoard] currentUserRole:', currentUserRole);
+  }, [currentUserId, workspaceOwnerId, isOwner, currentUserRole]);
 
   const handleMemberClick = (member: any) => {
+    console.log('[WorkspaceTaskBoard] Member clicked:', member);
+    console.log('[WorkspaceTaskBoard] isOwner at click:', isOwner);
     setSelectedMember(member);
     setShowMemberPermissionModal(true);
     setShowMembersDropdown(false);
@@ -53,6 +65,10 @@ const WorkspaceTaskBoard: React.FC<WorkspaceTaskBoardProps> = ({
   const handleMemberPermissionUpdated = () => {
     setShowMemberPermissionModal(false);
     setSelectedMember(null);
+    // Refresh members list to get updated roles
+    if (onRefreshMembers) {
+      onRefreshMembers();
+    }
   };
 
   React.useEffect(() => {
@@ -77,7 +93,7 @@ const WorkspaceTaskBoard: React.FC<WorkspaceTaskBoardProps> = ({
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
               }`}
             >
-              {view === 'list' ? '📋 List' : view === 'board' ? '📊 Board' : '📅 Calendar'}
+              {view === 'list' ? `📋 ${t('workspace_task.list')}` : view === 'board' ? `📊 ${t('workspace_task.board')}` : `📅 ${t('workspace_task.calendar')}`}
             </button>
           ))}
         </div>
@@ -98,23 +114,23 @@ const WorkspaceTaskBoard: React.FC<WorkspaceTaskBoardProps> = ({
             <div className="absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-lg border border-gray-200 z-50 overflow-hidden">
               {/* Header */}
               <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
-                <p className="text-sm font-semibold text-gray-900">Team Members ({workspaceMembers.length})</p>
+                <p className="text-sm font-semibold text-gray-900">{t('workspace_task.team_members')} ({workspaceMembers.length})</p>
               </div>
 
               {/* Members List */}
               <div className="max-h-96 overflow-y-auto">
                 {workspaceMembers.length === 0 ? (
                   <div className="p-4 text-center text-sm text-gray-500">
-                    No members yet
+                    {t('workspace_task.no_members_yet')}
                   </div>
                 ) : (
                   <div className="divide-y divide-gray-100">
                     {workspaceMembers.map((member) => (
                       <div
                         key={member._id}
-                        onClick={() => isOwner && member._id !== workspaceOwnerId && member.role !== 'admin' && handleMemberClick(member)}
+                        onClick={() => member._id !== currentUserId && handleMemberClick(member)}
                         className={`px-4 py-3 flex items-center gap-3 ${
-                          isOwner && member._id !== workspaceOwnerId && member.role !== 'admin'
+                          member._id !== currentUserId
                             ? 'hover:bg-blue-50 cursor-pointer transition-colors duration-200'
                             : 'hover:bg-gray-50 transition-colors duration-200'
                         }`}
@@ -132,17 +148,21 @@ const WorkspaceTaskBoard: React.FC<WorkspaceTaskBoardProps> = ({
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <p className="text-sm font-medium text-gray-900 truncate">{member.full_name}</p>
-                            {member._id === workspaceOwnerId || member.role === 'admin' ? (
+                            {member._id === workspaceOwnerId ? (
                               <span className="px-2 py-0.5 bg-yellow-100 text-yellow-700 text-xs font-semibold rounded">
                                 Owner
                               </span>
+                            ) : member.role === 'admin' ? (
+                              <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-semibold rounded">
+                                Admin
+                              </span>
                             ) : (
                               <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-semibold rounded">
-                                Member
+                                {t('workspace_task.member')}
                               </span>
                             )}
                             {member._id === currentUserId && (
-                              <span className="text-xs text-gray-500">(You)</span>
+                              <span className="text-xs text-gray-500">({t('workspace_task.you')})</span>
                             )}
                           </div>
                           <p className="text-xs text-gray-500 truncate">{member.email}</p>
@@ -156,7 +176,7 @@ const WorkspaceTaskBoard: React.FC<WorkspaceTaskBoardProps> = ({
               {/* Footer */}
               <div className="px-4 py-3 border-t border-gray-100 bg-gray-50">
                 <button className="w-full text-center text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors duration-200">
-                  Manage Members
+                  {t('workspace_task.manage_members')}
                 </button>
               </div>
             </div>

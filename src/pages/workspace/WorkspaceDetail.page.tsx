@@ -173,8 +173,10 @@ const WorkspaceDetail: React.FC = () => {
               const member = workspaceMembers.find(m => m._id === currentUserId);
               return (member?.role as 'admin' | 'user') || 'user';
             })()}
+            workspaceOwnerId={workspaceMembers.find(m => m.role === 'admin')?._id}
             onTaskEdit={handleTaskEdit}
             onTaskClick={handleTaskDetail}
+            onRefreshMembers={() => fetchWorkspaceMembers(workspaceId!)}
           />
         )}
       </div>

@@ -1,0 +1,15 @@
+{
+  "manage_tags": "Quản lý nhãn",
+  "close_tag_management": "Đóng quản lý nhãn",
+  "add_new_tag": "Thêm nhãn mới",
+  "tag_name_placeholder": "Tên nhãn",
+  "choose_tag_color": "Chọn màu nhãn",
+  "add": "Thêm",
+  "characters": "ký tự",
+  "tag_name_exceed_limit": "Tên nhãn không được vượt quá 25 ký tự.",
+  "your_tags": "Nhãn của bạn",
+  "no_tags_available_create_first": "Chưa có nhãn. Hãy tạo nhãn đầu tiên!",
+  "delete_tag": "Xóa nhãn",
+  "tag_update_success": "Cập nhật nhãn thành công",
+  "tag_update_failed": "Cập nhật nhãn thất bại. Vui lòng thử lại."
+}
