@@ -65,7 +65,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         </p>
 
         {/* Pricing Breakdown (if available) */}
-        {pricing && pricing.final_price && (
+        {pricing && pricing.final_price !== undefined && pricing.final_price > 0 && (
           <div className="bg-blue-50 rounded-lg p-4 mb-6 space-y-2">
             {/* Original Price */}
             {pricing.original_price && (
@@ -78,7 +78,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
             )}
 
             {/* Discount */}
-            {pricing.discount_percentage && pricing.discount_amount && (
+            {pricing.discount_percentage > 0 && pricing.discount_amount && (
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-700">{t('discount')}:</span>
                 <span className="font-semibold text-red-600">

@@ -44,12 +44,16 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = ({
     if (compact) {
         return (
             <div className="flex items-center gap-2">
-                <span className="text-lg line-through text-gray-500">
-                    {formatPrice(pricing.original_price)}
-                </span>
-                <span className="inline-flex items-center gap-1 text-sm bg-red-100 text-red-700 px-2 py-1 rounded">
-                    -{pricing.discount_percentage}%
-                </span>
+                {pricing.discount_percentage > 0 && (
+                    <>
+                        <span className="text-lg line-through text-gray-500">
+                            {formatPrice(pricing.original_price)}
+                        </span>
+                        <span className="inline-flex items-center gap-1 text-sm bg-red-100 text-red-700 px-2 py-1 rounded">
+                            -{pricing.discount_percentage}%
+                        </span>
+                    </>
+                )}
                 <span className="text-lg font-bold text-green-600">
                     {formatPrice(pricing.final_price)}
                 </span>
@@ -77,12 +81,14 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = ({
                     </div>
                 )}
 
-                <div className="flex justify-between items-center">
-                    <span className="text-gray-700">{t('discount')}:</span>
-                    <span className="font-semibold text-red-600">
-                        -{pricing.discount_percentage}% ({formatPrice(pricing.discount_amount)})
-                    </span>
-                </div>
+                {pricing.discount_percentage > 0 && (
+                    <div className="flex justify-between items-center">
+                        <span className="text-gray-700">{t('discount')}:</span>
+                        <span className="font-semibold text-red-600">
+                            -{pricing.discount_percentage}% ({formatPrice(pricing.discount_amount)})
+                        </span>
+                    </div>
+                )}
 
                 <div className="border-t pt-3 flex justify-between items-center">
                     <span className="font-bold text-gray-900">{t('you_will_pay')}:</span>
@@ -97,14 +103,16 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = ({
     // Default: Show stacked pricing
     return (
         <div className="space-y-2">
-            <div className="flex items-center gap-2">
-                <span className="line-through text-gray-500 text-lg">
-                    {formatPrice(pricing.original_price)}
-                </span>
-                <span className="inline-flex items-center gap-1 text-xs bg-red-100 text-red-700 px-2 py-1 rounded font-semibold">
-                    -{pricing.discount_percentage}%
-                </span>
-            </div>
+            {pricing.discount_percentage > 0 && (
+                <div className="flex items-center gap-2">
+                    <span className="line-through text-gray-500 text-lg">
+                        {formatPrice(pricing.original_price)}
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-xs bg-red-100 text-red-700 px-2 py-1 rounded font-semibold">
+                        -{pricing.discount_percentage}%
+                    </span>
+                </div>
+            )}
             <div className="text-2xl font-bold text-green-600">
                 {formatPrice(pricing.final_price)}
             </div>
