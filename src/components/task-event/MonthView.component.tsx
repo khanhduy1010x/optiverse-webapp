@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { TaskEvent } from '../../types/task-events/task-events.types';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isToday } from 'date-fns';
 import { isSameLocalDay, ensureDate } from '../../utils/date.util';
@@ -27,6 +27,7 @@ export const MonthView: React.FC<MonthViewProps> = ({
   onDeadlineClick
 }) => {
   const { t } = useAppTranslate('task');
+  const [expandedDayIndex, setExpandedDayIndex] = useState<number | null>(null);
   // Tạo mảng các ngày trong tháng (bao gồm cả ngày của tháng trước và tháng sau để hiển thị đủ lịch)
   const days = useMemo(() => {
     try {
@@ -154,32 +155,41 @@ export const MonthView: React.FC<MonthViewProps> = ({
 
           {/* Hiển thị các deadline và sự kiện */}
           <div className={styles.eventListContainer}>
-            {/* Deadlines first, max 2 */}
-            {deadlinesForDay.slice(0, 2).map((task, idx) => (
+            {/* Deadlines first, max 2 unless expanded */}
+            {(expandedDayIndex === i ? deadlinesForDay : deadlinesForDay.slice(0, 2)).map((task, idx) => (
               <CalendarDeadlineEvent
                 key={task._id || `deadline-${i}-${idx}`}
                 task={task}
                 onClick={() => onDeadlineClick && onDeadlineClick(task)}
               />
             ))}
-            {deadlinesForDay.length > 2 && (
-              <div className={styles.moreButton}>
+            {deadlinesForDay.length > 2 && expandedDayIndex !== i && (
+              <div 
+                className={styles.moreButton}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setExpandedDayIndex(i);
+                }}
+              >
                 +{deadlinesForDay.length - 2} {t('more')}
               </div>
             )}
 
-            {/* Events, max 3 */}
-            {dayEvents.slice(0, 3).map((event, index) => (
+            {/* Events, max 3 unless expanded */}
+            {(expandedDayIndex === i ? dayEvents : dayEvents.slice(0, 3)).map((event, index) => (
               <CalendarEvent
                 key={event._id || index}
                 event={event}
                 onClick={() => handleEditEvent(event)}
               />
             ))}
-            {dayEvents.length > 3 && (
+            {dayEvents.length > 3 && expandedDayIndex !== i && (
               <div
                 className={styles.moreButton}
-                onClick={() => dayEvents.slice(3).forEach(event => handleEditEvent(event))}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setExpandedDayIndex(i);
+                }}
               >
                 +{dayEvents.length - 3} {t('more')}
               </div>

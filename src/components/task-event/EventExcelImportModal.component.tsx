@@ -437,6 +437,15 @@ export const EventExcelImportModal: React.FC<EventExcelImportModalProps> = ({ is
         rowErrors.push({ rowIndex: eventIndex, message: errorMsg });
         continue;
       }
+      
+      // Validate title length (max 50 characters)
+      if (title.length > 50) {
+        const errorMsg = `Event ${eventIndex}: Validation failed: title length invalid`;
+        console.error('❌ Validation Error:', errorMsg);
+        console.log('   Title length:', title.length);
+        rowErrors.push({ rowIndex: eventIndex, message: errorMsg });
+        continue;
+      }
       console.log('   ✅ Title:', title);
 
       // Validate start_time (require both start_date and start_time, accept hh:mm string, number (Excel), or Date)
@@ -580,6 +589,29 @@ export const EventExcelImportModal: React.FC<EventExcelImportModalProps> = ({ is
 
       // Validate repeat logic
       if (repeatType !== 'none') {
+        // Check if to_date is provided when repeat is not 'none'
+        const hasToDate = r['to_date'] && String(r['to_date']).trim() !== '';
+        if (!hasToDate) {
+          const errorMsg = `Event ${eventIndex}: Request failed with status code 400`;
+          console.error('❌ Validation Error:', errorMsg);
+          console.log('repeatType:', repeatType, 'to_date missing');
+          rowErrors.push({ rowIndex: eventIndex, message: errorMsg });
+          continue;
+        }
+        
+        // Parse to_date and validate it's after start_date
+        const toDateISO = combineDateTimeToISO(r['to_date'], undefined, r['to_date'], true);
+        if (toDateISO) {
+          const toDate = new Date(toDateISO);
+          if (toDate <= startDate) {
+            const errorMsg = `Event ${eventIndex}: Request failed with status code 400`;
+            console.error('❌ Validation Error: to_date must be after start_date');
+            console.log('startDate:', startDate.toISOString(), 'toDate:', toDate.toISOString());
+            rowErrors.push({ rowIndex: eventIndex, message: errorMsg });
+            continue;
+          }
+        }
+        
         if (!repeatUnit) {
           const errorMsg = `Event ${eventIndex}: Invalid repeat unit. Use: daily, weekly, monthly, yearly`;
           console.error('❌ Validation Error:', errorMsg);
