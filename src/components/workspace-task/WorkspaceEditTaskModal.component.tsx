@@ -481,19 +481,19 @@ const WorkspaceEditTaskModal: React.FC<WorkspaceEditTaskModalProps> = ({ task, w
           </div>
 
           {/* Buttons */}
-          <div className="flex gap-3 pt-4 border-t border-gray-100">
+          <div className="flex items-center justify-end gap-3 p-4 border-t border-gray-200">
             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading || !title.trim()}
-              className="flex-1 px-4 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>
@@ -504,10 +504,7 @@ const WorkspaceEditTaskModal: React.FC<WorkspaceEditTaskModalProps> = ({ task, w
                   Updating...
                 </>
               ) : (
-                <>
-                  <span>✓</span>
-                  Save
-                </>
+                'Save'
               )}
             </button>
           </div>

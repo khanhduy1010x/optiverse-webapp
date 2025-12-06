@@ -385,6 +385,13 @@ export const TaskExcelImportModal: React.FC<TaskExcelImportModalProps> = ({ isOp
           rowErrors.push({ rowIndex: taskIndex, message: `Task ${taskIndex}: Title is required` });
           continue;
         }
+        
+        // Validate title length (max 100 characters)
+        if (title.length > 100) {
+          errors.push('Title is too long (max 100 characters)');
+          rowErrors.push({ rowIndex: taskIndex, message: `Task ${taskIndex}: Title is too long (max 100 characters)` });
+          continue;
+        }
 
         // 2. Validate end_time only (optional - user can skip deadline)
         const hasEndDate = r['end_date'] && String(r['end_date']).trim() !== '';
@@ -481,6 +488,13 @@ export const TaskExcelImportModal: React.FC<TaskExcelImportModalProps> = ({ isOp
             description = descVal.trim() || undefined;
           } else {
             description = String(descVal);
+          }
+          
+          // Validate description length (max 500 characters)
+          if (description && description.length > 500) {
+            errors.push('Description is too long (max 500 characters)');
+            rowErrors.push({ rowIndex: taskIndex, message: `Task ${taskIndex}: Description is too long (max 500 characters)` });
+            continue;
           }
         }
 
