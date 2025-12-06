@@ -68,13 +68,13 @@ export const ImportDropdown: React.FC<ImportDropdownProps> = ({
           setIsOpen(!isOpen);
         }}
         className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-md text-sm flex items-center space-x-1 transition-colors duration-200"
-        aria-label={t('import_export')}
-        title={t('import_export')}
+        aria-label={t('import')}
+        title={t('import')}
       >
         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
         </svg>
-        <span className="hidden sm:inline">{t('import_export')}</span>
+        <span className="hidden sm:inline">{t('import')}</span>
         <svg 
           xmlns="http://www.w3.org/2000/svg" 
           className={`h-3 w-3 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 

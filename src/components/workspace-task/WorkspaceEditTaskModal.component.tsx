@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown } from 'lucide-react';
@@ -33,6 +33,23 @@ const WorkspaceEditTaskModal: React.FC<WorkspaceEditTaskModalProps> = ({ task, w
   const [showAssigneeDropdown, setShowAssigneeDropdown] = useState(false);
   const [tempTimeCleared, setTempTimeCleared] = useState(false);
   const [inputTimeValue, setInputTimeValue] = useState('');
+  const assigneeDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close assignee dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (assigneeDropdownRef.current && !assigneeDropdownRef.current.contains(event.target as Node)) {
+        setShowAssigneeDropdown(false);
+      }
+    };
+
+    if (showAssigneeDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [showAssigneeDropdown]);
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -178,7 +195,7 @@ const WorkspaceEditTaskModal: React.FC<WorkspaceEditTaskModalProps> = ({ task, w
           {/* Assignee Section - Custom Dropdown with Avatars */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Assign to</label>
-            <div className="relative">
+            <div className="relative" ref={assigneeDropdownRef}>
               {/* Dropdown Button */}
               <button
                 type="button"

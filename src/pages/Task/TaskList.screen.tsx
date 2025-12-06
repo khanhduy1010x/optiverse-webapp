@@ -283,12 +283,12 @@ const TaskList: React.FC<TaskListComponentProps> = ({
                 )}
 
                 {/* Task Tags and Countdown */}
-                <div className={GROUP_CLASSNAMES.taskTagContainer}>
+                <div className="mt-2 space-y-2">
                   {/* Hiển thị thời gian đếm ngược cho tasks với end_time, không hiển thị cho task overdue */}
                   {task.end_time &&
                     task.status !== 'completed' &&
                     task.status !== 'overdue' && (
-                      <div className="mt-1 mb-2 text-xs flex items-center">
+                      <div className="text-xs flex items-center">
                         <svg
                           className="w-3 h-3 mr-1 text-amber-500"
                           fill="none"
@@ -309,27 +309,29 @@ const TaskList: React.FC<TaskListComponentProps> = ({
                       </div>
                     )}
 
-                  <div className={GROUP_CLASSNAMES.tagContainer}>
-                    {taskTags[task._id] && taskTags[task._id].length > 0 ? (
-                      taskTags[task._id].map(tag => (
-                        <TagItem
-                          key={
-                            tag._id ||
-                            `temp-${tag.name}-${Math.random().toString(36).substr(2, 9)}`
-                          }
-                          tag={tag}
-                          className={GROUP_CLASSNAMES.tagItem}
-                        />
-                      ))
-                    ) : (
-                      <></>
-                    )}
+                  <div className={GROUP_CLASSNAMES.taskTagContainer}>
+                    <div className={GROUP_CLASSNAMES.tagContainer}>
+                      {taskTags[task._id] && taskTags[task._id].length > 0 ? (
+                        taskTags[task._id].map(tag => (
+                          <TagItem
+                            key={
+                              tag._id ||
+                              `temp-${tag.name}-${Math.random().toString(36).substr(2, 9)}`
+                            }
+                            tag={tag}
+                            className={GROUP_CLASSNAMES.tagItem}
+                          />
+                        ))
+                      ) : (
+                        <></>
+                      )}
+                    </div>
+                    <span className="ml-auto text-xs text-gray-500">
+                      {task.createdAt
+                        ? formatConsistentDateTime(task.createdAt).split(',')[0]
+                        : ''}
+                    </span>
                   </div>
-                  <span className="ml-auto text-xs text-gray-500">
-                    {task.createdAt
-                      ? formatConsistentDateTime(task.createdAt).split(',')[0]
-                      : ''}
-                  </span>
                 </div>
               </div>
 

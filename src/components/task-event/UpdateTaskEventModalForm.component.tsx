@@ -41,7 +41,7 @@ export const UpdateTaskEventModalForm: React.FC<UpdateTaskEventModalFormProps> =
   const [tempEndTimeCleared, setTempEndTimeCleared] = useState(false);
   const userId = useAppSelector(state => state.auth.user?._id);
 
-  const { taskEvents, refreshTaskEvents } = useTaskEventList();
+  const { taskEvents } = useTaskEventList();
 
   // Xác nhận cập nhật cho sự kiện lặp lại (UI đẹp mắt, đồng bộ design)
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);

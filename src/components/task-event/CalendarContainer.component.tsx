@@ -1,6 +1,5 @@
 import React from 'react';
 import { Calendar } from './Calendar.component';
-import { RefreshButton } from './RefreshButton.component';
 import { TaskEvent } from '../../types/task-events/task-events.types';
 
 interface CalendarContainerProps {
@@ -10,9 +9,7 @@ interface CalendarContainerProps {
   addEvent: (event: TaskEvent) => void;
   removeEvent: (eventId: string, deleteOption?: 'all' | 'this') => void;
   updateEvent: (eventId: string, updatedEvent: TaskEvent, updateOption?: 'all' | 'this') => void;
-  refreshTaskEvents: () => void;
   refreshImportedEvents: () => void;
-  onRefresh: () => void;
 }
 
 export const CalendarContainer: React.FC<CalendarContainerProps> = ({
@@ -22,9 +19,7 @@ export const CalendarContainer: React.FC<CalendarContainerProps> = ({
   addEvent,
   removeEvent,
   updateEvent,
-  refreshTaskEvents,
-  refreshImportedEvents,
-  onRefresh
+  refreshImportedEvents
 }) => {
   return (
     <div className="flex flex-col h-full w-full bg-white">
@@ -36,7 +31,6 @@ export const CalendarContainer: React.FC<CalendarContainerProps> = ({
           addEvent={addEvent}
           removeEvent={removeEvent}
           updateEvent={updateEvent}
-          refreshTaskEvents={refreshTaskEvents}
           refreshImportedEvents={refreshImportedEvents}
         />
       </div>

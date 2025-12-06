@@ -22,7 +22,7 @@ interface TaskEventListProps {
 export const TaskEventList: React.FC<TaskEventListProps> = ({ taskId }) => {
   const { t } = useAppTranslate('task');
   // useTaskEventList hiện không nhận tham số taskId nữa (lấy theo user_id)
-  const { taskEvents, loading, error, refreshTaskEvents, removeEvent, addEvent, updateEvent } = useTaskEventList();
+  const { taskEvents, loading, error, removeEvent, addEvent, updateEvent } = useTaskEventList();
   // const { deleteTaskEvent } = useTaskEventOperations();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -299,7 +299,7 @@ export const TaskEventList: React.FC<TaskEventListProps> = ({ taskId }) => {
       <CreateTaskEventModalForm
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        onSuccess={refreshTaskEvents}
+        onSuccess={() => {}}
         addEvent={addEvent}
       />
 
@@ -309,7 +309,7 @@ export const TaskEventList: React.FC<TaskEventListProps> = ({ taskId }) => {
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
           taskEvent={selectedTaskEvent}
-          onSuccess={refreshTaskEvents}
+          onSuccess={() => {}}
           updateEvent={updateEvent}
         />
       )}
@@ -330,7 +330,6 @@ export const TaskEventList: React.FC<TaskEventListProps> = ({ taskId }) => {
           onConfirm={() => {
             if (eventToDelete?._id) {
               removeEvent(eventToDelete._id, 'this', eventToDelete.start_time as any);
-              refreshTaskEvents();
             }
             setIsDeleteConfirmOpen(false);
             setEventToDelete(null);
@@ -369,7 +368,6 @@ export const TaskEventList: React.FC<TaskEventListProps> = ({ taskId }) => {
                 onClick={() => {
                   if (eventToDelete?._id) {
                     removeEvent(eventToDelete._id, 'this', eventToDelete.start_time as any);
-                    refreshTaskEvents();
                   }
                   setIsRecurringDeleteOpen(false);
                   setEventToDelete(null);
@@ -383,7 +381,6 @@ export const TaskEventList: React.FC<TaskEventListProps> = ({ taskId }) => {
                 onClick={() => {
                   if (eventToDelete?._id) {
                     removeEvent(eventToDelete._id, 'all');
-                    refreshTaskEvents();
                   }
                   setIsRecurringDeleteOpen(false);
                   setEventToDelete(null);
