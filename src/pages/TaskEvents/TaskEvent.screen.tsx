@@ -1,6 +1,5 @@
 import React from 'react';
 import { useTaskEventList } from '../../hooks/task-events/useTaskEventList.hook';
-import { useAutoRefresh } from '../../hooks/task-events/useAutoRefresh.hook';
 import { LoadingState } from '../../components/task-event/LoadingState.component';
 import { ErrorState } from '../../components/task-event/ErrorState.component';
 import { CalendarContainer } from '../../components/task-event/CalendarContainer.component';
@@ -19,26 +18,15 @@ const TaskEvent: React.FC<TaskEventProps> = ({ onAddEvent }) => {
     taskEvents, 
     loading, 
     error, 
-    refreshTaskEvents,
     refreshImportedEvents,
     addEvent, 
     removeEvent, 
     updateEvent 
   } = useTaskEventList();
 
-  // Custom hook for auto-refresh functionality
-  const { triggerRefresh } = useAutoRefresh(refreshTaskEvents, {
-    interval: 30000,
-    enabled: false // Enable auto refresh
-  });
-
-  // Handle reload - refresh task events
+  // Handle reload - reload page
   const handleReload = () => {
-    try {
-      refreshTaskEvents();
-    } catch (error) {
-      console.error('Error reloading data:', error);
-    }
+    window.location.reload();
   };
 
   // Show loading state while fetching events
@@ -60,9 +48,7 @@ const TaskEvent: React.FC<TaskEventProps> = ({ onAddEvent }) => {
         addEvent={addEvent}
         removeEvent={removeEvent}
         updateEvent={updateEvent}
-        refreshTaskEvents={refreshTaskEvents}
         refreshImportedEvents={refreshImportedEvents}
-        onRefresh={triggerRefresh}
       />
 
       {/* Floating Add Event Button */}

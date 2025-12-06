@@ -58,10 +58,13 @@ export function useTagOperations(
     newTagColor: string,
     resetForm: () => void
   ) => {
-    if (!newTagName.trim()) return null;
+    if (!newTagName.trim()) {
+      console.warn('Tag name is empty, cannot create tag');
+      return null;
+    }
 
     try {
-      console.log('Creating new tag:', newTagName, newTagColor);
+      console.log('Creating new tag:', newTagName.trim(), newTagColor);
 
       // Disable form while tag is being created
       const createTagButton = document.getElementById('create-tag-button');
@@ -71,7 +74,7 @@ export function useTagOperations(
       }
 
       const newTag = await tagService.createTag({
-        name: newTagName,
+        name: newTagName.trim(),
         color: newTagColor,
       });
 

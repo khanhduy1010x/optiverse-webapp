@@ -43,15 +43,24 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
   React.useEffect(() => {
     let error = '';
     
-    // Check if start_time is in the past
+    // Check if start_time is in the past (including time)
     if (formData.start_time) {
-      const startDate = new Date(formData.start_time);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      startDate.setHours(0, 0, 0, 0);
+      const startDateTime = new Date(formData.start_time);
+      const now = new Date();
       
-      if (startDate < today) {
-        error = t('cannot_select_past_date');
+      // Check full date and time
+      if (startDateTime <= now) {
+        // Check if it's today
+        const startDate = new Date(startDateTime);
+        startDate.setHours(0, 0, 0, 0);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        if (startDate.getTime() === today.getTime()) {
+          error = 'Time must be greater than current time for today.';
+        } else if (startDate < today) {
+          error = t('cannot_select_past_date');
+        }
       }
     }
 
@@ -155,6 +164,20 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
       alert(t('repeat_type_required'));
       return;
     }
+    
+    // Validation: Nếu repeat_type không phải 'none', bắt buộc phải có repeat_to
+    if (
+      formData.repeat_type !== 'none' &&
+      (formData.repeat_type === 'daily' || 
+       formData.repeat_type === 'weekly' || 
+       formData.repeat_type === 'monthly' || 
+       formData.repeat_type === 'yearly') &&
+      !formData.repeat_to
+    ) {
+      alert(t('repeat_end_date_required') || 'Please select an end date for repeating events');
+      return;
+    }
+    
     if (formData.description && formData.description.length > 100) {
       alert(t('description_max_length'));
       return;
@@ -437,24 +460,8 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
                       currentDate.setHours(hours, minutes);
                       const newDateTime = new Date(currentDate);
 
-                      // Check if date is today and time must be greater than current time
-                      const now = new Date();
-                      const newDateOnly = new Date(newDateTime);
-                      newDateOnly.setHours(0, 0, 0, 0);
-                      const todayOnly = new Date(now);
-                      todayOnly.setHours(0, 0, 0, 0);
-
-                      if (newDateOnly.getTime() === todayOnly.getTime()) {
-                        if (newDateTime <= now) {
-                          // Keep the date/time but show error
-                          handleInputChange('start_time', newDateTime.toISOString());
-                          setDateError('Time must be greater than current time for today.');
-                          return;
-                        }
-                      }
-
+                      // Always update the value, validation will be handled by useEffect
                       handleInputChange('start_time', newDateTime.toISOString());
-                      setDateError('');
                     }}
                     placeholder="HH:mm"
                     format24h={true}
@@ -483,24 +490,8 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
                       currentDate.setHours(hours, minutes);
                       const newDateTime = new Date(currentDate);
 
-                      // Check if date is today and time must be greater than current time
-                      const now = new Date();
-                      const newDateOnly = new Date(newDateTime);
-                      newDateOnly.setHours(0, 0, 0, 0);
-                      const todayOnly = new Date(now);
-                      todayOnly.setHours(0, 0, 0, 0);
-
-                      if (newDateOnly.getTime() === todayOnly.getTime()) {
-                        if (newDateTime <= now) {
-                          // Keep the date/time but show error
-                          handleInputChange('end_time', newDateTime.toISOString());
-                          setDateError('Time must be greater than current time for today.');
-                          return;
-                        }
-                      }
-
+                      // Always update the value, validation will be handled by useEffect
                       handleInputChange('end_time', newDateTime.toISOString());
-                      setDateError('');
                     }}
                     placeholder="HH:mm"
                     format24h={true}

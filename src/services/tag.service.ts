@@ -55,10 +55,26 @@ class TagService {
   // Create a new tag
   async createTag(tagData: Omit<Tag, '_id' | 'user_id'>): Promise<Tag> {
     try {
+      // Validate tag data before sending
+      if (!tagData.name || !tagData.name.trim()) {
+        throw new Error('Tag name is required');
+      }
+
+      // Clean and prepare data
+      const cleanedData = {
+        name: tagData.name.trim(),
+        color: tagData.color || '#3B82F6',
+      };
+
+      console.log('Sending tag creation request:', cleanedData);
+
       const response = await api.post<ApiResponse<{ tag: Tag }>>(
         '/productivity/tag',
-        tagData
+        cleanedData
       );
+
+      console.log('Tag creation response:', response.data);
+
       if (response.data && response.data.data && response.data.data.tag) {
         const tag = response.data.data.tag;
         return {

@@ -44,7 +44,6 @@ interface CalendarProps {
   addEvent: (event: TaskEvent) => void;
   removeEvent: (eventId: string, deleteOption?: 'all' | 'this', instanceStartTime?: Date | string) => void;
   updateEvent: (eventId: string, event: TaskEvent, updateOption?: 'all' | 'this') => void;
-  refreshTaskEvents: () => void;
   refreshImportedEvents: () => void;
 }
 
@@ -55,7 +54,6 @@ export const Calendar: React.FC<CalendarProps> = ({
   addEvent,
   removeEvent,
   updateEvent,
-  refreshTaskEvents,
   refreshImportedEvents
 }) => {
   const { t } = useAppTranslate('task');
@@ -1447,7 +1445,6 @@ export const Calendar: React.FC<CalendarProps> = ({
           handlePrevious={handlePrevious}
           handleNext={handleNext}
           handleToday={handleToday}
-          refreshTaskEvents={refreshTaskEvents}
           onOpenEventImport={openEventImport}
           onDownloadEventTemplate={handleDownloadEventTemplate}
         />
@@ -1466,7 +1463,7 @@ export const Calendar: React.FC<CalendarProps> = ({
               <div className="text-center text-red-500">
                 <p>{error}</p>
                 <button
-                  onClick={refreshTaskEvents}
+                  onClick={() => window.location.reload()}
                   className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                 >
                   Retry

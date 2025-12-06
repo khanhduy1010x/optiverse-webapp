@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ViewTypeDropdown } from './ViewTypeDropdown.component';
 import { MiniCalendar } from './MiniCalendar.component';
-import { RefreshButton } from './RefreshButton.component';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
 import { ImportDropdown } from '../common/ImportDropdown.component';
 
@@ -16,7 +15,6 @@ interface CalendarHeaderProps {
   handlePrevious: () => void;
   handleNext: () => void;
   handleToday: () => void;
-  refreshTaskEvents: () => void;
   onOpenEventImport?: () => void;
   onDownloadEventTemplate?: () => void;
 }
@@ -30,7 +28,6 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
   handlePrevious,
   handleNext,
   handleToday,
-  refreshTaskEvents,
   onOpenEventImport,
   onDownloadEventTemplate,
 }) => {
@@ -155,9 +152,8 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
           ))}
         </div>
 
-        {/* Refresh & Import/Export */}
+        {/* Import */}
         <div className="flex items-center gap-2">
-          <RefreshButton onClick={refreshTaskEvents} />
           <ImportDropdown
             onDownloadTemplate={onDownloadEventTemplate}
             onOpenImport={onOpenEventImport}

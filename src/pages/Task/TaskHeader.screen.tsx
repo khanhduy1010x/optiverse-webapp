@@ -98,7 +98,7 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({
             {/* Add NotificationBell component */}
             <NotificationBell tasks={tasks} />
 
-            {/* Import/Export Dropdown */}
+            {/* Import Dropdown */}
             <ImportDropdown
               onDownloadTemplate={onDownloadTaskTemplate}
               onOpenImport={onOpenTaskImport}

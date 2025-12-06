@@ -709,37 +709,18 @@ export const useTaskEventList = () => {
       if (response && response.data && response.data.data) {
         const createdEvent = response.data.data;
         
-        console.log('Created event from server:', createdEvent);
+        console.log('✅ Event created successfully on server:', createdEvent._id);
+        console.log('🔄 Fetching latest data from server immediately...');
         
-        // Format created event
-        const formattedCreatedEvent = {
-          ...createdEvent,
-          start_time: createdEvent.start_time ? new Date(createdEvent.start_time) : new Date(),
-          end_time: createdEvent.end_time ? new Date(createdEvent.end_time) : undefined
-        };
+        // Fetch lại data từ server ngay lập tức để đảm bảo đồng bộ
+        await refreshTaskEvents();
         
-        console.log('Formatted created event:', formattedCreatedEvent);
-        
-        // Thêm event gốc vào state và tạo lại virtual instances cho tất cả events
-        setTaskEvents(prev => {
-          console.log('Previous events (before adding):', prev.length);
-          const baseEvents = prev.filter(e => !e.isRecurrence);
-          console.log('Base events (non-recurring):', baseEvents.length);
-          
-          const updatedEvents = [...baseEvents, formattedCreatedEvent];
-          console.log('Updated base events (after adding):', updatedEvents.length);
-          
-          const allEventsWithRecurring = generateRecurringEvents(updatedEvents);
-          console.log('All events with recurring instances:', allEventsWithRecurring.length);
-          
-          return allEventsWithRecurring;
-        });
-        
-        console.log('Event created successfully:', createdEvent._id, 'Repeat type:', createdEvent.repeat_type);
+        console.log('✅ Data refreshed successfully after creating event');
       }
     } catch (error) {
       console.error('=== ERROR ADDING EVENT ===');
       console.error('Error details:', error);
+      throw error; // Re-throw để component có thể handle error
     }
   };
 
@@ -764,12 +745,13 @@ export const useTaskEventList = () => {
         if (deleteOption === 'all') {
           // Xóa toàn bộ series - xóa event gốc
           await taskEventService.deleteTaskEvent(parentEventId);
-          setTaskEvents(prev => {
-            const updatedEvents = prev.filter(event => event._id !== parentEventId && !event.isRecurrence);
-            const allEventsWithRecurring = generateRecurringEvents(updatedEvents);
-            console.log('Regenerated events after deleting series:', allEventsWithRecurring.length, 'total events');
-            return allEventsWithRecurring;
-          });
+          console.log('✅ Event series deleted successfully');
+          console.log('🔄 Fetching latest data from server immediately...');
+          
+          // Fetch lại data từ server ngay lập tức
+          await refreshTaskEvents();
+          
+          console.log('✅ Data refreshed successfully after deleting series');
         } else {
           // Xóa chỉ instance này - thêm ngày vào exclusion_dates
           console.log('Deleting single instance - adding to exclusion_dates');
@@ -832,20 +814,13 @@ export const useTaskEventList = () => {
               // Cập nhật event gốc ở DB để loại trừ instance đã xóa
               console.log('Updating parent event with exclusion_dates...');
               await taskEventService.updateTaskEvent(parentEventId, parentEventUpdate);
-              console.log('Parent event updated successfully');
-
-              setTaskEvents(prev => {
-                const updatedEvents = prev.filter(e => !e.isRecurrence).map(event => {
-                  if (event._id === parentEventId) {
-                    return { ...event, exclusion_dates: updatedExclusionDates };
-                  }
-                  return event;
-                });
-
-                const allEventsWithRecurring = generateRecurringEvents(updatedEvents);
-                console.log('Regenerated events after single instance deletion:', allEventsWithRecurring.length, 'total events');
-                return allEventsWithRecurring;
-              });
+              console.log('✅ Single instance excluded successfully');
+              console.log('🔄 Fetching latest data from server immediately...');
+              
+              // Fetch lại data từ server ngay lập tức
+              await refreshTaskEvents();
+              
+              console.log('✅ Data refreshed successfully after excluding instance');
             } else {
               console.warn('Could not resolve instance date for deletion, skipping exclusion update.');
               console.warn('EventId:', eventId);
@@ -860,12 +835,13 @@ export const useTaskEventList = () => {
         console.log('Deleting single/root event');
         // Xóa event ở DB
         await taskEventService.deleteTaskEvent(eventId);
-        setTaskEvents(prev => {
-          const updatedEvents = prev.filter(event => event._id !== eventId && !event.isRecurrence);
-          const allEventsWithRecurring = generateRecurringEvents(updatedEvents);
-          console.log('Regenerated events after deleting event:', allEventsWithRecurring.length, 'total events');
-          return allEventsWithRecurring;
-        });
+        console.log('✅ Event deleted successfully');
+        console.log('🔄 Fetching latest data from server immediately...');
+        
+        // Fetch lại data từ server ngay lập tức
+        await refreshTaskEvents();
+        
+        console.log('✅ Data refreshed successfully after deleting event');
       }
     } catch (error) {
       console.error('Error deleting event:', error);
@@ -940,22 +916,13 @@ export const useTaskEventList = () => {
           const response = await taskEventService.updateTaskEvent(parentEventId, eventToUpdate);
           
           if (response && response.data && response.data.data) {
-            // Format updated event
-            const formattedUpdatedEvent = {
-              ...response.data.data,
-              start_time: response.data.data.start_time ? new Date(response.data.data.start_time) : new Date(),
-              end_time: response.data.data.end_time ? new Date(response.data.data.end_time) : undefined
-            };
+            console.log('✅ Event series updated successfully on server');
+            console.log('🔄 Fetching latest data from server immediately...');
             
-            // Cập nhật event gốc trong state và tạo lại virtual instances
-            setTaskEvents(prev => {
-              const updatedEvents = prev.filter(e => !e.isRecurrence).map(event => 
-                event._id === parentEventId ? formattedUpdatedEvent : event
-              );
-              const allEventsWithRecurring = generateRecurringEvents(updatedEvents);
-              console.log('Regenerated events after updating series:', allEventsWithRecurring.length, 'total events');
-              return allEventsWithRecurring;
-            });
+            // Fetch lại data từ server ngay lập tức để đảm bảo đồng bộ
+            await refreshTaskEvents();
+            
+            console.log('✅ Data refreshed successfully after updating series');
           }
         } else {
           // Cập nhật chỉ instance này - thêm ngày vào exclusion_dates và tạo event mới
@@ -1001,29 +968,13 @@ export const useTaskEventList = () => {
             const response = await taskEventService.createTaskEvent(newSingleEvent);
           
             if (response && response.data && response.data.data) {
-              // Format created event
-              const formattedNewEvent = {
-                ...response.data.data,
-                start_time: response.data.data.start_time ? new Date(response.data.data.start_time) : new Date(),
-                end_time: response.data.data.end_time ? new Date(response.data.data.end_time) : undefined
-              };
-          
-              // Cập nhật state với event gốc đã có exclusion_dates mới và event mới
-              setTaskEvents(prev => {
-                const updatedEvents = prev.filter(e => !e.isRecurrence).map(event => {
-                  if (event._id === parentEventId) {
-                    return { ...event, exclusion_dates: updatedExclusionDates };
-                  }
-                  return event;
-                });
-          
-                // Thêm event mới
-                updatedEvents.push(formattedNewEvent);
-          
-                const allEventsWithRecurring = generateRecurringEvents(updatedEvents);
-                console.log('Regenerated events after single instance update:', allEventsWithRecurring.length, 'total events');
-                return allEventsWithRecurring;
-              });
+              console.log('✅ Single instance updated successfully (new event created)');
+              console.log('🔄 Fetching latest data from server immediately...');
+              
+              // Fetch lại data từ server ngay lập tức để đảm bảo đồng bộ
+              await refreshTaskEvents();
+              
+              console.log('✅ Data refreshed successfully after updating single instance');
             }
           }
         }
@@ -1050,22 +1001,13 @@ export const useTaskEventList = () => {
         const response = await taskEventService.updateTaskEvent(eventId, eventToUpdate);
         
         if (response && response.data && response.data.data) {
-          // Format updated event
-          const formattedUpdatedEvent = {
-            ...response.data.data,
-            start_time: response.data.data.start_time ? new Date(response.data.data.start_time) : new Date(),
-            end_time: response.data.data.end_time ? new Date(response.data.data.end_time) : undefined
-          };
+          console.log('✅ Event updated successfully on server');
+          console.log('🔄 Fetching latest data from server immediately...');
           
-          // Cập nhật state local và tạo lại virtual instances
-          setTaskEvents(prev => {
-            const updatedEvents = prev.filter(e => !e.isRecurrence).map(event => 
-              event._id === eventId ? formattedUpdatedEvent : event
-            );
-            const allEventsWithRecurring = generateRecurringEvents(updatedEvents);
-            console.log('Regenerated events after updating event:', allEventsWithRecurring.length, 'total events');
-            return allEventsWithRecurring;
-          });
+          // Fetch lại data từ server ngay lập tức để đảm bảo đồng bộ
+          await refreshTaskEvents();
+          
+          console.log('✅ Data refreshed successfully after updating event');
         }
       }
     } catch (error) {
@@ -1085,7 +1027,6 @@ export const useTaskEventList = () => {
     taskEvents: visibleEvents,
     loading,
     error,
-    refreshTaskEvents,
     refreshImportedEvents,
     addEvent,
     removeEvent,

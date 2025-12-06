@@ -37,6 +37,7 @@ const WorkspaceCreateTaskModal: React.FC<WorkspaceCreateTaskModalProps> = ({ wor
   const [tempTimeCleared, setTempTimeCleared] = useState(false);
   const [inputTimeValue, setInputTimeValue] = useState('');
   const dateButtonRef = useRef<HTMLButtonElement>(null);
+  const assigneeDropdownRef = useRef<HTMLDivElement>(null);
   
   // State for upgrade modals
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -68,6 +69,23 @@ const WorkspaceCreateTaskModal: React.FC<WorkspaceCreateTaskModalProps> = ({ wor
       fetchMembers();
     }
   }, [workspaceId]);
+
+  // Close assignee dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (assigneeDropdownRef.current && !assigneeDropdownRef.current.contains(event.target as Node)) {
+        setShowAssigneeDropdown(false);
+      }
+    };
+
+    if (showAssigneeDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showAssigneeDropdown]);
 
   // Format date for display
   const formatDate = (date: Date) => {
@@ -303,7 +321,7 @@ const WorkspaceCreateTaskModal: React.FC<WorkspaceCreateTaskModalProps> = ({ wor
           {/* Assignee Section - Custom Dropdown with Avatars */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Assign to</label>
-            <div className="relative">
+            <div className="relative" ref={assigneeDropdownRef}>
               {/* Dropdown Button */}
               <button
                 type="button"
