@@ -119,7 +119,7 @@ const PurchaseHistoryPage: React.FC = () => {
                   <div className="p-4 flex flex-col flex-1">
                     {/* Title */}
                     <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 mb-2">
-                      {item.title || 'Unknown Item'}
+                      {item.title || t('unknown_item')}
                     </h3>
 
                     {/* Description */}
@@ -127,7 +127,7 @@ const PurchaseHistoryPage: React.FC = () => {
                       {item.description ? (
                         <div dangerouslySetInnerHTML={{ __html: item.description }} />
                       ) : (
-                        <p className="text-gray-400">No description</p>
+                        <p className="text-gray-400">{t('no_description_text')}</p>
                       )}
                     </div>
 

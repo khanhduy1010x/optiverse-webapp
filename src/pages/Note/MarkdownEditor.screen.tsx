@@ -44,6 +44,36 @@ const editorStyles = `
   .markdown-editor .ql-editor p {
     color: #1f2937;
   }
+
+  @media print {
+    body,
+    .markdown-editor,
+    .markdown-editor .ql-container,
+    .markdown-editor .ql-editor,
+    .markdown-editor .ql-editor *,
+    .markdown-editor .ql-editor p,
+    .markdown-editor .ql-editor span,
+    .markdown-editor .ql-editor div {
+      background: #fff !important;
+      background-color: #fff !important;
+      color: #000 !important;
+    }
+    
+    .markdown-editor .ql-editor h1,
+    .markdown-editor .ql-editor h2,
+    .markdown-editor .ql-editor h3,
+    .markdown-editor .ql-editor h4,
+    .markdown-editor .ql-editor h5,
+    .markdown-editor .ql-editor h6 {
+      color: #000 !important;
+    }
+
+    .markdown-editor .ql-editor pre,
+    .markdown-editor .ql-editor code {
+      background: #f5f5f5 !important;
+      color: #000 !important;
+    }
+  }
 `;
 
 const MarkdownEditor: React.FC<MarkdownEditorProps> = () => {

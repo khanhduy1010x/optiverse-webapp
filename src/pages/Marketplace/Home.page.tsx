@@ -10,6 +10,7 @@ import { usePurchaseMarketplace } from '../../hooks/marketplace/usePurchaseMarke
 import { MarketplaceItem } from '../../types/marketplace/marketplace.types';
 import { MarketplaceProduct } from '../../components/Marketplace/MarketplaceCard.component';
 import marketplaceService from '../../services/marketplace.service';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 // Hide scrollbar style
 const scrollbarHideStyle = `
@@ -24,6 +25,7 @@ const scrollbarHideStyle = `
 
 const MarketplaceHomePage: React.FC = () => {
     const [searchInput, setSearchInput] = useState('');
+    const { t } = useAppTranslate('marketplace');
     const [searchQuery, setSearchQuery] = useState('');
     const [sortBy, setSortBy] = useState('newest');
     const [priceRange, setPriceRange] = useState({ min: 0, max: 1000 });
@@ -90,7 +92,7 @@ const MarketplaceHomePage: React.FC = () => {
                 <div className="max-w-[2000px] mx-auto">
                     <h1 className="text-4xl md:text-5xl font-bold text-gray-900 tracking-tight">Marketplace</h1>
                     <p className="text-gray-500 mt-3 text-lg">
-                        Discover and collect flashcards from the community
+                        {t('discover_subtitle')}
                     </p>
                 </div>
             </div>
@@ -118,7 +120,7 @@ const MarketplaceHomePage: React.FC = () => {
                     <div className="flex justify-center items-center h-96">
                         <div className="text-center">
                             <div className="w-10 h-10 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
-                            <p className="text-gray-500 text-lg">Loading data...</p>
+                            <p className="text-gray-500 text-lg">{t('loading_data')}</p>
                         </div>
                     </div>
                 ) : error ? (

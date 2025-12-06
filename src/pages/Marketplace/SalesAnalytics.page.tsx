@@ -14,6 +14,7 @@ import {
 } from 'chart.js';
 import MarketplaceService from '../../services/marketplace.service';
 import { toast } from 'react-toastify';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 // Register Chart.js components
 ChartJS.register(
@@ -45,6 +46,7 @@ interface SalesAnalyticsData {
 }
 
 const SalesAnalyticsPage: React.FC = () => {
+  const { t } = useAppTranslate('marketplace');
   const [analyticsData, setAnalyticsData] = useState<SalesAnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -118,7 +120,7 @@ const SalesAnalyticsPage: React.FC = () => {
       },
       title: {
         display: true,
-        text: 'Monthly Sales Performance',
+        text: t('revenue_trend'),
         font: {
           size: 16,
         },
@@ -159,7 +161,7 @@ const SalesAnalyticsPage: React.FC = () => {
       },
       title: {
         display: true,
-        text: 'Top 10 Selling Items',
+        text: t('top_selling_items'),
         font: {
           size: 16,
         },
@@ -179,8 +181,8 @@ const SalesAnalyticsPage: React.FC = () => {
     <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
       {/* Page Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Sales Analytics</h1>
-        <p className="text-gray-600 mt-2">Track your marketplace performance and earnings</p>
+        <h1 className="text-3xl font-bold text-gray-900">{t('sales_analytics')}</h1>
+        <p className="text-gray-600 mt-2">{t('track_performance')}</p>
       </div>
 
       {/* Summary Cards */}
@@ -188,7 +190,7 @@ const SalesAnalyticsPage: React.FC = () => {
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Revenue</p>
+              <p className="text-sm font-medium text-gray-600">{t('total_revenue')}</p>
               <p className="text-3xl font-bold text-blue-600 mt-2">
                 {analyticsData.totalRevenue.toLocaleString()} OP
               </p>
@@ -204,7 +206,7 @@ const SalesAnalyticsPage: React.FC = () => {
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Sales</p>
+              <p className="text-sm font-medium text-gray-600">{t('total_sales')}</p>
               <p className="text-3xl font-bold text-green-600 mt-2">
                 {analyticsData.totalSales}
               </p>
@@ -220,7 +222,7 @@ const SalesAnalyticsPage: React.FC = () => {
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Average Sale Price</p>
+              <p className="text-sm font-medium text-gray-600">{t('average_order_value')}</p>
               <p className="text-3xl font-bold text-purple-600 mt-2">
                 {analyticsData.totalSales > 0
                   ? Math.round(analyticsData.totalRevenue / analyticsData.totalSales).toLocaleString()
@@ -255,22 +257,22 @@ const SalesAnalyticsPage: React.FC = () => {
 
       {/* Top Selling Items Table */}
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Top Selling Items Details</h2>
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('top_selling_details')}</h2>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Item Title
+                  {t('item_title')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Price
+                  {t('price')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Sales Count
+                  {t('sales_count_header')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Total Revenue
+                  {t('total_revenue_header')}
                 </th>
               </tr>
             </thead>

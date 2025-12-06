@@ -85,5 +85,19 @@
   "failed_to_update": "Failed to update achievement. Please try again later.",
   "failed_to_create": "Failed to create achievement or achievement type. Please try again later.",
   "network_error_upload": "Network error: Cannot connect to image upload service. Please check your internet connection and try again.",
-  "network_connectivity_issue_upload": "Network connectivity issue with image upload service. Please check your internet connection and try again."
+  "network_connectivity_issue_upload": "Network connectivity issue with image upload service. Please check your internet connection and try again.",
+  "membership_packages_management": "Membership Packages Management",
+  "manage_configure_membership_packages": "Manage and configure membership packages for your platform",
+  "package_management": "Package Management",
+  "create_package": "Create Package",
+  "statistics_analytics": "Statistics & Analytics",
+  "view": "View:",
+  "card": "Card",
+  "table": "Table",
+  "are_you_sure_deactivate_package": "Are you sure you want to deactivate this package?",
+  "failed_to_load_membership_packages": "Failed to load membership packages",
+  "failed_to_delete_membership_package": "Failed to delete membership package",
+  "membership_package_deactivated_successfully": "Membership package deactivated successfully!",
+  "membership_package_created_successfully": "Membership package created successfully!",
+  "failed_to_create_membership_package": "Failed to create membership package"
 }

@@ -140,7 +140,7 @@ export default function UserProfile() {
               <div className="mb-6 gap-4">
                 <div>
                   <h1 className="text-2xl md:text-3xl font-black text-gray-900 mb-2 leading-tight">
-                    Your Account
+                    {t('your_account')}
                   </h1>
                   <p className="text-sm text-gray-600 font-medium max-w-2xl">
                     {t('manage_profile_information')}
@@ -243,7 +243,7 @@ export default function UserProfile() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {/* Full Name */}
                           <div className="space-y-2">
-                            <label className="block text-xs font-bold text-gray-900 uppercase tracking-wider">Full Name</label>
+                            <label className="block text-xs font-bold text-gray-900 uppercase tracking-wider">{t('full_name')}</label>
                             {isEditingName ? (
                               <div className="flex gap-2">
                                 <input
@@ -293,7 +293,7 @@ export default function UserProfile() {
 
                           {/* Email */}
                           <div className="space-y-2">
-                            <label className="block text-xs font-bold text-gray-900 uppercase tracking-wider">Email Address</label>
+                            <label className="block text-xs font-bold text-gray-900 uppercase tracking-wider">{t('email_address')}</label>
                             <input
                               type="text"
                               value={profileData.email}
@@ -308,7 +308,7 @@ export default function UserProfile() {
                           onClick={() => setShowChangePasswordPopup(true)}
                           className="w-full px-4 py-3 bg-gradient-to-r from-[#21b4ca] to-[#1c9eb1] text-white font-bold rounded-lg hover:shadow-xl active:scale-95 transition-all text-xs shadow-lg uppercase tracking-wide"
                         >
-                          Change Password
+                          {t('change_password_button')}
                         </button>
                       </div>
                     </div>
@@ -322,7 +322,7 @@ export default function UserProfile() {
                   {/* Membership Section */}
                   {!isLoading && profileData.membership && profileData.membership.package_id && (
                     <div className="mb-8">
-                      <h2 className="text-lg font-bold text-gray-900 mb-4">Subscription Plan</h2>
+                      <h2 className="text-lg font-bold text-gray-900 mb-4">{t('subscription_plan')}</h2>
 
                       <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg p-4 md:p-5 border border-slate-200">
                         
@@ -345,7 +345,7 @@ export default function UserProfile() {
                               />
                             </div>
                             <div>
-                              <p className="text-xs font-semibold text-gray-500 mb-0.5">CURRENT PLAN</p>
+                              <p className="text-xs font-semibold text-gray-500 mb-0.5">{t('current_plan')}</p>
                               <h3 className="text-2xl font-bold text-gray-900">
                                 {profileData.membership.package_id.name}
                               </h3>
@@ -356,25 +356,25 @@ export default function UserProfile() {
                         {/* Plan Details Grid */}
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mb-5">
                           <div className="bg-white rounded-lg p-3 border border-slate-200">
-                            <p className="text-xs font-semibold text-gray-600 mb-1 uppercase">OP Bonus</p>
+                            <p className="text-xs font-semibold text-gray-600 mb-1 uppercase">{t('op_bonus')}</p>
                             <p className="text-lg font-bold text-[#21b4ca]">+{profileData.membership.package_id.opBonusCredits.toLocaleString()}</p>
                           </div>
 
                           <div className="bg-white rounded-lg p-3 border border-slate-200">
-                            <p className="text-xs font-semibold text-gray-600 mb-1 uppercase">Duration</p>
+                            <p className="text-xs font-semibold text-gray-600 mb-1 uppercase">{t('duration')}</p>
                             <p className="text-lg font-bold text-gray-900">{profileData.membership.package_id.duration_days}</p>
-                            <p className="text-xs text-gray-500 font-medium">days</p>
+                            <p className="text-xs text-gray-500 font-medium">{t('days')}</p>
                           </div>
 
                           <div className="bg-white rounded-lg p-3 border border-slate-200">
-                            <p className="text-xs font-semibold text-gray-600 mb-1 uppercase">Started</p>
+                            <p className="text-xs font-semibold text-gray-600 mb-1 uppercase">{t('started')}</p>
                             <p className="text-sm font-semibold text-gray-900">
                               {new Date(profileData.membership.start_date).toLocaleDateString()}
                             </p>
                           </div>
 
                           <div className="bg-white rounded-lg p-3 border border-slate-200">
-                            <p className="text-xs font-semibold text-gray-600 mb-1 uppercase">Expires</p>
+                            <p className="text-xs font-semibold text-gray-600 mb-1 uppercase">{t('expires')}</p>
                             <p className="text-sm font-semibold text-gray-900">
                               {new Date(profileData.membership.end_date).toLocaleDateString()}
                             </p>
@@ -391,7 +391,7 @@ export default function UserProfile() {
                           return (
                             <div className="mb-5">
                               <div className="flex justify-between items-center mb-2">
-                                <span className="text-xs font-semibold text-gray-700">Plan Active Period</span>
+                                <span className="text-xs font-semibold text-gray-700">{t('plan_active_period')}</span>
                                 <span className="text-sm font-bold text-gray-900">{Math.round(percentage)}%</span>
                               </div>
                               <div className="w-full h-2 bg-slate-300 rounded-full overflow-hidden">

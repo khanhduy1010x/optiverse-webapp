@@ -8,5 +8,25 @@
     "leaveConfirm": "Are you sure you want to leave this note? You will lose access to it.",
     "leaveSuccess": "Successfully left the note",
     "leaveError": "Failed to leave the note"
+  },
+  "import": {
+    "title": "Import Note from File",
+    "selectFile": "Click to select file or drag and drop here",
+    "acceptedFormats": "Accepted: .doc, .docx, .txt (max 10MB)",
+    "selectedFile": "KB",
+    "changeFile": "Click to select another file",
+    "noteTitle": "Note:",
+    "note1": "• File name will be used as note title",
+    "note2": "• Content will be converted to plain text",
+    "note3": "• Word files (.doc, .docx) will be parsed automatically",
+    "cancel": "Cancel",
+    "import": "Import",
+    "importing": "Importing...",
+    "selectFileWarning": "Please select a file to import",
+    "invalidFileType": "Only .doc, .docx or .txt files are accepted",
+    "fileTooLarge": "File must not exceed 10MB",
+    "emptyFile": "File has no content",
+    "importSuccess": "Successfully imported note",
+    "importError": "Unable to import note"
   }
 }

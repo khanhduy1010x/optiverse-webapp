@@ -104,6 +104,27 @@ class NoteServiceClass {
     }
   }
 
+  async handleUpdateNote(item: NoteItem): Promise<void> {
+    try {
+      await api.patch(`${URLBASE}/${item._id}`, {
+        title: item.title,
+        content: item.content,
+        folder_id: item.folder_id,
+      });
+
+      SocketService.emitFolderStructureChanged();
+    } catch (error: any) {
+      console.error(
+        `Failed to update note ${item._id}:`,
+        {
+          error: error.message,
+          response: error.response?.data,
+        }
+      );
+      throw new Error(`Could not update note ${item.title}`);
+    }
+  }
+
   async formatNoteWithGemini(content: string): Promise<string> {
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
     if (!apiKey) throw new Error('Missing Gemini API key');

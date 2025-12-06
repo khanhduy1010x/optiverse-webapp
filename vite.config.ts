@@ -15,11 +15,16 @@ export default defineConfig(({ mode }): UserConfig => {
     plugins: [react(), tailwindcss(), svgr(), ...(isProd ? [] : [mkcert()])],
 
     server: {
-      host: '0.0.0.0',
+      // host: '0.0.0.0',
+      host: 'optiverse.io.vn',
       // https: isProd ? undefined : {},
-      port: Number(env.VITE_PORT) || 5173,
+      port: Number(env.VITE_PORT) || 443,
       allowedHosts: true,
-      https: false,
+      // https: true,
+      https: {
+    cert: './optiverse.io.vn.pem',
+    key: './optiverse.io.vn-key.pem',
+  },
     },
 
     build: {

@@ -34,7 +34,7 @@ const MpsManagement: React.FC = () => {
       setPackages(data || []);
     } catch (err) {
       console.error('Error fetching membership packages:', err);
-      setError('Failed to load membership packages');
+      setError(t('failed_to_load_membership_packages'));
     } finally {
       setLoading(false);
     }
@@ -46,7 +46,7 @@ const MpsManagement: React.FC = () => {
   };
 
   const handleDelete = async (level: number) => {
-    if (!window.confirm('Are you sure you want to deactivate this package?')) {
+    if (!window.confirm(t('are_you_sure_deactivate_package'))) {
       return;
     }
 
@@ -54,10 +54,10 @@ const MpsManagement: React.FC = () => {
       await membershipPackageService.deactivateMembershipPackage(level);
       // Refresh packages list
       await fetchMembershipPackages();
-      toast.success('Membership package deactivated successfully!');
+      toast.success(t('membership_package_deactivated_successfully'));
     } catch (err: any) {
       console.error('Error deleting package:', err);
-      const errorMessage = err?.response?.data?.message || 'Failed to delete membership package';
+      const errorMessage = err?.response?.data?.message || t('failed_to_delete_membership_package');
       toast.error(`❌ ${errorMessage}`);
       setError(errorMessage);
     }
@@ -79,13 +79,13 @@ const MpsManagement: React.FC = () => {
       await fetchMembershipPackages();
       setTabMode('management');
       // Show success toast
-      toast.success('Membership package created successfully!', {
+      toast.success(t('membership_package_created_successfully'), {
         position: 'top-right',
         autoClose: 3000,
       });
     } catch (err: any) {
       console.error('Error creating package:', err);
-      const errorMessage = err?.response?.data?.message || 'Failed to create membership package';
+      const errorMessage = err?.response?.data?.message || t('failed_to_create_membership_package');
       toast.error(`❌ ${errorMessage}`, {
         position: 'top-right',
         autoClose: 3000,
@@ -100,10 +100,10 @@ const MpsManagement: React.FC = () => {
       <div className="mb-6 flex-shrink-0">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Membership Packages Management
+            {t('membership_packages_management')}
           </h1>
           <p className="text-gray-600">
-            Manage and configure membership packages for your platform
+            {t('manage_configure_membership_packages')}
           </p>
         </div>
 
@@ -116,7 +116,7 @@ const MpsManagement: React.FC = () => {
               : 'border-transparent text-gray-600 hover:text-gray-900'
               }`}
           >
-            Package Management
+            {t('package_management')}
           </button>
           <button
             onClick={() => setTabMode('create')}
@@ -125,7 +125,7 @@ const MpsManagement: React.FC = () => {
               : 'border-transparent text-gray-600 hover:text-gray-900'
               }`}
           >
-            Create Package
+            {t('create_package')}
           </button>
           <button
             onClick={() => setTabMode('statistics')}
@@ -134,7 +134,7 @@ const MpsManagement: React.FC = () => {
               : 'border-transparent text-gray-600 hover:text-gray-900'
               }`}
           >
-            Statistics & Analytics
+            {t('statistics_analytics')}
           </button>
         </div>
       </div>
@@ -144,7 +144,7 @@ const MpsManagement: React.FC = () => {
         <div className="flex flex-col flex-1 min-h-0">
           {/* View Mode Toggle - Fixed */}
           <div className="mb-6 flex items-center gap-3 flex-shrink-0 bg-white">
-            <span className="text-sm font-medium text-gray-700">View:</span>
+            <span className="text-sm font-medium text-gray-700">{t('view')}</span>
             <div className="flex gap-2 bg-gray-100 p-1 rounded-lg">
               <button
                 onClick={() => setViewMode('card')}
@@ -155,7 +155,7 @@ const MpsManagement: React.FC = () => {
                 title="Card View"
               >
                 <Icon name="description" size={16} />
-                <span>Card</span>
+                <span>{t('card')}</span>
               </button>
               <button
                 onClick={() => setViewMode('table')}
@@ -166,7 +166,7 @@ const MpsManagement: React.FC = () => {
                 title="Table View"
               >
                 <Icon name="statistic" size={16} />
-                <span>Table</span>
+                <span>{t('table')}</span>
               </button>
             </div>
           </div>

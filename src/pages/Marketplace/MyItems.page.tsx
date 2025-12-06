@@ -132,7 +132,7 @@ const MyItemsPage: React.FC = () => {
                                                 {item.description ? (
                                                     <div dangerouslySetInnerHTML={{ __html: item.description }} />
                                                 ) : (
-                                                    <p className="text-gray-400">No description</p>
+                                                    <p className="text-gray-400">{t('no_description_text')}</p>
                                                 )}
                                             </div>
 

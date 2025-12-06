@@ -59,5 +59,7 @@
   "time_validation_error": "Time must be greater than 0 and no more than 1 hour",
   "close": "Close",
   "no_focus_session": "No focus session for this day.",
-  "min": "min"
+  "min": "min",
+  "subtitle": "Manage your focus time with ease",
+  "stats_info": "Focus sessions help boost productivity"
 }
