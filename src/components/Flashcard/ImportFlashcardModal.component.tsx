@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import flashcardService from '../../services/flashcard.service';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 interface ImportFlashcardModalProps {
   isOpen: boolean;
@@ -29,7 +30,7 @@ const ImportFlashcardModal: React.FC<ImportFlashcardModalProps> = ({
   workspaceId,
   onSuccess,
 }) => {
-  const { t } = useTranslation('flashcard');
+  const { t } = useAppTranslate('flashcard');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);

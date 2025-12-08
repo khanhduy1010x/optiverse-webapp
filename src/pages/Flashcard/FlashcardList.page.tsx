@@ -27,13 +27,21 @@ export default function FlashcardList() {
 
   return (
     <div className="w-full max-w-2xl mx-auto p-4 pb-8 flex flex-col gap-4">
-      <div className="w-full flex justify-between">
-        <h1
-          className="text-xl mb-6 text-blue-600 cursor-pointer"
+      <div className="w-full flex justify-between items-center mb-6">
+        <Button
+          title={''}
+          leftIcon="back"
+          textSize={15}
           onClick={() => navigate(-1)}
-        >
-          {t('back')}
-        </h1>
+          style={{ borderColor: 'transparent' }}
+        ></Button>
+        <Button
+          title={t('export_button')}
+          leftIcon="download"
+          textSize={15}
+          inverted
+          onClick={() => setExportModalOpen(true)}
+        ></Button>
       </div>
 
       <div className="w-full flex flex-row gap-4 justify-between">
@@ -50,8 +58,7 @@ export default function FlashcardList() {
         <div className="w-1/4 flex flex-col flex-wrap gap-4">
           <Button
             title={t('spaced_repetition')}
-            textType='bold'
-            textSize={12}
+            textSize={14}
             inverted
             onClick={() =>
               navigate(`/flashcard-deck/${deck._id}/learn`, {
@@ -61,22 +68,13 @@ export default function FlashcardList() {
           ></Button>
           <Button
             title={t('unlimited_study')}
-            textType='bold'
-            textSize={12}
+            textSize={14}
             inverted
             onClick={() =>
               navigate(`/flashcard-deck/${deck._id}/learn`, {
                 state: { title: deck.title, mode: 'unlimited' },
               })
             }
-          ></Button>
-          <Button
-            title={t('export_button')}
-            leftIcon="download"
-            textType='bold'
-            textSize={12}
-            inverted
-            onClick={() => setExportModalOpen(true)}
           ></Button>
         </div>
       </div>
