@@ -9,6 +9,8 @@ import { flashcardDeckMock } from '../../types/flashcard/response/flashcard.resp
 import { SearchInputField } from '../../components/common/Input.component';
 import FlashcardSidebar from './FlashcardSidebar';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
+import { useState } from 'react';
+import ImportFlashcardModal from '../../components/Flashcard/ImportFlashcardModal.component';
 
 export default function FlashcardDeckList() {
   const navigate = useNavigate();
@@ -29,6 +31,8 @@ export default function FlashcardDeckList() {
     handleDelete,
     closePopupAndRefresh,
   } = useFlashcardDeckList();
+
+  const [importModalOpen, setImportModalOpen] = useState(false);
 
 
 
@@ -57,6 +61,16 @@ export default function FlashcardDeckList() {
               className="flex-1/12"
               inverted
               onClick={refresh}
+            ></Button>
+            
+            <Button
+              title={t('import_button')}
+              leftIcon="upload"
+              textType='bold'
+              textSize={12}
+              className="flex-1/12"
+              inverted
+              onClick={() => setImportModalOpen(true)}
             ></Button>
           </div>
 
@@ -173,6 +187,15 @@ export default function FlashcardDeckList() {
             </div>
           )}
         </div>
+
+        <ImportFlashcardModal
+          isOpen={importModalOpen}
+          onClose={() => setImportModalOpen(false)}
+          onSuccess={() => {
+            setImportModalOpen(false);
+            refresh();
+          }}
+        />
       </div>
     </div>
   );

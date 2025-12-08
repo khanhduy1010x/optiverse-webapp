@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import FriendService from '../../services/friend.service';
+import DeleteConfirmation from '../Task/DeleteConfirmation.screen';
 import {
   setFriends,
   setSearchedUsers,
@@ -58,6 +59,10 @@ const FriendList: React.FC = () => {
   const suggestions = useSelector((state: RootState) => state.friend.suggestions);
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
 
+  // Delete confirmation state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [friendToDelete, setFriendToDelete] = useState<string | null>(null);
+
   // Render user info with name if available
   const renderUserInfo = (userId: string, showId: boolean = false) => {
     const user = users[userId];
@@ -98,6 +103,19 @@ const FriendList: React.FC = () => {
     } finally {
       setSuggestionsLoading(false);
     }
+  };
+
+  // Confirm remove friend
+  const confirmRemoveFriend = (friendId: string) => {
+    setFriendToDelete(friendId);
+    setShowDeleteConfirm(true);
+  };
+
+  // Handle delete friend
+  const handleDeleteFriend = async (friendId: string) => {
+    await handleRemoveFriend(friendId);
+    setShowDeleteConfirm(false);
+    setFriendToDelete(null);
   };
 
   // Handle add friend from suggestions
@@ -192,7 +210,7 @@ const FriendList: React.FC = () => {
           <AllFriends
             friends={friends}
             loading={loading}
-            onRemoveFriend={handleRemoveFriend}
+            onRemoveFriend={confirmRemoveFriend}
             renderUserInfo={renderUserInfo}
             onRefresh={handleRefresh}
             onStartChat={handleStartChat}
@@ -239,7 +257,7 @@ const FriendList: React.FC = () => {
             loading={loading}
             onAddFriend={handleAddFriend}
             onCancelRequest={handleCancelFriendRequest}
-            onRemoveFriend={handleRemoveFriend}
+            onRemoveFriend={confirmRemoveFriend}
             renderUserInfo={renderUserInfo}
             friends={friends}
             sentRequests={sentRequests}
@@ -250,6 +268,19 @@ const FriendList: React.FC = () => {
           />
         )}
       </div>
+
+      {/* Delete Friend Confirmation */}
+      {showDeleteConfirm && friendToDelete && (
+        <DeleteConfirmation
+          title={t('delete_friend_title')}
+          description={t('delete_friend_confirm')}
+          onCancel={() => {
+            setShowDeleteConfirm(false);
+            setFriendToDelete(null);
+          }}
+          onConfirm={() => handleDeleteFriend(friendToDelete)}
+        />
+      )}
     </div>
   );
 };

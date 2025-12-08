@@ -150,6 +150,11 @@ class FlashcardService {
 
   public async createFlashcard(item: CreateFlashcardRequest): Promise<any> {
     try {
+      console.log('Creating flashcard with data:', {
+        deck_id: item.deck_id,
+        front: item.front,
+        back: item.back,
+      });
       const response = await api.post<ApiResponse<any>>(
         `${this.flashcardPath}`,
         {
@@ -163,7 +168,8 @@ class FlashcardService {
       return data;
     } catch (error: any) {
       console.error('Lỗi khi fetch API:', error);
-      throw Error(error.message);
+      console.error('Error response:', error.response?.data);
+      throw Error(error.response?.data?.message || error.message);
     }
   }
 

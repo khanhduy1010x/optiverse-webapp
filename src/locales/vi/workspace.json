@@ -325,6 +325,9 @@
     "description": "Mô tả (tùy chọn)",
     "descriptionPlaceholder": "Mô tả về phiên tập trung này...",
     "duration": "Thời lượng (phút)",
-    "maxDuration": "Tối đa 480 phút (8 giờ)"
+    "maxDuration": "Tối đa 480 phút (8 giờ)",
+    "cancel": "Hủy",
+    "createSession": "Tạo phiên",
+    "creating": "Đang tạo..."
   }
 }

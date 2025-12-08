@@ -325,6 +325,9 @@
     "description": "Description (optional)",
     "descriptionPlaceholder": "Description of this focus session...",
     "duration": "Duration (minutes)",
-    "maxDuration": "Maximum 480 minutes (8 hours)"
+    "maxDuration": "Maximum 480 minutes (8 hours)",
+    "cancel": "Cancel",
+    "createSession": "Create Session",
+    "creating": "Creating..."
   }
 }

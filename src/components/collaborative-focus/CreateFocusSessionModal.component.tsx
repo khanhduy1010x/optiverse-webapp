@@ -51,7 +51,7 @@ export const CreateFocusSessionModal: React.FC<
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-fadeIn">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -151,14 +151,14 @@ export const CreateFocusSessionModal: React.FC<
               className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all"
               disabled={loading}
             >
-              Hủy
+              {t('collaborativeFocus.cancel')}
             </button>
             <button
               type="submit"
               disabled={loading || !title.trim()}
               className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
-              {loading ? 'Đang tạo...' : 'Tạo phiên'}
+              {loading ? t('collaborativeFocus.creating') : t('collaborativeFocus.createSession')}
             </button>
           </div>
         </form>

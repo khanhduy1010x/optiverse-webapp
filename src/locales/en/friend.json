@@ -12,6 +12,8 @@
   "no_friends_yet": "No Friends Yet",
   "no_friends_description": "You have not added any friends yet. Start by searching for users to add.",
   "remove_friend": "Remove Friend",
+  "delete_friend_title": "Delete Friend",
+  "delete_friend_confirm": "Are you sure you want to remove this friend? This action cannot be undone.",
   "start_conversation": "Start conversation",
   "starting": "Starting",
   "friend": "Friend",
