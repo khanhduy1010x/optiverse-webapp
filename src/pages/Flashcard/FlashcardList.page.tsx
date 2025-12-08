@@ -26,7 +26,7 @@ export default function FlashcardList() {
   const [exportModalOpen, setExportModalOpen] = useState(false);
 
   return (
-    <div className="w-full max-w-2xl mx-auto p-4 pb-8 flex flex-col gap-4">
+    <div className="w-full max-w-4xl mx-auto p-4 pb-8 flex flex-col gap-4">
       <div className="w-full flex justify-between items-center mb-6">
         <Button
           title={''}
