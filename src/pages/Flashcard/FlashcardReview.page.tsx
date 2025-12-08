@@ -22,13 +22,16 @@ export default function FlashcardReview() {
   } = useFlashcardReview();
 
   return (
-    <div className="flex flex-col items-center justify-start w-full min-h-screen px-4 py-8 bg-gray-100 gap-4">
-      <h1
-        className="w-1/2 text-xl mb-6 text-blue-600 cursor-pointer"
-        onClick={() => navigate(-1)}
-      >
-        {t('back')}
-      </h1>
+    <div className="flex flex-col items-center justify-start w-full min-h-screen px-4 py-8 gap-4">
+      <div className="w-1/2 flex justify-between items-center mb-6">
+        <Button
+          title={''}
+          leftIcon="back"
+          textSize={15}
+          onClick={() => navigate(-1)}
+          style={{ borderColor: 'transparent' }}
+        ></Button>
+      </div>
 
       <h1 className="text-2xl font-bold">{title}</h1>
 
@@ -110,7 +113,7 @@ export default function FlashcardReview() {
                   difficulty={t('easy')}
                   minutes={60}
                   onClick={() => handleReview(3)}
-                  style={{ backgroundColor: COLORS.white900 }}
+                  style={{ backgroundColor: COLORS.white900, borderWidth: 1, borderColor: COLORS.black500 }}
                   textStyle={{ color: COLORS.black500 }}
                 />
               </div>
