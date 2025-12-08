@@ -88,6 +88,7 @@ export interface ToolBarFolderProps {
   setCreateType: (type: 'folder' | 'note') => void;
   onToggleSharedView?: () => void;
   isSharedView?: boolean;
+  onImportNote?: () => void;
 }
 
 export interface ToolBarNoteProps {

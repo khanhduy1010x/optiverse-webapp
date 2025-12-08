@@ -8,5 +8,25 @@
     "leaveConfirm": "Bạn có chắc chắn muốn rời khỏi ghi chú này? Bạn sẽ mất quyền truy cập vào nó.",
     "leaveSuccess": "Đã rời khỏi ghi chú thành công",
     "leaveError": "Không thể rời khỏi ghi chú"
+  },
+  "import": {
+    "title": "Import Note từ File",
+    "selectFile": "Click để chọn file hoặc kéo thả vào đây",
+    "acceptedFormats": "Chấp nhận: .doc, .docx, .txt (tối đa 10MB)",
+    "selectedFile": "KB",
+    "changeFile": "Click để chọn file khác",
+    "noteTitle": "Lưu ý:",
+    "note1": "• Tên file sẽ làm tiêu đề note",
+    "note2": "• Nội dung chuyển sang text thuần",
+    "note3": "• File Word (.doc, .docx) được parse tự động",
+    "cancel": "Hủy",
+    "import": "Import",
+    "importing": "Đang import...",
+    "selectFileWarning": "Vui lòng chọn file để import",
+    "invalidFileType": "Chỉ chấp nhận file .doc, .docx hoặc .txt",
+    "fileTooLarge": "File không được vượt quá 10MB",
+    "emptyFile": "File không có nội dung",
+    "importSuccess": "Đã import note thành công",
+    "importError": "Không thể import note"
   }
 }

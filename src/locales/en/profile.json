@@ -68,5 +68,17 @@
   "logout": "Logout",
   "confirm_logout": "Confirm Logout",
   "logout_confirmation_message": "Are you sure you want to log out?",
-  "logout_confirmation_description": "You will be signed out from your account and returned to the login page."
+  "logout_confirmation_description": "You will be signed out from your account and returned to the login page.",
+  "your_account": "Your Account",
+  "change_password_button": "Change Password",
+  "subscription_plan": "Subscription Plan",
+  "current_plan": "CURRENT PLAN",
+  "op_bonus": "OP Bonus",
+  "duration": "Duration",
+  "started": "Started",
+  "expires": "Expires",
+  "plan_active_period": "Plan Active Period",
+  "days": "days",
+  "upgrade_plan": "Upgrade Plan",
+  "email_address": "Email Address"
 }

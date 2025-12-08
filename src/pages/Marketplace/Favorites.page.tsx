@@ -6,6 +6,7 @@ import PaginationControl from '../../components/Marketplace/PaginationControl.co
 import { MarketplaceItem } from '../../types/marketplace/marketplace.types';
 import { MarketplaceProduct } from '../../components/Marketplace/MarketplaceCard.component';
 import { transformItemsToProductsWithRatings } from '../../utils/marketplace.transform';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 // Hide scrollbar style
 const scrollbarHideStyle = `
@@ -19,6 +20,7 @@ const scrollbarHideStyle = `
 `;
 
 const FavoritesPage: React.FC = () => {
+    const { t } = useAppTranslate('marketplace');
     const { items, loading, error, page, setPage, refetch } = useFavorites();
     const [selectedItem, setSelectedItem] = useState<MarketplaceItem | null>(null);
     const [products, setProducts] = useState<MarketplaceProduct[]>([]);
@@ -56,7 +58,7 @@ const FavoritesPage: React.FC = () => {
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
                 <div className="text-center">
                     <div className="inline-block w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-                    <p className="text-gray-500 text-lg">Đang tải danh sách yêu thích...</p>
+                    <p className="text-gray-500 text-lg">{t('loading_favorites')}</p>
                 </div>
             </div>
         );
@@ -69,9 +71,9 @@ const FavoritesPage: React.FC = () => {
                 {/* Header */}
                 <div className="border-b border-gray-200 px-6 sm:px-8 lg:px-12 xl:px-16 2xl:px-24 py-8">
                     <div>
-                        <h1 className="text-5xl font-bold tracking-tight text-gray-900">Yêu thích của tôi</h1>
+                        <h1 className="text-5xl font-bold tracking-tight text-gray-900">{t('my_favorites')}</h1>
                         <p className="text-gray-500 mt-2 text-base">
-                            Danh sách các sản phẩm bạn đã lưu vào yêu thích
+                            {t('favorites_description')}
                         </p>
                     </div>
                 </div>
@@ -87,12 +89,12 @@ const FavoritesPage: React.FC = () => {
 
                         {products.length === 0 ? (
                             <div className="bg-gray-50 rounded-2xl border border-gray-200 p-12 text-center">
-                                <p className="text-gray-500 mb-4 text-lg">Bạn chưa có sản phẩm yêu thích nào</p>
+                                <p className="text-gray-500 mb-4 text-lg">{t('no_favorites')}</p>
                                 <a
                                     href="/marketplace"
                                     className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
                                 >
-                                    Khám phá Marketplace
+                                    {t('explore_marketplace')}
                                 </a>
                             </div>
                         ) : (
@@ -127,7 +129,7 @@ const FavoritesPage: React.FC = () => {
                                                         {item?.description ? (
                                                             <div dangerouslySetInnerHTML={{ __html: item.description }} />
                                                         ) : (
-                                                            <p className="text-gray-400">Không có mô tả</p>
+                                                            <p className="text-gray-400">{t('no_description_text')}</p>
                                                         )}
                                                     </div>
 
@@ -138,14 +140,14 @@ const FavoritesPage: React.FC = () => {
                                                                 {product.price} <span className="text-xs font-normal text-gray-600">OP</span>
                                                             </p>
                                                         ) : (
-                                                            <p className="text-lg font-bold text-gray-900">Miễn phí</p>
+                                                            <p className="text-lg font-bold text-gray-900">{t('free')}</p>
                                                         )}
                                                     </div>
 
                                                     {/* Rating */}
                                                     <div className="flex items-center justify-between text-xs text-gray-600">
                                                         <span>★ {product.rating || '0'}</span>
-                                                        <span>{product.reviews || 0} đánh giá</span>
+                                                        <span>{product.reviews || 0} {t('reviews_text')}</span>
                                                     </div>
                                                 </div>
                                             </div>

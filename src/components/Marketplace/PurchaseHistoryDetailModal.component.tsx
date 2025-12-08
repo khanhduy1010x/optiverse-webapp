@@ -3,6 +3,7 @@ import Modal from 'react-modal';
 import { MarketplaceItem } from '../../types/marketplace/marketplace.types';
 import RichTextDisplay from '../common/RichTextDisplay.component';
 import '../common/RichTextDisplay.style.css';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 interface PurchaseHistoryDetailModalProps {
     item: MarketplaceItem | null;
@@ -19,6 +20,7 @@ const PurchaseHistoryDetailModal: React.FC<PurchaseHistoryDetailModalProps> = ({
     isOpen,
     onClose,
 }) => {
+    const { t } = useAppTranslate('marketplace');
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
     if (!isOpen || !item) {
@@ -111,7 +113,7 @@ const PurchaseHistoryDetailModal: React.FC<PurchaseHistoryDetailModalProps> = ({
                                     className="text-gray-600 text-sm leading-relaxed"
                                 />
                             ) || (
-                                <p className="text-gray-600 text-sm leading-relaxed">No description available</p>
+                                <p className="text-gray-600 text-sm leading-relaxed">{t('no_description_available')}</p>
                             )}
                         </div>
 

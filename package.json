@@ -40,6 +40,7 @@
     "jwt-encode": "^1.0.1",
     "livekit-client": "^2.15.14",
     "lucide-react": "^0.511.0",
+    "mammoth": "^1.11.0",
     "npm": "^11.6.2",
     "react": "19.1.1",
     "react-calendar-heatmap": "^1.10.0",

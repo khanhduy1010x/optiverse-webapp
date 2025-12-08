@@ -84,6 +84,20 @@
   "duplicate_condition_prefix": "Điều kiện trùng lặp: {{message}}",
   "failed_to_update": "Không thể cập nhật thành tích. Vui lòng thử lại sau.",
   "failed_to_create": "Không thể tạo thành tích hoặc loại thành tích. Vui lòng thử lại sau.",
-  "network_error_upload": "Lỗi mạng: Không thể kết nối đến dịch vụ tải ảnh lên. Vui lòng kiểm tra kết nối internet và thử lại.",
-  "network_connectivity_issue_upload": "Vấn đề kết nối mạng với dịch vụ tải ảnh lên. Vui lòng kiểm tra kết nối internet và thử lại."
+  "network_error_upload": "Lỗi mạng: Không thể kết nối với dịch vụ tải ảnh lên. Vui lòng kiểm tra kết nối internet và thử lại.",
+  "network_connectivity_issue_upload": "Vấn đề kết nối mạng với dịch vụ tải ảnh lên. Vui lòng kiểm tra kết nối internet và thử lại.",
+  "membership_packages_management": "Quản lý gói thành viên",
+  "manage_configure_membership_packages": "Quản lý và cấu hình gói thành viên cho nền tảng của bạn",
+  "package_management": "Quản lý gói",
+  "create_package": "Tạo gói",
+  "statistics_analytics": "Thống kê & Phân tích",
+  "view": "Xem:",
+  "card": "Thẻ",
+  "table": "Bảng",
+  "are_you_sure_deactivate_package": "Bạn có chắc chắn muốn hủy kích hoạt gói này?",
+  "failed_to_load_membership_packages": "Không thể tải gói thành viên",
+  "failed_to_delete_membership_package": "Không thể xóa gói thành viên",
+  "membership_package_deactivated_successfully": "Đã hủy kích hoạt gói thành viên thành công!",
+  "membership_package_created_successfully": "Đã tạo gói thành viên thành công!",
+  "failed_to_create_membership_package": "Không thể tạo gói thành viên"
 }

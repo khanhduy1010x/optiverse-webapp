@@ -15,6 +15,7 @@ import { PriceDisplay } from './PriceDisplay.component';
 import { useToggleFavorite } from '../../hooks/marketplace/useToggleFavorite';
 import { useFavoriteStatus } from '../../hooks/marketplace/useFavoriteStatus';
 import { useFollowCreator } from '../../hooks/marketplace/useFollowCreator';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 interface MarketplaceItemDetailModalProps {
     item: MarketplaceItem | null;
@@ -36,6 +37,8 @@ const MarketplaceItemDetailModal: React.FC<MarketplaceItemDetailModalProps> = ({
     const [purchasePrice, setPurchasePrice] = useState<number | null>(null);
     const [purchaseTitle, setPurchaseTitle] = useState<string>('');
     const [showMembershipUpgradeError, setShowMembershipUpgradeError] = useState(false);
+
+    const { t } = useAppTranslate('marketplace');
 
     const {
         selectedImageIndex,
@@ -112,7 +115,7 @@ const MarketplaceItemDetailModal: React.FC<MarketplaceItemDetailModalProps> = ({
         if (showConfirmation && displayItem) {
             // Use displayItem pricing if available, otherwise use item price
             const price = displayItem.pricing?.final_price ?? displayItem.price ?? item?.price ?? 0;
-            const title = displayItem.title || item?.title || 'Unknown Item';
+            const title = displayItem.title || item?.title || t('unknown_item');
             setPurchasePrice(price);
             setPurchaseTitle(title);
         }
@@ -339,16 +342,16 @@ const MarketplaceItemDetailModal: React.FC<MarketplaceItemDetailModalProps> = ({
                                 <div className="flex items-center gap-3 justify-between">
                                     <div className="flex items-center gap-3">
                                         <img
-                                            src={item.creator_info?.avatar_url || `https://ui-avatars.com/api/?name=${item.creator_info?.full_name || 'Unknown'}&background=0ea5e9&color=fff&size=48`}
+                                        src={item.creator_info?.avatar_url || `https://ui-avatars.com/api/?name=${item.creator_info?.full_name || t('unknown_user')}&background=0ea5e9&color=fff&size=48`}
                                             alt={item.creator_info?.full_name || 'Seller'}
                                             className="w-12 h-12 rounded-full object-cover"
                                         />
                                         <div>
                                             <p className="font-semibold text-gray-900">
-                                                {item.creator_info?.full_name || 'Unknown'}
+                                            {item.creator_info?.full_name || t('unknown_user')}
                                             </p>
                                             <p className="text-xs text-gray-600">
-                                                {item.creator_info?.email || 'No email'}
+                                            {item.creator_info?.email || t('no_email')}
                                             </p>
                                         </div>
                                     </div>
@@ -380,8 +383,8 @@ const MarketplaceItemDetailModal: React.FC<MarketplaceItemDetailModalProps> = ({
                             {/* Description */}
                             {item.description && (
                                 <div className="mb-6">
-                                    <p className="text-xs font-semibold text-gray-600 mb-2">DESCRIPTION</p>
-                                    <div 
+                                    <p className="text-xs font-semibold text-gray-600 mb-2">{t('description_label')}</p>
+                                    <div
                                         dangerouslySetInnerHTML={{ __html: item.description }}
                                         className="description-content text-sm text-gray-700 leading-relaxed"
                                     />
@@ -401,14 +404,15 @@ const MarketplaceItemDetailModal: React.FC<MarketplaceItemDetailModalProps> = ({
                                                 onClick={handlePreviewClick}
                                                 className="btn-secondary py-2.5 rounded-lg text-sm font-semibold transition-all"
                                             >
-                                                Preview
+                                                  {t('preview_button')}
+
                                             </button>
                                             {currentItem?.is_purchased ? (
                                                 <button
                                                     disabled
                                                     className="btn-secondary py-2.5 rounded-lg text-gray-700 text-sm font-semibold transition-all bg-gray-100 cursor-not-allowed"
                                                 >
-                                                    ✓ Already Purchased
+                                        ✓ {t('already_purchased')}
                                                 </button>
                                             ) : isOwner ? (
                                                 <button
@@ -423,7 +427,7 @@ const MarketplaceItemDetailModal: React.FC<MarketplaceItemDetailModalProps> = ({
                                                     disabled={isPurchasing}
                                                     className="btn-primary py-2.5 rounded-lg text-white text-sm font-semibold transition-all disabled:opacity-50"
                                                 >
-                                                    {isPurchasing ? 'Processing...' : currentItem?.price === 0 ? 'Get Free' : 'Buy Now'}
+                                        {isPurchasing ? t('processing') : item.price === 0 ? t('get_free_button') : t('buy_now_button')}
                                                 </button>
                                             )}
                                         </>
@@ -435,7 +439,7 @@ const MarketplaceItemDetailModal: React.FC<MarketplaceItemDetailModalProps> = ({
 
                     {/* Reviews Section - Full Width Below */}
                     <div className="px-8 pb-8 border-t border-gray-200">
-                        <h2 className="text-2xl font-bold text-gray-900 my-8">Reviews & Ratings</h2>
+                        <h2 className="text-2xl font-bold text-gray-900 my-8">{t('reviews_ratings')}</h2>
                         
                         <div className="space-y-8">
                             {/* Rating Form */}

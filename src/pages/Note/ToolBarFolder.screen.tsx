@@ -5,7 +5,8 @@ const ToolBarFolder: React.FC<ToolBarFolderProps> = ({
   setIsModalInputName,
   setCreateType,
   onToggleSharedView,
-  isSharedView = false
+  isSharedView = false,
+  onImportNote
 }) => {
   const handleCreateFolder = () => {
     setCreateType('folder');
@@ -15,6 +16,12 @@ const ToolBarFolder: React.FC<ToolBarFolderProps> = ({
   const handleCreateNote = () => {
     setCreateType('note');
     setIsModalInputName(true);
+  };
+
+  const handleImportNote = () => {
+    if (onImportNote) {
+      onImportNote();
+    }
   };
 
   return (
@@ -39,6 +46,16 @@ const ToolBarFolder: React.FC<ToolBarFolderProps> = ({
           <path
             d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"
           />
+        </svg>
+      </button>
+      <button
+        onClick={handleImportNote}
+        className="p-2 cursor-pointer"
+        disabled={isSharedView}
+        title="Import Note từ File"
+      >
+        <svg width="32" height="32" viewBox="0 0 24 24" fill={isSharedView ? "#CCCCCC" : "#000"}>
+          <path d="M9 16V10H5L12 3L19 10H15V16H9ZM5 20V18H19V20H5Z" />
         </svg>
       </button>
       <button

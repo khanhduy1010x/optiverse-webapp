@@ -9,6 +9,7 @@ import DeleteModal from './DeleteModal.screen';
 import ShareModal from './ShareModal.screen';
 import LeaveModal from './LeaveModal.screen';
 import SendToChatModal from './SendToChatModal.screen';
+import ImportNoteModal from '../../components/Note/ImportNoteModal.component';
 import { ContextMenu } from './ContextMenu.screen';
 import FolderFileComponent from './FolderFileComponent.screen';
 import { useFolderNote } from '../../hooks/note/useFolderNote.hook';
@@ -22,6 +23,7 @@ const FolderNote: React.FC = () => {
   const dispatch = useDispatch();
   const [shareModalVisible, setShareModalVisible] = useState(false);
   const [sendToChatModalVisible, setSendToChatModalVisible] = useState(false);
+  const [importNoteModalVisible, setImportNoteModalVisible] = useState(false);
 
   const [sendToChatItem, setSendToChatItem] = useState<RootItem | null>(null);
 
@@ -97,6 +99,18 @@ const FolderNote: React.FC = () => {
     setSendToChatItem(item);
     setSendToChatModalVisible(true);
     setContextMenu(null);
+  };
+
+  const handleOpenImportModal = () => {
+    if (isSharedView) {
+      toast.warning('Không thể import note trong chế độ xem shared');
+      return;
+    }
+    setImportNoteModalVisible(true);
+  };
+
+  const handleCloseImportModal = () => {
+    setImportNoteModalVisible(false);
   };
 
   const renderItemRow = (item: RootItem) => {
@@ -466,6 +480,12 @@ const FolderNote: React.FC = () => {
         setCreateType={setCreateType}
         onToggleSharedView={handleToggleSharedView}
         isSharedView={isSharedView}
+        onImportNote={handleOpenImportModal}
+      />
+      <ImportNoteModal
+        isOpen={importNoteModalVisible}
+        onClose={handleCloseImportModal}
+        parentFolderId={folderStack.length > 0 ? folderStack[folderStack.length - 1]._id : null}
       />
       <CreateModal
         isOpen={isModalInputName}

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useAppTranslate } from '../../hooks/useAppTranslate';
 
 interface PaginationControlProps {
   currentPage: number;
@@ -11,6 +12,7 @@ const PaginationControl: React.FC<PaginationControlProps> = ({
   totalPages,
   onPageChange,
 }) => {
+  const { t } = useAppTranslate('marketplace');
   const [showInput, setShowInput] = useState(false);
   const [inputValue, setInputValue] = useState(currentPage.toString());
   const inputRef = useRef<HTMLInputElement>(null);
@@ -99,7 +101,7 @@ const PaginationControl: React.FC<PaginationControlProps> = ({
         disabled={currentPage === 1}
         className="px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 border border-gray-200 hover:border-[#21B4CA] hover:bg-blue-50 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-gray-200 disabled:hover:bg-white text-gray-700 hover:text-[#21B4CA] bg-white hover:shadow-sm"
       >
-        ← Previous
+        ← {t('previous_page')}
       </button>
 
       {/* Page Display */}
@@ -129,14 +131,14 @@ const PaginationControl: React.FC<PaginationControlProps> = ({
             value={inputValue}
             onChange={handleInputChange}
             onKeyDown={handleKeyPress}
-            placeholder="page"
+            placeholder={t('page_placeholder')}
             className="w-14 px-2 py-1 text-sm text-center rounded-md bg-white border border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0"
           />
           <button
             onClick={handleGoToPage}
             className="px-4 py-1 text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors duration-200 shadow-sm hover:shadow-md"
           >
-            Go
+            {t('go_button')}
           </button>
         </div>
       )}
@@ -147,7 +149,7 @@ const PaginationControl: React.FC<PaginationControlProps> = ({
         disabled={currentPage === totalPages}
         className="px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 border border-gray-200 hover:border-blue-400 hover:bg-blue-50 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-gray-200 disabled:hover:bg-white text-gray-700 hover:text-blue-700 bg-white hover:shadow-sm"
       >
-        Next →
+        {t('next_page')} →
       </button>
 
       <style>{`

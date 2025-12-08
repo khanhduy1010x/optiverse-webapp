@@ -68,5 +68,17 @@
   "language": "Ngôn ngữ",
   "confirm_logout": "Xác nhận đăng xuất",
   "logout_confirmation_message": "Bạn có chắc chắn muốn đăng xuất không?",
-  "logout_confirmation_description": "Bạn sẽ được đăng xuất khỏi tài khoản của mình và quay lại trang đăng nhập."
+  "logout_confirmation_description": "Bạn sẽ được đăng xuất khỏi tài khoản của mình và quay lại trang đăng nhập.",
+  "your_account": "Tài khoản của bạn",
+  "change_password_button": "Đổi mật khẩu",
+  "subscription_plan": "Gói đăng ký",
+  "current_plan": "GÓI HIỆN TẠI",
+  "op_bonus": "Thưởng OP",
+  "duration": "Thời hạn",
+  "started": "Bắt đầu",
+  "expires": "Hết hạn",
+  "plan_active_period": "Chu kỳ kích hoạt gói",
+  "days": "ngày",
+  "upgrade_plan": "Nâng cấp gói",
+  "email_address": "Địa chỉ Email"
 }

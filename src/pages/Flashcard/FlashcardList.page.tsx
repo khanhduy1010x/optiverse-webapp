@@ -7,6 +7,8 @@ import Icon from '../../components/common/Icon/Icon.component';
 import UpdateFlashcard from './UpdateFlashcard.screen';
 import { useFlashcardList } from '../../hooks/flashcard/useFlashcardList.hook';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
+import { useState } from 'react';
+import ExportFlashcardModal from '../../components/Flashcard/ExportFlashcardModal.component';
 
 export default function FlashcardList() {
   const { t } = useAppTranslate('flashcard');
@@ -20,6 +22,8 @@ export default function FlashcardList() {
     handleDelete,
     closePopupAndRefresh,
   } = useFlashcardList();
+
+  const [exportModalOpen, setExportModalOpen] = useState(false);
 
   return (
     <div className="w-full max-w-2xl mx-auto p-4 pb-8 flex flex-col gap-4">
@@ -65,6 +69,14 @@ export default function FlashcardList() {
                 state: { title: deck.title, mode: 'unlimited' },
               })
             }
+          ></Button>
+          <Button
+            title={t('export_button')}
+            leftIcon="download"
+            textType='bold'
+            textSize={12}
+            inverted
+            onClick={() => setExportModalOpen(true)}
           ></Button>
         </div>
       </div>
@@ -183,6 +195,13 @@ export default function FlashcardList() {
           </div>
         </div>
       )}
+
+      <ExportFlashcardModal
+        isOpen={exportModalOpen}
+        onClose={() => setExportModalOpen(false)}
+        deck={deck}
+        flashcards={deck.flashcards || []}
+      />
     </div>
   );
 }
