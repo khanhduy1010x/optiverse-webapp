@@ -11,6 +11,7 @@ import FlashcardSidebar from './FlashcardSidebar';
 import { useAppTranslate } from '../../hooks/useAppTranslate';
 import { useState } from 'react';
 import ImportFlashcardModal from '../../components/Flashcard/ImportFlashcardModal.component';
+import GenerateFlashcardFromPdfModal from '../../components/Flashcard/GenerateFlashcardFromPdfModal.component';
 
 export default function FlashcardDeckList() {
   const navigate = useNavigate();
@@ -33,6 +34,7 @@ export default function FlashcardDeckList() {
   } = useFlashcardDeckList();
 
   const [importModalOpen, setImportModalOpen] = useState(false);
+  const [pdfModalOpen, setPdfModalOpen] = useState(false);
 
 
 
@@ -48,7 +50,7 @@ export default function FlashcardDeckList() {
           </div>
 
           <div className="mb-8 flex flex-row gap-4">
-            <form onSubmit={handleSubmit(onSubmit)} className="flex-11/12">
+            <form onSubmit={handleSubmit(onSubmit)} className="flex-9/12">
               <SearchInputField
                 name="search"
                 control={control}
@@ -69,6 +71,14 @@ export default function FlashcardDeckList() {
               className="flex-1/12"
               inverted
               onClick={() => setImportModalOpen(true)}
+            ></Button>
+
+            <Button
+              title={t('pdf.title')}
+              leftIcon="file"
+              className="flex-4/12"
+              inverted
+              onClick={() => setPdfModalOpen(true)}
             ></Button>
           </div>
 
@@ -191,6 +201,15 @@ export default function FlashcardDeckList() {
           onClose={() => setImportModalOpen(false)}
           onSuccess={() => {
             setImportModalOpen(false);
+            refresh();
+          }}
+        />
+
+        <GenerateFlashcardFromPdfModal
+          isOpen={pdfModalOpen}
+          onClose={() => setPdfModalOpen(false)}
+          onSuccess={() => {
+            setPdfModalOpen(false);
             refresh();
           }}
         />

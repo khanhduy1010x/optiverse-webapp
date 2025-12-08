@@ -197,6 +197,28 @@ class FlashcardService {
     }
     return null;
   }
+
+  public async generateFlashcardsFromPdf(formData: FormData): Promise<any> {
+    try {
+      const response = await api.post<ApiResponse<any>>(
+        `${this.flashcardDeckPath}/generate-from-pdf`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+          timeout: 300000, // 5 minutes timeout for PDF processing
+        }
+      );
+      const data = response.data.data;
+      console.log('PDF generation result:', data);
+      return data;
+    } catch (error: any) {
+      console.error('Lỗi khi generate flashcards từ PDF:', error);
+      throw error.response?.data?.message || error.message || 'Failed to generate flashcards from PDF';
+    }
+  }
 }
 
 export default new FlashcardService();
+
