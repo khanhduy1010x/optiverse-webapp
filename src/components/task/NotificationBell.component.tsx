@@ -23,10 +23,19 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ tasks }) => {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [removedNotifications, setRemovedNotifications] = useState<Set<string>>(new Set());
-  const [dismissedNotifications, setDismissedNotifications] = useState<Set<string>>(new Set());
+  // Lưu dismissed notifications vào localStorage để persist qua sessions
+  const [dismissedNotifications, setDismissedNotifications] = useState<Set<string>>(() => {
+    const saved = localStorage.getItem('dismissedTaskNotifications');
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+  });
   const [undoTimer, setUndoTimer] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const undoTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Sync dismissed notifications to localStorage
+  useEffect(() => {
+    localStorage.setItem('dismissedTaskNotifications', JSON.stringify([...dismissedNotifications]));
+  }, [dismissedNotifications]);
 
   // Check for overdue and near-due tasks
   useEffect(() => {
@@ -238,22 +247,13 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ tasks }) => {
                           <p className="text-sm font-semibold text-gray-900 truncate">
                             {notification.title}
                           </p>
-                          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                            <button
-                              onClick={() => handleMarkAsCompleted(notification.id)}
-                              className="p-1.5 text-gray-400 hover:text-green-500 hover:bg-green-50 rounded-lg transition-all duration-200"
-                              title="Complete task"
-                            >
-                              <FiCheck size={16} />
-                            </button>
-                            <button
-                              onClick={() => handleDismiss(notification.id)}
-                              className="p-1.5 text-gray-400 hover:text-gray-500 hover:bg-gray-200 rounded-lg transition-all duration-200"
-                              title="Dismiss"
-                            >
-                              <FiX size={16} />
-                            </button>
-                          </div>
+                          <button
+                            onClick={() => handleDismiss(notification.id)}
+                            className="p-1.5 text-gray-400 hover:text-gray-500 hover:bg-gray-200 rounded-lg transition-all duration-200 opacity-0 group-hover:opacity-100"
+                            title="Dismiss"
+                          >
+                            <FiX size={16} />
+                          </button>
                         </div>
 
                         <p
