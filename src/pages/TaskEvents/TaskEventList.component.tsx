@@ -22,7 +22,7 @@ interface TaskEventListProps {
 export const TaskEventList: React.FC<TaskEventListProps> = ({ taskId }) => {
   const { t } = useAppTranslate('task');
   // useTaskEventList hiện không nhận tham số taskId nữa (lấy theo user_id)
-  const { taskEvents, loading, error, removeEvent, addEvent, updateEvent } = useTaskEventList();
+  const { taskEvents, loading, error, removeEvent, addEvent, updateEvent, refreshImportedEvents } = useTaskEventList();
   // const { deleteTaskEvent } = useTaskEventOperations();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -299,7 +299,10 @@ export const TaskEventList: React.FC<TaskEventListProps> = ({ taskId }) => {
       <CreateTaskEventModalForm
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        onSuccess={() => {}}
+        onSuccess={() => {
+          setIsCreateModalOpen(false);
+          // addEvent đã tự động refresh data, không cần gọi lại
+        }}
         addEvent={addEvent}
       />
 

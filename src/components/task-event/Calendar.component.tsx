@@ -41,7 +41,7 @@ interface CalendarProps {
   taskEvents: TaskEvent[];
   loading: boolean;
   error: string | null;
-  addEvent: (event: TaskEvent) => void;
+  addEvent: (event: TaskEvent) => Promise<void>;
   removeEvent: (eventId: string, deleteOption?: 'all' | 'this', instanceStartTime?: Date | string) => void;
   updateEvent: (eventId: string, event: TaskEvent, updateOption?: 'all' | 'this') => void;
   refreshImportedEvents: () => void;
@@ -182,6 +182,31 @@ export const Calendar: React.FC<CalendarProps> = ({
     link.click();
     document.body.removeChild(link);
   };
+
+  // Handle Refresh with Toast Notification
+  const handleRefresh = useCallback(async () => {
+    try {
+      console.log('🔄 [REFRESH BUTTON] User clicked refresh');
+      const loadingToastId = toast.loading(t('refreshing_events'), { autoClose: false, closeButton: false });
+      
+      await refreshImportedEvents();
+      
+      // Dismiss loading toast and show success
+      if (loadingToastId) {
+        toast.dismiss(loadingToastId);
+      } else {
+        toast.dismiss();
+      }
+      
+      // Không hiển thị toast success khi refresh thủ công
+      console.log('✅ [REFRESH BUTTON] Refresh completed silently');
+    } catch (error) {
+      console.error('❌ [REFRESH BUTTON] Error:', error);
+      toast.dismiss(); // Dismiss loading toast
+      toast.error(t('refresh_failed'), { autoClose: 3000 });
+    }
+  }, [refreshImportedEvents, t]);
+
   const [repeatType, setRepeatType] = useState<RepeatType>('none');
   const [customRepeatFrequency, setCustomRepeatFrequency] = useState(1);
   const [customRepeatUnit, setCustomRepeatUnit] = useState<'day' | 'week' | 'month' | 'year'>('week');
@@ -1447,6 +1472,8 @@ export const Calendar: React.FC<CalendarProps> = ({
           handleToday={handleToday}
           onOpenEventImport={openEventImport}
           onDownloadEventTemplate={handleDownloadEventTemplate}
+          onRefresh={handleRefresh}
+          isLoading={loading}
         />
  </div>
         {/* Calendar View */}
@@ -1485,6 +1512,7 @@ export const Calendar: React.FC<CalendarProps> = ({
           onClose={() => setIsAddScheduleOpen(false)}
           onSuccess={() => {
             setIsAddScheduleOpen(false);
+            // addEvent đã tự động refresh data, không cần gọi lại
           }}
           addEvent={addEvent}
         />

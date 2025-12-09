@@ -416,14 +416,53 @@ export const useTaskEventList = () => {
   const user = useSelector((state: RootState) => state.auth.user);
   const userId = user?._id;
 
-  const fetchTaskEvents = useCallback(async () => {
-    console.log('🔍 Fetching task events for current user');
+  // ==================== CORE FETCH LOGIC ====================
+  // Hàm fetch data từ API - không có side effects
+  const fetchEventsFromAPI = useCallback(async (): Promise<TaskEvent[]> => {
+    console.log('[API] Fetching events from server...');
+    if (!userId) {
+      throw new Error('No userId');
+    }
     
-    // Nếu không có userId, không làm gì cả
+    const response = await taskEventService.getTaskEventsByUserId();
+    
+    if (response && response.data) {
+      const rawData: any = response.data?.data;
+      let events: TaskEvent[] = [];
+      
+      if (Array.isArray(rawData)) {
+        events = rawData as TaskEvent[];
+      } else if (rawData && Array.isArray(rawData.taskEvents)) {
+        events = rawData.taskEvents as TaskEvent[];
+      } else if (rawData && typeof rawData === 'object') {
+        const possibleArrayKeys = Object.keys(rawData).filter(key => Array.isArray(rawData[key]));
+        if (possibleArrayKeys.length > 0) {
+          events = rawData[possibleArrayKeys[0]] as TaskEvent[];
+        }
+      }
+      
+      const validEvents = events.filter(event => event._id && event.title);
+      
+      const formattedEvents = validEvents.map(event => ({
+        ...event,
+        start_time: event.start_time ? new Date(event.start_time) : new Date(),
+        end_time: event.end_time ? new Date(event.end_time) : undefined
+      }));
+      
+      const allEventsWithRecurring = generateRecurringEvents(formattedEvents);
+      console.log('✅ [API] Fetched', allEventsWithRecurring.length, 'total events');
+      
+      return allEventsWithRecurring;
+    }
+    
+    return [];
+  }, [userId]);
+
+  // ==================== 1. INITIAL FETCH - Khi mount component ====================
+  const fetchTaskEvents = useCallback(async () => {
+    console.log('🔵 [INITIAL FETCH] Loading events on mount');
     if (!userId) {
       console.log('❌ No userId found, skipping fetch');
-      setTaskEvents([]);
-      setLoading(false);
       return;
     }
     
@@ -431,246 +470,56 @@ export const useTaskEventList = () => {
     setError(null);
     
     try {
-      // Sử dụng method mới để lấy events theo userId
-      console.log('🚀 Calling API for task events by userId:', userId);
-      console.log('📡 API endpoint will be: /productivity/task-event/user');
-      
-      const response = await taskEventService.getTaskEventsByUserId();
-        
-      if (response && response.data) {
-        // Hỗ trợ cả 2 định dạng dữ liệu trả về:
-        // 1) ApiResponse<TaskEvent[]>  -> data: TaskEvent[]
-        // 2) ApiResponse<{ taskEvents: TaskEvent[] }> -> data: { taskEvents: TaskEvent[] }
-        const rawData: any = response.data?.data;
-        let events: TaskEvent[] = [];
-        
-        console.log('🔍 Raw data type:', typeof rawData);
-        console.log('🔍 Raw data is array:', Array.isArray(rawData));
-        console.log('🔍 Raw data content:', rawData);
-        console.log('🔍 Raw data length (if array):', Array.isArray(rawData) ? rawData.length : 'N/A');
-        
-        if (Array.isArray(rawData)) {
-          events = rawData as TaskEvent[];
-          console.log('✅ Parsed as direct array, events count:', events.length);
-        } else if (rawData && Array.isArray(rawData.taskEvents)) {
-          events = rawData.taskEvents as TaskEvent[];
-          console.log('✅ Parsed from taskEvents property, events count:', events.length);
-        } else if (rawData && typeof rawData === 'object') {
-          // Kiểm tra các key khác có thể chứa array
-          const possibleArrayKeys = Object.keys(rawData).filter(key => Array.isArray(rawData[key]));
-          console.log('🔍 Possible array keys in response:', possibleArrayKeys);
-          
-          if (possibleArrayKeys.length > 0) {
-            events = rawData[possibleArrayKeys[0]] as TaskEvent[];
-            console.log('✅ Found events in key:', possibleArrayKeys[0], 'count:', events.length);
-          } else {
-            console.warn('⚠️ No array found in response data');
-          }
-        } else {
-          console.warn('⚠️ Unexpected task events response shape:', rawData);
-          console.warn('⚠️ Response structure:', {
-            hasData: !!response.data,
-            dataKeys: response.data ? Object.keys(response.data) : [],
-            rawDataType: typeof rawData,
-            rawDataKeys: rawData && typeof rawData === 'object' ? Object.keys(rawData) : []
-          });
-        }
-        
-        console.log('📋 Final parsed events count:', events.length);
-        if (events.length > 0) {
-          console.log('📝 Sample event structure:', {
-            id: events[0]._id,
-            title: events[0].title,
-            start_time: events[0].start_time,
-            end_time: events[0].end_time,
-            repeat_type: events[0].repeat_type
-          });
-          console.log('📝 Full sample event:', events[0]);
-        }
-        
-        // Validate và format events
-        const validEvents = events.filter(event => {
-          if (!event._id || !event.title) {
-            console.warn('⚠️ Invalid event found (missing id or title):', event);
-            return false;
-          }
-          return true;
-        });
-        
-        console.log('✅ Valid events after filtering:', validEvents.length);
-        
-        const formattedEvents = validEvents.map(event => ({
-          ...event,
-          start_time: event.start_time ? new Date(event.start_time) : new Date(),
-          end_time: event.end_time ? new Date(event.end_time) : undefined
-        }));
-        
-        // Tạo các sự kiện lặp lại ảo từ events gốc
-        const allEventsWithRecurring = generateRecurringEvents(formattedEvents);
-        console.log('🔄 Generated events with recurring instances:', allEventsWithRecurring.length, 'total events');
-        
-        // Log events by date for debugging
-        const eventsByDate = allEventsWithRecurring.reduce((acc, event) => {
-          const startTime = event.start_time instanceof Date ? event.start_time : new Date(event.start_time);
-          const dateKey = startTime.toISOString().split('T')[0];
-          if (!acc[dateKey]) acc[dateKey] = [];
-          acc[dateKey].push(event.title);
-          return acc;
-        }, {} as Record<string, string[]>);
-        
-        console.log('📅 Events grouped by date:', eventsByDate);
-        
-        setTaskEvents(allEventsWithRecurring);
-      } else {
-        console.log('❌ No data in response or invalid response structure');
-        setTaskEvents([]);
-      }
+      const events = await fetchEventsFromAPI();
+      setTaskEvents(events);
+      console.log('✅ [INITIAL FETCH] Successfully loaded', events.length, 'events');
     } catch (err: any) {
-      console.error('❌ Error in useTaskEventList:', err);
-      console.error('❌ Error details:', {
-        message: err?.message,
-        status: err?.response?.status,
-        statusText: err?.response?.statusText,
-        data: err?.response?.data
-      });
+      console.error('❌ [INITIAL FETCH] Error:', err);
       setError('Failed to fetch task events');
       setTaskEvents([]);
     } finally {
       setLoading(false);
     }
-  }, [userId]); // Thay đổi dependency từ taskId sang userId
+  }, [userId, fetchEventsFromAPI]);
 
-  // Hàm để trigger refresh từ bên ngoài - thực hiện fetch ngay lập tức
-  // Sử dụng cho header refresh button - hiển thị loading state
+  // ==================== 2. REFRESH BUTTON - Với loading indicator ====================
   const refreshTaskEvents = useCallback(async () => {
-    console.log('[Header Refresh] Manual refresh triggered - fetching events directly');
-    // Fetch dữ liệu trực tiếp thay vì sử dụng refreshKey
-    if (!userId) {
-      console.log('❌ No userId found, skipping fetch');
-      return;
-    }
-    
+    console.log('🔄 [REFRESH BUTTON] Manual refresh triggered');
     setLoading(true);
     setError(null);
     
     try {
-      const response = await taskEventService.getTaskEventsByUserId();
-      
-      if (response && response.data) {
-        const rawData: any = response.data?.data;
-        let events: TaskEvent[] = [];
-        
-        if (Array.isArray(rawData)) {
-          events = rawData as TaskEvent[];
-          console.log('✅ Parsed as direct array, events count:', events.length);
-        } else if (rawData && Array.isArray(rawData.taskEvents)) {
-          events = rawData.taskEvents as TaskEvent[];
-          console.log('✅ Parsed from taskEvents property, events count:', events.length);
-        } else if (rawData && typeof rawData === 'object') {
-          const possibleArrayKeys = Object.keys(rawData).filter(key => Array.isArray(rawData[key]));
-          if (possibleArrayKeys.length > 0) {
-            events = rawData[possibleArrayKeys[0]] as TaskEvent[];
-            console.log('✅ Found events in key:', possibleArrayKeys[0], 'count:', events.length);
-          }
-        }
-        
-        console.log('📋 Refreshed events count:', events.length);
-        
-        const validEvents = events.filter(event => {
-          if (!event._id || !event.title) {
-            return false;
-          }
-          return true;
-        });
-        
-        const formattedEvents = validEvents.map(event => ({
-          ...event,
-          start_time: event.start_time ? new Date(event.start_time) : new Date(),
-          end_time: event.end_time ? new Date(event.end_time) : undefined
-        }));
-        
-        const allEventsWithRecurring = generateRecurringEvents(formattedEvents);
-        console.log('🔄 Refreshed events with recurring instances:', allEventsWithRecurring.length, 'total events');
-        
-        setTaskEvents(allEventsWithRecurring);
-      } else {
-        console.log('❌ No data in refresh response');
-        setTaskEvents([]);
-      }
+      const events = await fetchEventsFromAPI();
+      setTaskEvents(events);
+      console.log('✅ [REFRESH BUTTON] Successfully refreshed', events.length, 'events');
     } catch (err: any) {
-      console.error('❌ Error in refreshTaskEvents:', err);
+      console.error('❌ [REFRESH BUTTON] Error:', err);
       setError('Failed to refresh task events');
       setTaskEvents([]);
     } finally {
       setLoading(false);
     }
-  }, []); // Empty dependency - userId được access từ closure
+  }, [fetchEventsFromAPI]);
 
-  // Hàm refresh riêng cho import modal - KHÔNG hiển thị loading state toàn trang
-  // Giữ modal mở và chỉ cập nhật data ở background
-  const refreshImportedEvents = useCallback(async () => {
-    console.log('[Import Modal Refresh] Refreshing imported events without closing modal');
-    if (!userId) {
-      console.log('❌ No userId found, skipping fetch');
-      return;
-    }
-    
-    // KHÔNG set loading = true để tránh hiển thị loading state
-    setError(null);
-    
+  // ==================== 3. AFTER IMPORT - Silent refresh (no loading) ====================
+  const refreshAfterImport = useCallback(async () => {
+    console.log('📥 [AFTER IMPORT] Silent refresh without loading state');
     try {
-      const response = await taskEventService.getTaskEventsByUserId();
-      
-      if (response && response.data) {
-        const rawData: any = response.data?.data;
-        let events: TaskEvent[] = [];
-        
-        if (Array.isArray(rawData)) {
-          events = rawData as TaskEvent[];
-          console.log('✅ [Import] Parsed as direct array, events count:', events.length);
-        } else if (rawData && Array.isArray(rawData.taskEvents)) {
-          events = rawData.taskEvents as TaskEvent[];
-          console.log('✅ [Import] Parsed from taskEvents property, events count:', events.length);
-        } else if (rawData && typeof rawData === 'object') {
-          const possibleArrayKeys = Object.keys(rawData).filter(key => Array.isArray(rawData[key]));
-          if (possibleArrayKeys.length > 0) {
-            events = rawData[possibleArrayKeys[0]] as TaskEvent[];
-            console.log('✅ [Import] Found events in key:', possibleArrayKeys[0], 'count:', events.length);
-          }
-        }
-        
-        console.log('📋 [Import] Refreshed events count:', events.length);
-        
-        const validEvents = events.filter(event => {
-          if (!event._id || !event.title) {
-            return false;
-          }
-          return true;
-        });
-        
-        const formattedEvents = validEvents.map(event => ({
-          ...event,
-          start_time: event.start_time ? new Date(event.start_time) : new Date(),
-          end_time: event.end_time ? new Date(event.end_time) : undefined
-        }));
-        
-        const allEventsWithRecurring = generateRecurringEvents(formattedEvents);
-        console.log('🔄 [Import] Refreshed events with recurring instances:', allEventsWithRecurring.length, 'total events');
-        
-        setTaskEvents(allEventsWithRecurring);
-      } else {
-        console.log('❌ No data in import refresh response');
-      }
+      const events = await fetchEventsFromAPI();
+      setTaskEvents(events);
+      console.log('✅ [AFTER IMPORT] Successfully refreshed', events.length, 'events');
     } catch (err: any) {
-      console.error('❌ Error in refreshImportedEvents:', err);
-      // KHÔNG set error để tránh thay đổi UI state
+      console.error('❌ [AFTER IMPORT] Error:', err);
+      // KHÔNG set error để không ảnh hưởng UI
     }
-    // KHÔNG set loading = false vì không bao giờ set = true
-  }, []); // Empty dependency - userId được access từ closure
+  }, [fetchEventsFromAPI]);
 
-  // Hàm thêm sự kiện mới - chỉ lưu 1 event gốc vào database, virtual instances sẽ được tạo tự động
+  // Alias cho backward compatibility
+  const refreshImportedEvents = refreshAfterImport;
+
+  // ==================== 4. AFTER SAVE MODAL - Optimistic update ====================
   const addEvent = async (newEvent: TaskEvent) => {
-    console.log('=== ADDING NEW EVENT ===');
+    console.log('💾 [AFTER SAVE] Creating new event from modal...');
     console.log('Event data:', newEvent);
     console.log('Repeat settings:', {
       repeat_type: newEvent.repeat_type,
@@ -680,18 +529,26 @@ export const useTaskEventList = () => {
     });
     
     try {
+      // Convert Date objects to ISO strings for API
+      const convertToISOString = (value: any): string | undefined => {
+        if (!value) return undefined;
+        if (typeof value === 'string') return value;
+        if (value instanceof Date) return value.toISOString();
+        return String(value);
+      };
+
       // Chuẩn bị dữ liệu để gửi lên server - chỉ lưu event gốc
       const eventToCreate: CreateTaskEventRequest = {
         user_id: userId || '',
         title: newEvent.title,
-        start_time: newEvent.start_time,
-        end_time: newEvent.end_time,
+        start_time: convertToISOString(newEvent.start_time),
+        end_time: convertToISOString(newEvent.end_time),
         all_day: newEvent.all_day,
         repeat_type: newEvent.repeat_type,
         repeat_interval: newEvent.repeat_interval,
         repeat_days: newEvent.repeat_days,
         repeat_end_type: newEvent.repeat_end_type,
-        repeat_end_date: newEvent.repeat_end_date,
+        repeat_end_date: convertToISOString(newEvent.repeat_end_date),
         repeat_occurrences: newEvent.repeat_occurrences,
         exclusion_dates: newEvent.exclusion_dates,
         location: newEvent.location,
@@ -699,27 +556,39 @@ export const useTaskEventList = () => {
         guests: newEvent.guests
       };
       
-      console.log('Event to create on server:', eventToCreate);
+      console.log('📤 [AFTER SAVE] Sending to server:', eventToCreate);
       
       // Tạo sự kiện trong cơ sở dữ liệu (chỉ lưu event gốc)
       const response = await taskEventService.createTaskEvent(eventToCreate);
       
-      console.log('Server response:', response);
+      console.log('📥 [AFTER SAVE] Server response:', response);
       
       if (response && response.data && response.data.data) {
         const createdEvent = response.data.data;
+        console.log('✅ [AFTER SAVE] Event created on server:', createdEvent._id);
         
-        console.log('✅ Event created successfully on server:', createdEvent._id);
-        console.log('🔄 Fetching latest data from server immediately...');
+        // OPTIMISTIC UI UPDATE - Thêm event trực tiếp vào state
+        const formattedCreatedEvent = {
+          ...createdEvent,
+          start_time: new Date(createdEvent.start_time),
+          end_time: createdEvent.end_time ? new Date(createdEvent.end_time) : undefined
+        };
         
-        // Fetch lại data từ server ngay lập tức để đảm bảo đồng bộ
-        await refreshTaskEvents();
+        // Generate recurring instances nếu có
+        const newEventsWithRecurring = generateRecurringEvents([formattedCreatedEvent]);
+        console.log('📅 [AFTER SAVE] Generated', newEventsWithRecurring.length, 'instances');
         
-        console.log('✅ Data refreshed successfully after creating event');
+        // Thêm vào state hiện tại - UI cập nhật ngay lập tức
+        setTaskEvents(prevEvents => {
+          const updatedEvents = [...prevEvents, ...newEventsWithRecurring];
+          console.log('✅ [AFTER SAVE] Added to state. Total events:', updatedEvents.length);
+          return updatedEvents;
+        });
+        
+        console.log('🎉 [AFTER SAVE] Event displayed immediately!');
       }
     } catch (error) {
-      console.error('=== ERROR ADDING EVENT ===');
-      console.error('Error details:', error);
+      console.error('❌ [AFTER SAVE] Error:', error);
       throw error; // Re-throw để component có thể handle error
     }
   };
@@ -748,8 +617,8 @@ export const useTaskEventList = () => {
           console.log('✅ Event series deleted successfully');
           console.log('🔄 Fetching latest data from server immediately...');
           
-          // Fetch lại data từ server ngay lập tức
-          await refreshTaskEvents();
+          // Fetch lại data từ server ngay lập tức (silent refresh)
+          await refreshAfterImport();
           
           console.log('✅ Data refreshed successfully after deleting series');
         } else {
@@ -817,8 +686,8 @@ export const useTaskEventList = () => {
               console.log('✅ Single instance excluded successfully');
               console.log('🔄 Fetching latest data from server immediately...');
               
-              // Fetch lại data từ server ngay lập tức
-              await refreshTaskEvents();
+              // Fetch lại data từ server ngay lập tức (silent refresh)
+              await refreshAfterImport();
               
               console.log('✅ Data refreshed successfully after excluding instance');
             } else {
@@ -971,8 +840,8 @@ export const useTaskEventList = () => {
               console.log('✅ Single instance updated successfully (new event created)');
               console.log('🔄 Fetching latest data from server immediately...');
               
-              // Fetch lại data từ server ngay lập tức để đảm bảo đồng bộ
-              await refreshTaskEvents();
+              // Fetch lại data từ server ngay lập tức (silent refresh)
+              await refreshAfterImport();
               
               console.log('✅ Data refreshed successfully after updating single instance');
             }
@@ -1004,8 +873,8 @@ export const useTaskEventList = () => {
           console.log('✅ Event updated successfully on server');
           console.log('🔄 Fetching latest data from server immediately...');
           
-          // Fetch lại data từ server ngay lập tức để đảm bảo đồng bộ
-          await refreshTaskEvents();
+          // Fetch lại data từ server ngay lập tức (silent refresh)
+          await refreshAfterImport();
           
           console.log('✅ Data refreshed successfully after updating event');
         }
@@ -1027,8 +896,10 @@ export const useTaskEventList = () => {
     taskEvents: visibleEvents,
     loading,
     error,
-    refreshImportedEvents,
-    addEvent,
+    refreshTaskEvents,      // 🔄 Cho nút refresh button - có loading
+    refreshAfterImport,     // 📥 Sau khi import - silent, không loading
+    refreshImportedEvents,  // Alias của refreshAfterImport
+    addEvent,               // 💾 Sau khi save modal - optimistic update
     removeEvent,
     updateEvent
   };

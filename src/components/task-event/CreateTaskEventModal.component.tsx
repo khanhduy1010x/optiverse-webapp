@@ -38,28 +38,39 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
   const repeatButtonRef = React.useRef<HTMLButtonElement>(null);
   const [repeatDropdownPos, setRepeatDropdownPos] = useState({ top: 0, left: 0, width: 0 });
   const repeatDropdownRef = React.useRef<HTMLDivElement>(null);
+  const [hasInteracted, setHasInteracted] = useState(false);
+
+  // Reset hasInteracted when modal opens
+  React.useEffect(() => {
+    if (isOpen) {
+      setHasInteracted(false);
+      setDateError('');
+    }
+  }, [isOpen]);
 
   // Validate Start Date is not in the past and To Date > Start Date
   React.useEffect(() => {
+    // Chỉ validate khi user đã tương tác với form
+    if (!hasInteracted) return;
+    
     let error = '';
     
-    // Check if start_time is in the past (including time)
+    // Check if start_time is in the past (với buffer 1 phút)
     if (formData.start_time) {
       const startDateTime = new Date(formData.start_time);
       const now = new Date();
+      const oneMinuteAgo = new Date(now.getTime() - 60 * 1000); // Buffer 1 phút
       
-      // Check full date and time
-      if (startDateTime <= now) {
-        // Check if it's today
+      // Chỉ kiểm tra nếu thời gian < 1 phút trước
+      if (startDateTime < oneMinuteAgo) {
         const startDate = new Date(startDateTime);
         startDate.setHours(0, 0, 0, 0);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         
-        if (startDate.getTime() === today.getTime()) {
-          error = 'Time must be greater than current time for today.';
-        } else if (startDate < today) {
-          error = t('cannot_select_past_date');
+        // Nếu là ngày quá khứ (không phải hôm nay)
+        if (startDate < today) {
+          error = t('cannot_select_past_date') || 'Cannot select past date';
         }
       }
     }
@@ -144,6 +155,10 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Trigger validation khi submit
+    setHasInteracted(true);
+    
     if (!formData.title || !formData.title.trim()) {
       alert(t('title_required'));
       return;
@@ -159,6 +174,25 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
     if (!formData.start_time) {
       alert(t('start_time_required'));
       return;
+    }
+    
+    // Validate start time không ở quá khứ (cho phép buffer 1 phút)
+    const startDateTime = new Date(formData.start_time);
+    const now = new Date();
+    const oneMinuteAgo = new Date(now.getTime() - 60 * 1000); // Buffer 1 phút
+    
+    // Chỉ check nếu thời gian chọn nhỏ hơn 1 phút trước
+    if (startDateTime < oneMinuteAgo) {
+      const startDate = new Date(startDateTime);
+      startDate.setHours(0, 0, 0, 0);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      // Nếu là ngày khác với hôm nay và ở quá khứ
+      if (startDate < today) {
+        alert(t('cannot_select_past_date') || 'Cannot select past date');
+        return;
+      }
     }
     if (!formData.repeat_type) {
       alert(t('repeat_type_required'));
@@ -197,9 +231,12 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
     // Tạo event gốc duy nhất với thông tin recurring
     // Virtual instances sẽ được tạo tự động bởi generateRecurringEvents
     const eventStart = startTime;
-    let eventEnd: Date | undefined = undefined;
-    if (endTime) {
+    let eventEnd: Date;
+    if (endTime && endTime > startTime) {
       eventEnd = endTime;
+    } else {
+      // Nếu không có end_time hoặc end_time <= start_time, tự động set = start_time + 1 giờ
+      eventEnd = new Date(eventStart.getTime() + 60 * 60 * 1000); // Thêm 1 giờ
     }
     
     console.log('Event times - start:', eventStart.toISOString(), 'end:', eventEnd?.toISOString());
@@ -251,14 +288,14 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
       _id: '', // Sẽ được tạo bởi backend
       user_id: userId || '',
       title: formData.title.trim(),
-      start_time: eventStart.toISOString(),
-      end_time: eventEnd ? eventEnd.toISOString() : undefined,
+      start_time: eventStart, // Truyền Date object, không phải ISO string
+      end_time: eventEnd, // Truyền Date object, không phải ISO string
       description: mergedDescription,
       repeat_type: repeatType as import('../../types/task-events/task-events.types').RepeatType,
       repeat_interval: 1, // Mặc định là 1
       repeat_end_type: repeatEndDate ? 'on' : 'never',
-      repeat_end_date: repeatEndDate ? repeatEndDate.toISOString() : undefined,
-      exclusion_dates: [], // Khởi tạo exclusion_dates rỗng
+      repeat_end_date: repeatEndDate, // Truyền Date object, không phải ISO string
+      exclusion_dates: [], // Khởi tạ exclusion_dates rỗng
       color: colorVal,
       location: '',
       guests: []
@@ -269,31 +306,43 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
     console.log('repeatEndDate calculated:', repeatEndDate);
     console.log('repeatEndDate ISO:', repeatEndDate ? repeatEndDate.toISOString() : 'undefined');
     
-    // Sử dụng addEvent nếu có, nếu không thì dùng createTaskEvent
-    if (addEvent) {
-      await addEvent(payload);
-    } else {
-      // Convert Date objects to ISO strings for API
-      await createTaskEvent({
-        user_id: userId || '',
-        title: formData.title.trim(),
-        start_time: eventStart.toISOString(),
-        end_time: eventEnd ? eventEnd.toISOString() : undefined,
-        description: mergedDescription,
-        repeat_type: repeatType as import('../../types/task-events/task-events.types').RepeatType,
-        repeat_interval: 1,
-        repeat_end_type: repeatEndDate ? 'on' : 'never',
-        repeat_end_date: repeatEndDate ? repeatEndDate.toISOString() : undefined,
-        exclusion_dates: [], // Khởi tạo exclusion_dates rỗng
-        color: colorVal,
-        location: '',
-        guests: []
-      });
-    }
+    try {
+      console.log('🚀 Starting to create event...');
+      
+      // Sử dụng addEvent nếu có, nếu không thì dùng createTaskEvent
+      if (addEvent) {
+        console.log('📤 Using addEvent prop to create and refresh');
+        await addEvent(payload);
+        console.log('✅ Event created and refreshed successfully');
+      } else {
+        console.log('📤 Using createTaskEvent service directly');
+        // Convert Date objects to ISO strings for API
+        await createTaskEvent({
+          user_id: userId || '',
+          title: formData.title.trim(),
+          start_time: eventStart.toISOString(),
+          end_time: eventEnd.toISOString(), // Luôn có end_time
+          description: mergedDescription,
+          repeat_type: repeatType as import('../../types/task-events/task-events.types').RepeatType,
+          repeat_interval: 1,
+          repeat_end_type: repeatEndDate ? 'on' : 'never',
+          repeat_end_date: repeatEndDate ? repeatEndDate.toISOString() : undefined,
+          exclusion_dates: [], // Khởi tạo exclusion_dates rỗng
+          color: colorVal,
+          location: '',
+          guests: []
+        });
+        console.log('✅ Event created successfully');
+      }
 
+      console.log('🧹 Resetting form and closing modal');
       resetForm();
       onSuccess();
       onClose();
+    } catch (error) {
+      console.error('❌ Error creating event:', error);
+      alert(t('error_creating_event') || `Error creating event: ${error instanceof Error ? error.message : String(error)}`);
+    }
   };
 
   if (!isOpen) return null;
@@ -426,6 +475,7 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
                     triggerRef={dateButtonRef}
                     selectedDate={formData.start_time ? new Date(formData.start_time) : new Date()}
                     onDateSelect={(date) => {
+                      setHasInteracted(true);
                       const currentTime = formData.start_time ? new Date(formData.start_time) : new Date();
                       date.setHours(currentTime.getHours(), currentTime.getMinutes());
                       handleInputChange('start_time', date.toISOString());
@@ -452,6 +502,7 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
                         return;
                       }
                       
+                      setHasInteracted(true);
                       // Reset the flag when user enters new time
                       setTempStartTimeCleared(false);
                       
@@ -676,32 +727,31 @@ export const CreateTaskEventModalForm: React.FC<CreateTaskEventModalFormProps> =
               <div className="text-red-500 text-sm bg-red-50 p-3 rounded-lg">{dateError}</div>
             )}
           </div>
-        </form>
 
-        {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-4 border-t border-gray-200">
-          <button 
-            type="button"
-            onClick={() => { resetForm(); onClose(); }}
-            className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            {t('cancel')}
-          </button>
-          <button
-            type="submit"
-            onClick={handleSubmit}
-            disabled={
-              loading ||
-              !formData.title?.trim() ||
-              (formData.title && formData.title.length > 50) ||
-              (!!formData.description && formData.description.length > 100) ||
-              !!dateError
-            }
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-          >
-            {loading ? t('saving') : t('save')}
-          </button>
-        </div>
+          {/* Footer */}
+          <div className="flex items-center justify-end gap-3 p-4 border-t border-gray-200">
+            <button 
+              type="button"
+              onClick={() => { resetForm(); onClose(); }}
+              className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              {t('cancel')}
+            </button>
+            <button
+              type="submit"
+              disabled={
+                loading ||
+                !formData.title?.trim() ||
+                (formData.title && formData.title.length > 50) ||
+                (!!formData.description && formData.description.length > 100) ||
+                !!dateError
+              }
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+            >
+              {loading ? t('saving') : t('save')}
+            </button>
+          </div>
+        </form>
       </div>
     </Modal>
   );
